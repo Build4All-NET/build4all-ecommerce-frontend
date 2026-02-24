@@ -45,8 +45,7 @@ class LicensingApiService {
     }
 
     try {
-      // ✅ IMPORTANT:
-      // DO NOT start with "/" otherwise Dio will drop "/api" from baseUrl.
+    
       final res = await _dio.get(
         '/licensing/apps/$aupId/access',
         options: Options(headers: {'Authorization': 'Bearer $token'}),

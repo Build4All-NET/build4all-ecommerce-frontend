@@ -122,43 +122,72 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
             );
       }
 
-      Future<void> _enterUserFlow(bool wasInactiveUser) async {
-        final user = result.userEntity;
-        if (user == null) return;
+     Future<void> _enterUserFlow(bool wasInactiveUser) async {
+  final user = result.userEntity;
+  if (user == null) return;
 
-        if (wasInactiveUser) {
-          final confirm = await _showReactivateSheet(context);
-          if (confirm != true) {
-            // ✅ IMPORTANT: clear stored session so AuthGate won't auto-enter
-            await authApi.clearAuth();
+  // ✅ NEW: deleted restore flow first
+  if (result.wasDeletedUser == true) {
+    final confirm = await _showRestoreDeletedSheet(context);
+    if (confirm != true) {
+    
+      await authApi.clearAuth();
+      return;
+    }
 
-            return;
-          }
+    try {
+      await authApi.reactivateUser(
+        userId: user.id,
+        ownerProjectLinkId: int.tryParse(Env.ownerProjectLinkId) ?? 0,
+      );
 
-          try {
-            await authApi.reactivateUser(
-              userId: user.id,
-              ownerProjectLinkId: int.tryParse(Env.ownerProjectLinkId) ?? 0,
-            );
+      if (!mounted) return;
 
-            if (!mounted) return;
+      AppToast.show(context, 'Account restored successfully'); // l10n later
+      await _hydrateUserAuth(false);
+      await _roleStore.saveRole('user');
+      _goToUserHome(context);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = ExceptionMapper.toMessage(e);
+      AppToast.show(context, msg, isError: true);
+    }
 
-            AppToast.show(context, l10n.loginInactiveSuccess);
+    return;
+  }
 
-            await _hydrateUserAuth(true);
-            await _roleStore.saveRole('user');
-            _goToUserHome(context);
-          } catch (e) {
-            if (!mounted) return;
-            final msg = ExceptionMapper.toMessage(e);
-            AppToast.show(context, msg, isError: true);
-          }
-        } else {
-          await _hydrateUserAuth(false);
-          await _roleStore.saveRole('user');
-          _goToUserHome(context);
-        }
-      }
+  // existing inactive flow
+  if (wasInactiveUser) {
+    final confirm = await _showReactivateSheet(context);
+    if (confirm != true) {
+      await authApi.clearAuth();
+      return;
+    }
+
+    try {
+      await authApi.reactivateUser(
+        userId: user.id,
+        ownerProjectLinkId: int.tryParse(Env.ownerProjectLinkId) ?? 0,
+      );
+
+      if (!mounted) return;
+
+      AppToast.show(context, l10n.loginInactiveSuccess);
+
+      await _hydrateUserAuth(true);
+      await _roleStore.saveRole('user');
+      _goToUserHome(context);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = ExceptionMapper.toMessage(e);
+      AppToast.show(context, msg, isError: true);
+    }
+  } else {
+    await _hydrateUserAuth(false);
+    await _roleStore.saveRole('user');
+    _goToUserHome(context);
+  }
+}
 
       // BOTH
       if (result.both) {
@@ -272,6 +301,87 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     );
   }
 
+
+Future<bool?> _showRestoreDeletedSheet(BuildContext context) {
+  final themeState = context.read<ThemeCubit>().state;
+  final colors = themeState.tokens.colors;
+  final t = Theme.of(context).textTheme;
+
+  return showModalBottomSheet<bool>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (ctx) {
+      final tt = Theme.of(ctx).textTheme;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                height: 4,
+                width: 36,
+                decoration: BoxDecoration(
+                  color: colors.border.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Restore deleted account?',
+              style: tt.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.label,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This account was deleted, but it can still be restored. Do you want to reactivate it now?',
+              style: tt.bodyMedium?.copyWith(color: colors.body),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: colors.border.withOpacity(0.6)),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: t.bodyMedium?.copyWith(color: colors.body),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary,
+                    ),
+                    child: Text(
+                      'Restore',
+                      style: t.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
   void _goToAdmin(
     BuildContext context, {
     required String role,

@@ -1,3 +1,4 @@
+import 'package:build4front/core/config/env.dart';
 import '../../domain/entities/admin_order_entities.dart';
 
 DateTime? _tryParseDate(dynamic v) {
@@ -16,6 +17,100 @@ int _toInt(dynamic v) {
   if (v == null) return 0;
   if (v is num) return v.toInt();
   return int.tryParse(v.toString()) ?? 0;
+}
+
+String? _toNullableString(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString().trim();
+  if (s.isEmpty || s.toLowerCase() == 'null') return null;
+  return s;
+}
+
+String? _firstNonEmpty(Map<String, dynamic> json, List<String> keys) {
+  for (final k in keys) {
+    final s = _toNullableString(json[k]);
+    if (s != null) return s;
+  }
+  return null;
+}
+
+String? _normalizeUrl(String? raw) {
+  final s = _toNullableString(raw);
+  if (s == null) return null;
+
+  // already absolute
+  if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) {
+    return s;
+  }
+
+  // protocol-relative URL
+  if (s.startsWith('//')) {
+    return 'https:$s';
+  }
+
+  // relative path -> resolve against backend base URL
+  try {
+    final base = Uri.parse(Env.apiBaseUrl);
+    return base.resolve(s).toString();
+  } catch (_) {
+    // fallback (safe string concat)
+    final base = Env.apiBaseUrl.endsWith('/')
+        ? Env.apiBaseUrl.substring(0, Env.apiBaseUrl.length - 1)
+        : Env.apiBaseUrl;
+    final path = s.startsWith('/') ? s : '/$s';
+    return '$base$path';
+  }
+}
+
+String? _extractImageUrl(Map<String, dynamic> json) {
+  // Common direct keys
+  final direct = _firstNonEmpty(json, const [
+    'imageUrl',
+    'imageURL',
+    'image',
+    'itemImage',
+    'thumbnailUrl',
+    'thumbnail',
+    'photoUrl',
+    'photo',
+    'coverImage',
+    'cover',
+  ]);
+  if (direct != null) return _normalizeUrl(direct);
+
+  // Nested image object: { image: { url: ... } }
+  final imageObj = json['image'];
+  if (imageObj is Map) {
+    final m = imageObj.cast<String, dynamic>();
+    final nested = _firstNonEmpty(m, const [
+      'url',
+      'imageUrl',
+      'path',
+      'src',
+      'thumbnailUrl',
+    ]);
+    if (nested != null) return _normalizeUrl(nested);
+  }
+
+  // List images: [{url:...}] or ["..."]
+  final images = json['images'];
+  if (images is List && images.isNotEmpty) {
+    final first = images.first;
+    if (first is String) return _normalizeUrl(first);
+    if (first is Map) {
+      final m = first.cast<String, dynamic>();
+      final nested = _firstNonEmpty(m, const [
+        'url',
+        'imageUrl',
+        'path',
+        'src',
+        'thumbnailUrl',
+      ]);
+      if (nested != null) return _normalizeUrl(nested);
+    }
+  }
+
+  return null;
 }
 
 class PaymentSummaryModel {
@@ -44,12 +139,12 @@ class PaymentSummaryModel {
   }
 
   PaymentSummary toEntity() => PaymentSummary(
-    orderTotal: orderTotal,
-    paidAmount: paidAmount,
-    remainingAmount: remainingAmount,
-    fullyPaid: fullyPaid,
-    paymentState: paymentState,
-  );
+        orderTotal: orderTotal,
+        paidAmount: paidAmount,
+        remainingAmount: remainingAmount,
+        fullyPaid: fullyPaid,
+        paymentState: paymentState,
+      );
 }
 
 class OrderHeaderRowModel {
@@ -62,7 +157,7 @@ class OrderHeaderRowModel {
   final bool fullyPaid;
   final PaymentSummaryModel payment;
 
-  // ✅ NEW
+  // list endpoint extras
   final String? phone;
   final String? addressLine;
 
@@ -91,10 +186,14 @@ class OrderHeaderRowModel {
       payment: PaymentSummaryModel.fromJson(
         (json['payment'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
-
-      // ✅ NEW keys from list endpoint
-      phone: json['phone']?.toString(),
-      addressLine: json['addressline']?.toString(), // backend uses addressline
+      phone: _firstNonEmpty(json, const ['phone', 'shippingPhone']),
+      // backend may use addressline / addressLine / shippingAddress
+      addressLine: _firstNonEmpty(json, const [
+        'addressline',
+        'addressLine',
+        'shippingAddress',
+        'shippingAddressLine',
+      ]),
     );
   }
 
@@ -107,13 +206,10 @@ class OrderHeaderRowModel {
         itemsCount: itemsCount,
         fullyPaid: fullyPaid,
         payment: payment.toEntity(),
-
-        //  NEW
         phone: phone,
         addressLine: addressLine,
       );
 }
-
 
 class CurrencyMiniModel {
   final String? code;
@@ -143,22 +239,55 @@ class UserMiniModel {
     this.firstName,
     this.lastName,
   });
-
-  factory UserMiniModel.fromJson(Map<String, dynamic> json) {
-    return UserMiniModel(
-      id: _toInt(json['id']),
-      username: json['username']?.toString(),
-      firstName: json['firstName']?.toString(),
-      lastName: json['lastName']?.toString(),
-    );
+factory UserMiniModel.fromJson(Map<String, dynamic> json) {
+  String? pick(List<String> keys) {
+    for (final k in keys) {
+      final v = json[k];
+      if (v == null) continue;
+      final s = v.toString().trim();
+      if (s.isNotEmpty && s.toLowerCase() != 'null') return s;
+    }
+    return null;
   }
 
-  UserMini toEntity() => UserMini(
-    id: id,
-    username: username,
-    firstName: firstName,
-    lastName: lastName,
+  final fullNameRaw = pick([
+    'fullName',
+    'full_name',
+    'name',
+    'customerName',
+    'customer_name',
+  ]);
+
+  String? first = pick(['firstName', 'first_name']);
+  String? last = pick(['lastName', 'last_name']);
+  String? usern = pick(['username', 'userName', 'login']);
+
+  // If backend sends one full name only, split it softly
+  if (fullNameRaw != null && ((first == null || first.isEmpty) && (last == null || last.isEmpty))) {
+    final parts = fullNameRaw.split(RegExp(r'\s+')).where((e) => e.trim().isNotEmpty).toList();
+    if (parts.isNotEmpty) {
+      first = parts.first;
+      if (parts.length > 1) {
+        last = parts.sublist(1).join(' ');
+      }
+    }
+    usern ??= fullNameRaw;
+  }
+
+  return UserMiniModel(
+    id: _toInt(json['id']),
+    username: usern,
+    firstName: first,
+    lastName: last,
   );
+}
+
+  UserMini toEntity() => UserMini(
+        id: id,
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
+      );
 }
 
 class ItemMiniDetailsModel {
@@ -179,20 +308,22 @@ class ItemMiniDetailsModel {
   factory ItemMiniDetailsModel.fromJson(Map<String, dynamic> json) {
     return ItemMiniDetailsModel(
       id: _toInt(json['id']),
-      itemName: (json['itemName'] ?? '').toString(),
-      imageUrl: json['imageUrl']?.toString(),
-      location: json['location']?.toString(),
-      startDatetime: _tryParseDate(json['startDatetime']),
+      itemName: _firstNonEmpty(json, const ['itemName', 'name', 'title']) ?? '',
+      imageUrl: _extractImageUrl(json), // ✅ robust image parsing
+      location: _firstNonEmpty(json, const ['location', 'address', 'place']),
+      startDatetime: _tryParseDate(
+        json['startDatetime'] ?? json['startDateTime'] ?? json['startDate'],
+      ),
     );
   }
 
   ItemMiniDetails toEntity() => ItemMiniDetails(
-    id: id,
-    itemName: itemName,
-    imageUrl: imageUrl,
-    location: location,
-    startDatetime: startDatetime,
-  );
+        id: id,
+        itemName: itemName,
+        imageUrl: imageUrl,
+        location: location,
+        startDatetime: startDatetime,
+      );
 }
 
 class OrderDetailsItemModel {
@@ -225,12 +356,12 @@ class OrderDetailsItemModel {
   }
 
   OrderDetailsItem toEntity() => OrderDetailsItem(
-    orderItemId: orderItemId,
-    quantity: quantity,
-    price: price,
-    item: item.toEntity(),
-    user: user.toEntity(),
-  );
+        orderItemId: orderItemId,
+        quantity: quantity,
+        price: price,
+        item: item.toEntity(),
+        user: user.toEntity(),
+      );
 }
 
 class OrderDetailsHeaderModel {
@@ -247,7 +378,6 @@ class OrderDetailsHeaderModel {
   final String? shippingCity;
   final String? shippingPostalCode;
 
-  // ✅ NEW
   final String? shippingPhone;
   final String? shippingAddress;
 
@@ -300,12 +430,19 @@ class OrderDetailsHeaderModel {
             )
           : null,
 
-      shippingCity: json['shippingCity']?.toString(),
-      shippingPostalCode: json['shippingPostalCode']?.toString(),
+      shippingCity: _firstNonEmpty(json, const ['shippingCity', 'city']),
+      shippingPostalCode:
+          _firstNonEmpty(json, const ['shippingPostalCode', 'postalCode']),
 
-      // ✅ NEW from details response
-      shippingPhone: json['shippingPhone']?.toString(),
-      shippingAddress: json['shippingAddress']?.toString(),
+      // ✅ supports multiple backend naming styles
+      shippingPhone: _firstNonEmpty(json, const ['shippingPhone', 'phone']),
+      shippingAddress: _firstNonEmpty(json, const [
+        'shippingAddress',
+        'shippingAddressLine',
+        'addressLine',
+        'addressline',
+        'address',
+      ]),
 
       shippingMethodId: json['shippingMethodId'] == null
           ? null
@@ -339,14 +476,10 @@ class OrderDetailsHeaderModel {
         statusUi: statusUi,
         paymentMethod: paymentMethod,
         currency: currency?.toEntity(),
-
         shippingCity: shippingCity,
         shippingPostalCode: shippingPostalCode,
-
-        // ✅ NEW
         shippingPhone: shippingPhone,
         shippingAddress: shippingAddress,
-
         shippingMethodId: shippingMethodId,
         shippingMethodName: shippingMethodName,
         shippingTotal: shippingTotal,
@@ -354,7 +487,6 @@ class OrderDetailsHeaderModel {
         shippingTaxTotal: shippingTaxTotal,
         couponCode: couponCode,
         couponDiscount: couponDiscount,
-
         fullyPaid: fullyPaid,
         payment: payment.toEntity(),
       );
@@ -379,19 +511,16 @@ class OrderDetailsResponseModel {
       itemsCount: _toInt(json['itemsCount']),
       items: (json['items'] is List)
           ? (json['items'] as List)
-                .whereType<Map>()
-                .map(
-                  (m) =>
-                      OrderDetailsItemModel.fromJson(m.cast<String, dynamic>()),
-                )
-                .toList()
+              .whereType<Map>()
+              .map((m) => OrderDetailsItemModel.fromJson(m.cast<String, dynamic>()))
+              .toList()
           : const [],
     );
   }
 
   OrderDetailsResponse toEntity() => OrderDetailsResponse(
-    order: order.toEntity(),
-    itemsCount: itemsCount,
-    items: items.map((e) => e.toEntity()).toList(),
-  );
+        order: order.toEntity(),
+        itemsCount: itemsCount,
+        items: items.map((e) => e.toEntity()).toList(),
+      );
 }

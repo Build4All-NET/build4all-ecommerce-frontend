@@ -1,3 +1,4 @@
+import 'package:build4front/features/orders/presentation/widgets/order_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -6,11 +7,13 @@ import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
 
+import '../../domain/entities/order_entities.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
 import '../widgets/orders_filter_chips.dart';
-import '../widgets/order_line_card.dart';
+import '../widgets/order_group_card.dart';
+
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -73,7 +76,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               );
             }
 
-            final list = state.filtered;
+            // NOTE: state.filtered is line-level list (OrderLine)
+            final lines = state.filtered;
 
             if (state.orders.isEmpty) {
               return Center(
@@ -116,6 +120,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               );
             }
 
+            // ✅ Group line items into orders (UI-only fix)
+            final groupedOrders = _groupLinesByOrder(lines);
+
             return RefreshIndicator(
               onRefresh: () async {
                 context.read<OrdersBloc>().add(const OrdersRefreshRequested());
@@ -127,7 +134,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   const OrdersFilterChips(),
                   SizedBox(height: spacing.md),
 
-                  if (list.isEmpty)
+                  if (groupedOrders.isEmpty)
                     Padding(
                       padding: EdgeInsets.only(top: spacing.lg),
                       child: Center(
@@ -140,10 +147,21 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                       ),
                     ),
 
-                  ...list.map(
-                    (o) => Padding(
+                  ...groupedOrders.map(
+                    (groupLines) => Padding(
                       padding: EdgeInsets.only(bottom: spacing.md),
-                      child: OrderLineCard(line: o),
+                      child: OrderGroupCard(
+                        lines: groupLines,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => OrderDetailsScreen(
+                                lines: groupLines,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -153,5 +171,99 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         ),
       ),
     );
+  }
+
+  // -------------------------
+  // Group helpers (UI-only fix)
+  // -------------------------
+
+  List<List<OrderLine>> _groupLinesByOrder(List<OrderLine> lines) {
+    final map = <String, List<OrderLine>>{};
+
+    for (final line in lines) {
+      final key = _orderKey(line);
+      (map[key] ??= []).add(line);
+    }
+
+    final groups = map.values.toList();
+
+    // Sort groups by order date DESC, then order id DESC
+    groups.sort((a, b) {
+      final aDate = _orderDate(a.first);
+      final bDate = _orderDate(b.first);
+
+      if (aDate != null && bDate != null) {
+        return bDate.compareTo(aDate);
+      }
+      if (aDate != null) return -1;
+      if (bDate != null) return 1;
+
+      final aId = _orderId(a.first) ?? 0;
+      final bId = _orderId(b.first) ?? 0;
+      return bId.compareTo(aId);
+    });
+
+    return groups;
+  }
+
+  String _orderKey(OrderLine line) {
+    final id = _orderId(line);
+    if (id != null) return 'id_$id';
+
+    final orderNumber = _safeGet<dynamic>(
+      () => (line.order as dynamic).orderNumber,
+    );
+    if (orderNumber != null && orderNumber.toString().trim().isNotEmpty) {
+      return 'num_${orderNumber.toString().trim()}';
+    }
+
+    // Fallback (not ideal, but prevents crashes)
+    return 'line_${line.id}';
+  }
+
+  int? _orderId(OrderLine line) {
+    final dynamic order = line.order;
+
+    final v1 = _safeGet<dynamic>(() => order.id);
+    if (v1 is int) return v1;
+    if (v1 is num) return v1.toInt();
+    if (v1 is String) return int.tryParse(v1);
+
+    return null;
+  }
+
+  DateTime? _orderDate(OrderLine line) {
+    final dynamic order = line.order;
+
+    final d1 = _safeGet<dynamic>(() => order.createdAt);
+    final parsed1 = _toDate(d1);
+    if (parsed1 != null) return parsed1;
+
+    final d2 = _safeGet<dynamic>(() => order.orderDate);
+    final parsed2 = _toDate(d2);
+    if (parsed2 != null) return parsed2;
+
+    final d3 = _safeGet<dynamic>(() => order.createdDate);
+    final parsed3 = _toDate(d3);
+    if (parsed3 != null) return parsed3;
+
+    return null;
+  }
+
+  DateTime? _toDate(dynamic v) {
+    if (v == null) return null;
+    if (v is DateTime) return v;
+    if (v is String && v.trim().isNotEmpty) {
+      return DateTime.tryParse(v.trim());
+    }
+    return null;
+  }
+
+  T? _safeGet<T>(T Function() getter) {
+    try {
+      return getter();
+    } catch (_) {
+      return null;
+    }
   }
 }

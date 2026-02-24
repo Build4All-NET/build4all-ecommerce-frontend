@@ -21,6 +21,10 @@ class AuthApiService {
   final http.Client _client;
   final AuthTokenStore _tokenStore;
 
+  // ✅ NEW
+  bool _lastWasDeletedUser = false;
+  bool _lastCanRestoreDeletedUser = false;
+
   AuthApiService({http.Client? client, required AuthTokenStore tokenStore})
       : _client = client ?? http.Client(),
         _tokenStore = tokenStore;
@@ -199,87 +203,101 @@ class AuthApiService {
   // ========================= USER LOGIN - EMAIL =========================
 
   Future<UserModel> loginWithEmail({
-    required String email,
-    required String password,
-    required int ownerProjectLinkId,
-  }) async {
-    final uri = _uri('/api/auth/user/login');
+  required String email,
+  required String password,
+  required int ownerProjectLinkId,
+}) async {
+  final uri = _uri('/api/auth/user/login');
 
-    debugPrint('🔐 LOGIN REQUEST (EMAIL) → $uri');
-    debugPrint('BODY: email=$email, ownerProjectLinkId=$ownerProjectLinkId');
+  debugPrint('🔐 LOGIN REQUEST (EMAIL) → $uri');
+  debugPrint('BODY: email=$email, ownerProjectLinkId=$ownerProjectLinkId');
 
-    try {
-      final resp = await _safePost(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'ownerProjectLinkId': ownerProjectLinkId.toString(),
-        }),
-      );
+  // ✅ reset stale values before a new login attempt
+  _lastWasDeletedUser = false;
+  _lastCanRestoreDeletedUser = false;
 
-      debugPrint('🔐 LOGIN RESPONSE (EMAIL) → ${resp.statusCode}');
-      debugPrint('BODY: ${resp.body}');
-
-      final decoded = _safeJson(resp.body);
-
-      if (resp.statusCode >= 400) {
-        _throwAuthFromLogin(resp, decoded);
-      }
-
-      await _storeAuthFromLogin(decoded);
-      return UserModel.fromLoginJson(decoded);
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AppException('Failed to login with email', original: e);
-    }
-  }
-
-  // ========================= USER LOGIN - PHONE =========================
-
-  Future<UserModel> loginWithPhone({
-    required String phoneNumber,
-    required String password,
-    required int ownerProjectLinkId,
-  }) async {
-    final uri = _uri('/api/auth/user/login-phone');
-
-    debugPrint('🔐 LOGIN REQUEST (PHONE) → $uri');
-    debugPrint(
-      'BODY: phoneNumber=$phoneNumber, ownerProjectLinkId=$ownerProjectLinkId',
+  try {
+    final resp = await _safePost(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'ownerProjectLinkId': ownerProjectLinkId.toString(),
+      }),
     );
 
-    try {
-      final resp = await _safePost(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'phoneNumber': phoneNumber,
-          'password': password,
-          'ownerProjectLinkId': ownerProjectLinkId.toString(),
-        }),
-      );
+    debugPrint('🔐 LOGIN RESPONSE (EMAIL) → ${resp.statusCode}');
+    debugPrint('BODY: ${resp.body}');
 
-      debugPrint('🔐 LOGIN RESPONSE (PHONE) → ${resp.statusCode}');
-      debugPrint('BODY: ${resp.body}');
+    final decoded = _safeJson(resp.body);
 
-      final decoded = _safeJson(resp.body);
+    // ✅ capture special restore flags from backend success response
+    _lastWasDeletedUser = decoded['wasDeleted'] == true;
+    _lastCanRestoreDeletedUser = decoded['canRestoreDeleted'] == true;
 
-      if (resp.statusCode >= 400) {
-        _throwAuthFromLogin(resp, decoded);
-      }
-
-      await _storeAuthFromLogin(decoded);
-      return UserModel.fromLoginJson(decoded);
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AppException('Failed to login with phone', original: e);
+    if (resp.statusCode >= 400) {
+      _throwAuthFromLogin(resp, decoded);
     }
-  }
 
+    await _storeAuthFromLogin(decoded);
+    return UserModel.fromLoginJson(decoded);
+  } on AppException {
+    rethrow;
+  } catch (e) {
+    throw AppException('Failed to login with email', original: e);
+  }
+}
+  // ========================= USER LOGIN - PHONE =========================
+
+ Future<UserModel> loginWithPhone({
+  required String phoneNumber,
+  required String password,
+  required int ownerProjectLinkId,
+}) async {
+  final uri = _uri('/api/auth/user/login-phone');
+
+  debugPrint('🔐 LOGIN REQUEST (PHONE) → $uri');
+  debugPrint(
+    'BODY: phoneNumber=$phoneNumber, ownerProjectLinkId=$ownerProjectLinkId',
+  );
+
+  // ✅ reset stale values before a new login attempt
+  _lastWasDeletedUser = false;
+  _lastCanRestoreDeletedUser = false;
+
+  try {
+    final resp = await _safePost(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'phoneNumber': phoneNumber,
+        'password': password,
+        'ownerProjectLinkId': ownerProjectLinkId.toString(),
+      }),
+    );
+
+    debugPrint('🔐 LOGIN RESPONSE (PHONE) → ${resp.statusCode}');
+    debugPrint('BODY: ${resp.body}');
+
+    final decoded = _safeJson(resp.body);
+
+    // ✅ capture special restore flags from backend success response
+    _lastWasDeletedUser = decoded['wasDeleted'] == true;
+    _lastCanRestoreDeletedUser = decoded['canRestoreDeleted'] == true;
+
+    if (resp.statusCode >= 400) {
+      _throwAuthFromLogin(resp, decoded);
+    }
+
+    await _storeAuthFromLogin(decoded);
+    return UserModel.fromLoginJson(decoded);
+  } on AppException {
+    rethrow;
+  } catch (e) {
+    throw AppException('Failed to login with phone', original: e);
+  }
+}
   // ========================= USER REACTIVATION =========================
 
   Future<void> reactivateUser({
@@ -298,6 +316,8 @@ class AuthApiService {
         }),
       );
 
+    
+
       debugPrint('♻️ REACTIVATE USER → ${resp.statusCode}');
       debugPrint('BODY: ${resp.body}');
 
@@ -315,6 +335,9 @@ class AuthApiService {
         'token': decoded['token'],
         'wasInactive': false,
       };
+        // ✅ account restored/reactivated, clear restore markers
+_lastWasDeletedUser = false;
+_lastCanRestoreDeletedUser = false;
 
       await _storeAuthFromLogin(storePayload);
     } on AppException {
@@ -375,18 +398,23 @@ class AuthApiService {
 
   Future<String?> getSavedToken() => _tokenStore.getToken();
   Future<bool> getWasInactive() => _tokenStore.getWasInactive();
+  Future<bool> getWasDeletedUser() async => _lastWasDeletedUser;
+Future<bool> getCanRestoreDeletedUser() async => _lastCanRestoreDeletedUser;
 
-  Future<void> clearAuth() async {
-    await _tokenStore.clear();
-    g.setAuthToken('');
-    debugPrint('🔓 Auth cleared: token removed from storage and globals');
-  }
+Future<void> clearAuth() async {
+  await _tokenStore.clear();
+  g.setAuthToken('');
+  _lastWasDeletedUser = false;
+  _lastCanRestoreDeletedUser = false;
+  debugPrint('🔓 Auth cleared: token removed from storage and globals');
+}
 
-  Future<void> clearUserSession() async {
-    await _tokenStore.clear();
-    g.setAuthToken('');
-  }
-
+Future<void> clearUserSession() async {
+  await _tokenStore.clear();
+  g.setAuthToken('');
+  _lastWasDeletedUser = false;
+  _lastCanRestoreDeletedUser = false;
+}
   // ============================ HELPERS ================================
 
   Map<String, dynamic> _safeJson(String body) {

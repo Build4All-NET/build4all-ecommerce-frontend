@@ -19,13 +19,11 @@ class AdminOrderDetailsScreen extends StatefulWidget {
   const AdminOrderDetailsScreen({super.key, required this.orderId});
 
   @override
-  State<AdminOrderDetailsScreen> createState() =>
-      _AdminOrderDetailsScreenState();
+  State<AdminOrderDetailsScreen> createState() => _AdminOrderDetailsScreenState();
 }
 
 class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
   late final AdminOrderDetailsBloc _bloc;
-
   bool _changed = false;
 
   @override
@@ -53,6 +51,77 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     });
   }
 
+  Future<bool> _confirmAction({
+    required BuildContext context,
+    required String title,
+    required String body,
+    required Color confirmColor,
+    required dynamic tokens,
+    required dynamic colors,
+    required dynamic spacing,
+    String? confirmText,
+    String? cancelText,
+  }) async {
+    return (await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          builder: (_) {
+            return AlertDialog(
+              backgroundColor: colors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              title: Text(
+                title,
+                style: tokens.typography.titleMedium.copyWith(
+                  color: colors.label,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              content: Text(
+                body,
+                style: tokens.typography.bodyMedium.copyWith(
+                  color: colors.body,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    cancelText ?? 'Cancel',
+                    style: tokens.typography.bodyMedium.copyWith(
+                      color: colors.muted,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: confirmColor,
+                    foregroundColor: colors.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: spacing.md,
+                      vertical: spacing.sm,
+                    ),
+                  ),
+                  child: Text(
+                    confirmText ?? 'Confirm',
+                    style: tokens.typography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        )) ??
+        false;
+  }
+
   String _statusLabel(AppLocalizations l10n, String code) {
     switch (code) {
       case 'PENDING':
@@ -70,141 +139,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       default:
         return code;
     }
-  }
-
-  Future<bool> _confirmMarkCashPaid({
-    required BuildContext context,
-    required AppLocalizations l10n,
-    required dynamic tokens,
-    required dynamic colors,
-    required dynamic spacing,
-  }) async {
-    return (await showDialog<bool>(
-          context: context,
-          barrierDismissible: true,
-          builder: (_) {
-            return AlertDialog(
-              backgroundColor: colors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              title: Text(
-                l10n.adminMarkCashPaidTitle,
-                style: tokens.typography.titleMedium.copyWith(
-                  color: colors.label,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              content: Text(
-                l10n.adminMarkCashPaidBody,
-                style: tokens.typography.bodyMedium.copyWith(
-                  color: colors.body,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    l10n.cancel,
-                    style: tokens.typography.bodyMedium.copyWith(
-                      color: colors.muted,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.success,
-                    foregroundColor: colors.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: spacing.md,
-                      vertical: spacing.sm,
-                    ),
-                  ),
-                  child: Text(
-                    l10n.confirm,
-                    style: tokens.typography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        )) ??
-        false;
-  }
-
-  // ✅ NEW: Reject confirmation dialog
-  Future<bool> _confirmRejectOrder({
-    required BuildContext context,
-    required AppLocalizations l10n,
-    required dynamic tokens,
-    required dynamic colors,
-    required dynamic spacing,
-  }) async {
-    return (await showDialog<bool>(
-          context: context,
-          barrierDismissible: true,
-          builder: (_) {
-            return AlertDialog(
-              backgroundColor: colors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              title: Text(
-                l10n.adminRejectOrderTitle, // ✅ NEW KEY
-                style: tokens.typography.titleMedium.copyWith(
-                  color: colors.label,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              content: Text(
-                l10n.adminRejectOrderBody, // ✅ NEW KEY
-                style: tokens.typography.bodyMedium.copyWith(
-                  color: colors.body,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    l10n.cancel,
-                    style: tokens.typography.bodyMedium.copyWith(
-                      color: colors.muted,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.danger,
-                    foregroundColor: colors.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: spacing.md,
-                      vertical: spacing.sm,
-                    ),
-                  ),
-                  child: Text(
-                    l10n.confirm,
-                    style: tokens.typography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        )) ??
-        false;
   }
 
   @override
@@ -304,15 +238,37 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                 final isCash = paymentMethod == 'CASH';
                 final canMarkCashPaid = isCash && paymentState != 'PAID';
 
-                // ✅ NEW: reject rules (safe defaults)
-                final rawStatus = (o.status).toUpperCase();
+                final rawStatus = o.status.toUpperCase();
                 final isPaid = paymentState == 'PAID' || o.fullyPaid == true;
 
-                // Allow reject only before money is received + only for early statuses.
+                // Existing reject rule (safe)
                 final canReject = !isPaid &&
                     (rawStatus == 'PENDING' || rawStatus == 'CANCEL_REQUESTED') &&
                     !['REJECTED', 'CANCELED', 'REFUNDED', 'COMPLETED']
                         .contains(rawStatus);
+
+               
+                final canReopen = rawStatus != 'PENDING' && rawStatus != 'REFUNDED';
+
+                // Customer shown ONCE at order level (not in each item row)
+final headerCustomer = [
+  // if you later add these fields in entity/model
+  // o.customerName,
+].whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+final uniqueCustomers = data.items
+    .map((e) => e.user.fullName.trim())
+    .where((e) => e.isNotEmpty)
+    .toSet()
+    .toList();
+
+final customerDisplay = headerCustomer.isNotEmpty
+    ? headerCustomer.first
+    : uniqueCustomers.isEmpty
+        ? '—'
+        : uniqueCustomers.length == 1
+            ? uniqueCustomers.first
+            : '${uniqueCustomers.first} (+${uniqueCustomers.length - 1})';
 
                 Widget paymentCard() {
                   return Container(
@@ -376,7 +332,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                           _kv(tokens, colors, l10n.adminRemaining,
                               money(o.payment.remainingAmount)),
 
-                        // ✅ CASH button: ONLY triggers payment event
+                        // ✅ CASH button
                         if (canMarkCashPaid) ...[
                           SizedBox(height: spacing.md),
                           Row(
@@ -386,12 +342,16 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                                   onPressed: state.updating
                                       ? null
                                       : () async {
-                                          final ok = await _confirmMarkCashPaid(
+                                          final ok = await _confirmAction(
                                             context: context,
-                                            l10n: l10n,
+                                            title: l10n.adminMarkCashPaidTitle,
+                                            body: l10n.adminMarkCashPaidBody,
+                                            confirmColor: colors.success,
                                             tokens: tokens,
                                             colors: colors,
                                             spacing: spacing,
+                                            confirmText: l10n.confirm,
+                                            cancelText: l10n.cancel,
                                           );
                                           if (!ok) return;
 
@@ -460,7 +420,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                         ),
                         SizedBox(height: spacing.sm),
 
-                        // Status pill
+                        // Status
                         Row(
                           children: [
                             Text(
@@ -483,7 +443,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                                 ),
                               ),
                               child: Text(
-                                o.statusUi,
+                                _statusLabel(l10n, rawStatus),
                                 style: tokens.typography.bodySmall.copyWith(
                                   color: colors.primary,
                                   fontWeight: FontWeight.w800,
@@ -493,7 +453,87 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                           ],
                         ),
 
-                        // ✅ NEW: Reject button (safe: only for not-paid early statuses)
+                        SizedBox(height: spacing.md),
+
+                        // ✅ Customer shown ONCE here
+                        _kv(tokens, colors, 'Customer', customerDisplay),
+                        if ((o.shippingPhone ?? '').trim().isNotEmpty)
+                          _kv(tokens, colors, 'Phone', o.shippingPhone!.trim()),
+                        if ((o.shippingAddress ?? '').trim().isNotEmpty)
+                          _kv(tokens, colors, 'Address', o.shippingAddress!.trim()),
+                        if ((o.shippingCity ?? '').trim().isNotEmpty)
+                          _kv(tokens, colors, 'City', o.shippingCity!.trim()),
+                        if ((o.shippingPostalCode ?? '').trim().isNotEmpty)
+                          _kv(tokens, colors, 'Postal Code', o.shippingPostalCode!.trim()),
+
+                        if ((o.paymentMethod ?? '').trim().isNotEmpty)
+                          _kv(tokens, colors, 'Payment Method', o.paymentMethod!.trim()),
+
+                        // ✅ Reopen (status correction)
+                        if (canReopen) ...[
+                          SizedBox(height: spacing.md),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: state.updating
+                                      ? null
+                                      : () async {
+                                          final ok = await _confirmAction(
+                                            context: context,
+                                            title: 'Reopen Order',
+                                            body: 'This will change the order status back to Pending.',
+                                            confirmColor: colors.primary,
+                                            tokens: tokens,
+                                            colors: colors,
+                                            spacing: spacing,
+                                            confirmText: 'Reopen',
+                                            cancelText: l10n.cancel,
+                                          );
+                                          if (!ok) return;
+
+                                          context.read<AdminOrderDetailsBloc>().add(
+                                                AdminOrderStatusUpdateRequested(
+                                                  orderId: o.id,
+                                                  status: 'PENDING',
+                                                ),
+                                              );
+                                        },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: colors.primary,
+                                    side: BorderSide(
+                                      color: colors.primary.withOpacity(0.45),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: spacing.md,
+                                      vertical: spacing.sm,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.undo),
+                                  label: Text(
+                                    'Reopen Order',
+                                    style: tokens.typography.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (state.updating) ...[
+                                SizedBox(width: spacing.sm),
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+
+                        // Reject button (kept)
                         if (canReject) ...[
                           SizedBox(height: spacing.md),
                           Row(
@@ -503,12 +543,16 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                                   onPressed: state.updating
                                       ? null
                                       : () async {
-                                          final ok = await _confirmRejectOrder(
+                                          final ok = await _confirmAction(
                                             context: context,
-                                            l10n: l10n,
+                                            title: l10n.adminRejectOrderTitle,
+                                            body: l10n.adminRejectOrderBody,
+                                            confirmColor: colors.danger,
                                             tokens: tokens,
                                             colors: colors,
                                             spacing: spacing,
+                                            confirmText: l10n.confirm,
+                                            cancelText: l10n.cancel,
                                           );
                                           if (!ok) return;
 
@@ -532,7 +576,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                                   ),
                                   icon: const Icon(Icons.block),
                                   label: Text(
-                                    l10n.adminRejectOrderButton, // ✅ NEW KEY
+                                    l10n.adminRejectOrderButton,
                                     style: tokens.typography.bodyMedium.copyWith(
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -565,6 +609,55 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                   );
                 }
 
+                Widget itemImage(OrderDetailsItem it) {
+                  final url = it.item.imageUrl?.trim();
+
+                  Widget placeholder() {
+                    return Container(
+                      color: colors.border.withOpacity(0.18),
+                      child: Icon(
+                        Icons.image_outlined,
+                        color: colors.muted,
+                        size: 22,
+                      ),
+                    );
+                  }
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: (url == null || url.isEmpty)
+                          ? placeholder()
+                          : Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: colors.border.withOpacity(0.12),
+                                  alignment: Alignment.center,
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      value: progress.expectedTotalBytes != null &&
+                                              progress.expectedTotalBytes! > 0
+                                          ? progress.cumulativeBytesLoaded /
+                                              progress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (_, __, ___) => placeholder(),
+                            ),
+                    ),
+                  );
+                }
+
                 Widget itemCard(OrderDetailsItem it) {
                   final itemTotal = it.price * it.quantity;
 
@@ -577,24 +670,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                     ),
                     child: Row(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: (it.item.imageUrl == null)
-                                ? Container(color: colors.border.withOpacity(0.2))
-                                : Image.network(
-                                    it.item.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      color: colors.border.withOpacity(0.2),
-                                      child: Icon(Icons.image_not_supported,
-                                          color: colors.muted),
-                                    ),
-                                  ),
-                          ),
-                        ),
+                        itemImage(it),
                         SizedBox(width: spacing.md),
                         Expanded(
                           child: Column(
@@ -610,13 +686,18 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               SizedBox(height: spacing.xs),
-                              Text(
-                                '${l10n.adminCustomer}: ${it.user.fullName}',
-                                style: tokens.typography.bodySmall
-                                    .copyWith(color: colors.muted),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+
+                              // ✅ BUG FIX: customer removed from item row
+                              // Items section should show item-related info only.
+                              if ((it.item.location ?? '').trim().isNotEmpty)
+                                Text(
+                                  it.item.location!.trim(),
+                                  style: tokens.typography.bodySmall
+                                      .copyWith(color: colors.muted),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
                               Text(
                                 l10n.adminQtyPriceLine(it.quantity, money(it.price)),
                                 style: tokens.typography.bodySmall
@@ -713,20 +794,27 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
               k,
               style: tokens.typography.bodySmall.copyWith(color: colors.muted),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            v,
-            style: tokens.typography.bodySmall.copyWith(
-              color: colors.label,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              v,
+              textAlign: TextAlign.right,
+              style: tokens.typography.bodySmall.copyWith(
+                color: colors.label,
+                fontWeight: FontWeight.w800,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
