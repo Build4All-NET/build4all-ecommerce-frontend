@@ -224,25 +224,47 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     }
   }
 
-  List<Product> _applyFilters(ProductListState state) {
-    var list = state.products;
+  String _norm(String v) => v.trim().toLowerCase();
 
-    if (_searchQuery.trim().isNotEmpty) {
-      final q = _searchQuery.trim().toLowerCase();
-      list = list.where((p) {
-        final name = p.name.toLowerCase();
-        final sku = (p.sku ?? '').toLowerCase();
-        return name.contains(q) || sku.contains(q);
-      }).toList();
-    }
+String _normSku(String? v) {
+  final raw = (v ?? '').trim().toLowerCase();
 
-    if (_typeFilter != 'ALL') {
-      list = list.where((p) => (p.productType).toUpperCase() == _typeFilter).toList();
-    }
+  // Optional: remove common SKU prefix so searching "k" doesn't match "SKU-*"
+  // Examples removed: "sku-", "sku_", "sku ", "sku:"
+  return raw.replaceFirst(RegExp(r'^sku[\s\-_:#]*'), '');
+}
 
-    return list;
+bool _matchesSearch(Product p, String query) {
+  final q = _norm(query);
+  if (q.isEmpty) return true;
+
+  final name = _norm(p.name);
+  final sku = _normSku(p.sku);
+
+  //  If user typed only 1 char, be strict (starts with)
+  if (q.length == 1) {
+    return name.startsWith(q) || sku.startsWith(q);
   }
 
+  //  For longer queries, allow contains
+  return name.contains(q) || sku.contains(q);
+}
+
+List<Product> _applyFilters(ProductListState state) {
+  var list = state.products;
+
+  if (_searchQuery.trim().isNotEmpty) {
+    list = list.where((p) => _matchesSearch(p, _searchQuery)).toList();
+  }
+
+  if (_typeFilter != 'ALL') {
+    list = list
+        .where((p) => (p.productType).toUpperCase() == _typeFilter)
+        .toList();
+  }
+
+  return list;
+}
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

@@ -5034,6 +5034,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reject Order'**
   String get adminRejectOrderButton;
+
+  /// No description provided for @authGateContinueAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as…'**
+  String get authGateContinueAs;
+
+  /// No description provided for @authGateRoleAdminOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin / Owner'**
+  String get authGateRoleAdminOwner;
+
+  /// No description provided for @authGateRoleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get authGateRoleUser;
+
+  /// No description provided for @appAccessTitleDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Removed'**
+  String get appAccessTitleDeleted;
+
+  /// No description provided for @appAccessTitleExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Expired'**
+  String get appAccessTitleExpired;
+
+  /// No description provided for @appAccessTitleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'App Unavailable'**
+  String get appAccessTitleUnavailable;
+
+  /// No description provided for @appAccessMessageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is no longer available.'**
+  String get appAccessMessageDeleted;
+
+  /// No description provided for @appAccessMessageExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This app subscription has expired.'**
+  String get appAccessMessageExpired;
+
+  /// No description provided for @appAccessMessageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'You no longer have access to this app.'**
+  String get appAccessMessageUnavailable;
+
+  /// No description provided for @appAccessOwnerDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This app has been disabled by the owner or is no longer active.'**
+  String get appAccessOwnerDisabledHint;
+
+  /// No description provided for @appAccessRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get appAccessRetry;
+
+  /// No description provided for @appAccessBlockedButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Access blocked'**
+  String get appAccessBlockedButton;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

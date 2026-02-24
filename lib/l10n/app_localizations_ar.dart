@@ -2570,4 +2570,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminRejectOrderButton => 'رفض الطلب';
+
+  @override
+  String get authGateContinueAs => 'المتابعة كـ…';
+
+  @override
+  String get authGateRoleAdminOwner => 'أدمن / مالك';
+
+  @override
+  String get authGateRoleUser => 'مستخدم';
+
+  @override
+  String get appAccessTitleDeleted => 'تمت إزالة الوصول';
+
+  @override
+  String get appAccessTitleExpired => 'انتهى الاشتراك';
+
+  @override
+  String get appAccessTitleUnavailable => 'التطبيق غير متاح';
+
+  @override
+  String get appAccessMessageDeleted => 'هذا التطبيق لم يعد متاحًا.';
+
+  @override
+  String get appAccessMessageExpired => 'انتهت صلاحية اشتراك هذا التطبيق.';
+
+  @override
+  String get appAccessMessageUnavailable => 'لم يعد لديك صلاحية الوصول إلى هذا التطبيق.';
+
+  @override
+  String get appAccessOwnerDisabledHint => 'تم تعطيل هذا التطبيق من قبل المالك أو أنه لم يعد نشطًا.';
+
+  @override
+  String get appAccessRetry => 'إعادة المحاولة';
+
+  @override
+  String get appAccessBlockedButton => 'الوصول محظور';
 }

@@ -43,7 +43,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _started = false;
 
-  // ✅ NEW: validate checkout form
+  // ✅ validate checkout form
   final _addressFormKey = GlobalKey<FormState>();
   bool _showAddressPickerErrors = false;
 
@@ -74,7 +74,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return res == true;
   }
 
-  // ✅ NEW: extra guard for pickers + address/phone
+  // ✅ extra guard for pickers + address/phone
+  // NOTE:
+  // Phone length/format is handled by IntlPhoneField validator in CheckoutAddressForm
+  // because stored phone is full international format (+961...) which can break simple digit-length checks here.
   String? _addressError(AppLocalizations l10n, ShippingAddress a) {
     if (a.countryId == null) {
       return '${l10n.adminTaxCountryLabel}: ${l10n.fieldRequired}';
@@ -93,8 +96,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (ph.isEmpty) {
       return '${l10n.checkoutPhoneLabel}: ${l10n.fieldRequired}';
     }
-    final digits = ph.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 6) return l10n.invalidPhone;
 
     return null;
   }
@@ -305,6 +306,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 tax: state.tax,
                 isPlacing: state.placing,
                 onPlaceOrder: () async {
+                   FocusScope.of(context).unfocus();
                   final s = context.read<CheckoutBloc>().state;
 
                   if (s.placing) return;

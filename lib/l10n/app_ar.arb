@@ -985,6 +985,21 @@
   "adminRejectOrderBody": "سيتم وضع الطلب بحالة مرفوض. هل تريد المتابعة؟",
   "adminRejectOrderButton": "رفض الطلب",
   "adminCategoryDeleteBlockedTypes": "لا يمكنك حذف هذه الفئة لأنها تحتوي على {count} نوع/أنواع من العناصر. قم بحذف أو نقل هذه الأنواع أولاً.",
-  "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } }
+  "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } },
+   "authGateContinueAs": "المتابعة كـ…",
+  "authGateRoleAdminOwner": "أدمن / مالك",
+  "authGateRoleUser": "مستخدم",
+
+  "appAccessTitleDeleted": "تمت إزالة الوصول",
+  "appAccessTitleExpired": "انتهى الاشتراك",
+  "appAccessTitleUnavailable": "التطبيق غير متاح",
+
+  "appAccessMessageDeleted": "هذا التطبيق لم يعد متاحًا.",
+  "appAccessMessageExpired": "انتهت صلاحية اشتراك هذا التطبيق.",
+  "appAccessMessageUnavailable": "لم يعد لديك صلاحية الوصول إلى هذا التطبيق.",
+
+  "appAccessOwnerDisabledHint": "تم تعطيل هذا التطبيق من قبل المالك أو أنه لم يعد نشطًا.",
+  "appAccessRetry": "إعادة المحاولة",
+  "appAccessBlockedButton": "الوصول محظور"
 
 }

@@ -2570,4 +2570,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminRejectOrderButton => 'Rejeter la commande';
+
+  @override
+  String get authGateContinueAs => 'Continuer en tant que…';
+
+  @override
+  String get authGateRoleAdminOwner => 'Admin / Propriétaire';
+
+  @override
+  String get authGateRoleUser => 'Utilisateur';
+
+  @override
+  String get appAccessTitleDeleted => 'Accès supprimé';
+
+  @override
+  String get appAccessTitleExpired => 'Abonnement expiré';
+
+  @override
+  String get appAccessTitleUnavailable => 'Application indisponible';
+
+  @override
+  String get appAccessMessageDeleted => 'Cette application n\'est plus disponible.';
+
+  @override
+  String get appAccessMessageExpired => 'L\'abonnement de cette application a expiré.';
+
+  @override
+  String get appAccessMessageUnavailable => 'Vous n\'avez plus accès à cette application.';
+
+  @override
+  String get appAccessOwnerDisabledHint => 'Cette application a été désactivée par le propriétaire ou n\'est plus active.';
+
+  @override
+  String get appAccessRetry => 'Réessayer';
+
+  @override
+  String get appAccessBlockedButton => 'Accès bloqué';
 }

@@ -1209,6 +1209,21 @@
   "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } },
   "adminRejectOrderTitle": "Reject order?",
   "adminRejectOrderBody": "This will mark the order as rejected. Continue?",
-  "adminRejectOrderButton": "Reject Order"
+  "adminRejectOrderButton": "Reject Order",
+    "authGateContinueAs": "Continue as…",
+  "authGateRoleAdminOwner": "Admin / Owner",
+  "authGateRoleUser": "User",
+
+  "appAccessTitleDeleted": "Access Removed",
+  "appAccessTitleExpired": "Subscription Expired",
+  "appAccessTitleUnavailable": "App Unavailable",
+
+  "appAccessMessageDeleted": "This app is no longer available.",
+  "appAccessMessageExpired": "This app subscription has expired.",
+  "appAccessMessageUnavailable": "You no longer have access to this app.",
+
+  "appAccessOwnerDisabledHint": "This app has been disabled by the owner or is no longer active.",
+  "appAccessRetry": "Retry",
+  "appAccessBlockedButton": "Access blocked"
 
 }

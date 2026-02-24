@@ -1064,7 +1064,23 @@
   "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } },
   "adminRejectOrderTitle": "Rejeter la commande ?",
   "adminRejectOrderBody": "Cette action marquera la commande comme rejetée. Continuer ?",
-  "adminRejectOrderButton": "Rejeter la commande"
+  "adminRejectOrderButton": "Rejeter la commande",
+   "authGateContinueAs": "Continuer en tant que…",
+  "authGateRoleAdminOwner": "Admin / Propriétaire",
+  "authGateRoleUser": "Utilisateur",
+
+  "appAccessTitleDeleted": "Accès supprimé",
+  "appAccessTitleExpired": "Abonnement expiré",
+  "appAccessTitleUnavailable": "Application indisponible",
+
+  "appAccessMessageDeleted": "Cette application n'est plus disponible.",
+  "appAccessMessageExpired": "L'abonnement de cette application a expiré.",
+  "appAccessMessageUnavailable": "Vous n'avez plus accès à cette application.",
+
+  "appAccessOwnerDisabledHint": "Cette application a été désactivée par le propriétaire ou n'est plus active.",
+  "appAccessRetry": "Réessayer",
+  "appAccessBlockedButton": "Accès bloqué"
+
 
 
 
