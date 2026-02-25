@@ -1,4 +1,5 @@
 import 'package:build4front/core/config/env.dart';
+import 'package:build4front/features/auth/domain/repository/auth_repository.dart';
 import 'package:build4front/features/auth/domain/usecases/send_verification_code.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
@@ -14,6 +15,7 @@ import 'package:build4front/core/exceptions/app_exception.dart';
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   final SendVerificationCode sendVerificationCode;
+  
 
   RegisterBloc({required this.sendVerificationCode})
       : super(RegisterState.initial()) {
@@ -31,6 +33,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         codeSent: false,
         contact: null,
         method: null,
+        resumeCompleteProfile: false,
+resumePendingId: null,
       ),
     );
 
@@ -54,30 +58,50 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       // ✅ If the usecase returns Either => handle Left/Right properly
       if (result is Either) {
         result.fold(
-          (failure) {
-            final code = _mapFailureToCode(failure);
-            emit(
-              state.copyWith(
-                isLoading: false,
-                errorCode: code,
-                codeSent: false,
-                contact: null,
-                method: null,
-              ),
-            );
-          },
-          (_) {
-            emit(
-              state.copyWith(
-                isLoading: false,
-                errorCode: null,
-                codeSent: true,
-                contact: email ?? phone,
-                method: event.method,
-              ),
-            );
-          },
-        );
+  (failure) {
+    // ✅ special case: already verified pending user -> resume complete profile
+    if (failure.code == 'PENDING_ALREADY_VERIFIED' && failure.pendingId != null) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorCode: null,
+          codeSent: false,
+          contact: email ?? phone,
+          method: event.method,
+          resumeCompleteProfile: true,
+          resumePendingId: failure.pendingId,
+        ),
+      );
+      return;
+    }
+
+    final code = _mapFailureToCode(failure);
+    emit(
+      state.copyWith(
+        isLoading: false,
+        errorCode: code,
+        codeSent: false,
+        contact: null,
+        method: null,
+        resumeCompleteProfile: false,
+        resumePendingId: null,
+      ),
+    );
+  },
+  (_) {
+    emit(
+      state.copyWith(
+        isLoading: false,
+        errorCode: null,
+        codeSent: true,
+        contact: email ?? phone,
+        method: event.method,
+        resumeCompleteProfile: false,
+        resumePendingId: null,
+      ),
+    );
+  },
+);
         return;
       }
 
@@ -110,6 +134,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   // ---------------------------------------------------------------------------
 
   String _mapFailureToCode(dynamic failure) {
+    if (failure is AuthFailure && failure.code != null && failure.code!.trim().isNotEmpty) {
+  return _normalizeCode(failure.code!);
+}
     if (failure is AuthException) return failure.code ?? 'AUTH_ERROR';
     if (failure is NetworkException) return _mapNetworkFailure(failure);
     if (failure is AppException) {

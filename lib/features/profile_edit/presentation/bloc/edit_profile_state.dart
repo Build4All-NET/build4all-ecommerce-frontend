@@ -4,10 +4,7 @@ class EditProfileState {
   final bool loading;
   final bool saving;
   final bool deleting;
-
-  // ✅ NEW: tells UI that delete really happened
   final bool didDelete;
-
   final UserProfile? user;
   final String? error;
   final String? success;

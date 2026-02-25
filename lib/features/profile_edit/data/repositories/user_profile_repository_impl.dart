@@ -7,6 +7,14 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   final UserProfileApiService api;
   UserProfileRepositoryImpl(this.api);
 
+  bool _looksLikeUserPayload(Map<String, dynamic> json) {
+    return json.containsKey('id') ||
+        json.containsKey('userId') ||
+        json.containsKey('firstName') ||
+        json.containsKey('lastName') ||
+        json.containsKey('username');
+  }
+
   @override
   Future<UserProfile> getById({
     required String token,
@@ -45,11 +53,29 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       imageRemoved: imageRemoved,
     );
 
-    final userJson = (json['user'] is Map)
-        ? (json['user'] as Map).cast<String, dynamic>()
-        : (json as Map).cast<String, dynamic>();
+    Map<String, dynamic>? userJson;
 
-    return UserProfileModel.fromJson(userJson);
+    if (json['user'] is Map) {
+      userJson = (json['user'] as Map).cast<String, dynamic>();
+    } else if (json['data'] is Map) {
+      // some backends wrap payload in "data"
+      final dataMap = (json['data'] as Map).cast<String, dynamic>();
+      if (_looksLikeUserPayload(dataMap)) userJson = dataMap;
+    } else if (_looksLikeUserPayload(json)) {
+      userJson = json;
+    }
+
+    if (userJson != null) {
+      return UserProfileModel.fromJson(userJson);
+    }
+
+    // ✅ IMPORTANT: backend returned only message (or non-user envelope)
+    // refetch the updated profile so UI never gets null/empty fields
+    return getById(
+      token: token,
+      userId: userId,
+      ownerProjectLinkId: ownerProjectLinkId,
+    );
   }
 
   @override

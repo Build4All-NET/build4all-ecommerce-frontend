@@ -22,6 +22,11 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
     on<DeleteAccount>(_onDelete);
   }
 
+  String _cleanError(Object err) {
+  final s = err.toString().trim();
+  return s.replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+}
+
   Future<void> _onLoad(
     LoadEditProfile e,
     Emitter<EditProfileState> emit,
@@ -43,9 +48,9 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
       );
 
       emit(state.copyWith(loading: false, user: user));
-    } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
-    }
+   } catch (err) {
+  emit(state.copyWith(loading: false, error: _cleanError(err)));
+}
   }
 
   Future<void> _onSave(
@@ -81,9 +86,9 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
           success: "Profile updated",
         ),
       );
-    } catch (err) {
-      emit(state.copyWith(saving: false, error: err.toString()));
-    }
+   } catch (err) {
+  emit(state.copyWith(saving: false, error: _cleanError(err)));
+}
   }
 
   Future<void> _onDelete(
@@ -114,8 +119,8 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
           success: "Account deleted",
         ),
       );
-    } catch (err) {
-      emit(state.copyWith(deleting: false, error: err.toString()));
-    }
+   } catch (err) {
+  emit(state.copyWith(deleting: false, error: _cleanError(err)));
+}
   }
 }

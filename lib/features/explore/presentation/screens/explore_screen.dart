@@ -104,6 +104,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
     });
   }
 
+  List<ItemSummary> _mergeUniqueById(List<List<ItemSummary>> lists) {
+  final seen = <int>{};
+  final out = <ItemSummary>[];
+
+  for (final list in lists) {
+    for (final item in list) {
+      if (seen.add(item.id)) {
+        out.add(item);
+      }
+    }
+  }
+  return out;
+}
+
   // detect if app has ANY items (all sections)
   bool _hasAnyItems(HomeState s) {
     return s.recommendedItems.isNotEmpty ||
@@ -345,34 +359,42 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   List<ItemSummary> _baseItemsForExplore(HomeState homeState) {
-    final sid = (widget.initialSectionId ?? '').trim();
+  final sid = (widget.initialSectionId ?? '').trim();
 
-    if (sid == 'flash_sale') {
-      return homeState.flashSaleItems.isNotEmpty
-          ? homeState.flashSaleItems
-          : homeState.popularItems;
-    }
-    if (sid == 'new_arrivals') {
-      return homeState.newArrivalsItems.isNotEmpty
-          ? homeState.newArrivalsItems
-          : homeState.popularItems;
-    }
-    if (sid == 'best_sellers') {
-      return homeState.bestSellersItems.isNotEmpty
-          ? homeState.bestSellersItems
-          : homeState.popularItems;
-    }
-    if (sid == 'top_rated') {
-      return homeState.topRatedItems.isNotEmpty
-          ? homeState.topRatedItems
-          : homeState.popularItems;
-    }
-
-    return homeState.recommendedItems.isNotEmpty
-        ? homeState.recommendedItems
+  // For section-specific explore, keep section behavior
+  if (sid == 'flash_sale') {
+    return homeState.flashSaleItems.isNotEmpty
+        ? homeState.flashSaleItems
+        : homeState.popularItems;
+  }
+  if (sid == 'new_arrivals') {
+    return homeState.newArrivalsItems.isNotEmpty
+        ? homeState.newArrivalsItems
+        : homeState.popularItems;
+  }
+  if (sid == 'best_sellers') {
+    return homeState.bestSellersItems.isNotEmpty
+        ? homeState.bestSellersItems
+        : homeState.popularItems;
+  }
+  if (sid == 'top_rated') {
+    return homeState.topRatedItems.isNotEmpty
+        ? homeState.topRatedItems
         : homeState.popularItems;
   }
 
+  // ✅ Default Explore = ALL available items from all sections (deduped)
+  final merged = _mergeUniqueById([
+    homeState.recommendedItems,
+    homeState.popularItems,
+    homeState.flashSaleItems,
+    homeState.newArrivalsItems,
+    homeState.bestSellersItems,
+    homeState.topRatedItems,
+  ]);
+
+  return merged;
+}
   List<ItemSummary> _buildFilteredAndSortedItems(
     List<ItemSummary> base, {
     required int? effectiveCategoryId,

@@ -21,9 +21,19 @@ class AuthApiService {
   final http.Client _client;
   final AuthTokenStore _tokenStore;
 
-  // ✅ NEW
+  //  NEW
   bool _lastWasDeletedUser = false;
   bool _lastCanRestoreDeletedUser = false;
+  //  NEW (resume complete profile after already-verified pending)
+int? _lastResumePendingId;
+
+int? get lastResumePendingId => _lastResumePendingId;
+
+int? consumeLastResumePendingId() {
+  final v = _lastResumePendingId;
+  _lastResumePendingId = null;
+  return v;
+}
 
   AuthApiService({http.Client? client, required AuthTokenStore tokenStore})
       : _client = client ?? http.Client(),
@@ -41,43 +51,73 @@ class AuthApiService {
     }
   }
 
+  int? _asInt(dynamic v) {
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
+}
+
+int? _extractPendingId(Map<String, dynamic> decoded) {
+  // direct
+  final direct = _asInt(decoded['pendingId']);
+  if (direct != null) return direct;
+
+  // nested in details
+  final details = decoded['details'];
+  if (details is Map) {
+    final p1 = _asInt(details['pendingId']);
+    if (p1 != null) return p1;
+
+    final p2 = _asInt(details['id']); // fallback if backend uses id
+    if (p2 != null) return p2;
+  }
+
+  return null;
+}
+
   // ===================== SEND VERIFICATION CODE =========================
 
   Future<void> sendVerificationCode({
-    String? email,
-    String? phoneNumber,
-    required String password,
-    required int ownerProjectLinkId,
-  }) async {
-    final uri = _uri('/api/auth/send-verification');
+  String? email,
+  String? phoneNumber,
+  required String password,
+  required int ownerProjectLinkId,
+}) async {
+  final uri = _uri('/api/auth/send-verification');
 
-    final body = <String, String>{
-      'password': password,
-      'ownerProjectLinkId': ownerProjectLinkId.toString(),
-    };
-    if (email != null && email.isNotEmpty) body['email'] = email;
-    if (phoneNumber != null && phoneNumber.isNotEmpty) {
-      body['phoneNumber'] = phoneNumber;
+  // ✅ reset previous resume state before new attempt
+  _lastResumePendingId = null;
+
+  final body = <String, dynamic>{
+    'password': password,
+    'ownerProjectLinkId': ownerProjectLinkId,
+    if (email != null && email.isNotEmpty) 'email': email,
+    if (phoneNumber != null && phoneNumber.isNotEmpty) 'phoneNumber': phoneNumber,
+  };
+
+  try {
+    final resp = await _safePost(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    final decoded = _safeJson(resp.body);
+
+    if (resp.statusCode >= 400) {
+      _throwAuthFromHttp(
+        resp,
+        decoded,
+        fallback: 'Failed to send verification',
+      );
     }
-
-    try {
-      final resp = await _safePost(uri, body: body);
-      final decoded = _safeJson(resp.body);
-
-      if (resp.statusCode >= 400) {
-        _throwAuthFromHttp(
-          resp,
-          decoded,
-          fallback: 'Failed to send verification',
-        );
-      }
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AppException('Failed to send verification', original: e);
-    }
+  } on AppException {
+    rethrow;
+  } catch (e) {
+    throw AppException('Failed to send verification', original: e);
   }
-
+}
   // ========================= VERIFY EMAIL CODE ==========================
 
   Future<int> verifyEmailCode({
@@ -103,10 +143,10 @@ class AuthApiService {
         );
       }
 
-      final user = decoded['user'] as Map<String, dynamic>? ?? {};
-      final id = user['id'];
-      if (id == null) throw AppException('No user id returned');
-      return (id as num).toInt();
+     final user = decoded['user'] as Map<String, dynamic>? ?? {};
+final id = decoded['pendingId'] ?? user['id'];
+if (id == null) throw AppException('No pending/user id returned');
+return (id as num).toInt();
     } on AppException {
       rethrow;
     } catch (e) {
@@ -140,9 +180,9 @@ class AuthApiService {
       }
 
       final user = decoded['user'] as Map<String, dynamic>? ?? {};
-      final id = user['id'];
-      if (id == null) throw AppException('No user id returned');
-      return (id as num).toInt();
+final id = decoded['pendingId'] ?? user['id'];
+if (id == null) throw AppException('No pending/user id returned');
+return (id as num).toInt();
     } on AppException {
       rethrow;
     } catch (e) {
@@ -526,6 +566,20 @@ Future<void> clearUserSession() async {
     final mentionsPhone =
         hasAny(['phone', 'phone number', 'phonenumber', 'mobile']);
 
+        final backendCodeRaw = decoded['code']?.toString().trim();
+final backendCode = (backendCodeRaw != null && backendCodeRaw.isNotEmpty)
+    ? backendCodeRaw
+    : null;
+
+//  If backend explicitly sends a code, preserve it.
+// Especially important for PENDING_ALREADY_VERIFIED + details.pendingId
+if (backendCode != null) {
+  if (backendCode == 'PENDING_ALREADY_VERIFIED') {
+    _lastResumePendingId = _extractPendingId(decoded);
+  }
+  throw AuthException(msg, code: backendCode, original: resp);
+}
+
     final isConflictStatus = (status == 409 || status == 400 || status == 422);
 
     // --- specific conflicts first (best UX) ---
@@ -633,7 +687,7 @@ Future<void> clearUserSession() async {
 
     if (status == 401 && backendMsg.contains('access denied')) {
       throw AuthException(
-        'Access denied',
+        'Access denized',
         code: 'ADMIN_ACCESS_DENIED',
         original: resp,
       );

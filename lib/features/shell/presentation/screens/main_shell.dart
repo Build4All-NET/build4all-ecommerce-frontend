@@ -140,11 +140,7 @@ class _MainShellState extends State<MainShell> {
       }
     }).toList();
 
-    // ✅ After first frame, try to load profile (works for hydrated token too)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _maybeLoadProfileFromAuth(context.read<AuthBloc>().state);
-    });
+  
   }
 
   @override
@@ -192,7 +188,10 @@ class _MainShellState extends State<MainShell> {
                 prevId != nextId ||
                 prevOwner != nextOwner;
           },
-          listener: (ctx, st) => _maybeLoadProfileFromAuth(st),
+          listener: (ctx, st) => _maybeLoadProfileFromAuthWithBloc(
+  bloc: ctx.read<UserProfileBloc>(),
+  authState: st,
+),
           child: Scaffold(
             appBar: hideAppBar
                 ? null
@@ -296,32 +295,32 @@ class _MainShellState extends State<MainShell> {
 
   int _envOwnerId() => int.tryParse(Env.ownerProjectLinkId) ?? 0;
 
-  void _maybeLoadProfileFromAuth(AuthState authState) {
-    // pick token (auth -> globals)
-    final token = ((authState.token ?? '').trim().isNotEmpty)
-        ? authState.token!.trim()
-        : g.readAuthToken().trim();
+void _maybeLoadProfileFromAuthWithBloc({
+  required UserProfileBloc bloc,
+  required AuthState authState,
+}) {
+  // pick token (auth -> globals)
+  final token = ((authState.token ?? '').trim().isNotEmpty)
+      ? authState.token!.trim()
+      : g.readAuthToken().trim();
 
-    final userId = authState.user?.id ?? _userIdFromToken(token);
-    final ownerId = _envOwnerId();
+  final userId = authState.user?.id ?? _userIdFromToken(token);
+  final ownerId = _envOwnerId();
 
-    if (token.isEmpty || userId <= 0 || ownerId <= 0) return;
+  if (token.isEmpty || userId <= 0 || ownerId <= 0) return;
 
-    if (token == _lastProfileToken &&
-        userId == _lastProfileUserId &&
-        ownerId == _lastProfileOwnerId) {
-      return;
-    }
-
-    _lastProfileToken = token;
-    _lastProfileUserId = userId;
-    _lastProfileOwnerId = ownerId;
-
-    // new signature needs ownerProjectLinkId
-    context
-        .read<UserProfileBloc>()
-        .add(LoadUserProfile(token, userId, ownerId));
+  if (token == _lastProfileToken &&
+      userId == _lastProfileUserId &&
+      ownerId == _lastProfileOwnerId) {
+    return;
   }
+
+  _lastProfileToken = token;
+  _lastProfileUserId = userId;
+  _lastProfileOwnerId = ownerId;
+
+  bloc.add(LoadUserProfile(token, userId, ownerId));
+}
 
   int _userIdFromToken(String token) {
     try {

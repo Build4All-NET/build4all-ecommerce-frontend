@@ -1224,6 +1224,10 @@
 
   "appAccessOwnerDisabledHint": "This app has been disabled by the owner or is no longer active.",
   "appAccessRetry": "Retry",
-  "appAccessBlockedButton": "Access blocked"
+  "appAccessBlockedButton": "Access blocked",
+ "pasteButtonLabel": "Paste",
 
+"codeReadyToVerifyHint": "Code ready to verify",
+"enterSixDigitCodeHint": "Enter 6-digit verification code",
+"accountAlreadyVerified": "Account already verified. Please log in."
 }

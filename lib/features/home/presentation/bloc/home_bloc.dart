@@ -66,96 +66,147 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     return set;
   }
 
-  Future<void> _loadHome(Emitter<HomeState> emit, {String? token}) async {
-    // ✅ Prevent duplicate requests if HomeStarted fired twice by mistake.
-    if (state.isLoading) return;
+  List<ItemSummary> _dedupeById(List<ItemSummary> items) {
+    final seen = <int>{};
+    final out = <ItemSummary>[];
+    for (final item in items) {
+      if (seen.add(item.id)) out.add(item);
+    }
+    return out;
+  }
 
-    // ✅ Keep old lists while loading (nice UX)
-    emit(state.copyWith(isLoading: true, errorMessage: null));
-
+  Future<List<ItemSummary>> _safeItems(Future<List<ItemSummary>> future) async {
     try {
-      final projectId = int.tryParse(Env.projectId) ?? 0;
-
-      // ✅ Start everything ASAP (parallel)
-      final popularF = getGuestUpcomingItems(token: token);
-      final flashF = getDiscountedItems.call(token: token);
-      final newF = getNewArrivalsItems.call(days: 3650, token: token);
-      final bestF = getBestSellersItems.call(limit: 20, token: token);
-
-      final typesF = projectId > 0
-          ? getItemTypesByProject(projectId)
-          : Future.value(<ItemType>[]);
-
-      final catsF = projectId > 0
-          ? getCategoriesByProject(projectId)
-          : Future.value(<Category>[]);
-
-      // ✅ Await (already running in parallel)
-      final popularItems = await popularF;
-      final flashSaleItems = await flashF;
-      final newArrivalsItems = await newF;
-      final bestSellersItems = await bestF;
-
-      // Recommended (temporary)
-      final recommendedItems = popularItems;
-
-      // Top rated (temporary)
-      final topRatedItems = bestSellersItems;
-
-      // ✅ Fetch types/categories (also already running)
-      final types = await typesF;
-      // ignore: unused_local_variable
-      final _ = types;
-
-      final allCategories = await catsF;
-
-      // categories
-      List<String> categoryLabels = <String>[];
-      List<Category> categoryEntities = <Category>[];
-
-      if (projectId > 0) {
-        final usedCategoryIds = _collectUsedCategoryIds([
-          popularItems,
-          recommendedItems,
-          flashSaleItems,
-          newArrivalsItems,
-          bestSellersItems,
-          topRatedItems,
-        ]);
-
-        final filteredCategories = usedCategoryIds.isEmpty
-            ? allCategories
-            : allCategories
-                .where((c) => usedCategoryIds.contains(c.id))
-                .toList();
-
-        categoryLabels = filteredCategories.map((c) => c.name).toList();
-        categoryEntities = filteredCategories;
-      }
-
-      emit(
-        state.copyWith(
-          isLoading: false,
-          hasLoaded: true,
-          errorMessage: null,
-          popularItems: popularItems,
-          recommendedItems: recommendedItems,
-          categories: categoryLabels,
-          categoryEntities: categoryEntities,
-          flashSaleItems: flashSaleItems,
-          newArrivalsItems: newArrivalsItems,
-          bestSellersItems: bestSellersItems,
-          topRatedItems: topRatedItems,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          hasLoaded: true,
-          errorMessage: e.toString(),
-        ),
-      );
+      final res = await future;
+      return _dedupeById(res);
+    } catch (_) {
+      return <ItemSummary>[];
     }
   }
+
+  Future<List<Category>> _safeCategories(Future<List<Category>> future) async {
+    try {
+      return await future;
+    } catch (_) {
+      return <Category>[];
+    }
+  }
+
+  Future<List<ItemType>> _safeTypes(Future<List<ItemType>> future) async {
+    try {
+      return await future;
+    } catch (_) {
+      return <ItemType>[];
+    }
+  }
+
+  Future<void> _loadHome(Emitter<HomeState> emit, {String? token}) async {
+  if (state.isLoading) return;
+
+  emit(state.copyWith(isLoading: true, errorMessage: null));
+
+  try {
+    final projectId = int.tryParse(Env.projectId) ?? 0;
+
+    // ✅ parallel calls
+    final popularF = getGuestUpcomingItems(token: token);
+    final flashF = getDiscountedItems.call(token: token);
+
+    // ✅ FIX: don't use 3650 (too wide)
+    final newF = getNewArrivalsItems.call(days: 14, token: token);
+
+    final bestF = getBestSellersItems.call(limit: 20, token: token);
+
+    final typesF = projectId > 0
+        ? getItemTypesByProject(projectId)
+        : Future.value(<ItemType>[]);
+
+    final catsF = projectId > 0
+        ? getCategoriesByProject(projectId)
+        : Future.value(<Category>[]);
+
+    // ✅ await all
+    final popularItemsRaw = await popularF;
+    final flashSaleItemsRaw = await flashF;
+    final newArrivalsItemsRaw = await newF;
+    final bestSellersItemsRaw = await bestF;
+
+    // ✅ Dedup by priority (you can change order)
+    final usedIds = <int>{};
+
+    List<ItemSummary> dedup(List<ItemSummary> source) {
+      final out = <ItemSummary>[];
+      for (final item in source) {
+        if (usedIds.add(item.id)) {
+          out.add(item);
+        }
+      }
+      return out;
+    }
+
+    // Priority example:
+    final flashSaleItems = dedup(flashSaleItemsRaw);
+    final newArrivalsItems = dedup(newArrivalsItemsRaw);
+    final bestSellersItems = dedup(bestSellersItemsRaw);
+
+    // Popular after specialty sections (so it won't repeat same items)
+    final popularItems = dedup(popularItemsRaw);
+
+    // ✅ TEMP (until real endpoints exist) - avoid fake duplicates
+    final recommendedItems = <ItemSummary>[]; // was: popularItems
+    final topRatedItems = <ItemSummary>[];    // was: bestSellersItems
+
+    // fetch types/categories
+    final types = await typesF;
+    // ignore: unused_local_variable
+    final _ = types;
+
+    final allCategories = await catsF;
+
+    List<String> categoryLabels = <String>[];
+    List<Category> categoryEntities = <Category>[];
+
+    if (projectId > 0) {
+      final usedCategoryIds = _collectUsedCategoryIds([
+        popularItems,
+        recommendedItems,
+        flashSaleItems,
+        newArrivalsItems,
+        bestSellersItems,
+        topRatedItems,
+      ]);
+
+      final filteredCategories = usedCategoryIds.isEmpty
+          ? allCategories
+          : allCategories.where((c) => usedCategoryIds.contains(c.id)).toList();
+
+      categoryLabels = filteredCategories.map((c) => c.name).toList();
+      categoryEntities = filteredCategories;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        hasLoaded: true,
+        errorMessage: null,
+        popularItems: popularItems,
+        recommendedItems: recommendedItems,
+        categories: categoryLabels,
+        categoryEntities: categoryEntities,
+        flashSaleItems: flashSaleItems,
+        newArrivalsItems: newArrivalsItems,
+        bestSellersItems: bestSellersItems,
+        topRatedItems: topRatedItems,
+      ),
+    );
+  } catch (e) {
+    emit(
+      state.copyWith(
+        isLoading: false,
+        hasLoaded: true,
+        errorMessage: e.toString(),
+      ),
+    );
+  }
+}
 }

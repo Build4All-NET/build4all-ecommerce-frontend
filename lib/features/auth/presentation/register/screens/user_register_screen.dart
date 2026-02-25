@@ -1,9 +1,11 @@
 import 'package:build4front/core/config/app_config.dart';
+import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 
 import 'package:build4front/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:build4front/features/auth/presentation/register/bloc/register_event.dart';
 import 'package:build4front/features/auth/presentation/register/bloc/register_state.dart';
+import 'package:build4front/features/auth/presentation/register/screens/UserCompleteProfileScreen.dart';
 import 'package:build4front/features/auth/presentation/register/screens/user_verify_code_screen.dart';
 
 import 'package:build4front/l10n/app_localizations.dart';
@@ -101,42 +103,57 @@ String? _passwordValidator(String? value, AppLocalizations l10n) {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: BlocConsumer<RegisterBloc, RegisterState>(
-              // ✅ only react when it matters
-              listenWhen: (p, c) =>
-                  p.errorCode != c.errorCode || p.codeSent != c.codeSent,
-              listener: (context, state) {
-                final l10n = AppLocalizations.of(context)!;
+            child:BlocConsumer<RegisterBloc, RegisterState>(
+  // ✅ react on error / normal codeSent / resume flow
+  listenWhen: (p, c) =>
+      p.errorCode != c.errorCode ||
+      p.codeSent != c.codeSent ||
+      p.resumeCompleteProfile != c.resumeCompleteProfile ||
+      p.resumePendingId != c.resumePendingId,
+  listener: (context, state) {
+    final l10n = AppLocalizations.of(context)!;
 
-                // ✅ show error toast only when error appears/changes
-                if (state.errorCode != null) {
-                  AppToast.show(
-                    context,
-                    _l10nFromCode(l10n, state.errorCode!),
-                    isError: true,
-                  );
-                  return;
-                }
+    // ✅ 1) SPECIAL CASE: pending already verified -> resume complete profile
+    if (state.resumeCompleteProfile && state.resumePendingId != null) {
+      final ownerId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
 
-                // ✅ navigate ONLY once: when codeSent flips false -> true
-                final prev = context.read<RegisterBloc>().state; // current (after emit)
-                // We can't access previous directly here, so rely on listenWhen + codeSent change:
-                // If we're here and codeSent == true and no error => proceed.
-                if (state.codeSent &&
-                    state.contact != null &&
-                    state.method != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => UserVerifyCodeScreen(
-                        contact: state.contact!,
-                        method: state.method!,
-                        appConfig: widget.appConfig,
-                      ),
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => UserCompleteProfileScreen(
+            pendingId: state.resumePendingId!,
+            ownerProjectLinkId: ownerId,
+            appConfig: widget.appConfig,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // ✅ 2) show error toast
+    if (state.errorCode != null) {
+      AppToast.show(
+        context,
+        _l10nFromCode(l10n, state.errorCode!),
+        isError: true,
+      );
+      return;
+    }
+
+    // ✅ 3) normal flow: code sent -> go verify code screen
+    if (state.codeSent && state.contact != null && state.method != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => UserVerifyCodeScreen(
+            contact: state.contact!,
+            method: state.method!,
+            appConfig: widget.appConfig,
+          ),
+        ),
+      );
+    }
+  },
+  builder: (context, state) {
+    
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -495,6 +512,8 @@ String _l10nFromCode(AppLocalizations l10n, String code) {
 
     case 'USERNAME_TAKEN':
       return l10n.authUsernameTaken;
+      case 'PENDING_ALREADY_VERIFIED':
+  return l10n.accountAlreadyVerified; // or add dedicated l10n key later
 
     case 'USER_NOT_FOUND':
       return l10n.authUserNotFound;

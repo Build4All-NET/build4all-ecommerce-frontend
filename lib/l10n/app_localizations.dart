@@ -5106,6 +5106,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Access blocked'**
   String get appAccessBlockedButton;
+
+  /// No description provided for @pasteButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get pasteButtonLabel;
+
+  /// No description provided for @codeReadyToVerifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code ready to verify'**
+  String get codeReadyToVerifyHint;
+
+  /// No description provided for @enterSixDigitCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 6-digit verification code'**
+  String get enterSixDigitCodeHint;
+
+  /// No description provided for @accountAlreadyVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Account already verified. Please log in.'**
+  String get accountAlreadyVerified;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

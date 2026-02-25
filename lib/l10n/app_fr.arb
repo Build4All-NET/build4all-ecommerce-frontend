@@ -1079,7 +1079,8 @@
 
   "appAccessOwnerDisabledHint": "Cette application a été désactivée par le propriétaire ou n'est plus active.",
   "appAccessRetry": "Réessayer",
-  "appAccessBlockedButton": "Accès bloqué"
+  "appAccessBlockedButton": "Accès bloqué",
+  "accountAlreadyVerified": "Votre compte est déjà vérifié. Veuillez vous connecter."
 
 
 

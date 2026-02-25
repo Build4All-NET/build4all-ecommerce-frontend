@@ -47,10 +47,12 @@ class HomeState extends Equatable {
         topRatedItems: <ItemSummary>[],
       );
 
+  static const Object _unset = Object();
+
   HomeState copyWith({
     bool? isLoading,
     bool? hasLoaded,
-    String? errorMessage,
+    Object? errorMessage = _unset, // ✅ allows explicit null
     List<ItemSummary>? popularItems,
     List<ItemSummary>? recommendedItems,
     List<String>? categories,
@@ -63,7 +65,9 @@ class HomeState extends Equatable {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
       hasLoaded: hasLoaded ?? this.hasLoaded,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
       popularItems: popularItems ?? this.popularItems,
       recommendedItems: recommendedItems ?? this.recommendedItems,
       categories: categories ?? this.categories,

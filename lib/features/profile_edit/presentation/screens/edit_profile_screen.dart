@@ -82,7 +82,7 @@ class EditProfileScreen extends StatefulWidget {
   final String token;
   final int ownerProjectLinkId;
 
-  // ✅ NEW: parent passes logout handler (clear token + go login)
+  // ✅ parent passes logout handler (clear token + go login)
   final VoidCallback onLogoutAfterDelete;
 
   const EditProfileScreen({
@@ -113,15 +113,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // ✅ guard so we don’t logout twice
   bool _loggedOutAfterDelete = false;
 
+  // ✅ validation errors (inline under fields)
+  String? _firstError;
+  String? _lastError;
+  String? _userError;
+
   late final EditProfileBloc _bloc;
 
   @override
   void initState() {
     super.initState();
 
+    // clear inline validation errors while typing
+    _firstCtrl.addListener(_clearFieldErrorsIfNeeded);
+    _lastCtrl.addListener(_clearFieldErrorsIfNeeded);
+    _userCtrl.addListener(_clearFieldErrorsIfNeeded);
+
     final dio = g.appDio ?? Dio();
 
-    final has = dio.interceptors.any((i) => i is _EditProfileAuthDebugInterceptor);
+    final has =
+        dio.interceptors.any((i) => i is _EditProfileAuthDebugInterceptor);
     if (!has) {
       dio.interceptors.add(
         _EditProfileAuthDebugInterceptor(
@@ -151,6 +162,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _cleanToken(String token) {
     final t = token.trim();
     return t.toLowerCase().startsWith('bearer ') ? t.substring(7).trim() : t;
+  }
+
+  bool _validateInputs(AppLocalizations loc) {
+    final first = _firstCtrl.text.trim();
+    final last = _lastCtrl.text.trim();
+    final username = _userCtrl.text.trim();
+
+    String? firstError;
+    String? lastError;
+    String? userError;
+
+    if (username.isEmpty) userError = loc.fieldRequired;
+    if (first.isEmpty) firstError = loc.fieldRequired;
+    if (last.isEmpty) lastError = loc.fieldRequired;
+
+    setState(() {
+      _userError = userError;
+      _firstError = firstError;
+      _lastError = lastError;
+    });
+
+    return userError == null && firstError == null && lastError == null;
+  }
+
+  void _clearFieldErrorsIfNeeded() {
+    bool changed = false;
+
+    if (_userError != null && _userCtrl.text.trim().isNotEmpty) {
+      _userError = null;
+      changed = true;
+    }
+    if (_firstError != null && _firstCtrl.text.trim().isNotEmpty) {
+      _firstError = null;
+      changed = true;
+    }
+    if (_lastError != null && _lastCtrl.text.trim().isNotEmpty) {
+      _lastError = null;
+      changed = true;
+    }
+
+    if (changed && mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -206,7 +260,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           }
 
           // ✅ SAVE SUCCESS: normal behavior (pop with updated user)
-          if (state.success != null) {
+          if (state.success != null && !state.didDelete) {
             AppToast.show(context, state.success!);
 
             if (!_poppedAfterSave && state.user != null) {
@@ -223,12 +277,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _firstCtrl.text = u.firstName;
             _lastCtrl.text = u.lastName;
             _userCtrl.text = u.username ?? '';
-            setState(() => _public = u.publicProfile);
+            _public = u.publicProfile;
+
+            // clear stale inline errors after initial fill
+            _firstError = null;
+            _lastError = null;
+            _userError = null;
+
+            if (mounted) setState(() {});
           }
         },
         builder: (context, state) {
           final u = state.user;
-          final resolvedImageUrl = u == null ? '' : _resolveImageUrl(u.profileImageUrl);
+          final resolvedImageUrl =
+              u == null ? '' : _resolveImageUrl(u.profileImageUrl);
 
           return Scaffold(
             appBar: AppBar(
@@ -261,12 +323,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             }),
                           ),
                           const SizedBox(height: 16),
+
+                          // Username (required)
                           AppTextField(controller: _userCtrl, label: loc.username),
+                          if (_userError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _userError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
                           const SizedBox(height: 12),
-                          AppTextField(controller: _firstCtrl, label: loc.firstName),
+
+                          // First name (required)
+                          AppTextField(
+                              controller: _firstCtrl, label: loc.firstName),
+                          if (_firstError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _firstError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
                           const SizedBox(height: 12),
+
+                          // Last name (required)
                           AppTextField(controller: _lastCtrl, label: loc.lastName),
+                          if (_lastError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _lastError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
                           const SizedBox(height: 12),
+
                           SwitchListTile(
                             value: _public,
                             onChanged: (v) => setState(() => _public = v),
@@ -276,20 +367,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
+
                           ElevatedButton(
                             onPressed: state.saving
                                 ? null
                                 : () {
+                                    // ✅ local validation before calling API
+                                    final valid = _validateInputs(loc);
+                                    if (!valid) {
+                                      AppToast.show(
+                                        context,
+                                        loc.fieldRequired,
+                                        isError: true,
+                                      );
+                                      return;
+                                    }
+
                                     context.read<EditProfileBloc>().add(
                                           SaveEditProfile(
                                             token: widget.token,
                                             userId: widget.userId,
-                                            ownerProjectLinkId: widget.ownerProjectLinkId,
+                                            ownerProjectLinkId:
+                                                widget.ownerProjectLinkId,
                                             firstName: _firstCtrl.text.trim(),
                                             lastName: _lastCtrl.text.trim(),
-                                            username: _userCtrl.text.trim().isEmpty
-                                                ? null
-                                                : _userCtrl.text.trim(),
+                                            // ✅ required now (no null fallback)
+                                            username: _userCtrl.text.trim(),
                                             isPublicProfile: _public,
                                             imageFilePath: _pickedImagePath,
                                             imageRemoved: _removeImage,
@@ -300,10 +403,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ? const SizedBox(
                                     height: 18,
                                     width: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(loc.save),
                           ),
+
                           const SizedBox(height: 24),
                           Divider(color: colors.border),
                           const SizedBox(height: 12),
@@ -362,7 +468,9 @@ class _ProfileHeader extends StatelessWidget {
           radius: 44,
           backgroundColor: colors.surface,
           backgroundImage: provider,
-          child: provider == null ? Icon(Icons.person, color: colors.label, size: 40) : null,
+          child: provider == null
+              ? Icon(Icons.person, color: colors.label, size: 40)
+              : null,
         ),
         const SizedBox(height: 10),
         Wrap(

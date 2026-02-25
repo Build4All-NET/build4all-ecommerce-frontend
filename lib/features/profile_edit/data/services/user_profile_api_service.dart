@@ -7,13 +7,11 @@ class UserProfileApiService {
 
   UserProfileApiService({required this.dio, required this.baseUrl});
 
-  // ---- helpers ----
   String _cleanToken(String token) {
     final t = token.trim();
     return t.toLowerCase().startsWith('bearer ') ? t.substring(7).trim() : t;
   }
 
-  // Ensures baseUrl ends as: http://IP:PORT/api
   String _apiRoot() {
     var b = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     b = b.replaceAll('/api/api', '/api');
@@ -21,15 +19,49 @@ class UserProfileApiService {
     return b;
   }
 
-  Options _authJson(String token) =>
-      Options(headers: {'Authorization': 'Bearer ${_cleanToken(token)}'});
+  Options _authJson(String token) => Options(
+        headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
+        validateStatus: (s) => s != null && s >= 200 && s < 500,
+      );
 
   Options _authMultipart(String token) => Options(
         headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
         contentType: Headers.multipartFormDataContentType,
+        validateStatus: (s) => s != null && s >= 200 && s < 500,
       );
 
-  // ---- API ----
+  String _readErrorMessage(dynamic data, {int? statusCode}) {
+    if (data is Map) {
+      final map = data.cast<dynamic, dynamic>();
+
+      final candidates = [
+        map['error'],
+        map['message'],
+        map['details'],
+        map['msg'],
+      ];
+
+      for (final c in candidates) {
+        final text = c?.toString().trim();
+        if (text != null && text.isNotEmpty) return text;
+      }
+    }
+
+    if (data is String) {
+      final text = data.trim();
+      if (text.isNotEmpty) return text;
+    }
+
+    return 'Request failed (${statusCode ?? 'unknown'})';
+  }
+
+  void _throwIfFailed(Response res) {
+    final code = res.statusCode;
+    if (code == null || code >= 400) {
+      throw Exception(_readErrorMessage(res.data, statusCode: code));
+    }
+  }
+
   Future<Map<String, dynamic>> getUserById({
     required String token,
     required int userId,
@@ -40,7 +72,13 @@ class UserProfileApiService {
       queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
       options: _authJson(token),
     );
-    return (res.data as Map).cast<String, dynamic>();
+
+    _throwIfFailed(res);
+
+    if (res.data is Map) {
+      return (res.data as Map).cast<String, dynamic>();
+    }
+    throw Exception('Invalid server response while loading profile');
   }
 
   Future<Map<String, dynamic>> updateProfile({
@@ -57,13 +95,9 @@ class UserProfileApiService {
     final form = FormData.fromMap({
       'firstName': firstName,
       'lastName': lastName,
-
-      // ✅ safest with Spring @RequestParam: send booleans as "true"/"false"
       if (username != null) 'username': username,
-      if (isPublicProfile != null)
-        'isPublicProfile': isPublicProfile.toString(),
+      if (isPublicProfile != null) 'isPublicProfile': isPublicProfile.toString(),
       'imageRemoved': imageRemoved.toString(),
-
       if (imageFilePath != null)
         'profileImage': await MultipartFile.fromFile(
           imageFilePath,
@@ -78,7 +112,14 @@ class UserProfileApiService {
       options: _authMultipart(token),
     );
 
-    return (res.data as Map).cast<String, dynamic>();
+    _throwIfFailed(res);
+
+    if (res.data is Map) {
+      return (res.data as Map).cast<String, dynamic>();
+    }
+
+    // if backend returns plain text success
+    return {'message': res.data?.toString() ?? 'Profile updated'};
   }
 
   Future<void> deleteUser({
@@ -99,8 +140,7 @@ class UserProfileApiService {
     final text = (res.data ?? '').toString().trim();
 
     if (res.statusCode == null || res.statusCode! >= 400) {
-      throw Exception(
-          text.isNotEmpty ? text : 'Delete failed (${res.statusCode})');
+      throw Exception(text.isNotEmpty ? text : 'Delete failed (${res.statusCode})');
     }
   }
 }

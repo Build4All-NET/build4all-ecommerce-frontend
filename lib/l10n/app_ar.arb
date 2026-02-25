@@ -1000,6 +1000,7 @@
 
   "appAccessOwnerDisabledHint": "تم تعطيل هذا التطبيق من قبل المالك أو أنه لم يعد نشطًا.",
   "appAccessRetry": "إعادة المحاولة",
-  "appAccessBlockedButton": "الوصول محظور"
+  "appAccessBlockedButton": "الوصول محظور",
+  "accountAlreadyVerified": "تم التحقق من الحساب بالفعل. الرجاء تسجيل الدخول."
 
 }

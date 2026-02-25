@@ -15,9 +15,28 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ----- Helpers for Either<> branches -----
   AuthFailure _toFailure(Object e) {
-    if (e is AppException) return AuthFailure(e.message);
-    return const AuthFailure('Something went wrong. Please try again.');
+  if (e is AppException) {
+    String? code;
+    try {
+      code = (e as dynamic).code?.toString();
+    } catch (_) {
+      code = null;
+    }
+
+    int? pendingId;
+    if (code == 'PENDING_ALREADY_VERIFIED') {
+      pendingId = api.consumeLastResumePendingId();
+    }
+
+    return AuthFailure(
+      e.message,
+      code: code,
+      pendingId: pendingId,
+    );
   }
+
+  return const AuthFailure('Something went wrong. Please try again.');
+}
 
   @override
   Future<Either<AuthFailure, void>> sendVerificationCode({

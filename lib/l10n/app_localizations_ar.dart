@@ -2606,4 +2606,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appAccessBlockedButton => 'الوصول محظور';
+
+  @override
+  String get pasteButtonLabel => 'Paste';
+
+  @override
+  String get codeReadyToVerifyHint => 'Code ready to verify';
+
+  @override
+  String get enterSixDigitCodeHint => 'Enter 6-digit verification code';
+
+  @override
+  String get accountAlreadyVerified => 'تم التحقق من الحساب بالفعل. الرجاء تسجيل الدخول.';
 }

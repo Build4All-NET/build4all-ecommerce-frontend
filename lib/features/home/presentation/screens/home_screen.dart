@@ -97,6 +97,20 @@ class _HomeScreenState extends State<HomeScreen>
     return int.tryParse('$v') ?? 0;
   }
 
+  /// ✅ Force initial Home load (helps when tab is cached / kept alive)
+  void _ensureHomeDataLoaded() {
+    final homeBloc = context.read<HomeBloc>();
+    final s = homeBloc.state;
+
+    if (s.hasLoaded || s.isLoading) return;
+
+    final raw = (authState.token ?? '').trim();
+    final token = raw.isEmpty ? null : raw;
+
+    _log('Dispatch HomeStarted (initial load) | token=${token == null ? "null" : "yes"}');
+    homeBloc.add(HomeStarted(token: token));
+  }
+
   /// ✅ Your rule: "linkId = ownerProjectId"
   int get _resolvedOwnerProjectLinkId {
     final envLink = _asInt((Env.ownerProjectLinkId));
@@ -262,6 +276,10 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // ✅ Ensure home data loads even if tab is cached / opened later
+      _ensureHomeDataLoaded();
+
+      // Existing support info load
       _loadSupportInfo(silent: true, reason: 'init');
     });
   }
@@ -355,6 +373,14 @@ class _HomeScreenState extends State<HomeScreen>
 
             return BlocBuilder<HomeBloc, HomeState>(
               builder: (context, homeState) {
+                // ✅ self-heal if bloc was recreated and home wasn't started
+                if (!homeState.hasLoaded && !homeState.isLoading) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    _ensureHomeDataLoaded();
+                  });
+                }
+
                 if (homeState.isLoading && !homeState.hasLoaded) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -564,9 +590,6 @@ class _HomeScreenState extends State<HomeScreen>
         final icon = _iconForSection(section);
         final trailing = _trailingForSection(section, l10n);
 
-        // ✅ IMPORTANT FIX:
-        // New Arrivals keeps pagination BUT uses the "normal" layout (rowPages2),
-        // not the heavy grid3x2 which was confusing.
         final layout = _HomePagerLayout.rowPages2;
 
         return Padding(
@@ -580,7 +603,6 @@ class _HomeScreenState extends State<HomeScreen>
             trailingText: trailing.text,
             trailingIcon: trailing.icon,
             onTrailingTap: () {
-              // ✅ FIX: See all -> dedicated section screen with REAL category names
               _openSectionSeeAll(
                 context,
                 title: sectionTitle,
@@ -663,22 +685,44 @@ class _HomeScreenState extends State<HomeScreen>
     return result;
   }
 
-  // ✅ no fallback (shows only real data)
+  // ✅ FIXED: fallback added so Home is less likely to appear empty
   List<ItemSummary> _mapItemsForSection(
-      HomeSectionConfig section, HomeState homeState) {
+    HomeSectionConfig section,
+    HomeState homeState,
+  ) {
     switch (section.id) {
       case 'recommended':
-        return homeState.recommendedItems;
+        return homeState.recommendedItems.isNotEmpty
+            ? homeState.recommendedItems
+            : homeState.popularItems;
+
       case 'popular':
-        return homeState.popularItems;
+        return homeState.popularItems.isNotEmpty
+            ? homeState.popularItems
+            : homeState.recommendedItems;
+
       case 'flash_sale':
-        return homeState.flashSaleItems;
+        return homeState.flashSaleItems.isNotEmpty
+            ? homeState.flashSaleItems
+            : homeState.popularItems;
+
       case 'new_arrivals':
-        return homeState.newArrivalsItems;
+        return homeState.newArrivalsItems.isNotEmpty
+            ? homeState.newArrivalsItems
+            : homeState.popularItems;
+
       case 'best_sellers':
-        return homeState.bestSellersItems;
+        return homeState.bestSellersItems.isNotEmpty
+            ? homeState.bestSellersItems
+            : homeState.popularItems;
+
       case 'top_rated':
-        return homeState.topRatedItems;
+        return homeState.topRatedItems.isNotEmpty
+            ? homeState.topRatedItems
+            : homeState.bestSellersItems.isNotEmpty
+                ? homeState.bestSellersItems
+                : homeState.popularItems;
+
       default:
         return const <ItemSummary>[];
     }
@@ -1059,8 +1103,9 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
                     itemBuilder: (context, pageIndex) {
                       final start = pageIndex * perPage;
                       final end = math.min(start + perPage, items.length);
-                      final pageItems =
-                          start >= items.length ? <ItemSummary>[] : items.sublist(start, end);
+                      final pageItems = start >= items.length
+                          ? <ItemSummary>[]
+                          : items.sublist(start, end);
 
                       return Align(
                         alignment: Alignment.center,
@@ -1303,18 +1348,27 @@ class HomeSectionSeeAllScreen extends StatefulWidget {
   });
 
   @override
-  State<HomeSectionSeeAllScreen> createState() => _HomeSectionSeeAllScreenState();
+  State<HomeSectionSeeAllScreen> createState() =>
+      _HomeSectionSeeAllScreenState();
 }
 
 class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
   late String _q;
   int? _catId;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
     _q = widget.initialQuery;
     _catId = widget.initialCategoryId;
+    _searchController = TextEditingController(text: _q);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Map<int, String> _catNameMap() {
@@ -1376,6 +1430,7 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
           child: Column(
             children: [
               TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: '${l10n.home_search_hint}...',
                   prefixIcon: const Icon(Icons.search),
@@ -1383,7 +1438,6 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                controller: TextEditingController(text: _q),
                 onChanged: (v) => setState(() => _q = v),
               ),
               if (catIds.isNotEmpty) ...[

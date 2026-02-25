@@ -6,7 +6,14 @@ import '../entities/user_entity.dart';
 
 class AuthFailure {
   final String message;
-  const AuthFailure(this.message);
+  final String? code;
+  final int? pendingId;
+
+  const AuthFailure(
+    this.message, {
+    this.code,
+    this.pendingId,
+  });
 }
 
 abstract class AuthRepository {

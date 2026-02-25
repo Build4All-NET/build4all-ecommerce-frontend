@@ -43,7 +43,6 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _started = false;
 
-  // ✅ validate checkout form
   final _addressFormKey = GlobalKey<FormState>();
   bool _showAddressPickerErrors = false;
 
@@ -74,10 +73,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return res == true;
   }
 
-  // ✅ extra guard for pickers + address/phone
   // NOTE:
-  // Phone length/format is handled by IntlPhoneField validator in CheckoutAddressForm
-  // because stored phone is full international format (+961...) which can break simple digit-length checks here.
+  // Phone format is validated in CheckoutAddressForm (IntlPhoneField validator).
+  // Here we only guard "presence" + picker selections.
   String? _addressError(AppLocalizations l10n, ShippingAddress a) {
     if (a.countryId == null) {
       return '${l10n.adminTaxCountryLabel}: ${l10n.fieldRequired}';
@@ -306,17 +304,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 tax: state.tax,
                 isPlacing: state.placing,
                 onPlaceOrder: () async {
-                   FocusScope.of(context).unfocus();
-                  final s = context.read<CheckoutBloc>().state;
+                  FocusScope.of(context).unfocus();
 
-                  if (s.placing) return;
+                  if (!mounted) return;
+                  final bloc = context.read<CheckoutBloc>();
+                  final current = bloc.state;
 
-                  // ✅ 1) Validate address form first
-                  final formOk = _addressFormKey.currentState?.validate() ?? false;
+                  if (current.placing) return;
+
+                  // ✅ Turn on inline picker errors BEFORE validating
+                  if (!_showAddressPickerErrors) {
+                    setState(() => _showAddressPickerErrors = true);
+                  }
+
+                  // ✅ Let blur/debounce callbacks flush (address/city/phone sync to bloc)
+                  // This avoids false "required" when user taps Place Order immediately after typing.
+                  await Future<void>.delayed(const Duration(milliseconds: 380));
+                  if (!mounted) return;
+
+                  // ✅ Validate form fields
+                  final formState = _addressFormKey.currentState;
+                  final formOk = formState?.validate() ?? false;
+                  formState?.save();
+
+                  // Let CheckoutAddressChanged event process
+                  await Future<void>.delayed(const Duration(milliseconds: 10));
+                  if (!mounted) return;
+
+                  final s = bloc.state;
                   final addrErr = _addressError(l10n, s.address);
 
                   if (!formOk || addrErr != null) {
-                    setState(() => _showAddressPickerErrors = true);
                     AppToast.show(
                       context,
                       addrErr ?? l10n.fieldRequired,
@@ -325,30 +343,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     return;
                   }
 
-                  // ✅ 2) Payment validation
+                  // ✅ Payment validation
                   if (s.selectedPaymentIndex == null) {
-                    AppToast.show(context, l10n.checkoutSelectPayment, isError: true);
+                    AppToast.show(
+                      context,
+                      l10n.checkoutSelectPayment,
+                      isError: true,
+                    );
                     return;
                   }
 
-                  // ✅ 3) Shipping method validation (if needed)
-                  if (s.shippingQuotes.isNotEmpty && s.selectedShippingMethodId == null) {
-                    AppToast.show(context, l10n.checkoutSelectShipping, isError: true);
+                  // ✅ Shipping validation (if required)
+                  if (s.shippingQuotes.isNotEmpty &&
+                      s.selectedShippingMethodId == null) {
+                    AppToast.show(
+                      context,
+                      l10n.checkoutSelectShipping,
+                      isError: true,
+                    );
                     return;
                   }
 
-                  // ✅ 4) Confirm dialog
+                  // ✅ Confirm dialog
                   final itemCount = s.cart?.items.length ?? 0;
                   final ok = await _confirmCartWillBeCleared(itemCount);
-                  if (!ok) return;
-                  if (!mounted) return;
+                  if (!ok || !mounted) return;
 
-                  final latest = context.read<CheckoutBloc>().state;
+                  final latest = bloc.state;
                   if (latest.placing) return;
 
-                  context.read<CheckoutBloc>().add(
-                        const CheckoutPlaceOrderPressed(),
-                      );
+                  bloc.add(const CheckoutPlaceOrderPressed());
                 },
               ),
             );
