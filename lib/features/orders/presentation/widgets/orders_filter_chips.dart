@@ -26,7 +26,8 @@ class OrdersFilterChips extends StatelessWidget {
           return ChoiceChip(
             label: Text(label),
             selected: selected,
-            onSelected: (_) => context.read<OrdersBloc>().add(OrdersFilterChanged(f)),
+            onSelected: (_) =>
+                context.read<OrdersBloc>().add(OrdersFilterChanged(f)),
             selectedColor: colors.primary.withOpacity(0.18),
             labelStyle: tokens.typography.bodySmall.copyWith(
               color: selected ? colors.primary : colors.body,

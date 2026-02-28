@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:build4front/core/network/globals.dart' as g;
 
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -16,19 +15,6 @@ class OrderGroupCard extends StatelessWidget {
     required this.order,
     this.onTap,
   });
-
-  String _absUrl(String? url) {
-    if (url == null || url.trim().isEmpty) return '';
-    final u = url.trim();
-    if (u.startsWith('http://') || u.startsWith('https://')) return u;
-
-    final root = (g.appServerRoot ?? '').trim();
-    if (root.isEmpty) return u;
-
-    if (root.endsWith('/') && u.startsWith('/')) return root.substring(0, root.length - 1) + u;
-    if (!root.endsWith('/') && !u.startsWith('/')) return '$root/$u';
-    return root + u;
-  }
 
   String _money(double value) => '\$${value.toStringAsFixed(2)}';
 
@@ -51,20 +37,32 @@ class OrderGroupCard extends StatelessWidget {
     final rawStatus = order.orderStatus.trim().toUpperCase();
     final prettyStatus = (order.orderStatusUi?.trim().isNotEmpty == true)
         ? order.orderStatusUi!.trim()
-        : (rawStatus.isEmpty ? '' : rawStatus.substring(0, 1) + rawStatus.substring(1).toLowerCase());
+        : (rawStatus.isEmpty
+            ? ''
+            : rawStatus.substring(0, 1) + rawStatus.substring(1).toLowerCase());
 
     final paidAll = order.fullyPaid == true;
 
+    final displayCode =
+        (order.orderCode != null && order.orderCode!.trim().isNotEmpty)
+            ? order.orderCode!.trim()
+            : '#${order.orderId}';
+
     Color statusColor() {
-      if (rawStatus == 'PENDING' || rawStatus == 'CANCEL_REQUESTED') return colors.muted;
+      if (rawStatus == 'PENDING' || rawStatus == 'CANCEL_REQUESTED') {
+        return colors.muted;
+      }
       if (rawStatus == 'COMPLETED') return colors.success;
-      if (rawStatus == 'CANCELED' || rawStatus == 'CANCELLED') return colors.danger;
+      if (rawStatus == 'CANCELED' || rawStatus == 'CANCELLED') {
+        return colors.danger;
+      }
       return colors.muted;
     }
 
     Widget badge(String text, Color c) {
       return Container(
-        padding: EdgeInsets.symmetric(horizontal: spacing.sm, vertical: spacing.xs),
+        padding:
+            EdgeInsets.symmetric(horizontal: spacing.sm, vertical: spacing.xs),
         decoration: BoxDecoration(
           color: c.withOpacity(0.12),
           borderRadius: BorderRadius.circular(999),
@@ -79,8 +77,6 @@ class OrderGroupCard extends StatelessWidget {
         ),
       );
     }
-
-    final imageUrl = _absUrl(order.previewImageUrl);
 
     return InkWell(
       borderRadius: BorderRadius.circular(tokens.card.radius),
@@ -101,99 +97,89 @@ class OrderGroupCard extends StatelessWidget {
               : null,
         ),
         padding: EdgeInsets.all(tokens.card.padding),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                width: 76,
-                height: 76,
-                color: colors.background,
-                child: (imageUrl.isEmpty)
-                    ? Icon(Icons.receipt_long_outlined, color: colors.muted)
-                    : Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Icon(Icons.broken_image_outlined, color: colors.muted),
-                      ),
-              ),
-            ),
-            SizedBox(width: spacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Order #${order.orderId}',
-                          style: tokens.typography.titleMedium.copyWith(
-                            color: colors.label,
-                            fontWeight: FontWeight.w800,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Icon(Icons.chevron_right_rounded, color: colors.muted),
-                    ],
-                  ),
-                  SizedBox(height: spacing.xs),
-                  Text(
-                    (order.previewItemName ?? 'Item').toString(),
-                    style: tokens.typography.bodyMedium.copyWith(
-                      color: colors.body,
-                      fontWeight: FontWeight.w600,
+            // Header: Order + code + chevron
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Order $displayCode',
+                    style: tokens.typography.titleMedium.copyWith(
+                      color: colors.label,
+                      fontWeight: FontWeight.w800,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: spacing.sm),
+                ),
+                Icon(Icons.chevron_right_rounded, color: colors.muted),
+              ],
+            ),
 
-                  Wrap(
-                    spacing: spacing.sm,
-                    runSpacing: spacing.sm,
-                    children: [
-                      if (prettyStatus.isNotEmpty) badge(prettyStatus, statusColor()),
-                      badge(paidAll ? l10n.ordersPaid : l10n.ordersUnpaid,
-                          paidAll ? colors.success : colors.muted),
-                    ],
+            SizedBox(height: spacing.xs),
+
+            // Item name
+            Text(
+              (order.previewItemName ?? 'Item').toString(),
+              style: tokens.typography.bodyMedium.copyWith(
+                color: colors.body,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            SizedBox(height: spacing.sm),
+
+            // Badges row
+            Wrap(
+              spacing: spacing.sm,
+              runSpacing: spacing.sm,
+              children: [
+                if (prettyStatus.isNotEmpty) badge(prettyStatus, statusColor()),
+                badge(
+                  paidAll ? l10n.ordersPaid : l10n.ordersUnpaid,
+                  paidAll ? colors.success : colors.muted,
+                ),
+              ],
+            ),
+
+            SizedBox(height: spacing.sm),
+
+            // Info row (count • total • date)
+            Wrap(
+              spacing: spacing.xs,
+              runSpacing: spacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  '${order.itemsCount} ${order.itemsCount == 1 ? "item" : "items"}'
+                  '${order.linesCount != order.itemsCount ? " (${order.linesCount} lines)" : ""}',
+                  style: tokens.typography.bodySmall.copyWith(color: colors.body),
+                ),
+                Text('•',
+                    style:
+                        tokens.typography.bodySmall.copyWith(color: colors.muted)),
+                Text(
+                  _money(order.totalPrice),
+                  style: tokens.typography.bodySmall.copyWith(
+                    color: colors.body,
+                    fontWeight: FontWeight.w700,
                   ),
-
-                  SizedBox(height: spacing.sm),
-
-                  Wrap(
-                    spacing: spacing.xs,
-                    runSpacing: spacing.xs,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        '${order.itemsCount} ${order.itemsCount == 1 ? "item" : "items"}'
-                        '${order.linesCount != order.itemsCount ? " (${order.linesCount} lines)" : ""}',
-                        style: tokens.typography.bodySmall.copyWith(color: colors.body),
-                      ),
-                      Text('•', style: tokens.typography.bodySmall.copyWith(color: colors.muted)),
-                      Text(
-                        _money(order.totalPrice),
-                        style: tokens.typography.bodySmall.copyWith(
-                          color: colors.body,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (order.orderDate != null) ...[
-                        Text('•', style: tokens.typography.bodySmall.copyWith(color: colors.muted)),
-                        Text(
-                          _formatDateTime(order.orderDate!),
-                          style: tokens.typography.bodySmall.copyWith(color: colors.muted),
-                        ),
-                      ],
-                    ],
+                ),
+                if (order.orderDate != null) ...[
+                  Text('•',
+                      style: tokens.typography.bodySmall
+                          .copyWith(color: colors.muted)),
+                  Text(
+                    _formatDateTime(order.orderDate!),
+                    style:
+                        tokens.typography.bodySmall.copyWith(color: colors.muted),
                   ),
                 ],
-              ),
+              ],
             ),
           ],
         ),

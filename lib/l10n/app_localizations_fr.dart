@@ -2689,4 +2689,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get editProfile_emailUpdatedToast => 'E-mail mis à jour avec succès';
+
+  @override
+  String home_stock_left_label(int count) {
+    return 'Stock restant : $count';
+  }
 }

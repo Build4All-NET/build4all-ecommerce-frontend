@@ -1,3 +1,4 @@
+import 'package:build4front/features/catalog/cubit/money.dart';
 import 'package:build4front/features/checkout/presentation/screens/order_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,7 +46,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _addressFormController = CheckoutAddressFormController();
   bool _showAddressPickerErrors = false;
 
-  // ✅ NEW: keys to scroll to problematic sections
+  // ✅ scroll anchors
   final _itemsSectionKey = GlobalKey();
   final _addressSectionKey = GlobalKey();
   final _shippingSectionKey = GlobalKey();
@@ -111,20 +112,56 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       listenWhen: (prev, curr) =>
           prev.error != curr.error || prev.orderSummary != curr.orderSummary,
       listener: (context, state) {
-        if (state.error != null && state.error!.trim().isNotEmpty) {
-          AppToast.show(context, state.error!, isError: true);
+        final err = (state.error ?? '').trim();
+
+        // ✅ stop coupon errors from spamming toast
+        final isCouponErr = err.toLowerCase().contains('coupon');
+        if (err.isNotEmpty && !isCouponErr) {
+          AppToast.show(context, err, isError: true);
         }
 
-        if (state.orderSummary != null) {
-          final id = state.orderSummary!.orderId;
+        final summary = state.orderSummary;
+        if (summary != null) {
+          final code = (summary.orderCode ?? '').trim();
 
-          AppToast.show(context, l10n.checkoutOrderPlacedToast(id));
+          AppToast.show(
+            context,
+            code.isNotEmpty
+                ? 'Order placed: $code'
+                : l10n.checkoutOrderPlacedToast(summary.orderId),
+          );
+
           context.read<CartBloc>().add(const CartRefreshed());
+
+          // ✅ BEST fallback: from quote lines first (they include itemName)
+          final map = <int, String>{};
+
+          final q = state.quote; // assumes you added quote to state
+          if (q != null) {
+            for (final l in q.lines) {
+              final n = (l.itemName ?? '').trim();
+              if (n.isNotEmpty) map[l.itemId] = n;
+            }
+          }
+
+          // ✅ fallback #2: from cart itemName
+          final cart = state.cart;
+          if (map.isEmpty && cart != null) {
+            for (final it in cart.items) {
+              final n = (it.itemName ?? '').trim();
+              if (n.isNotEmpty) map[it.itemId] = n;
+            }
+          }
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => OrderDetailsScreen(summary: state.orderSummary!),
+              builder: (_) => OrderDetailsScreen(
+                summary: summary,
+                address: state.address,
+                shipping: state.selectedQuote,
+                itemNameById: map.isEmpty ? null : map,
+              ),
             ),
           );
         }
@@ -167,11 +204,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 44,
-                          color: colors.muted,
-                        ),
+                        Icon(Icons.shopping_cart_outlined,
+                            size: 44, color: colors.muted),
                         SizedBox(height: spacing.sm),
                         Text(
                           l10n.checkoutEmptyCart,
@@ -190,6 +224,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                 );
+              }
+
+              // ✅ Coupon inline status
+              final couponInput = state.coupon.trim();
+              final quote = state.quote;
+              final err = (state.error ?? '').trim().toLowerCase();
+              final isCouponErr = err.contains('coupon');
+
+              bool? couponValid;
+              String? couponMsg;
+
+              if (couponInput.isNotEmpty) {
+                if (isCouponErr) {
+                  couponValid = false;
+                  couponMsg = 'Invalid coupon';
+                } else if (quote == null) {
+                  couponValid = null;
+                  couponMsg = 'Checking...';
+                } else {
+                  final qCode = (quote.couponCode ?? '').trim();
+                  final same = qCode.isNotEmpty &&
+                      qCode.toUpperCase() == couponInput.toUpperCase();
+
+                  if (same) {
+                    couponValid = true;
+                    final disc = quote.couponDiscount ?? 0.0;
+                    couponMsg = disc > 0
+                        ? 'Applied • -${money(context, disc)}'
+                        : 'Applied';
+                  } else {
+                    // if quote returned but couponCode empty => treat invalid
+                    couponValid = false;
+                    couponMsg = 'Invalid coupon';
+                  }
+                }
               }
 
               return RefreshIndicator(
@@ -233,11 +302,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     SizedBox(height: spacing.md),
 
-                    // ✅ Coupon
+                    // ✅ Coupon (inline result below field)
                     CheckoutSectionCard(
                       title: l10n.checkoutCouponTitle,
                       child: CheckoutCouponField(
                         initial: state.coupon,
+                        isValid: couponValid,
+                        message: couponMsg,
                         onChanged: (v) {
                           context.read<CheckoutBloc>().add(CheckoutCouponChanged(v));
                         },
@@ -253,12 +324,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: CheckoutShippingMethods(
                           quotes: state.shippingQuotes,
                           selectedMethodId: state.selectedShippingMethodId,
-                          onSelect: (id) => context.read<CheckoutBloc>().add(
-                                CheckoutShippingSelected(id),
-                              ),
-                          onRefresh: () => context.read<CheckoutBloc>().add(
-                                const CheckoutRefreshRequested(),
-                              ),
+                          onSelect: (id) => context
+                              .read<CheckoutBloc>()
+                              .add(CheckoutShippingSelected(id)),
+                          onRefresh: () => context
+                              .read<CheckoutBloc>()
+                              .add(const CheckoutRefreshRequested()),
                         ),
                       ),
                     ),
@@ -272,21 +343,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: CheckoutPaymentMethods(
                           methods: state.paymentMethods,
                           selectedIndex: state.selectedPaymentIndex,
-                          onSelectIndex: (i) => context.read<CheckoutBloc>().add(
-                                CheckoutPaymentSelected(i),
-                              ),
+                          onSelectIndex: (i) => context
+                              .read<CheckoutBloc>()
+                              .add(CheckoutPaymentSelected(i)),
                         ),
                       ),
                     ),
                     SizedBox(height: spacing.md),
 
-                    // ✅ Summary
+                    // ✅ Summary (uses quote if you have it)
                     CheckoutSectionCard(
                       title: l10n.checkoutSummaryTitle,
                       child: CheckoutOrderSummary(
                         cart: cart,
                         selectedShipping: state.selectedQuote,
                         tax: state.tax,
+                        quote: state.quote,
                       ),
                     ),
                     SizedBox(height: spacing.xl),
@@ -309,6 +381,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 cart: cart,
                 selectedShipping: state.selectedQuote,
                 tax: state.tax,
+                quote: state.quote,
                 isPlacing: state.placing,
                 onPlaceOrder: () async {
                   FocusScope.of(context).unfocus();
@@ -317,25 +390,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   final bloc = context.read<CheckoutBloc>();
                   if (bloc.state.placing) return;
 
-                  // ✅ show inline picker errors
                   if (!_showAddressPickerErrors) {
                     setState(() => _showAddressPickerErrors = true);
                   }
 
-                  // ✅ push latest form values to bloc
                   _addressFormController.flush();
                   await Future<void>.delayed(const Duration(milliseconds: 25));
                   if (!mounted) return;
 
-                  // ✅ validate form
                   final formState = _addressFormKey.currentState;
                   final formOk = formState?.validate() ?? false;
                   formState?.save();
 
-                  // ✅ best possible error message
                   final firstErr = _addressFormController.firstError(l10n);
 
-                  // ✅ If address invalid, SCROLL to address immediately
                   if (!formOk || firstErr != null) {
                     await _scrollTo(_addressSectionKey);
                     AppToast.show(
@@ -348,21 +416,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                   final s = bloc.state;
 
-                  // ✅ Payment validation
                   if (s.selectedPaymentIndex == null) {
                     await _scrollTo(_paymentSectionKey);
                     AppToast.show(context, l10n.checkoutSelectPayment, isError: true);
                     return;
                   }
 
-                  // ✅ Shipping validation
                   if (s.shippingQuotes.isNotEmpty && s.selectedShippingMethodId == null) {
                     await _scrollTo(_shippingSectionKey);
                     AppToast.show(context, l10n.checkoutSelectShipping, isError: true);
                     return;
                   }
 
-                  // ✅ Confirm dialog
                   final itemCount = s.cart?.items.length ?? 0;
                   final ok = await _confirmCartWillBeCleared(itemCount);
                   if (!ok || !mounted) return;

@@ -29,6 +29,22 @@ class ItemDetailsPage extends StatelessWidget {
   final int itemId;
   const ItemDetailsPage({super.key, required this.itemId});
 
+  // ✅ Stock UX:
+  // - stock <= 0  => Out of stock
+  // - 1..10       => "Only X left"
+  // - > 10        => null (hide, no numbers)
+  // - null        => null (not tracked)
+  String? _stockStatusLabel(AppLocalizations l10n, int? stock) {
+    if (stock == null) return null;
+    if (stock <= 0) return l10n.outOfStock;
+
+    // ✅ requires l10n key: home_stock_left_label(count)
+    if (stock <= 10) return l10n.home_stock_left_label(stock);
+
+    // ✅ hide when plenty
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -84,9 +100,14 @@ class ItemDetailsPage extends StatelessWidget {
           final curPrice = d.displayPrice;
           final oldPrice = d.oldPriceIfDiscounted;
 
-          // ✅ STOCK GUARD (FIX)
-          final bool isStockTracked = d.stock != null;
-          final bool outOfStock = isStockTracked && (d.stock! <= 0);
+          // ✅ STOCK GUARD (no raw numbers shown)
+          final int? stock = d.stock;
+          final bool isStockTracked = stock != null;
+          final bool outOfStock = isStockTracked && stock! <= 0;
+          final bool lowStock =
+              isStockTracked && stock! > 0 && stock! <= 10;
+
+          final String? stockStatus = _stockStatusLabel(l10n, stock);
 
           // sale tag
           String? tag;
@@ -166,7 +187,33 @@ class ItemDetailsPage extends StatelessWidget {
                         ),
                       ),
                     ],
+
+                    // ✅ low stock pill near price (ONLY for 1..10)
+                    if (lowStock && stockStatus != null) ...[
+                      SizedBox(width: spacing.sm),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: spacing.sm,
+                          vertical: spacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.tertiaryContainer.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: c.tertiary.withOpacity(0.25),
+                          ),
+                        ),
+                        child: Text(
+                          stockStatus,
+                          style: t.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     const Spacer(),
+
                     if (tag != null)
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -190,7 +237,7 @@ class ItemDetailsPage extends StatelessWidget {
                   ],
                 ),
 
-                // ✅ optional: show a small out-of-stock hint
+                // ✅ out-of-stock banner only when stock tracked and <= 0
                 if (outOfStock) ...[
                   SizedBox(height: spacing.sm),
                   Container(
@@ -224,53 +271,55 @@ class ItemDetailsPage extends StatelessWidget {
 
                 SizedBox(height: spacing.md),
 
-// ✅ ASK AI BUTTON (Details)
-AiEnabledGate(
-  minRefreshInterval: const Duration(seconds: 10), // ✅ optional
-  whenEnabled: (ctx) {
-    return Padding(
-      padding: EdgeInsets.only(top: spacing.xs),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: OutlinedButton.icon(
-          onPressed: () {
-            showModalBottomSheet(
-              context: ctx,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) {
-                final remote = AiChatRemoteDataSource();
-                final repo = AiChatRepositoryImpl(remote);
-                final usecase = ChatItemUseCase(repo);
+                // ✅ ASK AI BUTTON (Details)
+                AiEnabledGate(
+                  minRefreshInterval: const Duration(seconds: 10),
+                  whenEnabled: (ctx) {
+                    return Padding(
+                      padding: EdgeInsets.only(top: spacing.xs),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: ctx,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) {
+                                final remote = AiChatRemoteDataSource();
+                                final repo = AiChatRepositoryImpl(remote);
+                                final usecase = ChatItemUseCase(repo);
 
-                return BlocProvider(
-                  create: (_) => AiChatBloc(useCase: usecase),
-                  child: AiItemChatSheet(
-                    itemId: d.id,
-                    title: d.name,
-                    imageUrl: image,
-                  ),
-                );
-              },
-            );
-          },
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: c.primary.withOpacity(0.35)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(card.radius / 1.5),
-            ),
-          ),
-          icon: const Icon(Icons.auto_awesome, size: 18),
-          label: Text(
-            l10n.ai_ask_button,
-            style: t.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ),
-      ),
-    );
-  },
-),
+                                return BlocProvider(
+                                  create: (_) => AiChatBloc(useCase: usecase),
+                                  child: AiItemChatSheet(
+                                    itemId: d.id,
+                                    title: d.name,
+                                    imageUrl: image,
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: c.primary.withOpacity(0.35)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(card.radius / 1.5),
+                            ),
+                          ),
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: Text(
+                            l10n.ai_ask_button,
+                            style:
+                                t.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
 
                 SizedBox(height: spacing.lg),
                 Divider(color: c.outline.withOpacity(0.2)),
@@ -294,11 +343,15 @@ AiEnabledGate(
                 // QUICK INFO
                 _infoRow(context,
                     label: l10n.common_sku_label, value: d.sku ?? '-'),
-                _infoRow(
-                  context,
-                  label: l10n.common_stock_label_plain,
-                  value: d.stock?.toString() ?? '-',
-                ),
+
+                // ✅ STOCK row only when meaningful (OutOfStock or Only X left)
+                if (stockStatus != null)
+                  _infoRow(
+                    context,
+                    label: l10n.common_stock_label_plain,
+                    value: stockStatus,
+                  ),
+
                 _infoRow(
                   context,
                   label: l10n.common_tax_label,
@@ -338,11 +391,10 @@ AiEnabledGate(
 
                 SizedBox(height: spacing.xl),
 
-                // ✅ CTA (Add to cart) — FIXED
+                // ✅ CTA (Add to cart) — disabled when out of stock
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    // ✅ DISABLE when out of stock
                     onPressed: outOfStock
                         ? null
                         : () {
@@ -357,22 +409,31 @@ AiEnabledGate(
                               return;
                             }
 
-                            // ✅ extra safety (even though button is enabled)
+                            // ✅ extra safety
                             if (outOfStock) {
-                              AppToast.show(context, l10n.outOfStock,
-                                  isError: true);
+                              AppToast.show(
+                                context,
+                                l10n.outOfStock,
+                                isError: true,
+                              );
                               return;
                             }
 
                             context.read<CartBloc>().add(
                                   CartAddItemRequested(
-                                      itemId: d.id, quantity: 1),
+                                    itemId: d.id,
+                                    quantity: 1,
+                                  ),
                                 );
 
                             AppToast.show(
-                                context, l10n.cart_item_added_snackbar);
+                              context,
+                              l10n.cart_item_added_snackbar,
+                            );
                           },
-                    child: Text(outOfStock ? l10n.outOfStock : l10n.cart_add_button),
+                    child: Text(
+                      outOfStock ? l10n.outOfStock : l10n.cart_add_button,
+                    ),
                   ),
                 ),
               ],

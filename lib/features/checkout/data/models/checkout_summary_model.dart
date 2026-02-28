@@ -1,20 +1,12 @@
 // lib/features/checkout/data/models/checkout_summary_model.dart
-//
-// Checkout response returned by backend from POST /api/orders/checkout
-//
-// NEW FLOW (backend orchestrated):
-// Backend returns:
-// - paymentProviderCode (STRIPE/PAYPAL/CASH)
-// - clientSecret (Stripe)
-// - publishableKey (Stripe pk_...)
-// - redirectUrl (PayPal)
-// - paymentStatus
-//
-// We must parse these fields so CheckoutBloc can use them.
 
 class CheckoutSummaryModel {
   final int orderId;
   final String? orderDate;
+
+  // NEW (what user/admin should see)
+  final String? orderCode;
+final int? orderSeq;
 
   final double itemsSubtotal;
   final double shippingTotal;
@@ -30,18 +22,20 @@ class CheckoutSummaryModel {
   final String? couponCode;
   final double? couponDiscount;
 
-  // ✅ Payment fields returned by backend
+  //  Payment fields returned by backend
   final int? paymentTransactionId;
   final String? paymentProviderCode; // STRIPE / PAYPAL / CASH
   final String? providerPaymentId;   // Stripe: pi_...
   final String? clientSecret;        // Stripe: pi_..._secret_...
-  final String? publishableKey;      // ✅ Stripe: pk_...
+  final String? publishableKey;      // Stripe: pk_...
   final String? redirectUrl;         // PayPal approval URL
   final String? paymentStatus;       // REQUIRES_PAYMENT_METHOD / PAID / ...
 
   CheckoutSummaryModel({
     required this.orderId,
     required this.orderDate,
+    this.orderCode,
+this.orderSeq,// ✅ NEW
     required this.itemsSubtotal,
     required this.shippingTotal,
     required this.itemTaxTotal,
@@ -73,10 +67,20 @@ class CheckoutSummaryModel {
     return int.tryParse(v.toString());
   }
 
+  static String? _toStringOrNull(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString().trim();
+    return s.isEmpty ? null : s;
+  }
+
   factory CheckoutSummaryModel.fromJson(Map<String, dynamic> json) {
     return CheckoutSummaryModel(
       orderId: (json['orderId'] as num?)?.toInt() ?? 0,
       orderDate: json['orderDate']?.toString(),
+
+      // ✅ NEW: accept multiple backend key styles just in case
+     orderCode: (json['orderCode'] ?? json['order_code'] ?? json['code'])?.toString(),
+orderSeq: _toIntOrNull(json['orderSeq'] ?? json['order_seq']),
 
       itemsSubtotal: _toDouble(json['itemsSubtotal']),
       shippingTotal: _toDouble(json['shippingTotal']),
@@ -95,16 +99,12 @@ class CheckoutSummaryModel {
       couponCode: json['couponCode']?.toString(),
       couponDiscount: json['couponDiscount'] == null ? null : _toDouble(json['couponDiscount']),
 
-      // ✅ Payment mapping (matches your backend JSON)
       paymentTransactionId: _toIntOrNull(json['paymentTransactionId']),
       paymentProviderCode: (json['paymentProviderCode'] ?? json['providerCode'] ?? json['paymentMethod'])
           ?.toString(),
       providerPaymentId: (json['providerPaymentId'] ?? json['paymentIntentId'])?.toString(),
       clientSecret: (json['clientSecret'] ?? json['paymentIntentClientSecret'])?.toString(),
-
-      // ✅ THIS is what you want (read pk_ from API)
       publishableKey: (json['publishableKey'] ?? json['stripePublishableKey'])?.toString(),
-
       redirectUrl: (json['redirectUrl'] ?? json['approvalUrl'])?.toString(),
       paymentStatus: (json['paymentStatus'] ?? json['status'])?.toString(),
     );
@@ -116,8 +116,6 @@ class CheckoutLineSummaryModel {
   final String? itemName;
   final int quantity;
   final double unitPrice;
-
-  // backend sends lineSubtotal (or lineTotal)
   final double lineSubtotal;
 
   CheckoutLineSummaryModel({

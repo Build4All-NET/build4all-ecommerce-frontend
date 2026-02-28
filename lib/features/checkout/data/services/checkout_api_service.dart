@@ -85,6 +85,30 @@ class CheckoutApiService {
   }
 
 
+  /// NEW: quote total BEFORE checkout (no order created)
+  /// Backend should call quoteCheckoutFromCart()
+  /// Suggested path: POST /api/orders/checkout/quote-from-cart
+  Future<Map<String, dynamic>> quoteFromCart(Map<String, dynamic> body) async {
+    try {
+      final res = await _fetch.fetch(
+        HttpMethod.post,
+        '/api/orders/checkout/quote', 
+        data: body,
+      );
+      return Map<String, dynamic>.from(res.data as Map);
+    } on DioException catch (e) {
+      final raw = e.response?.data;
+
+      Map<String, dynamic>? data;
+      if (raw is Map) data = Map<String, dynamic>.from(raw);
+
+      final msg = (data?['error'] ?? data?['message'])?.toString();
+      if (msg != null && msg.trim().isNotEmpty) throw Exception(msg);
+
+      rethrow;
+    }
+  }
+
   /// Prefill checkout shipping form (most recent order)
   /// GET /api/orders/myorders/last-shipping-address
   Future<Map<String, dynamic>> getMyLastShippingAddress() async {

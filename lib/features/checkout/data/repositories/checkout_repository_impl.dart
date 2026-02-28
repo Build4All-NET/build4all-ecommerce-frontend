@@ -37,6 +37,32 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     );
   }
 
+  @override
+  Future<CheckoutSummaryModel> quoteFromCart({
+    required int currencyId,
+    String? couponCode,
+    required int? shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+  }) async {
+    final body = <String, dynamic>{
+      'currencyId': currencyId,
+
+      // backend expects CheckoutRequest.shippingAddress
+      'shippingAddress': {
+        ..._addressToJson(shippingAddress),
+        'shippingMethodId': shippingMethodId,
+        'shippingMethodName': shippingMethodName,
+      },
+    };
+
+    final c = (couponCode ?? '').trim();
+    if (c.isNotEmpty) body['couponCode'] = c;
+
+    final json = await api.quoteFromCart(body);
+    return CheckoutSummaryModel.fromJson(json);
+  }
+
  Map<String, dynamic> _addressToJson(ShippingAddress a) => {
         'countryId': a.countryId,
         'regionId': a.regionId,

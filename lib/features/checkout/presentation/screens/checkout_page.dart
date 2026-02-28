@@ -1,6 +1,7 @@
 import 'package:build4front/features/checkout/data/repositories/checkout_repository_impl.dart';
 import 'package:build4front/features/checkout/data/services/checkout_api_service.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_last_shipping_address.dart';
+import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,7 +23,11 @@ class CheckoutPage extends StatelessWidget {
   final AppConfig appConfig;
   final int? ownerProjectId;
 
-  const CheckoutPage({super.key, required this.appConfig, this.ownerProjectId});
+  const CheckoutPage({
+    super.key,
+    required this.appConfig,
+    this.ownerProjectId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +36,20 @@ class CheckoutPage extends StatelessWidget {
 
     final int? currencyId = int.tryParse(Env.currencyId);
 
+    // ✅ Single instances (no duplicates)
     final CheckoutApiService api = CheckoutApiService();
     final CheckoutRepository repo = CheckoutRepositoryImpl(api);
 
+    // ✅ Usecases
     final getCart = GetCheckoutCart(repo);
     final getPms = GetPaymentMethods(repo);
     final getQuotes = GetShippingQuotes(repo);
     final tax = PreviewTax(repo);
     final place = PlaceOrder(repo);
+    final lastAddr = GetLastShippingAddress(repo);
+
+    // ✅ NEW: quote usecase (shows totals before place order)
+    final quote = QuoteFromCart(repo);
 
     return BlocProvider(
       create: (_) => CheckoutBloc(
@@ -49,8 +60,10 @@ class CheckoutPage extends StatelessWidget {
         placeOrder: place,
         ownerProjectId: ownerId,
         currencyId: currencyId,
-       getLastShippingAddress: GetLastShippingAddress(CheckoutRepositoryImpl(CheckoutApiService()), 
-      ),
+        getLastShippingAddress: lastAddr,
+
+        // ✅ required by the updated bloc
+        quoteFromCart: quote,
       ),
       child: CheckoutScreen(appConfig: appConfig, ownerProjectId: ownerId),
     );

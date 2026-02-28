@@ -1,9 +1,16 @@
+import 'dart:convert';
+
 import 'package:build4front/core/config/env.dart';
 import '../../domain/entities/admin_order_entities.dart';
 
 DateTime? _tryParseDate(dynamic v) {
   if (v == null) return null;
-  if (v is String && v.trim().isNotEmpty) return DateTime.tryParse(v);
+  if (v is DateTime) return v;
+  if (v is String) {
+    final s = v.trim();
+    if (s.isEmpty) return null;
+    return DateTime.tryParse(s);
+  }
   return null;
 }
 
@@ -157,9 +164,12 @@ class OrderHeaderRowModel {
   final bool fullyPaid;
   final PaymentSummaryModel payment;
 
-  // list endpoint extras
   final String? phone;
   final String? addressLine;
+
+  // ✅ NEW
+  final String? orderCode;
+  final int? orderSeq;
 
   OrderHeaderRowModel({
     required this.id,
@@ -172,6 +182,10 @@ class OrderHeaderRowModel {
     required this.payment,
     this.phone,
     this.addressLine,
+
+    // ✅ NEW
+    this.orderCode,
+    this.orderSeq,
   });
 
   factory OrderHeaderRowModel.fromJson(Map<String, dynamic> json) {
@@ -187,13 +201,16 @@ class OrderHeaderRowModel {
         (json['payment'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
       phone: _firstNonEmpty(json, const ['phone', 'shippingPhone']),
-      // backend may use addressline / addressLine / shippingAddress
       addressLine: _firstNonEmpty(json, const [
         'addressline',
         'addressLine',
         'shippingAddress',
         'shippingAddressLine',
       ]),
+
+      // ✅ NEW
+      orderCode: json['orderCode']?.toString(),
+      orderSeq: json['orderSeq'] == null ? null : _toInt(json['orderSeq']),
     );
   }
 
@@ -208,8 +225,14 @@ class OrderHeaderRowModel {
         payment: payment.toEntity(),
         phone: phone,
         addressLine: addressLine,
+
+        // ✅ NEW
+        orderCode: orderCode,
+        orderSeq: orderSeq,
       );
 }
+
+ 
 
 class CurrencyMiniModel {
   final String? code;
@@ -377,6 +400,7 @@ class OrderDetailsHeaderModel {
 
   final String? shippingCity;
   final String? shippingPostalCode;
+  final String? shippingFullName;
 
   final String? shippingPhone;
   final String? shippingAddress;
@@ -388,9 +412,11 @@ class OrderDetailsHeaderModel {
   final double? shippingTaxTotal;
   final String? couponCode;
   final double? couponDiscount;
-
+final String? orderCode;
+  final int? orderSeq;
   final bool fullyPaid;
   final PaymentSummaryModel payment;
+  
 
   OrderDetailsHeaderModel({
     required this.id,
@@ -398,6 +424,10 @@ class OrderDetailsHeaderModel {
     required this.totalPrice,
     required this.status,
     required this.statusUi,
+    required this.orderCode,
+    required this.orderSeq,
+
+    this.shippingFullName,
     this.paymentMethod,
     this.currency,
     this.shippingCity,
@@ -422,6 +452,7 @@ class OrderDetailsHeaderModel {
       totalPrice: _toDouble(json['totalPrice']),
       status: (json['status'] ?? '').toString(),
       statusUi: (json['statusUi'] ?? '').toString(),
+      
 
       paymentMethod: json['paymentMethod']?.toString(),
       currency: (json['currency'] is Map)
@@ -444,6 +475,12 @@ class OrderDetailsHeaderModel {
         'address',
       ]),
 
+      shippingFullName: _firstNonEmpty(json, const [
+  'shippingFullName',
+  'fullName',
+  'customerName',
+]),
+
       shippingMethodId: json['shippingMethodId'] == null
           ? null
           : _toInt(json['shippingMethodId']),
@@ -465,31 +502,39 @@ class OrderDetailsHeaderModel {
       payment: PaymentSummaryModel.fromJson(
         (json['payment'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
+       orderCode: json['orderCode']?.toString(),
+      orderSeq: json['orderSeq'] == null ? null : _toInt(json['orderSeq']),
     );
   }
 
-  OrderDetailsHeader toEntity() => OrderDetailsHeader(
-        id: id,
-        orderDate: orderDate,
-        totalPrice: totalPrice,
-        status: status,
-        statusUi: statusUi,
-        paymentMethod: paymentMethod,
-        currency: currency?.toEntity(),
-        shippingCity: shippingCity,
-        shippingPostalCode: shippingPostalCode,
-        shippingPhone: shippingPhone,
-        shippingAddress: shippingAddress,
-        shippingMethodId: shippingMethodId,
-        shippingMethodName: shippingMethodName,
-        shippingTotal: shippingTotal,
-        itemTaxTotal: itemTaxTotal,
-        shippingTaxTotal: shippingTaxTotal,
-        couponCode: couponCode,
-        couponDiscount: couponDiscount,
-        fullyPaid: fullyPaid,
-        payment: payment.toEntity(),
-      );
+OrderDetailsHeader toEntity() => OrderDetailsHeader(
+  id: id,
+  orderDate: orderDate,
+  totalPrice: totalPrice,
+  status: status,
+  statusUi: statusUi,
+  orderCode: orderCode,
+  orderSeq: orderSeq,
+  paymentMethod: paymentMethod,
+  currency: currency?.toEntity(),
+  shippingCity: shippingCity,
+  shippingPostalCode: shippingPostalCode,
+  shippingPhone: shippingPhone,
+  shippingAddress: shippingAddress,
+
+  // ✅ ADD THIS LINE
+  shippingFullName: shippingFullName,
+
+  shippingMethodId: shippingMethodId,
+  shippingMethodName: shippingMethodName,
+  shippingTotal: shippingTotal,
+  itemTaxTotal: itemTaxTotal,
+  shippingTaxTotal: shippingTaxTotal,
+  couponCode: couponCode,
+  couponDiscount: couponDiscount,
+  fullyPaid: fullyPaid,
+  payment: payment.toEntity(),
+);
 }
 
 class OrderDetailsResponseModel {

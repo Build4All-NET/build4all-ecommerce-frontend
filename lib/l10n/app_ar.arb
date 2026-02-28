@@ -1043,6 +1043,12 @@
   "editProfile_change": "تغيير",
   "editProfile_remove": "حذف",
   "editProfile_codeSentToast": "تم إرسال رمز التحقق إلى بريدك الجديد",
-  "editProfile_emailUpdatedToast": "تم تحديث البريد الإلكتروني بنجاح"
+  "editProfile_emailUpdatedToast": "تم تحديث البريد الإلكتروني بنجاح",
+  "home_stock_left_label": "باقي {count} فقط",
+"@home_stock_left_label": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }

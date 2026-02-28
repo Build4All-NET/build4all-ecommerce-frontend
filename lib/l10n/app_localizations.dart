@@ -5268,6 +5268,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email updated successfully'**
   String get editProfile_emailUpdatedToast;
+
+  /// No description provided for @home_stock_left_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} left'**
+  String home_stock_left_label(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

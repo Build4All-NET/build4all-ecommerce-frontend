@@ -705,10 +705,9 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
             ? homeState.popularItems
             : homeState.recommendedItems;
 
-      case 'flash_sale':
-        return homeState.flashSaleItems.isNotEmpty
-            ? homeState.flashSaleItems
-            : homeState.popularItems;
+     case 'flash_sale':
+  //  flash sale only (no fallback)
+  return homeState.flashSaleItems;
 
       case 'new_arrivals':
         return homeState.newArrivalsItems.isNotEmpty
@@ -716,9 +715,8 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
             : homeState.popularItems;
 
       case 'best_sellers':
-        return homeState.bestSellersItems.isNotEmpty
-            ? homeState.bestSellersItems
-            : homeState.popularItems;
+        return 
+             homeState.popularItems;
 
       case 'top_rated':
         return homeState.topRatedItems.isNotEmpty
@@ -785,29 +783,36 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
     }
   }
 
-  String? _metaLabelFor(BuildContext context, ItemSummary item) {
-    final l10n = AppLocalizations.of(context)!;
+ String? _metaLabelFor(BuildContext context, ItemSummary item) {
+  final l10n = AppLocalizations.of(context)!;
 
-    switch (item.kind) {
-      case ItemKind.activity:
-        if (item.start == null) return null;
-        final dt = item.start!.toLocal();
-        final y = dt.year.toString().padLeft(4, '0');
-        final m = dt.month.toString().padLeft(2, '0');
-        final d = dt.day.toString().padLeft(2, '0');
-        final hh = dt.hour.toString().padLeft(2, '0');
-        final mm = dt.minute.toString().padLeft(2, '0');
-        return '$d/$m/$y  $hh:$mm';
+  switch (item.kind) {
+    case ItemKind.activity:
+      if (item.start == null) return null;
+      final dt = item.start!.toLocal();
+      final y = dt.year.toString().padLeft(4, '0');
+      final m = dt.month.toString().padLeft(2, '0');
+      final d = dt.day.toString().padLeft(2, '0');
+      final hh = dt.hour.toString().padLeft(2, '0');
+      final mm = dt.minute.toString().padLeft(2, '0');
+      return '$d/$m/$y  $hh:$mm';
 
-      case ItemKind.product:
-        if (_isOutOfStock(item)) return l10n.outOfStock;
-        if (item.stock == null) return null;
-        return l10n.home_stock_label(item.stock!);
+    case ItemKind.product:
+      final stock = item.stock;
 
-      default:
-        return null;
-    }
+      if (stock == null) return null;
+      if (stock <= 0) return l10n.outOfStock;
+
+      // ✅ only show when low
+      if (stock <= 10) return l10n.home_stock_left_label(stock);
+
+      // ✅ hide when plenty
+      return null;
+
+    default:
+      return null;
   }
+}
 
   void _handleCtaPressed(BuildContext context, ItemSummary item) {
     final l10n = AppLocalizations.of(context)!;

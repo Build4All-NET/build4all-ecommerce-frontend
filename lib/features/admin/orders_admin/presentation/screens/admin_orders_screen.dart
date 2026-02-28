@@ -37,8 +37,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       context: context,
       firstDate: DateTime(now.year - 2),
       lastDate: now,
-      initialDateRange:
-          _range ??
+      initialDateRange: _range ??
           DateTimeRange(
             start: now.subtract(const Duration(days: 30)),
             end: now,
@@ -113,8 +112,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             return RefreshIndicator(
               onRefresh: () async {
                 context.read<AdminOrdersBloc>().add(
-                  const AdminOrdersRefreshRequested(),
-                );
+                      const AdminOrdersRefreshRequested(),
+                    );
               },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -130,42 +129,37 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                     onClear: _clearRange,
                   ),
                   SizedBox(height: spacing.md),
-
                   _StatusChips(
                     selected: state.statusFilter, // null => ALL
                     onChanged: (value) {
                       final mapped = (value == 'ALL') ? null : value;
                       context.read<AdminOrdersBloc>().add(
-                        AdminOrdersStatusChanged(mapped),
-                      );
+                            AdminOrdersStatusChanged(mapped),
+                          );
                     },
                   ),
                   SizedBox(height: spacing.md),
-
                   if (filteredOrders.isEmpty)
                     _EmptyState(
                       title: l10n.adminNoOrders,
                       subtitle: l10n.adminNoOrdersHint,
                     ),
-
                   ...filteredOrders.map(
                     (o) => Padding(
                       padding: EdgeInsets.only(bottom: spacing.md),
                       child: _OrderHeaderCard(
                         row: o,
                         onTap: () async {
-                          final changed = await Navigator.of(context)
-                              .push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      AdminOrderDetailsScreen(orderId: o.id),
-                                ),
-                              );
+                          final changed = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) => AdminOrderDetailsScreen(orderId: o.id),
+                            ),
+                          );
 
                           if (changed == true && context.mounted) {
                             context.read<AdminOrdersBloc>().add(
-                              const AdminOrdersRefreshRequested(),
-                            );
+                                  const AdminOrdersRefreshRequested(),
+                                );
                           }
                         },
                       ),
@@ -199,7 +193,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   }
 }
 
-/* ===================== Analytics header (KPI now has extra info line) ===================== */
+/* ===================== Analytics header ===================== */
 
 class AdminOrdersAnalyticsHeader extends StatelessWidget {
   final List<OrderHeaderRow> orders;
@@ -252,9 +246,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
         backgroundColor: colors.surface,
         shape: StadiumBorder(
           side: BorderSide(
-            color: (selected ? colors.primary : colors.border).withOpacity(
-              0.35,
-            ),
+            color: (selected ? colors.primary : colors.border).withOpacity(0.35),
           ),
         ),
         labelStyle: tokens.typography.bodySmall.copyWith(
@@ -368,9 +360,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
                 ),
             ],
           ),
-
           SizedBox(height: spacing.xs),
-
           Wrap(
             spacing: spacing.xs,
             runSpacing: spacing.xs,
@@ -399,9 +389,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
               ),
             ],
           ),
-
           SizedBox(height: spacing.md),
-
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -426,8 +414,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
                 kpi(
                   title: l10n.adminKpiPaid,
                   value: money.format(stats.paidRevenue),
-                  sub:
-                      'Fully paid ${stats.fullyPaidCount}/${stats.ordersCount}',
+                  sub: 'Fully paid ${stats.fullyPaidCount}/${stats.ordersCount}',
                   icon: Icons.payments_outlined,
                   accent: colors.success,
                 ),
@@ -450,9 +437,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
               ],
             ),
           ),
-
           SizedBox(height: spacing.md),
-
           Row(
             children: [
               Text(
@@ -484,9 +469,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
-
           SizedBox(height: spacing.md),
-
           Text(
             l10n.adminPaidRevenueLast7Days,
             style: tokens.typography.bodyMedium.copyWith(
@@ -495,7 +478,6 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
             ),
           ),
           SizedBox(height: spacing.sm),
-
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: stats.last7Days.map((p) {
@@ -554,9 +536,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
     final revByDay = {for (final d in days) d: 0.0};
 
     for (final o in orders) {
-      final total = (o.payment.orderTotal <= 0)
-          ? o.totalPrice
-          : o.payment.orderTotal;
+      final total = (o.payment.orderTotal <= 0) ? o.totalPrice : o.payment.orderTotal;
       gross += total;
 
       final st = (o.status).toUpperCase();
@@ -636,7 +616,7 @@ class _RevenueDay {
   const _RevenueDay(this.day, this.revenue);
 }
 
-/* ===================== Status chips (ALL selection fixed) ===================== */
+/* ===================== Status chips ===================== */
 
 class _StatusChips extends StatelessWidget {
   final String? selected; // null => ALL
@@ -689,7 +669,7 @@ class _StatusChips extends StatelessWidget {
   }
 }
 
-/* ===================== keep your existing card / badge / empty (same as yours) ===================== */
+/* ===================== Card ===================== */
 
 class _OrderHeaderCard extends StatelessWidget {
   final OrderHeaderRow row;
@@ -708,9 +688,7 @@ class _OrderHeaderCard extends StatelessWidget {
     Color statusColor() {
       final s = row.status.toUpperCase();
       if (s == 'COMPLETED') return colors.success;
-      if (s == 'CANCELED' || s == 'REJECTED' || s == 'REFUNDED') {
-        return colors.danger;
-      }
+      if (s == 'CANCELED' || s == 'REJECTED' || s == 'REFUNDED') return colors.danger;
       if (s == 'CANCEL_REQUESTED') return colors.primary;
       return colors.muted;
     }
@@ -723,14 +701,17 @@ class _OrderHeaderCard extends StatelessWidget {
       return colors.muted;
     }
 
-    final total = (row.payment.orderTotal <= 0)
-        ? row.totalPrice
-        : row.payment.orderTotal;
+    final total = (row.payment.orderTotal <= 0) ? row.totalPrice : row.payment.orderTotal;
     final paid = row.payment.paidAmount;
     final progress = total <= 0 ? 0.0 : (paid / total).clamp(0.0, 1.0);
 
     final statusC = statusColor();
     final payC = payColor();
+
+    // ✅ NEW: order code label
+    final code = (row.orderCode ?? '').trim();
+    final seq = row.orderSeq;
+    final title = code.isNotEmpty ? 'Order $code' : l10n.adminOrderCardTitle(row.id);
 
     return InkWell(
       borderRadius: BorderRadius.circular(card.radius),
@@ -748,12 +729,27 @@ class _OrderHeaderCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    l10n.adminOrderCardTitle(row.id),
-                    style: tokens.typography.titleMedium.copyWith(
-                      color: colors.label,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: tokens.typography.titleMedium.copyWith(
+                          color: colors.label,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (code.isNotEmpty) ...[
+                        SizedBox(height: spacing.xs),
+                        Text(
+                          '#${row.id}${seq != null ? ' • Seq $seq' : ''}',
+                          style: tokens.typography.bodySmall.copyWith(
+                            color: colors.muted,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 _Badge(

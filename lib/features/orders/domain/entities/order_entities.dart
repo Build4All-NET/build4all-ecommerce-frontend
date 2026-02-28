@@ -18,11 +18,11 @@ class OrderCard {
   final int orderId;
   final DateTime? orderDate;
 
-  final String orderStatus; // raw: PENDING
-  final String? orderStatusUi; // pretty: Pending
+  final String orderStatus;
+  final String? orderStatusUi;
 
-  final int itemsCount; // total qty
-  final int linesCount; // number of lines
+  final int itemsCount;
+  final int linesCount;
 
   final double totalPrice;
 
@@ -31,6 +31,10 @@ class OrderCard {
 
   final bool fullyPaid;
   final PaymentSummary? payment;
+
+  // ✅ NEW
+  final String? orderCode;
+  final int? orderSeq;
 
   const OrderCard({
     required this.orderId,
@@ -44,5 +48,9 @@ class OrderCard {
     this.orderStatusUi,
     this.previewItemName,
     this.previewImageUrl,
+
+    // ✅ NEW
+    this.orderCode,
+    this.orderSeq,
   });
 }

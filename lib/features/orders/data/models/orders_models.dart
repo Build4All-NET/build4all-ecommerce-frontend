@@ -24,6 +24,18 @@ double _toDouble(dynamic v, {double fallback = 0}) {
   return fallback;
 }
 
+Map<String, dynamic>? _asMap(dynamic v) {
+  if (v is Map) return v.cast<String, dynamic>();
+  return null;
+}
+
+String _normStatusRaw(String v) {
+  final t = v.trim();
+  if (t.isEmpty) return '';
+  // handle "Cancel Requested" => "CANCEL_REQUESTED"
+  return t.toUpperCase().replaceAll(' ', '_');
+}
+
 class PaymentSummaryModel {
   final double orderTotal;
   final double paidAmount;
@@ -71,6 +83,10 @@ class OrderCardModel {
   final bool fullyPaid;
   final PaymentSummaryModel? payment;
 
+  // ✅ NEW
+  final String? orderCode;
+  final int? orderSeq;
+
   const OrderCardModel({
     required this.orderId,
     required this.totalPrice,
@@ -83,6 +99,10 @@ class OrderCardModel {
     this.previewImageUrl,
     required this.fullyPaid,
     this.payment,
+
+    // ✅ NEW
+    this.orderCode,
+    this.orderSeq,
   });
 
   factory OrderCardModel.fromJson(Map<String, dynamic> json) {
@@ -100,6 +120,10 @@ class OrderCardModel {
       previewImageUrl: json['previewImageUrl']?.toString(),
       fullyPaid: json['fullyPaid'] == true,
       payment: pay == null ? null : PaymentSummaryModel.fromJson(pay),
+
+      // ✅ NEW
+      orderCode: json['orderCode']?.toString(),
+      orderSeq: json['orderSeq'] == null ? null : _toInt(json['orderSeq']),
     );
   }
 
@@ -115,5 +139,10 @@ class OrderCardModel {
         previewImageUrl: previewImageUrl,
         fullyPaid: fullyPaid,
         payment: payment?.toEntity(),
+
+        // ✅ NEW
+        orderCode: orderCode,
+        orderSeq: orderSeq,
       );
 }
+

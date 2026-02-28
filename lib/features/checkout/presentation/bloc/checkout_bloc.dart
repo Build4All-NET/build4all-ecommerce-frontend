@@ -1,3 +1,7 @@
+// lib/features/checkout/presentation/bloc/checkout_bloc.dart
+
+import 'dart:async';
+
 import 'package:build4front/features/checkout/domain/errors/checkout_blocked_failure.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_last_shipping_address.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +17,7 @@ import 'package:build4front/features/checkout/domain/usecases/get_payment_method
 import 'package:build4front/features/checkout/domain/usecases/get_shipping_quotes.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
+import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.dart';
 
 import 'checkout_event.dart';
 import 'checkout_state.dart';
@@ -25,9 +30,14 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final PreviewTax previewTax;
   final PlaceOrder placeOrder;
 
+  // ✅ NEW
+  final QuoteFromCart quoteFromCart;
 
   final int ownerProjectId;
   final int? currencyId;
+
+  Timer? _quoteDebounce;
+  String? _lastQuoteSig;
 
   CheckoutBloc({
     required this.getCart,
@@ -38,7 +48,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.ownerProjectId,
     required this.currencyId,
     required this.getLastShippingAddress,
-
+    required this.quoteFromCart,
   }) : super(CheckoutState.initial()) {
     on<CheckoutStarted>(_onStarted);
     on<CheckoutAddressChanged>(_onAddressChanged);
@@ -49,24 +59,31 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     on<CheckoutPlaceOrderPressed>(_onPlaceOrder);
   }
 
-List<CartLine> _linesFromCart(CheckoutCart cart) {
+  @override
+  Future<void> close() {
+    _quoteDebounce?.cancel();
+    return super.close();
+  }
+
+  int _resolvedCurrencyId() => (currencyId ?? int.tryParse(Env.currencyId) ?? 1);
+
+  List<CartLine> _linesFromCart(CheckoutCart cart) {
     return cart.items
         .where((x) => x.itemId != 0 && x.quantity > 0)
         .map((x) => CartLine(
               itemId: x.itemId,
               quantity: x.quantity,
-              unitPrice: 0.0, // ✅ keep required type happy, server ignores
+              unitPrice: 0.0, // server ignores
             ))
         .toList();
   }
 
-
-bool _addressReadyForQuotes(ShippingAddress a) {
-  return a.countryId != null &&
-      a.regionId != null &&
-      (a.city ?? '').trim().isNotEmpty &&
-      (a.addressLine ?? '').trim().isNotEmpty;
-}
+  bool _addressReadyForQuotes(ShippingAddress a) {
+    return a.countryId != null &&
+        a.regionId != null &&
+        (a.city ?? '').trim().isNotEmpty &&
+        (a.addressLine ?? '').trim().isNotEmpty;
+  }
 
   String? _stripeAccountIdFromPaymentMethod(PaymentMethod pm) {
     final cfg = pm.configMap;
@@ -82,7 +99,94 @@ bool _addressReadyForQuotes(ShippingAddress a) {
     return s.isEmpty ? null : s;
   }
 
-  Future<void> _loadQuotesAndTax(
+  String _quoteSignature({
+    required ShippingAddress addr,
+    required int? shipId,
+    required String shipName,
+    required String coupon,
+    required int currencyId,
+    required List<CartLine> lines,
+  }) {
+    // anything that can change totals belongs here
+    return [
+      currencyId.toString(),
+      (coupon.trim()),
+      (shipId?.toString() ?? 'null'),
+      shipName.trim(),
+      (addr.countryId?.toString() ?? ''),
+      (addr.regionId?.toString() ?? ''),
+      (addr.city ?? '').trim(),
+      (addr.postalCode ?? '').trim(),
+      (addr.addressLine ?? '').trim(),
+      // lines signature
+      lines.map((l) => '${l.itemId}:${l.quantity}').join(','),
+    ].join('|');
+  }
+
+  void _scheduleQuote({
+    required CheckoutCart cart,
+    required int? shippingMethodId,
+    required String shippingMethodName,
+  }) {
+    if (!_addressReadyForQuotes(state.address)) {
+      emit(state.copyWith(clearQuote: true, quoting: false));
+      return;
+    }
+
+    final lines = _linesFromCart(cart);
+    final curId = _resolvedCurrencyId();
+    final coupon = state.coupon.trim();
+
+    // if shipping options exist but no shipping selected -> don’t quote
+    if (state.shippingQuotes.isNotEmpty && shippingMethodId == null) {
+      emit(state.copyWith(clearQuote: true, quoting: false));
+      return;
+    }
+
+    final sig = _quoteSignature(
+      addr: state.address,
+      shipId: shippingMethodId,
+      shipName: shippingMethodName,
+      coupon: coupon,
+      currencyId: curId,
+      lines: lines,
+    );
+
+    if (sig == _lastQuoteSig) return;
+
+    _quoteDebounce?.cancel();
+    _quoteDebounce = Timer(const Duration(milliseconds: 350), () async {
+      _lastQuoteSig = sig;
+
+      emit(state.copyWith(quoting: true, clearError: true));
+
+      try {
+        final q = await quoteFromCart(
+          currencyId: curId,
+          couponCode: coupon.isEmpty ? null : coupon,
+          shippingMethodId: shippingMethodId,
+          shippingMethodName: shippingMethodName,
+          shippingAddress: state.address,
+        );
+
+        emit(state.copyWith(
+          quoting: false,
+          quote: q,
+          clearError: true,
+        ));
+      } catch (err) {
+        // don’t break checkout if quote fails
+        emit(state.copyWith(
+          quoting: false,
+          clearQuote: true,
+          // keep error soft (optional)
+          // error: 'Failed to quote totals',
+        ));
+      }
+    });
+  }
+
+  Future<void> _loadQuotesTaxAndQuote(
     CheckoutCart cart, {
     int? preferMethodId,
   }) async {
@@ -119,30 +223,33 @@ bool _addressReadyForQuotes(ShippingAddress a) {
         clearError: true,
       ),
     );
+
+    // ✅ quote totals (includes coupon)
+    _scheduleQuote(
+      cart: cart,
+      shippingMethodId: chosen?.methodId,
+      shippingMethodName: chosen?.methodName ?? 'Shipping',
+    );
   }
 
-  Future<void> _onStarted(
-    CheckoutStarted e,
-    Emitter<CheckoutState> emit,
-  ) async {
+  Future<void> _onStarted(CheckoutStarted e, Emitter<CheckoutState> emit) async {
     emit(state.copyWith(
       loading: true,
       clearError: true,
       clearOrderId: true,
       clearOrderSummary: true,
+      clearQuote: true,
+      quoting: false,
     ));
 
     try {
       final cart = await getCart();
       final pms = await getPaymentMethods();
 
-      // ✅ NEW: prefill address from backend
       ShippingAddress lastAddr = const ShippingAddress();
       try {
         lastAddr = await getLastShippingAddress();
-      } catch (_) {
-        // ignore - keep empty
-      }
+      } catch (_) {}
 
       final prevIndex = state.selectedPaymentIndex;
       final nextIndex =
@@ -150,7 +257,6 @@ bool _addressReadyForQuotes(ShippingAddress a) {
               ? prevIndex
               : null;
 
-      // ✅ IMPORTANT: emit address BEFORE quotes/tax
       emit(state.copyWith(
         cart: cart,
         paymentMethods: pms,
@@ -161,56 +267,63 @@ bool _addressReadyForQuotes(ShippingAddress a) {
       ));
 
       if (!cart.isEmpty) {
-        await _loadQuotesAndTax(
-          cart,
-          preferMethodId: state.selectedShippingMethodId,
-        );
+        if (_addressReadyForQuotes(lastAddr)) {
+          await _loadQuotesTaxAndQuote(cart, preferMethodId: state.selectedShippingMethodId);
+        } else {
+          // no address -> no shipping/tax/quote
+          emit(state.copyWith(
+            shippingQuotes: const [],
+            clearSelectedShipping: true,
+            clearTax: true,
+            clearQuote: true,
+            quoting: false,
+          ));
+        }
       }
     } catch (err) {
       emit(state.copyWith(loading: false, error: err.toString()));
     }
   }
 
- Future<void> _onAddressChanged(
-  CheckoutAddressChanged e,
-  Emitter<CheckoutState> emit,
-) async {
-  emit(state.copyWith(address: e.address, clearError: true));
+  Future<void> _onAddressChanged(
+    CheckoutAddressChanged e,
+    Emitter<CheckoutState> emit,
+  ) async {
+    emit(state.copyWith(address: e.address, clearError: true));
 
-  final cart = state.cart;
-  if (cart == null || cart.isEmpty) return;
+    final cart = state.cart;
+    if (cart == null || cart.isEmpty) return;
 
-  //  don't spam backend while user is still filling fields
-  if (!_addressReadyForQuotes(e.address)) {
-    emit(state.copyWith(
-      shippingQuotes: const [],
-      selectedShippingMethodId: null,
-      selectedQuote: null,
-      tax: null,
-      clearError: true,
-    ));
-    return;
+    if (!_addressReadyForQuotes(e.address)) {
+      emit(state.copyWith(
+        shippingQuotes: const [],
+        clearSelectedShipping: true,
+        clearTax: true,
+        clearQuote: true,
+        quoting: false,
+        clearError: true,
+      ));
+      return;
+    }
+
+    try {
+      await _loadQuotesTaxAndQuote(cart, preferMethodId: state.selectedShippingMethodId);
+    } catch (err) {
+      emit(state.copyWith(error: err.toString()));
+    }
   }
-
-  try {
-    await _loadQuotesAndTax(cart, preferMethodId: state.selectedShippingMethodId);
-  } catch (err) {
-    emit(state.copyWith(error: err.toString()));
-  }
-}
 
   Future<void> _onShippingSelected(
     CheckoutShippingSelected e,
     Emitter<CheckoutState> emit,
   ) async {
-    emit(
-        state.copyWith(selectedShippingMethodId: e.methodId, clearError: true));
+    emit(state.copyWith(selectedShippingMethodId: e.methodId, clearError: true));
 
     final cart = state.cart;
     if (cart == null || cart.isEmpty) return;
 
     try {
-      await _loadQuotesAndTax(cart, preferMethodId: e.methodId);
+      await _loadQuotesTaxAndQuote(cart, preferMethodId: e.methodId);
     } catch (err) {
       emit(state.copyWith(error: err.toString()));
     }
@@ -218,12 +331,19 @@ bool _addressReadyForQuotes(ShippingAddress a) {
 
   void _onCouponChanged(CheckoutCouponChanged e, Emitter<CheckoutState> emit) {
     emit(state.copyWith(coupon: e.coupon, clearError: true));
+
+    final cart = state.cart;
+    if (cart == null || cart.isEmpty) return;
+
+    // coupon affects totals => re-quote
+    _scheduleQuote(
+      cart: cart,
+      shippingMethodId: state.selectedQuote?.methodId ?? state.selectedShippingMethodId,
+      shippingMethodName: state.selectedQuote?.methodName ?? 'Shipping',
+    );
   }
 
-  void _onPaymentSelected(
-    CheckoutPaymentSelected e,
-    Emitter<CheckoutState> emit,
-  ) {
+  void _onPaymentSelected(CheckoutPaymentSelected e, Emitter<CheckoutState> emit) {
     emit(state.copyWith(selectedPaymentIndex: e.index, clearError: true));
   }
 
@@ -235,10 +355,17 @@ bool _addressReadyForQuotes(ShippingAddress a) {
     if (cart == null || cart.isEmpty) return;
 
     try {
-      await _loadQuotesAndTax(
-        cart,
-        preferMethodId: state.selectedShippingMethodId,
-      );
+      if (_addressReadyForQuotes(state.address)) {
+        await _loadQuotesTaxAndQuote(cart, preferMethodId: state.selectedShippingMethodId);
+      } else {
+        emit(state.copyWith(
+          shippingQuotes: const [],
+          clearSelectedShipping: true,
+          clearTax: true,
+          clearQuote: true,
+          quoting: false,
+        ));
+      }
     } catch (err) {
       emit(state.copyWith(error: err.toString()));
     }
@@ -271,31 +398,12 @@ bool _addressReadyForQuotes(ShippingAddress a) {
 
     final addr = state.address;
 
-    // ✅ REQUIRED (as before)
-    if (addr.countryId == null) {
-      emit(state.copyWith(error: 'Select a country'));
-      return;
-    }
-    if (addr.regionId == null) {
-      emit(state.copyWith(error: 'Select a region'));
-      return;
-    }
-    if ((addr.city ?? '').trim().isEmpty) {
-      emit(state.copyWith(error: 'Enter city'));
-      return;
-    }
+    if (addr.countryId == null) { emit(state.copyWith(error: 'Select a country')); return; }
+    if (addr.regionId == null) { emit(state.copyWith(error: 'Select a region')); return; }
+    if ((addr.city ?? '').trim().isEmpty) { emit(state.copyWith(error: 'Enter city')); return; }
 
-    // ✅ NEW REQUIRED shipping fields (because backend added them)
-    if ((addr.addressLine ?? '').trim().isEmpty) {
-      emit(state.copyWith(error: 'Enter address'));
-      return;
-    }
-    if ((addr.phone ?? '').trim().isEmpty) {
-      emit(state.copyWith(error: 'Enter phone'));
-      return;
-    }
-
-    // postalCode optional
+    if ((addr.addressLine ?? '').trim().isEmpty) { emit(state.copyWith(error: 'Enter address')); return; }
+    if ((addr.phone ?? '').trim().isEmpty) { emit(state.copyWith(error: 'Enter phone')); return; }
 
     final quote = state.selectedQuote;
     final shipId = quote?.methodId ?? state.selectedShippingMethodId;
@@ -315,13 +423,12 @@ bool _addressReadyForQuotes(ShippingAddress a) {
     try {
       final lines = _linesFromCart(cart);
 
-      final destinationAccountId = (pmCode == 'STRIPE')
-          ? _stripeAccountIdFromPaymentMethod(selectedPm)
-          : null;
+      final destinationAccountId =
+          (pmCode == 'STRIPE') ? _stripeAccountIdFromPaymentMethod(selectedPm) : null;
 
       final CheckoutSummaryModel summary = await placeOrder(
         ownerProjectId: ownerProjectId,
-        currencyId: (currencyId ?? int.tryParse(Env.currencyId) ?? 1),
+        currencyId: _resolvedCurrencyId(),
         paymentMethod: pmCode,
         couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
         stripePaymentId: null,
@@ -332,22 +439,14 @@ bool _addressReadyForQuotes(ShippingAddress a) {
         lines: lines,
       );
 
-      final provider = (summary.paymentProviderCode ?? pmCode)
-          .toString()
-          .trim()
-          .toUpperCase();
+      final provider = (summary.paymentProviderCode ?? pmCode).toString().trim().toUpperCase();
 
       if (provider == 'STRIPE') {
         final clientSecret = (summary.clientSecret ?? '').toString().trim();
         final publishableKey = (summary.publishableKey ?? '').toString().trim();
 
-        if (clientSecret.isEmpty) {
-          throw Exception('Checkout did not return Stripe clientSecret');
-        }
-        if (publishableKey.isEmpty) {
-          throw Exception(
-              'Checkout did not return Stripe publishableKey (pk_...)');
-        }
+        if (clientSecret.isEmpty) throw Exception('Checkout did not return Stripe clientSecret');
+        if (publishableKey.isEmpty) throw Exception('Checkout did not return Stripe publishableKey (pk_...)');
 
         try {
           await StripePaymentSheet.pay(
@@ -361,42 +460,28 @@ bool _addressReadyForQuotes(ShippingAddress a) {
         }
       }
 
-      emit(
-        state.copyWith(
-          placing: false,
-          orderId: summary.orderId,
-          orderSummary: summary,
-          clearError: true,
-        ),
-      );
-     } catch (err) {
-  if (err is CheckoutBlockedFailure) {
-    final msg = err.blockingErrors.isNotEmpty
-        ? err.blockingErrors.join('\n')
-        : err.message;
+      emit(state.copyWith(
+        placing: false,
+        orderId: summary.orderId,
+        orderSummary: summary,
+        clearError: true,
+      ));
+    } catch (err) {
+      if (err is CheckoutBlockedFailure) {
+        final msg = err.blockingErrors.isNotEmpty
+            ? err.blockingErrors.join('\n')
+            : err.message;
 
-    emit(state.copyWith(placing: false, error: msg));
-    return;
-  }
+        emit(state.copyWith(placing: false, error: msg));
+        return;
+      }
 
-  emit(state.copyWith(placing: false, error: _friendlyError(err)));
-}
-
+      emit(state.copyWith(placing: false, error: _friendlyError(err)));
+    }
   }
 
   String _friendlyError(Object err) {
     final s = err.toString();
-
-    // common stripe cases already handled, keep generic clean:
-    if (s.contains('CheckoutBlocked') || s.contains('blockingErrors')) {
-      return 'Some items are no longer available. Please review your cart.';
-    }
-
-    // tighten ugly exceptions
     return s.replaceAll('Exception:', '').trim();
   }
-
-
-  
-
 }

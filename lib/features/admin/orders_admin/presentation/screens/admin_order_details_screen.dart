@@ -1,6 +1,3 @@
-// lib/features/admin/orders_admin/presentation/screens/admin_order_details_screen.dart
-
-import 'package:build4front/features/admin/orders_admin/domain/entities/admin_order_entities.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,6 +5,7 @@ import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 
+import '../../domain/entities/admin_order_entities.dart';
 import '../../domain/repositories/admin_orders_repository.dart';
 import '../../domain/usecases/get_admin_order_details.dart';
 import '../bloc/admin_order_details_bloc.dart';
@@ -167,12 +165,24 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context, _changed),
             ),
-            title: Text(
-              l10n.adminOrderDetailsTitle(widget.orderId),
-              style: tokens.typography.titleMedium.copyWith(
-                color: colors.label,
-                fontWeight: FontWeight.w900,
-              ),
+
+            // ✅ NEW: dynamic title (use orderCode if loaded)
+            title: BlocBuilder<AdminOrderDetailsBloc, AdminOrderDetailsState>(
+              buildWhen: (p, c) => p.data?.order.orderCode != c.data?.order.orderCode,
+              builder: (context, state) {
+                final code = (state.data?.order.orderCode ?? '').trim();
+                final title = code.isNotEmpty
+                    ? 'Order $code'
+                    : l10n.adminOrderDetailsTitle(widget.orderId);
+
+                return Text(
+                  title,
+                  style: tokens.typography.titleMedium.copyWith(
+                    color: colors.label,
+                    fontWeight: FontWeight.w900,
+                  ),
+                );
+              },
             ),
           ),
           body: SafeArea(
@@ -237,24 +247,18 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                 final paymentMethod = (o.paymentMethod ?? '').toUpperCase();
                 final isCash = paymentMethod == 'CASH';
                 final canMarkCashPaid = isCash && paymentState != 'PAID';
+                  final phoneTxt = (o.shippingPhone ?? '').trim();
 
                 final rawStatus = o.status.toUpperCase();
                 final isPaid = paymentState == 'PAID' || o.fullyPaid == true;
 
-                // Existing reject rule (safe)
                 final canReject = !isPaid &&
                     (rawStatus == 'PENDING' || rawStatus == 'CANCEL_REQUESTED') &&
-                    !['REJECTED', 'CANCELED', 'REFUNDED', 'COMPLETED']
-                        .contains(rawStatus);
+                    !['REJECTED', 'CANCELED', 'REFUNDED', 'COMPLETED'].contains(rawStatus);
 
-               
                 final canReopen = rawStatus != 'PENDING' && rawStatus != 'REFUNDED';
 
-                // Customer shown ONCE at order level (not in each item row)
-final headerCustomer = [
-  // if you later add these fields in entity/model
-  // o.customerName,
-].whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+               final headerName = (o.shippingFullName ?? '').trim();
 
 final uniqueCustomers = data.items
     .map((e) => e.user.fullName.trim())
@@ -262,13 +266,19 @@ final uniqueCustomers = data.items
     .toSet()
     .toList();
 
-final customerDisplay = headerCustomer.isNotEmpty
-    ? headerCustomer.first
+final fallbackPhone = (o.shippingPhone ?? '').trim();
+
+final customerDisplay = headerName.isNotEmpty
+    ? headerName
     : uniqueCustomers.isEmpty
-        ? '—'
+        ? (fallbackPhone.isNotEmpty ? fallbackPhone : '—')
         : uniqueCustomers.length == 1
             ? uniqueCustomers.first
             : '${uniqueCustomers.first} (+${uniqueCustomers.length - 1})';
+
+                // ✅ NEW: order code display values
+                final orderCode = (o.orderCode ?? '').trim();
+                final orderSeq = o.orderSeq;
 
                 Widget paymentCard() {
                   return Container(
@@ -276,9 +286,7 @@ final customerDisplay = headerCustomer.isNotEmpty
                     decoration: BoxDecoration(
                       color: colors.surface,
                       borderRadius: BorderRadius.circular(tokens.card.radius),
-                      border: Border.all(
-                        color: colors.border.withOpacity(0.22),
-                      ),
+                      border: Border.all(color: colors.border.withOpacity(0.22)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,10 +337,7 @@ final customerDisplay = headerCustomer.isNotEmpty
                         _kv(tokens, colors, l10n.adminOrderTotal, money(total)),
                         _kv(tokens, colors, l10n.adminPaid, money(o.payment.paidAmount)),
                         if (!o.fullyPaid)
-                          _kv(tokens, colors, l10n.adminRemaining,
-                              money(o.payment.remainingAmount)),
-
-                        // ✅ CASH button
+                          _kv(tokens, colors, l10n.adminRemaining, money(o.payment.remainingAmount)),
                         if (canMarkCashPaid) ...[
                           SizedBox(height: spacing.md),
                           Row(
@@ -404,9 +409,7 @@ final customerDisplay = headerCustomer.isNotEmpty
                     decoration: BoxDecoration(
                       color: colors.surface,
                       borderRadius: BorderRadius.circular(tokens.card.radius),
-                      border: Border.all(
-                        color: colors.border.withOpacity(0.22),
-                      ),
+                      border: Border.all(color: colors.border.withOpacity(0.22)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +423,6 @@ final customerDisplay = headerCustomer.isNotEmpty
                         ),
                         SizedBox(height: spacing.sm),
 
-                        // Status
                         Row(
                           children: [
                             Text(
@@ -455,21 +457,26 @@ final customerDisplay = headerCustomer.isNotEmpty
 
                         SizedBox(height: spacing.md),
 
-                        // ✅ Customer shown ONCE here
+                        // ✅ NEW: Order Code + Seq
+                        if (orderCode.isNotEmpty) _kv(tokens, colors, 'Order Code', orderCode),
+                        if (orderSeq != null) _kv(tokens, colors, 'Order Seq', '$orderSeq'),
+                        if (orderCode.isNotEmpty || orderSeq != null)
+                          _kv(tokens, colors, 'Internal ID', '#${o.id}'),
+
                         _kv(tokens, colors, 'Customer', customerDisplay),
-                        if ((o.shippingPhone ?? '').trim().isNotEmpty)
-                          _kv(tokens, colors, 'Phone', o.shippingPhone!.trim()),
+                     
+
+if (phoneTxt.isNotEmpty && customerDisplay != phoneTxt)
+  _kv(tokens, colors, 'Phone', phoneTxt),
                         if ((o.shippingAddress ?? '').trim().isNotEmpty)
                           _kv(tokens, colors, 'Address', o.shippingAddress!.trim()),
                         if ((o.shippingCity ?? '').trim().isNotEmpty)
                           _kv(tokens, colors, 'City', o.shippingCity!.trim()),
                         if ((o.shippingPostalCode ?? '').trim().isNotEmpty)
                           _kv(tokens, colors, 'Postal Code', o.shippingPostalCode!.trim()),
-
                         if ((o.paymentMethod ?? '').trim().isNotEmpty)
                           _kv(tokens, colors, 'Payment Method', o.paymentMethod!.trim()),
 
-                        // ✅ Reopen (status correction)
                         if (canReopen) ...[
                           SizedBox(height: spacing.md),
                           Row(
@@ -501,9 +508,7 @@ final customerDisplay = headerCustomer.isNotEmpty
                                         },
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: colors.primary,
-                                    side: BorderSide(
-                                      color: colors.primary.withOpacity(0.45),
-                                    ),
+                                    side: BorderSide(color: colors.primary.withOpacity(0.45)),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: spacing.md,
                                       vertical: spacing.sm,
@@ -533,7 +538,6 @@ final customerDisplay = headerCustomer.isNotEmpty
                           ),
                         ],
 
-                        // Reject button (kept)
                         if (canReject) ...[
                           SizedBox(height: spacing.md),
                           Row(
@@ -615,11 +619,7 @@ final customerDisplay = headerCustomer.isNotEmpty
                   Widget placeholder() {
                     return Container(
                       color: colors.border.withOpacity(0.18),
-                      child: Icon(
-                        Icons.image_outlined,
-                        color: colors.muted,
-                        size: 22,
-                      ),
+                      child: Icon(Icons.image_outlined, color: colors.muted, size: 22),
                     );
                   }
 
@@ -686,22 +686,16 @@ final customerDisplay = headerCustomer.isNotEmpty
                                 overflow: TextOverflow.ellipsis,
                               ),
                               SizedBox(height: spacing.xs),
-
-                              // ✅ BUG FIX: customer removed from item row
-                              // Items section should show item-related info only.
                               if ((it.item.location ?? '').trim().isNotEmpty)
                                 Text(
                                   it.item.location!.trim(),
-                                  style: tokens.typography.bodySmall
-                                      .copyWith(color: colors.muted),
+                                  style: tokens.typography.bodySmall.copyWith(color: colors.muted),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-
                               Text(
                                 l10n.adminQtyPriceLine(it.quantity, money(it.price)),
-                                style: tokens.typography.bodySmall
-                                    .copyWith(color: colors.muted),
+                                style: tokens.typography.bodySmall.copyWith(color: colors.muted),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

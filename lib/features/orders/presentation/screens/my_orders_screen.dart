@@ -7,7 +7,6 @@ import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
 
-import '../../domain/entities/order_entities.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
@@ -90,23 +89,28 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.receipt_long_outlined, size: 46, color: colors.muted),
+                      Icon(Icons.receipt_long_outlined,
+                          size: 46, color: colors.muted),
                       SizedBox(height: spacing.sm),
                       Text(
                         l10n.ordersEmptyTitle,
-                        style: tokens.typography.titleMedium.copyWith(color: colors.label),
+                        style: tokens.typography.titleMedium
+                            .copyWith(color: colors.label),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: spacing.xs),
                       Text(
                         l10n.ordersEmptyBody,
-                        style: tokens.typography.bodyMedium.copyWith(color: colors.body),
+                        style: tokens.typography.bodyMedium
+                            .copyWith(color: colors.body),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: spacing.lg),
                       PrimaryButton(
                         label: l10n.ordersReload,
-                        onPressed: () => context.read<OrdersBloc>().add(const OrdersStarted()),
+                        onPressed: () => context
+                            .read<OrdersBloc>()
+                            .add(const OrdersStarted()),
                       ),
                     ],
                   ),
@@ -116,7 +120,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
 
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<OrdersBloc>().add(const OrdersRefreshRequested());
+                context
+                    .read<OrdersBloc>()
+                    .add(const OrdersRefreshRequested());
               },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -124,30 +130,40 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                 children: [
                   const OrdersFilterChips(),
                   SizedBox(height: spacing.md),
-
                   if (orders.isEmpty)
                     Padding(
                       padding: EdgeInsets.only(top: spacing.lg),
                       child: Center(
                         child: Text(
                           l10n.ordersNoResultsForFilter,
-                          style: tokens.typography.bodyMedium.copyWith(color: colors.muted),
+                          style: tokens.typography.bodyMedium
+                              .copyWith(color: colors.muted),
                         ),
                       ),
                     ),
-
                   ...orders.map(
                     (o) => Padding(
                       padding: EdgeInsets.only(bottom: spacing.md),
                       child: OrderGroupCard(
                         order: o,
-                       onTap: () {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => OrderDetailsScreen(orderId: o.orderId),
-    ),
-  );
-}
+                        onTap: () {
+                          // ✅ Safety: never call details with 0
+                          if (o.orderId <= 0) {
+                            AppToast.show(
+                              context,
+                              'Order details not available (missing orderId from API).',
+                              isError: true,
+                            );
+                            return;
+                          }
+
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  OrderDetailsScreen(orderId: o.orderId),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),

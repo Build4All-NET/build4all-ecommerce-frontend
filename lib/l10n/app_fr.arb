@@ -1124,7 +1124,13 @@
   "editProfile_change": "Changer",
   "editProfile_remove": "Supprimer",
   "editProfile_codeSentToast": "Code de vérification envoyé à votre nouvel e-mail",
-  "editProfile_emailUpdatedToast": "E-mail mis à jour avec succès"
+  "editProfile_emailUpdatedToast": "E-mail mis à jour avec succès",
+  "home_stock_left_label": "Stock restant : {count}",
+"@home_stock_left_label": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 
 

@@ -95,8 +95,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final colors = tokens.colors;
     final spacing = tokens.spacing;
 
+    final code = (order?['orderCode'] ?? '').toString().trim();
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.ordersDetailsTitle(widget.orderId))),
+      appBar: AppBar(title: Text(l10n.ordersDetailsTitle(code))),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : error != null
@@ -139,7 +141,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         final img = _absUrl(item['imageUrl']?.toString());
 
                         final qty = _toInt(row['quantity']);
-                        final unitPrice = _toDouble(row['unitPrice']);
+                        final unitPrice = _toDouble(row['unitPrice'], fallback: _toDouble(row['price']));
                         final lineTotal = _toDouble(row['lineTotal'], fallback: unitPrice * qty);
 
                         return Container(

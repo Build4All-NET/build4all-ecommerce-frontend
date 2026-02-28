@@ -19,16 +19,19 @@ class OrderHeaderRow {
   final DateTime? orderDate;
   final double totalPrice;
 
-  final String status; // PENDING...
-  final String statusUi; // Pending...
+  final String status;
+  final String statusUi;
   final int itemsCount;
 
   final bool fullyPaid;
   final PaymentSummary payment;
 
-  // ✅ NEW from list API
   final String? phone;
   final String? addressLine;
+
+  // ✅ NEW
+  final String? orderCode;
+  final int? orderSeq;
 
   const OrderHeaderRow({
     required this.id,
@@ -41,9 +44,12 @@ class OrderHeaderRow {
     required this.payment,
     this.phone,
     this.addressLine,
+
+    // ✅ NEW
+    this.orderCode,
+    this.orderSeq,
   });
 }
-
 class CurrencyMini {
   final String? code;
   final String? symbol;
@@ -117,9 +123,11 @@ class OrderDetailsHeader {
   final String? shippingCity;
   final String? shippingPostalCode;
 
-  // ✅ NEW
   final String? shippingPhone;
   final String? shippingAddress;
+
+  // ✅ ADD THIS
+  final String? shippingFullName;
 
   final int? shippingMethodId;
   final String? shippingMethodName;
@@ -131,6 +139,9 @@ class OrderDetailsHeader {
 
   final bool fullyPaid;
   final PaymentSummary payment;
+
+  final String? orderCode;
+  final int? orderSeq;
 
   const OrderDetailsHeader({
     required this.id,
@@ -144,6 +155,10 @@ class OrderDetailsHeader {
     this.shippingPostalCode,
     this.shippingPhone,
     this.shippingAddress,
+
+    // ✅ ADD THIS
+    this.shippingFullName,
+
     this.shippingMethodId,
     this.shippingMethodName,
     this.shippingTotal,
@@ -153,9 +168,10 @@ class OrderDetailsHeader {
     this.couponDiscount,
     required this.fullyPaid,
     required this.payment,
+    this.orderCode,
+    this.orderSeq,
   });
 }
-
 class OrderDetailsResponse {
   final OrderDetailsHeader order;
   final int itemsCount;

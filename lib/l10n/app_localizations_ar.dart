@@ -2689,4 +2689,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get editProfile_emailUpdatedToast => 'تم تحديث البريد الإلكتروني بنجاح';
+
+  @override
+  String home_stock_left_label(int count) {
+    return 'باقي $count فقط';
+  }
 }
