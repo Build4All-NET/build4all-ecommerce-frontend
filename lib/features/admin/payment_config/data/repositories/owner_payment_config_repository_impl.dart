@@ -1,8 +1,5 @@
-import 'package:build4front/features/admin/payment_config/domain/entities/payment_method_config_item.dart';
-import 'package:build4front/features/admin/payment_config/domain/repositories/owner_payment_config_repository.dart';
-import 'package:dio/dio.dart';
-
-
+import '../../domain/entities/payment_method_config_item.dart';
+import '../../domain/repositories/owner_payment_config_repository.dart';
 import '../models/payment_method_config_item_model.dart';
 import '../services/owner_payment_config_api_service.dart';
 
@@ -18,13 +15,11 @@ class OwnerPaymentConfigRepositoryImpl implements OwnerPaymentConfigRepository {
   });
 
   @override
-  Future<List<PaymentMethodConfigItem>> listMethods({
-    required int ownerProjectId,
-  }) async {
+  Future<List<PaymentMethodConfigItem>> listMethods() async {
     final token = await tokenProvider();
+
     final list = await api.listMethods(
       token: token,
-      ownerProjectId: ownerProjectId,
     );
 
     return list
@@ -39,15 +34,14 @@ class OwnerPaymentConfigRepositoryImpl implements OwnerPaymentConfigRepository {
 
   @override
   Future<void> saveMethodConfig({
-    required int ownerProjectId,
     required String methodName,
     required bool enabled,
     required Map<String, Object?> configValues,
   }) async {
     final token = await tokenProvider();
+
     await api.saveMethodConfig(
       token: token,
-      ownerProjectId: ownerProjectId,
       methodName: methodName,
       enabled: enabled,
       configValues: configValues,

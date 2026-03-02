@@ -5,13 +5,11 @@ abstract class UserProfileRepository {
   Future<UserProfile> getById({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   });
 
   Future<UserProfile> updateProfile({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
     required String firstName,
     required String lastName,
     String? username,
@@ -21,18 +19,15 @@ abstract class UserProfileRepository {
     bool imageRemoved = false,
   });
 
-  // ✅ NEW: email change verification flow
   Future<void> verifyEmailChange({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
     required String code,
   });
 
   Future<void> resendEmailChange({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   });
 
   Future<void> deleteUser({

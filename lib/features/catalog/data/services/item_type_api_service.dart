@@ -1,4 +1,3 @@
-// lib/features/catalog/data/services/item_type_api_service.dart
 import 'package:build4front/core/network/api_fetch.dart';
 import 'package:build4front/core/network/api_methods.dart' show HttpMethod;
 import 'package:build4front/core/exceptions/network_exception.dart';
@@ -11,16 +10,15 @@ class ItemTypeApiService {
 
   static const String _base = '/api/item-types';
 
-  Map<String, String>? _authHeaders(String? token) {
-    final t = token?.trim();
-    if (t == null || t.isEmpty) return null;
+  Map<String, String> _authHeaders(String token) {
+    final t = token.trim();
     final normalized = t.startsWith('Bearer ') ? t : 'Bearer $t';
     return {'Authorization': normalized};
   }
 
   Future<List<Map<String, dynamic>>> getItemTypesByProject(
     int projectId, {
-    String? authToken,
+    required String authToken,
   }) async {
     try {
       final r = await _fetch.fetch(
@@ -38,7 +36,7 @@ class ItemTypeApiService {
 
   Future<List<Map<String, dynamic>>> getItemTypesByCategory(
     int categoryId, {
-    String? authToken,
+    required String authToken,
   }) async {
     try {
       final r = await _fetch.fetch(

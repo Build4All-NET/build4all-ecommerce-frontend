@@ -39,7 +39,7 @@ class AdminExcelImportScreen extends StatelessWidget {
           AppToast.show(context, state.result!.message);
         }
 
-        // ✅ After download: show toast + open file مباشرة
+        // ✅ After download: show toast + open file
         if (state.templateFilePath != null &&
             state.templateFilePath!.isNotEmpty) {
           AppToast.show(context, l10n.adminExcelTemplateSavedToast);

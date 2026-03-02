@@ -1,4 +1,3 @@
-// lib/features/profile_edit/domain/usecases/resend_email_change.dart
 import '../repositories/user_profile_repository.dart';
 
 class ResendEmailChange {
@@ -8,12 +7,7 @@ class ResendEmailChange {
   Future<void> call({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) {
-    return repo.resendEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
+    return repo.resendEmailChange(token: token, userId: userId);
   }
 }

@@ -13,12 +13,10 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   Future<UserEntity> getProfile({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) async {
     final map = await service.fetchProfileMap(
       token: token,
       userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
     );
     final dto = ProfileUserDto.fromMap(map);
     return dto.toEntity();
@@ -27,15 +25,11 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   @override
   Future<void> setVisibility({
     required String token,
-    required int userId,
     required bool isPublic,
-    required int ownerProjectLinkId,
   }) {
     return service.updateVisibility(
       token: token,
-      userId: userId,
       isPublic: isPublic,
-      ownerProjectLinkId: ownerProjectLinkId,
     );
   }
 
@@ -44,14 +38,12 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String token,
     required int userId,
     required String status,
-    required int ownerProjectLinkId,
     String? password,
   }) {
     return service.updateStatus(
       token: token,
       userId: userId,
       status: status,
-      ownerProjectLinkId: ownerProjectLinkId,
       password: password,
     );
   }

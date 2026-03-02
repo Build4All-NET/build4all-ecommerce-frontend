@@ -19,13 +19,13 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<Product>> getProducts({
-    required int ownerProjectId,
+    
     int? itemTypeId,
     int? categoryId,
   }) async {
     final token = await _requireToken();
     final list = await api.getProducts(
-      ownerProjectId: ownerProjectId,
+      
       itemTypeId: itemTypeId,
       categoryId: categoryId,
       authToken: token,
@@ -43,12 +43,12 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<Product>> getNewArrivals({
-    required int ownerProjectId,
+    
     int? days,
   }) async {
     final token = await _requireToken();
     final list = await api.getNewArrivals(
-      ownerProjectId: ownerProjectId,
+      
       days: days,
       authToken: token,
     );
@@ -65,12 +65,12 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<Product>> getBestSellers({
-    required int ownerProjectId,
+    
     int? limit,
   }) async {
     final token = await _requireToken();
     final list = await api.getBestSellers(
-      ownerProjectId: ownerProjectId,
+      
       limit: limit,
       authToken: token,
     );
@@ -89,7 +89,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<List<Product>> getDiscounted({required int ownerProjectId}) async {
     final token = await _requireToken();
     final list = await api.getDiscounted(
-      ownerProjectId: ownerProjectId,
+      
       authToken: token,
     );
   return list
@@ -112,7 +112,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<Product> createProduct({
-    required int ownerProjectId,
+   
     required int itemTypeId,
     required int? currencyId,
     required String name,
@@ -135,7 +135,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final token = await _requireToken();
 
     final body = <String, dynamic>{
-      'ownerProjectId': ownerProjectId,
+    
       'itemTypeId': itemTypeId,
       'currencyId': currencyId,
       'name': name,

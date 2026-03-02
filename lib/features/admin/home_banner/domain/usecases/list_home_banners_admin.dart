@@ -5,10 +5,7 @@ class ListHomeBannersAdmin {
   final HomeBannerRepository repo;
   ListHomeBannersAdmin(this.repo);
 
-  Future<List<HomeBanner>> call({
-    required int ownerProjectId,
-    required String token,
-  }) {
-    return repo.listForAdmin(ownerProjectId: ownerProjectId, token: token);
+  Future<List<HomeBanner>> call({required String token}) {
+    return repo.listForAdmin(token: token);
   }
 }

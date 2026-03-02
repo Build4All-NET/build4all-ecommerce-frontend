@@ -36,47 +36,53 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
     return s.replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
   }
 
-  Future<void> _onLoad(LoadEditProfile e, Emitter<EditProfileState> emit) async {
-    emit(state.copyWith(loading: true, error: null, success: null, didDelete: false));
-    try {
-      final user = await getUserById(
-        token: e.token,
-        userId: e.userId,
-        ownerProjectLinkId: e.ownerProjectLinkId,
-      );
-      emit(state.copyWith(loading: false, user: user));
-    } catch (err) {
-      emit(state.copyWith(loading: false, error: _cleanError(err)));
-    }
+  // only showing changed parts
+
+Future<void> _onLoad(LoadEditProfile e, Emitter<EditProfileState> emit) async {
+  emit(state.copyWith(loading: true, error: null, success: null, didDelete: false));
+  try {
+    final user = await getUserById(token: e.token, userId: e.userId);
+    emit(state.copyWith(loading: false, user: user));
+  } catch (err) {
+    emit(state.copyWith(loading: false, error: _cleanError(err)));
   }
+}
 
-  Future<void> _onSave(SaveEditProfile e, Emitter<EditProfileState> emit) async {
-    emit(state.copyWith(saving: true, error: null, success: null, didDelete: false));
-    try {
-      final updated = await updateUserProfile(
-        token: e.token,
-        userId: e.userId,
-        ownerProjectLinkId: e.ownerProjectLinkId,
-        firstName: e.firstName,
-        lastName: e.lastName,
-        username: e.username,
-        email: e.email,
-        isPublicProfile: e.isPublicProfile,
-        imageFilePath: e.imageFilePath,
-        imageRemoved: e.imageRemoved,
-      );
+Future<void> _onSave(SaveEditProfile e, Emitter<EditProfileState> emit) async {
+  emit(state.copyWith(saving: true, error: null, success: null, didDelete: false));
+  try {
+    final updated = await updateUserProfile(
+      token: e.token,
+      userId: e.userId,
+      firstName: e.firstName,
+      lastName: e.lastName,
+      username: e.username,
+      email: e.email,
+      isPublicProfile: e.isPublicProfile,
+      imageFilePath: e.imageFilePath,
+      imageRemoved: e.imageRemoved,
+    );
 
-      final needsVerify = updated.emailVerificationRequired;
-
-      emit(state.copyWith(
-        saving: false,
-        user: updated,
-        success: needsVerify ? null : null, // UI will show its own l10n text
-      ));
-    } catch (err) {
-      emit(state.copyWith(saving: false, error: _cleanError(err)));
-    }
+    emit(state.copyWith(saving: false, user: updated, success: null));
+  } catch (err) {
+    emit(state.copyWith(saving: false, error: _cleanError(err)));
   }
+}
+
+Future<void> verifyEmailChangeDirect({
+  required String token,
+  required int userId,
+  required String code,
+}) async {
+  await verifyEmailChange(token: token, userId: userId, code: code);
+}
+
+Future<void> resendEmailChangeDirect({
+  required String token,
+  required int userId,
+}) async {
+  await resendEmailChange(token: token, userId: userId);
+}
 
   Future<void> _onDelete(DeleteAccount e, Emitter<EditProfileState> emit) async {
     emit(state.copyWith(deleting: true, error: null, success: null, didDelete: false));
@@ -88,30 +94,5 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
     }
   }
 
-  // ✅ Direct methods for dialog (no API calls in UI)
-  Future<void> verifyEmailChangeDirect({
-    required String token,
-    required int userId,
-    required int ownerProjectLinkId,
-    required String code,
-  }) async {
-    await verifyEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-      code: code,
-    );
-  }
-
-  Future<void> resendEmailChangeDirect({
-    required String token,
-    required int userId,
-    required int ownerProjectLinkId,
-  }) async {
-    await resendEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
-  }
+  
 }

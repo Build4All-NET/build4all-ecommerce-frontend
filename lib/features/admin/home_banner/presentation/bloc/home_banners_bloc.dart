@@ -31,10 +31,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
   ) async {
     emit(state.copyWith(loading: true, error: null));
     try {
-      final list = await listAdmin(
-        ownerProjectId: e.ownerProjectId,
-        token: e.token,
-      );
+      final list = await listAdmin(token: e.token);
       emit(state.copyWith(loading: false, banners: list));
     } catch (err) {
       emit(state.copyWith(loading: false, error: err.toString()));
@@ -47,7 +44,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
   ) async {
     try {
       await create(body: e.body, token: e.token, imagePath: e.imagePath);
-      add(LoadAdminBanners(ownerProjectId: e.ownerProjectId, token: e.token));
+      add(LoadAdminBanners(token: e.token));
     } catch (err) {
       emit(state.copyWith(error: err.toString()));
     }
@@ -64,7 +61,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
         token: e.token,
         imagePath: e.imagePath,
       );
-      add(LoadAdminBanners(ownerProjectId: e.ownerProjectId, token: e.token));
+      add(LoadAdminBanners(token: e.token));
     } catch (err) {
       emit(state.copyWith(error: err.toString()));
     }
@@ -76,7 +73,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
   ) async {
     try {
       await delete(id: e.id, token: e.token);
-      add(LoadAdminBanners(ownerProjectId: e.ownerProjectId, token: e.token));
+      add(LoadAdminBanners(token: e.token));
     } catch (err) {
       emit(state.copyWith(error: err.toString()));
     }

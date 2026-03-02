@@ -7,16 +7,16 @@ abstract class ProductListEvent extends Equatable {
 }
 
 class LoadProductsForOwner extends ProductListEvent {
-  final int ownerProjectId;
+ 
   final int? itemTypeId;
   final int? categoryId;
 
   const LoadProductsForOwner(
-    this.ownerProjectId, {
+  {
     this.itemTypeId,
     this.categoryId,
   });
 
   @override
-  List<Object?> get props => [ownerProjectId, itemTypeId, categoryId];
+  List<Object?> get props => [ itemTypeId, categoryId];
 }

@@ -1,5 +1,4 @@
 import 'package:build4front/core/config/env.dart';
-import 'package:build4front/features/home/homebanner/domain/entities/home_banner.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -9,6 +8,8 @@ class HomeBannersApiService {
   HomeBannersApiService(this._dio);
 
   factory HomeBannersApiService.create() {
+    // Prefer using your global dio if you have it (recommended),
+    // but keeping this structure for minimal change.
     final dio = Dio(
       BaseOptions(
         baseUrl: Env.apiBaseUrl,
@@ -19,40 +20,29 @@ class HomeBannersApiService {
     return HomeBannersApiService(dio);
   }
 
-  Future<List<HomeBanner>> fetchActiveBanners({
-    required int ownerProjectId,
+  Future<List<Map<String, dynamic>>> fetchActiveBanners({
     required String token,
   }) async {
     try {
-      final response = await _dio.get(
+      final res = await _dio.get(
         '/api/home-banners',
-        queryParameters: {'ownerProjectId': ownerProjectId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (kDebugMode) {
-        debugPrint(
-          'HomeBannersApiService: status=${response.statusCode}, data=${response.data}',
-        );
+        debugPrint('HomeBannersApiService: status=${res.statusCode}');
       }
 
-      final data = response.data;
+      final data = res.data;
       if (data is List) {
-        return data
-            .map((e) => HomeBanner.fromJson(e as Map<String, dynamic>))
-            .toList();
+        return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       }
-      return [];
+      return const [];
     } on DioException catch (e) {
       if (kDebugMode) {
         debugPrint(
           'HomeBannersApiService DioException: status=${e.response?.statusCode}, data=${e.response?.data}',
         );
-      }
-      rethrow;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('HomeBannersApiService error: $e');
       }
       rethrow;
     }

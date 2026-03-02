@@ -164,7 +164,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     _lastUserId = id;
     _lastOwnerId = ownerId;
 
-    context.read<UserProfileBloc>().add(LoadUserProfile(token, id, ownerId));
+    context.read<UserProfileBloc>().add(LoadUserProfile(token, id));
   }
 
   void _goToLogin(BuildContext context) {
@@ -207,7 +207,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
     context.read<UserProfileBloc>().add(
           LoadUserProfile(
-              _effectiveToken, _effectiveUserId, ownerProjectLinkId),
+              _effectiveToken, _effectiveUserId),
         );
   }
 
@@ -304,9 +304,6 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                                 LoadUserProfile(
                                   _effectiveToken,
                                   _effectiveUserId,
-                                  _effectiveOwnerProjectLinkId > 0
-                                      ? _effectiveOwnerProjectLinkId
-                                      : _envOwnerId(),
                                 ),
                               ),
                       icon: Icon(loginRequired ? Icons.login : Icons.refresh),

@@ -1,4 +1,3 @@
-// lib/features/profile_edit/domain/usecases/verify_email_change.dart
 import '../repositories/user_profile_repository.dart';
 
 class VerifyEmailChange {
@@ -8,14 +7,8 @@ class VerifyEmailChange {
   Future<void> call({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
     required String code,
   }) {
-    return repo.verifyEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-      code: code,
-    );
+    return repo.verifyEmailChange(token: token, userId: userId, code: code);
   }
 }

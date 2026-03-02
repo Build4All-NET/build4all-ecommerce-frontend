@@ -7,27 +7,26 @@ class HomeBannerApiService {
   final Dio _dio;
 
   HomeBannerApiService([Dio? dio]) : _dio = dio ?? ApiClient.instance.dio;
+
   String get _baseUrl => '${Env.apiBaseUrl}/api/home-banners';
 
+  // ✅ tenant comes from token
   Future<List<dynamic>> listActivePublic({
-    required int ownerProjectId,
     required String authToken,
   }) async {
     final res = await _dio.get(
-      '$_baseUrl',
-      queryParameters: {'ownerProjectId': ownerProjectId},
+      _baseUrl,
       options: Options(headers: {'Authorization': 'Bearer $authToken'}),
     );
     return (res.data as List);
   }
 
+  // ✅ tenant comes from token
   Future<List<dynamic>> listForAdmin({
-    required int ownerProjectId,
     required String authToken,
   }) async {
     final res = await _dio.get(
       '$_baseUrl/app',
-      queryParameters: {'ownerProjectId': ownerProjectId},
       options: Options(headers: {'Authorization': 'Bearer $authToken'}),
     );
     return (res.data as List);
@@ -87,7 +86,10 @@ class HomeBannerApiService {
     return Map<String, dynamic>.from(res.data);
   }
 
-  Future<void> delete({required int id, required String authToken}) async {
+  Future<void> delete({
+    required int id,
+    required String authToken,
+  }) async {
     await _dio.delete(
       '$_baseUrl/$id',
       options: Options(headers: {'Authorization': 'Bearer $authToken'}),

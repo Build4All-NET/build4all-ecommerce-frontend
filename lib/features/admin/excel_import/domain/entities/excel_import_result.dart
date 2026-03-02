@@ -3,7 +3,7 @@ class ExcelImportResult {
   final String message;
 
   final int projectId;
-  final int ownerProjectId;
+
   final String slug;
 
   final int insertedCategories;
@@ -20,7 +20,7 @@ class ExcelImportResult {
     required this.success,
     required this.message,
     required this.projectId,
-    required this.ownerProjectId,
+   
     required this.slug,
     required this.insertedCategories,
     required this.insertedItemTypes,

@@ -154,7 +154,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       LoadEditProfile(
         token: widget.token,
         userId: widget.userId,
-        ownerProjectLinkId: widget.ownerProjectLinkId,
+        
       ),
     );
   }
@@ -270,13 +270,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onVerify: (code) => _bloc.verifyEmailChangeDirect(
             token: widget.token,
             userId: widget.userId,
-            ownerProjectLinkId: widget.ownerProjectLinkId,
+            
             code: code,
           ),
           onResend: () => _bloc.resendEmailChangeDirect(
             token: widget.token,
             userId: widget.userId,
-            ownerProjectLinkId: widget.ownerProjectLinkId,
+           
           ),
         );
       },
@@ -391,7 +391,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     LoadEditProfile(
                       token: widget.token,
                       userId: widget.userId,
-                      ownerProjectLinkId: widget.ownerProjectLinkId,
+                     
                     ),
                   );
                 } else {
@@ -527,7 +527,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       SaveEditProfile(
                                         token: widget.token,
                                         userId: widget.userId,
-                                        ownerProjectLinkId: widget.ownerProjectLinkId,
+                                       
                                         firstName: _firstCtrl.text.trim(),
                                         lastName: _lastCtrl.text.trim(),
                                         username: _userCtrl.text.trim(),

@@ -209,7 +209,7 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     final api = ProductApiService();
 
     final rawList = await api.getProducts(
-      ownerProjectId: widget.ownerProjectId,
+     
       authToken: token,
     );
 

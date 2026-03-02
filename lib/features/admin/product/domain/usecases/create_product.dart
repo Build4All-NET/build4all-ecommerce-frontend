@@ -6,7 +6,7 @@ class CreateProduct {
   CreateProduct(this.repo);
 
   Future<Product> call({
-    required int ownerProjectId,
+ 
     required int itemTypeId,
     required int? currencyId,
 
@@ -34,7 +34,7 @@ class CreateProduct {
     Map<String, String>? attributes,
   }) {
     return repo.createProduct(
-      ownerProjectId: ownerProjectId,
+     
       itemTypeId: itemTypeId,
       currencyId: currencyId,
 

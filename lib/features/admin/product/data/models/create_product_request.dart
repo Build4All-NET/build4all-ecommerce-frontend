@@ -25,7 +25,6 @@ class AttributeValueDto {
 }
 
 class CreateProductRequest {
-  final int ownerProjectId;
   final int? itemTypeId;
   final int? categoryId;
   final int? currencyId;
@@ -35,10 +34,9 @@ class CreateProductRequest {
   final double price;
   final int? stock;
 
-  /// backend default if null
   final String? status;
-
   final String? sku;
+
   final ProductTypeDto productType;
 
   final bool virtualProduct;
@@ -54,7 +52,6 @@ class CreateProductRequest {
   final List<AttributeValueDto> attributes;
 
   CreateProductRequest({
-    required this.ownerProjectId,
     this.itemTypeId,
     this.categoryId,
     this.currencyId,
@@ -75,13 +72,12 @@ class CreateProductRequest {
     this.saleEnd,
     this.attributes = const [],
   }) : assert(
-         itemTypeId != null || categoryId != null,
-         'Either itemTypeId or categoryId must be provided',
-       );
+          itemTypeId != null || categoryId != null,
+          'Either itemTypeId or categoryId must be provided',
+        );
 
   Map<String, dynamic> toJson() {
     return {
-      'ownerProjectId': ownerProjectId,
       if (itemTypeId != null) 'itemTypeId': itemTypeId,
       if (categoryId != null) 'categoryId': categoryId,
       'currencyId': currencyId,

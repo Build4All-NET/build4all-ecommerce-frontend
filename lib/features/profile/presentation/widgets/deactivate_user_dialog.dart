@@ -95,7 +95,7 @@ class _DeactivateUserDialogState extends State<DeactivateUserDialog> {
         token: widget.token,
         userId: widget.userId,
         status: 'INACTIVE',
-        ownerProjectLinkId: widget.ownerProjectLinkId,
+        
         password: pwd,
       );
 

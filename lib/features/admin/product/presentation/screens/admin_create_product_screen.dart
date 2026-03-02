@@ -1022,34 +1022,33 @@ String _localizeError(Object e, AppLocalizations l) {
 
       if (!_isEdit) {
         final req = CreateProductRequest(
-          ownerProjectId: widget.ownerProjectId,
-          itemTypeId: itemTypeId,
-          categoryId: categoryId,
-          currencyId: currencyId,
-          name: _nameCtrl.text.trim(),
-          description: description,
-          price: price,
-          stock: stock,
-          status: null,
-          sku: sku,
-          productType: _selectedProductType,
-          virtualProduct: _virtualProduct,
-          downloadable: _downloadable,
-          downloadUrl: downloadUrl,
-          externalUrl: externalUrl,
-          buttonText: buttonText,
-          salePrice: salePrice,
-          saleStart: saleStartText,
-          saleEnd: saleEndText,
-          attributes: attrs,
-        );
+  itemTypeId: itemTypeId,
+  categoryId: categoryId,
+  currencyId: currencyId,
+  name: _nameCtrl.text.trim(),
+  description: description,
+  price: price,
+  stock: stock,
+  status: null,
+  sku: sku,
+  productType: _selectedProductType,
+  virtualProduct: _virtualProduct,
+  downloadable: _downloadable,
+  downloadUrl: downloadUrl,
+  externalUrl: externalUrl,
+  buttonText: buttonText,
+  salePrice: salePrice,
+  saleStart: saleStartText,
+  saleEnd: saleEndText,
+  attributes: attrs,
+);
 
         await _createProduct(req);
       } else {
         await _updateProduct(
           productId: widget.initialProduct!.id,
           reqBody: {
-            'ownerProjectId': widget.ownerProjectId,
+            
             'categoryId': categoryId,
             if (itemTypeId != null) 'itemTypeId': itemTypeId,
             'currencyId': currencyId,

@@ -14,11 +14,11 @@ class OwnerPaymentConfigState {
   });
 
   factory OwnerPaymentConfigState.initial() => const OwnerPaymentConfigState(
-    loading: false,
-    items: [],
-    savingCodes: {},
-    error: null,
-  );
+        loading: false,
+        items: [],
+        savingCodes: {},
+        error: null,
+      );
 
   OwnerPaymentConfigState copyWith({
     bool? loading,

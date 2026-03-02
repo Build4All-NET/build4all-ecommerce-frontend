@@ -48,7 +48,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       success: m.success,
       message: m.message,
       projectId: m.projectId,
-      ownerProjectId: m.ownerProjectId,
+      
       slug: m.slug,
       insertedCategories: m.insertedCategories,
       insertedItemTypes: m.insertedItemTypes,

@@ -8,14 +8,12 @@ class UpdateUserStatus {
     required String token,
     required int userId,
     required String status,
-    required int ownerProjectLinkId,
     String? password,
   }) =>
       repo.setStatus(
         token: token,
         userId: userId,
         status: status,
-        ownerProjectLinkId: ownerProjectLinkId,
         password: password,
       );
 }

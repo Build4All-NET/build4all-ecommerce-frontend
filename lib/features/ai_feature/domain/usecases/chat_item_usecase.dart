@@ -1,3 +1,4 @@
+// lib/features/ai_feature/domain/usecases/chat_item_usecase.dart
 import '../repositories/ai_chat_repository.dart';
 
 class ChatItemUseCase {
@@ -5,12 +6,12 @@ class ChatItemUseCase {
   ChatItemUseCase(this.repo);
 
   Future<String> call({
-    required int ownerProjectLinkId,
+    required String token,
     required int itemId,
     required String message,
   }) {
     return repo.chatItem(
-      ownerProjectLinkId: ownerProjectLinkId,
+      token: token,
       itemId: itemId,
       message: message,
     );

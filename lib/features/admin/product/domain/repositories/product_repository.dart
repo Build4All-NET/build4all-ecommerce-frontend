@@ -2,18 +2,18 @@ import '../entities/product.dart';
 
 abstract class ProductRepository {
   Future<List<Product>> getProducts({
-    required int ownerProjectId,
+   
     int? itemTypeId,
     int? categoryId,
   });
 
   Future<List<Product>> getNewArrivals({
-    required int ownerProjectId,
+    
     int? days,
   });
 
   Future<List<Product>> getBestSellers({
-    required int ownerProjectId,
+    
     int? limit,
   });
 
@@ -22,7 +22,7 @@ abstract class ProductRepository {
   Future<Product> getById(int id);
 
   Future<Product> createProduct({
-    required int ownerProjectId,
+    
     required int itemTypeId,
     required int? currencyId,
 

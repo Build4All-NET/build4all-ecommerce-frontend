@@ -1,6 +1,4 @@
-import 'package:build4front/features/admin/payment_config/domain/entities/payment_method_config_item.dart';
-
-
+import '../../domain/entities/payment_method_config_item.dart';
 
 class PaymentMethodConfigItemModel extends PaymentMethodConfigItem {
   const PaymentMethodConfigItemModel({

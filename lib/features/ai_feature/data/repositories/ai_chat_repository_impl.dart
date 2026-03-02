@@ -1,8 +1,7 @@
-import 'package:build4front/features/ai_feature/data/services/ai_chat_remote_datasource.dart';
-
+// lib/features/ai_feature/data/repositories/ai_chat_repository_impl.dart
 import '../../domain/repositories/ai_chat_repository.dart';
-
 import '../models/ai_item_chat_request_model.dart';
+import '../services/ai_chat_remote_datasource.dart';
 
 class AiChatRepositoryImpl implements AiChatRepository {
   final AiChatRemoteDataSource remote;
@@ -10,12 +9,12 @@ class AiChatRepositoryImpl implements AiChatRepository {
 
   @override
   Future<String> chatItem({
-    required int ownerProjectLinkId,
+    required String token,
     required int itemId,
     required String message,
   }) async {
     final res = await remote.chatItem(
-      ownerProjectLinkId: ownerProjectLinkId,
+      token: token,
       body: AiItemChatRequestModel(itemId: itemId, message: message),
     );
     return res.answer;

@@ -19,7 +19,7 @@ class ProductListBloc extends Bloc<ProductListEvent, ProductListState> {
 
     try {
       final products = await getProducts(
-        ownerProjectId: event.ownerProjectId,
+        
         itemTypeId: event.itemTypeId,
         categoryId: event.categoryId,
       );

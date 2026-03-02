@@ -18,16 +18,13 @@ import '../bloc/owner_payment_config_state.dart';
 import '../widgets/payment_method_config_sheet.dart';
 
 class OwnerPaymentConfigScreen extends StatelessWidget {
-  final int ownerProjectId;
-
-  /// ✅ Inject token provider so this screen works from:
-  /// - admin dashboard (AdminTokenStore)
-  /// - normal app (AuthTokenStore)
+  /// ✅ Token provider so screen can run in:
+  /// - Owner app token store
+  /// - Admin dashboard token store
   final Future<String?> Function()? getToken;
 
   const OwnerPaymentConfigScreen({
     super.key,
-    required this.ownerProjectId,
     this.getToken,
   });
 
@@ -45,25 +42,21 @@ class OwnerPaymentConfigScreen extends StatelessWidget {
       create: (_) => OwnerPaymentConfigBloc(
         getMethods: GetOwnerPaymentMethods(repo),
         saveConfig: SaveOwnerPaymentMethodConfig(repo),
-      )..add(OwnerPaymentConfigLoad(ownerProjectId)),
-      child: _OwnerPaymentConfigView(ownerProjectId: ownerProjectId),
+      )..add(OwnerPaymentConfigLoad()),
+      child: const _OwnerPaymentConfigView(),
     );
   }
 }
 
 class _OwnerPaymentConfigView extends StatefulWidget {
-  final int ownerProjectId;
-  const _OwnerPaymentConfigView({required this.ownerProjectId});
+  const _OwnerPaymentConfigView();
 
   @override
-  State<_OwnerPaymentConfigView> createState() =>
-      _OwnerPaymentConfigViewState();
+  State<_OwnerPaymentConfigView> createState() => _OwnerPaymentConfigViewState();
 }
 
 class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
   String _q = '';
-
-  // ✅ optional, but nice: keeps field value stable if widget rebuilds
   final TextEditingController _searchCtrl = TextEditingController();
 
   @override
@@ -87,9 +80,9 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
         title: Text(
           l10n.paymentMethodsTitle,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: c.label,
-            fontWeight: FontWeight.w700,
-          ),
+                color: c.label,
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ),
       body: BlocConsumer<OwnerPaymentConfigBloc, OwnerPaymentConfigState>(
@@ -119,16 +112,13 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
             padding: EdgeInsets.all(s.lg),
             child: Column(
               children: [
-                // ✅ Common Search Widget
                 AppSearchField(
                   controller: _searchCtrl,
                   hintText: l10n.paymentSearchHint,
                   onChanged: (v) => setState(() => _q = v),
                   textInputAction: TextInputAction.search,
                 ),
-
                 SizedBox(height: s.lg),
-
                 if (state.loading)
                   Expanded(
                     child: Center(
@@ -140,9 +130,10 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                     child: Center(
                       child: Text(
                         l10n.paymentNoResults,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(color: c.body),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: c.body),
                       ),
                     ),
                   )
@@ -158,8 +149,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
 
                         return _PaymentMethodTile(
                           methodName: it.name,
-                          title: (it.configSchema['title'] ?? it.name)
-                              .toString(),
+                          title: (it.configSchema['title'] ?? it.name).toString(),
                           enabled: it.projectEnabled,
                           saving: saving,
                           incomplete: _isIncomplete(
@@ -169,85 +159,77 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                           onToggle: (val) async {
                             if (saving) return;
 
-                            // ✅ DISABLE: save immediately
-                          // ✅ DISABLE: save immediately
-if (val == false) {
-  context.read<OwnerPaymentConfigBloc>().add(
-    OwnerPaymentConfigSave(
-      ownerProjectId: widget.ownerProjectId,
-      methodName: it.name,
-      enabled: false,
-      configValues: const {}, // ✅ IMPORTANT: don't send old configValues
-    ),
-  );
-  return;
-}
+                            // ✅ DISABLE: save immediately + send empty config to backend
+                            if (val == false) {
+                              context.read<OwnerPaymentConfigBloc>().add(
+                                    OwnerPaymentConfigSave(
+                                      methodName: it.name,
+                                      enabled: false,
+                                      configValues: const {},
+                                    ),
+                                  );
+                              return;
+                            }
 
                             // ✅ ENABLE => configure
-                            final result =
-                                await showModalBottomSheet<
-                                  Map<String, Object?>
-                                >(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: c.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(tokens.card.radius),
-                                    ),
-                                  ),
-                                  builder: (_) => PaymentMethodConfigSheet(
-                                    methodName: it.name,
-                                    schema: it.configSchema,
-                                    existingValues: it.configValues,
-                                  ),
-                                );
+                            final result = await showModalBottomSheet<
+                                Map<String, Object?>>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: c.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(tokens.card.radius),
+                                ),
+                              ),
+                              builder: (_) => PaymentMethodConfigSheet(
+                                methodName: it.name,
+                                schema: it.configSchema,
+                                existingValues: it.configValues,
+                              ),
+                            );
 
                             if (result == null) return;
 
                             context.read<OwnerPaymentConfigBloc>().add(
-                              OwnerPaymentConfigSave(
-                                ownerProjectId: widget.ownerProjectId,
-                                methodName: it.name,
-                                enabled: true,
-                                configValues: result,
-                              ),
-                            );
+                                  OwnerPaymentConfigSave(
+                                    methodName: it.name,
+                                    enabled: true,
+                                    configValues: result,
+                                  ),
+                                );
 
                             AppToast.show(context, l10n.paymentSavedKeepHint);
                           },
                           onConfigure: () async {
                             if (saving) return;
 
-                            final result =
-                                await showModalBottomSheet<
-                                  Map<String, Object?>
-                                >(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: c.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(tokens.card.radius),
-                                    ),
-                                  ),
-                                  builder: (_) => PaymentMethodConfigSheet(
-                                    methodName: it.name,
-                                    schema: it.configSchema,
-                                    existingValues: it.configValues,
-                                  ),
-                                );
+                            final result = await showModalBottomSheet<
+                                Map<String, Object?>>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: c.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(tokens.card.radius),
+                                ),
+                              ),
+                              builder: (_) => PaymentMethodConfigSheet(
+                                methodName: it.name,
+                                schema: it.configSchema,
+                                existingValues: it.configValues,
+                              ),
+                            );
 
                             if (result == null) return;
 
                             context.read<OwnerPaymentConfigBloc>().add(
-                              OwnerPaymentConfigSave(
-                                ownerProjectId: widget.ownerProjectId,
-                                methodName: it.name,
-                                enabled: true,
-                                configValues: result,
-                              ),
-                            );
+                                  OwnerPaymentConfigSave(
+                                    methodName: it.name,
+                                    enabled: true,
+                                    configValues: result,
+                                  ),
+                                );
 
                             AppToast.show(context, l10n.paymentSavedKeepHint);
                           },
@@ -328,25 +310,26 @@ class _PaymentMethodTile extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: c.label,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: c.label,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 SizedBox(height: s.xs),
                 if (enabled && incomplete)
                   Text(
                     l10n.paymentIncomplete,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: c.error,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: c.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                   )
                 else
                   Text(
                     methodName.toUpperCase(),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: c.muted),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: c.muted),
                   ),
               ],
             ),

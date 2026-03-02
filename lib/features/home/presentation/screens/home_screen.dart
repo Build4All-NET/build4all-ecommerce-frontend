@@ -140,58 +140,37 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadSupportInfo({bool silent = true, String reason = ''}) async {
-    final linkId = _resolvedOwnerProjectLinkId;
-
-    if (linkId <= 0) {
-      if (!silent) {
-        setState(() {
-          _supportInfo = null;
-          _supportError =
-              'Missing ownerProjectLinkId (Env.ownerProjectLinkId is 0).';
-          _supportLoading = false;
-          _supportLoadedAt = null;
-        });
-      }
-      _log(
-        'SupportInfo skipped: linkId invalid (<=0) | envLink=${_asInt(Env.ownerProjectLinkId)} | cfgOwner=${_asInt(widget.appConfig.ownerProjectId)} | envOwner=${_asInt(Env.ownerProjectLinkId)} | reason=$reason',
-      );
-      return;
-    }
-
-    if (!silent) {
-      setState(() {
-        _supportLoading = true;
-        _supportError = null;
-      });
-    }
-
-    try {
-      final raw = (authState.token ?? '').trim();
-      final token = raw.isEmpty ? null : raw;
-
-      final info = await _supportService.fetchSupportInfo(
-        token: token,
-        ownerProjectLinkId: linkId,
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _supportInfo = info;
-        _supportError = null;
-        _supportLoading = false;
-        _supportLoadedAt = DateTime.now();
-      });
-    } catch (e, st) {
-      if (!mounted) return;
-      setState(() {
-        _supportInfo = null;
-        _supportError = '$e';
-        _supportLoading = false;
-        _supportLoadedAt = null;
-      });
-      _logErr('SupportInfo FAIL (linkId=$linkId)', e, st);
-    }
+  if (!silent) {
+    setState(() {
+      _supportLoading = true;
+      _supportError = null;
+    });
   }
+
+  try {
+    final raw = (authState.token ?? '').trim();
+    final token = raw.isEmpty ? '' : raw;
+
+    final info = await _supportService.fetchSupportInfo(token: token);
+
+    if (!mounted) return;
+    setState(() {
+      _supportInfo = info;
+      _supportError = null;
+      _supportLoading = false;
+      _supportLoadedAt = DateTime.now();
+    });
+  } catch (e, st) {
+    if (!mounted) return;
+    setState(() {
+      _supportInfo = null;
+      _supportError = '$e';
+      _supportLoading = false;
+      _supportLoadedAt = null;
+    });
+    _logErr('SupportInfo FAIL', e, st);
+  }
+}
 
   void _resetPaging() => _filterVersion++;
 
@@ -553,7 +532,7 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
         return Padding(
           padding: EdgeInsets.only(bottom: spacing.xs),
           child: HomeBannerSlider(
-            ownerProjectId: _resolvedOwnerProjectId,
+           
             token: authState.token ?? '',
             onBannerTap: (banner) {
               if (banner.targetType == 'CATEGORY' && banner.targetId != null) {

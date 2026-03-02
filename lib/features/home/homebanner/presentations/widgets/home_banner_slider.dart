@@ -8,22 +8,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeBannerSlider extends StatefulWidget {
-  final int ownerProjectId;
   final String token;
 
-  /// Optional: what happens when user taps a banner (open product / category / URL)
   final void Function(HomeBanner banner)? onBannerTap;
 
-  /// Optional cache-buster to force reload / bypass cached image.
-  /// Default = 0 so you DON'T have to pass it.
   final int cacheBuster;
 
   const HomeBannerSlider({
     super.key,
-    required this.ownerProjectId,
     required this.token,
     this.onBannerTap,
-    this.cacheBuster = 0, // ✅ not required anymore
+    this.cacheBuster = 0,
   });
 
   @override
@@ -51,10 +46,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
   @override
   void didUpdateWidget(covariant HomeBannerSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // ✅ if ownerProject/token/cacheBuster changes -> reload banners
-    if (oldWidget.ownerProjectId != widget.ownerProjectId ||
-        oldWidget.token != widget.token ||
+    if (oldWidget.token != widget.token ||
         oldWidget.cacheBuster != widget.cacheBuster) {
       _load();
     }
@@ -76,15 +68,12 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
     });
 
     try {
-      final list = await _service.fetchActiveBanners(
-        ownerProjectId: widget.ownerProjectId,
-        token: widget.token,
-      );
+      final list = await _service.fetchActiveBanners(token: widget.token);
 
       if (!mounted) return;
 
       setState(() {
-        _banners = list;
+        _banners = list.map((e) => HomeBanner.fromJson(e)).toList();
         _isLoading = false;
         _currentIndex = 0;
       });
@@ -92,7 +81,6 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
       _setupAutoSlide();
     } catch (e) {
       if (!mounted) return;
-
       setState(() {
         _isLoading = false;
         _error = e.toString();
@@ -119,10 +107,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
   String _withCacheBuster(String url) {
     final cb = widget.cacheBuster;
     if (cb == 0) return url;
-
-    // Append ?cb= or &cb= safely
-    if (url.contains('?')) return '$url&cb=$cb';
-    return '$url?cb=$cb';
+    return url.contains('?') ? '$url&cb=$cb' : '$url?cb=$cb';
   }
 
   @override
@@ -167,9 +152,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
       );
     }
 
-    if (_banners.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (_banners.isEmpty) return const SizedBox.shrink();
 
     return Container(
       margin: EdgeInsets.only(bottom: spacing.lg),
@@ -179,14 +162,13 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
           PageView.builder(
             controller: _pageController,
             itemCount: _banners.length,
-            onPageChanged: (index) {
+            onPageChanged: (i) {
               if (!mounted) return;
-              setState(() => _currentIndex = index);
+              setState(() => _currentIndex = i);
             },
-            itemBuilder: (context, index) {
-              final banner = _banners[index];
+            itemBuilder: (_, i) {
+              final banner = _banners[i];
 
-              // ✅ resolve relative url + apply cache buster
               final resolved = net.resolveUrl(banner.imageUrl);
               final imageUrl = _withCacheBuster(resolved);
 
@@ -257,22 +239,19 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
               );
             },
           ),
-
           Positioned(
             bottom: spacing.sm,
             right: spacing.lg,
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: List.generate(_banners.length, (index) {
-                final isActive = index == _currentIndex;
+              children: List.generate(_banners.length, (i) {
+                final active = i == _currentIndex;
                 return Container(
-                  margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                  width: isActive ? 10 : 6,
+                  margin: EdgeInsets.only(left: i == 0 ? 0 : 4),
+                  width: active ? 10 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: isActive
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
+                    color: active ? Colors.white : Colors.white.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 );

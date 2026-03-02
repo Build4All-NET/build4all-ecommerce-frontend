@@ -1,3 +1,4 @@
+// lib/features/profile_edit/data/services/user_profile_api_service.dart
 import 'dart:io';
 import 'package:dio/dio.dart';
 
@@ -33,25 +34,16 @@ class UserProfileApiService {
   String _readErrorMessage(dynamic data, {int? statusCode}) {
     if (data is Map) {
       final map = data.cast<dynamic, dynamic>();
-
-      final candidates = [
-        map['error'],
-        map['message'],
-        map['details'],
-        map['msg'],
-      ];
-
+      final candidates = [map['error'], map['message'], map['details'], map['msg']];
       for (final c in candidates) {
         final text = c?.toString().trim();
         if (text != null && text.isNotEmpty) return text;
       }
     }
-
     if (data is String) {
       final text = data.trim();
       if (text.isNotEmpty) return text;
     }
-
     return 'Request failed (${statusCode ?? 'unknown'})';
   }
 
@@ -65,11 +57,9 @@ class UserProfileApiService {
   Future<Map<String, dynamic>> getUserById({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) async {
     final res = await dio.get(
       '${_apiRoot()}/users/$userId',
-      queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
       options: _authJson(token),
     );
 
@@ -82,38 +72,32 @@ class UserProfileApiService {
   }
 
   Future<Map<String, dynamic>> updateProfile({
-  required String token,
-  required int userId,
-  required int ownerProjectLinkId,
-  required String firstName,
-  required String lastName,
-  String? username,
-  String? email, // ✅ NEW
-  bool? isPublicProfile,
-  String? imageFilePath,
-  bool imageRemoved = false,
-}) async {
- final form = FormData.fromMap({
-  'firstName': firstName,
-  'lastName': lastName,
-  if (username != null) 'username': username,
-
-  // ✅ NEW (only send if not null)
-  if (email != null) 'email': email,
-
-  if (isPublicProfile != null) 'isPublicProfile': isPublicProfile.toString(),
-  'imageRemoved': imageRemoved.toString(),
-  if (imageFilePath != null)
-    'profileImage': await MultipartFile.fromFile(
-      imageFilePath,
-      filename: File(imageFilePath).uri.pathSegments.last,
-    ),
-});
-
+    required String token,
+    required int userId,
+    required String firstName,
+    required String lastName,
+    String? username,
+    String? email,
+    bool? isPublicProfile,
+    String? imageFilePath,
+    bool imageRemoved = false,
+  }) async {
+    final form = FormData.fromMap({
+      'firstName': firstName,
+      'lastName': lastName,
+      if (username != null) 'username': username,
+      if (email != null) 'email': email,
+      if (isPublicProfile != null) 'isPublicProfile': isPublicProfile.toString(),
+      'imageRemoved': imageRemoved.toString(),
+      if (imageFilePath != null)
+        'profileImage': await MultipartFile.fromFile(
+          imageFilePath,
+          filename: File(imageFilePath).uri.pathSegments.last,
+        ),
+    });
 
     final res = await dio.put(
       '${_apiRoot()}/users/$userId/profile',
-      queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
       data: form,
       options: _authMultipart(token),
     );
@@ -124,38 +108,33 @@ class UserProfileApiService {
       return (res.data as Map).cast<String, dynamic>();
     }
 
-    // if backend returns plain text success
     return {'message': res.data?.toString() ?? 'Profile updated'};
   }
 
+  Future<void> verifyEmailChange({
+    required String token,
+    required int userId,
+    required String code,
+  }) async {
+    final res = await dio.post(
+      '${_apiRoot()}/users/$userId/email-change/verify',
+      data: {'code': code},
+      options: _authJson(token),
+    );
+    _throwIfFailed(res);
+  }
 
-Future<void> verifyEmailChange({
-  required String token,
-  required int userId,
-  required int ownerProjectLinkId,
-  required String code,
-}) async {
-  final res = await dio.post(
-    '${_apiRoot()}/users/$userId/email-change/verify',
-    queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
-    data: {'code': code},
-    options: _authJson(token),
-  );
-  _throwIfFailed(res);
-}
+  Future<void> resendEmailChange({
+    required String token,
+    required int userId,
+  }) async {
+    final res = await dio.post(
+      '${_apiRoot()}/users/$userId/email-change/resend',
+      options: _authJson(token),
+    );
+    _throwIfFailed(res);
+  }
 
-Future<void> resendEmailChange({
-  required String token,
-  required int userId,
-  required int ownerProjectLinkId,
-}) async {
-  final res = await dio.post(
-    '${_apiRoot()}/users/$userId/email-change/resend',
-    queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
-    options: _authJson(token),
-  );
-  _throwIfFailed(res);
-}
   Future<void> deleteUser({
     required String token,
     required int userId,
@@ -172,7 +151,6 @@ Future<void> resendEmailChange({
     );
 
     final text = (res.data ?? '').toString().trim();
-
     if (res.statusCode == null || res.statusCode! >= 400) {
       throw Exception(text.isNotEmpty ? text : 'Delete failed (${res.statusCode})');
     }

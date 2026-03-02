@@ -23,9 +23,8 @@ class OwnerPaymentConfigApiService {
 
   Future<List<dynamic>> listMethods({
     required String token,
-    required int ownerProjectId,
   }) async {
-    final url = '${_apiRoot()}/owner/projects/$ownerProjectId/payment/methods';
+    final url = '${_apiRoot()}/owner/projects/payment/methods';
     final res = await dio.get(url, options: _auth(token));
     if (res.data is List) return res.data as List;
     return [];
@@ -33,13 +32,11 @@ class OwnerPaymentConfigApiService {
 
   Future<void> saveMethodConfig({
     required String token,
-    required int ownerProjectId,
     required String methodName,
     required bool enabled,
     required Map<String, Object?> configValues,
   }) async {
-    final url =
-        '${_apiRoot()}/owner/projects/$ownerProjectId/payment/methods/$methodName';
+    final url = '${_apiRoot()}/owner/projects/payment/methods/$methodName';
 
     await dio.put(
       url,

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/config/env.dart';
@@ -27,30 +26,24 @@ class UserProfileService {
   // ---------- helpers ----------
 
   String _extractMessage(dynamic data) {
-    // If backend returns JSON map
     if (data is Map) {
       final m = data.cast<String, dynamic>();
-      return (m['error'] ?? m['message'] ?? m['detail'] ?? m['msg'] ?? '').toString();
+      return (m['error'] ?? m['message'] ?? m['detail'] ?? m['msg'] ?? '')
+          .toString();
     }
-
-    // If backend returns a string (plain text OR JSON string)
     if (data is String) {
       final s = data.trim();
       if (s.isEmpty) return '';
-
-      // Try decode JSON string safely
       if (s.startsWith('{') || s.startsWith('[')) {
         try {
           final decoded = jsonDecode(s);
           return _extractMessage(decoded);
         } catch (_) {
-          // Not valid JSON, treat as plain
           return s;
         }
       }
       return s;
     }
-
     return '';
   }
 
@@ -69,14 +62,14 @@ class UserProfileService {
 
   // ---------- API ----------
 
+  /// ✅ GET /api/users/{id}
+  /// Tenant inferred from JWT in backend
   Future<Map<String, dynamic>> fetchProfileMap({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) async {
     final res = await _dio.get(
       '$_base/$userId',
-      queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
       options: Options(
         headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
         responseType: ResponseType.json,
@@ -100,19 +93,15 @@ class UserProfileService {
     );
   }
 
-  /// visibility (keep plain, backend often returns text)
+  /// ✅ PUT /api/users/profile-visibility?isPublic=true
+  /// NOTE: NO /{id} in path in your backend
   Future<void> updateVisibility({
     required String token,
-    required int userId,
     required bool isPublic,
-    required int ownerProjectLinkId,
   }) async {
     final res = await _dio.put(
-      '$_base/$userId/profile-visibility',
-      queryParameters: {
-        'isPublic': isPublic,
-        'ownerProjectLinkId': ownerProjectLinkId,
-      },
+      '$_base/profile-visibility',
+      queryParameters: {'isPublic': isPublic},
       data: const {},
       options: Options(
         headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
@@ -127,13 +116,12 @@ class UserProfileService {
     }
   }
 
-  /// ✅ FIXED: status endpoint should NOT be ResponseType.json
-  /// because backend usually returns plain text (or empty).
+  /// ✅ PUT /api/users/{id}/status
+  /// Tenant inferred from JWT in backend
   Future<void> updateStatus({
     required String token,
     required int userId,
     required String status,
-    required int ownerProjectLinkId,
     String? password,
   }) async {
     final body = <String, dynamic>{'status': status};
@@ -144,12 +132,11 @@ class UserProfileService {
 
     final res = await _dio.put(
       '$_base/$userId/status',
-      queryParameters: {'ownerProjectLinkId': ownerProjectLinkId},
       data: body,
       options: Options(
         headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
-        responseType: ResponseType.plain, // ✅ important
-        receiveDataWhenStatusError: true, // ✅ keep body even on 400/401
+        responseType: ResponseType.plain,
+        receiveDataWhenStatusError: true,
         validateStatus: (s) => s != null && s >= 200 && s < 500,
       ),
     );
@@ -157,7 +144,5 @@ class UserProfileService {
     if ((res.statusCode ?? 0) < 200 || (res.statusCode ?? 0) >= 300) {
       _throwBadResponse(res);
     }
-
-    // success: ignore body (could be empty or text)
   }
 }

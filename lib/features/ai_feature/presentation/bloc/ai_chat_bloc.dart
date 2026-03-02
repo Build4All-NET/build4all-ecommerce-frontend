@@ -1,5 +1,6 @@
+// lib/features/ai_feature/presentation/bloc/ai_chat_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 
 import '../../domain/entities/ai_message.dart';
 import '../../domain/usecases/chat_item_usecase.dart';
@@ -32,19 +33,23 @@ class AiChatBloc extends Bloc<AiChatEvent, AiChatState> {
     final msg = e.text.trim();
     if (msg.isEmpty || _itemId == null) return;
 
-    final now = DateTime.now();
+    final token = (g.authToken ?? '').toString().trim(); // ✅ replace with your real token getter
+    if (token.isEmpty) {
+      emit(state.copyWith(isSending: false));
+      throw Exception('Not authenticated');
+    }
 
+    final now = DateTime.now();
     final userMessage = AiMessage(role: AiMessageRole.user, text: msg, at: now);
+
     emit(state.copyWith(
       isSending: true,
       messages: [...state.messages, userMessage],
     ));
 
-    final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId.trim()) ?? 0;
-
     try {
       final answer = await useCase(
-        ownerProjectLinkId: ownerProjectLinkId,
+        token: token,
         itemId: _itemId!,
         message: msg,
       );
@@ -61,7 +66,6 @@ class AiChatBloc extends Bloc<AiChatEvent, AiChatState> {
       ));
     } catch (err) {
       emit(state.copyWith(isSending: false));
-      // presentation will toast
       rethrow;
     }
   }

@@ -16,7 +16,6 @@ class ProductApiService {
   // ---------------- GET LISTS ----------------
 
   Future<List<dynamic>> getProducts({
-    required int ownerProjectId,
     int? itemTypeId,
     int? categoryId,
     required String authToken,
@@ -24,7 +23,6 @@ class ProductApiService {
     final resp = await _dio.get(
       _baseUrl,
       queryParameters: {
-        'ownerProjectId': ownerProjectId,
         if (itemTypeId != null) 'itemTypeId': itemTypeId,
         if (categoryId != null) 'categoryId': categoryId,
       },
@@ -34,14 +32,12 @@ class ProductApiService {
   }
 
   Future<List<dynamic>> getNewArrivals({
-    required int ownerProjectId,
     int? days,
     required String authToken,
   }) async {
     final resp = await _dio.get(
       '$_baseUrl/new-arrivals',
       queryParameters: {
-        'ownerProjectId': ownerProjectId,
         if (days != null) 'days': days,
       },
       options: _auth(authToken),
@@ -50,14 +46,12 @@ class ProductApiService {
   }
 
   Future<List<dynamic>> getBestSellers({
-    required int ownerProjectId,
     int? limit,
     required String authToken,
   }) async {
     final resp = await _dio.get(
       '$_baseUrl/best-sellers',
       queryParameters: {
-        'ownerProjectId': ownerProjectId,
         if (limit != null) 'limit': limit,
       },
       options: _auth(authToken),
@@ -66,12 +60,10 @@ class ProductApiService {
   }
 
   Future<List<dynamic>> getDiscounted({
-    required int ownerProjectId,
     required String authToken,
   }) async {
     final resp = await _dio.get(
       '$_baseUrl/discounted',
-      queryParameters: {'ownerProjectId': ownerProjectId},
       options: _auth(authToken),
     );
     return resp.data as List<dynamic>;
@@ -87,8 +79,6 @@ class ProductApiService {
 
   // ---------------- HELPERS ----------------
 
-  /// Backend expects: attributesJson (string)
-
   Map<String, dynamic> _normalizeBodyForMultipart(Map<String, dynamic> body) {
     final map = Map<String, dynamic>.from(body);
 
@@ -99,9 +89,7 @@ class ProductApiService {
       map.remove('attributes');
     }
 
-    // Remove nulls to keep request clean
     map.removeWhere((key, value) => value == null);
-
     return map;
   }
 
@@ -125,8 +113,6 @@ class ProductApiService {
 
   // ---------------- CREATE ----------------
 
-  /// ✅ Create WITHOUT image
-  /// Still uses /with-image because backend create is defined there for flat multipart.
   Future<Map<String, dynamic>> create({
     required Map<String, dynamic> body,
     required String authToken,
@@ -142,7 +128,6 @@ class ProductApiService {
     return (resp.data as Map).cast<String, dynamic>();
   }
 
-  /// ✅ Create WITH image (flat form-data)
   Future<Map<String, dynamic>> createWithImage({
     required Map<String, dynamic> body,
     required String imagePath,
@@ -161,7 +146,6 @@ class ProductApiService {
 
   // ---------------- UPDATE ----------------
 
-
   Future<Map<String, dynamic>> update({
     required int id,
     required Map<String, dynamic> body,
@@ -178,7 +162,6 @@ class ProductApiService {
     return (resp.data as Map).cast<String, dynamic>();
   }
 
-  /// ✅ Update WITH image (flat form-data)
   Future<Map<String, dynamic>> updateWithImage({
     required int id,
     required Map<String, dynamic> body,

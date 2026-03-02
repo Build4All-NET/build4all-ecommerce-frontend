@@ -319,7 +319,7 @@ void _maybeLoadProfileFromAuthWithBloc({
   _lastProfileUserId = userId;
   _lastProfileOwnerId = ownerId;
 
-  bloc.add(LoadUserProfile(token, userId, ownerId));
+  bloc.add(LoadUserProfile(token, userId));
 }
 
   int _userIdFromToken(String token) {

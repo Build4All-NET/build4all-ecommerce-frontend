@@ -2,12 +2,10 @@ import '../entities/home_banner.dart';
 
 abstract class HomeBannerRepository {
   Future<List<HomeBanner>> listActivePublic({
-    required int ownerProjectId,
     required String token,
   });
 
   Future<List<HomeBanner>> listForAdmin({
-    required int ownerProjectId,
     required String token,
   });
 

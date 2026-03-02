@@ -38,7 +38,7 @@ class AdminProductsListScreen extends StatelessWidget {
             getToken: AdminTokenStore().getToken,
           ),
         ),
-      )..add(LoadProductsForOwner(ownerProjectId)),
+      )..add(LoadProductsForOwner()),
       child: _AdminProductsListView(ownerProjectId: ownerProjectId),
     );
   }
@@ -203,7 +203,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
       Navigator.of(context).pop(); // close loader
 
       context.read<ProductListBloc>().add(
-            LoadProductsForOwner(widget.ownerProjectId),
+            LoadProductsForOwner(),
           );
 
       AppToast.show(context, l10n.adminProductDeleteSuccess);
@@ -297,7 +297,7 @@ List<Product> _applyFilters(ProductListState state) {
 
           if (changed == true && context.mounted) {
             context.read<ProductListBloc>().add(
-                  LoadProductsForOwner(widget.ownerProjectId),
+                  LoadProductsForOwner(),
                 );
           }
         },
@@ -396,7 +396,7 @@ List<Product> _applyFilters(ProductListState state) {
 
                           if (changed == true && context.mounted) {
                             context.read<ProductListBloc>().add(
-                                  LoadProductsForOwner(widget.ownerProjectId),
+                                  LoadProductsForOwner(),
                                 );
                           }
                         },

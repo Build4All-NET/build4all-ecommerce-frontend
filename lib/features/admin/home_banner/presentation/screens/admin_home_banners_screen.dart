@@ -23,6 +23,7 @@ import '../widgets/admin_home_banner_empty_state.dart';
 import '../widgets/admin_home_banner_form_sheet.dart';
 
 class AdminHomeBannersScreen extends StatelessWidget {
+  // ✅ keep for targets loading in form sheet
   final int ownerProjectId;
 
   const AdminHomeBannersScreen({super.key, required this.ownerProjectId});
@@ -73,9 +74,7 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
     });
 
     if (t != null && t.isNotEmpty) {
-      context.read<HomeBannersBloc>().add(
-        LoadAdminBanners(ownerProjectId: widget.ownerProjectId, token: t),
-      );
+      context.read<HomeBannersBloc>().add(LoadAdminBanners(token: t));
     }
   }
 
@@ -86,9 +85,7 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
 
   Future<void> _refresh() async {
     if (_token == null || _token!.isEmpty) return _noToken();
-    context.read<HomeBannersBloc>().add(
-      LoadAdminBanners(ownerProjectId: widget.ownerProjectId, token: _token!),
-    );
+    context.read<HomeBannersBloc>().add(LoadAdminBanners(token: _token!));
   }
 
   Future<void> _openCreate() async {
@@ -98,8 +95,7 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
     final res = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      builder: (_) =>
-          AdminHomeBannerFormSheet(ownerProjectId: widget.ownerProjectId),
+      builder: (_) => AdminHomeBannerFormSheet(ownerProjectId: widget.ownerProjectId),
     );
 
     if (res == null) return;
@@ -114,7 +110,6 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
         body: body,
         imagePath: imagePath,
         token: _token!,
-        ownerProjectId: widget.ownerProjectId,
       ),
     );
   }
@@ -143,7 +138,6 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
         body: body,
         imagePath: imagePath,
         token: _token!,
-        ownerProjectId: widget.ownerProjectId,
       ),
     );
   }
@@ -181,7 +175,6 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
       DeleteBannerEvent(
         id: banner.id,
         token: _token!,
-        ownerProjectId: widget.ownerProjectId,
       ),
     );
   }
@@ -224,66 +217,66 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
       body: _loadingToken
           ? Center(child: CircularProgressIndicator(color: c.primary))
           : (_token == null || _token!.isEmpty)
-          ? Center(
-              child: Padding(
-                padding: EdgeInsets.all(spacing.lg),
-                child: Text(
-                  l.adminSessionExpired,
-                  style: text.bodyMedium.copyWith(color: c.danger),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : BlocBuilder<HomeBannersBloc, HomeBannersState>(
-              builder: (context, state) {
-                if (state.loading) {
-                  return Center(
-                    child: CircularProgressIndicator(color: c.primary),
-                  );
-                }
-
-                if (state.error != null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    AppToast.show(context, state.error!, isError: true);
-                  });
-
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(spacing.lg),
-                      child: Text(
-                        state.error!,
-                        style: text.bodyMedium.copyWith(color: c.danger),
-                        textAlign: TextAlign.center,
-                      ),
+              ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(spacing.lg),
+                    child: Text(
+                      l.adminSessionExpired,
+                      style: text.bodyMedium.copyWith(color: c.danger),
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                }
-
-                if (state.banners.isEmpty) {
-                  return ListView(
-                    padding: EdgeInsets.all(spacing.lg),
-                    children: [AdminHomeBannerEmptyState(onAdd: _openCreate)],
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: ListView.separated(
-                    padding: EdgeInsets.all(spacing.lg),
-                    itemCount: state.banners.length,
-                    separatorBuilder: (_, __) => SizedBox(height: spacing.sm),
-                    itemBuilder: (_, i) {
-                      final b = state.banners[i];
-                      return AdminHomeBannerCard(
-                        banner: b,
-                        onEdit: () => _openEdit(b),
-                        onDelete: () => _confirmDelete(b),
-                      );
-                    },
                   ),
-                );
-              },
-            ),
+                )
+              : BlocBuilder<HomeBannersBloc, HomeBannersState>(
+                  builder: (context, state) {
+                    if (state.loading) {
+                      return Center(
+                        child: CircularProgressIndicator(color: c.primary),
+                      );
+                    }
+
+                    if (state.error != null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        AppToast.show(context, state.error!, isError: true);
+                      });
+
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(spacing.lg),
+                          child: Text(
+                            state.error!,
+                            style: text.bodyMedium.copyWith(color: c.danger),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (state.banners.isEmpty) {
+                      return ListView(
+                        padding: EdgeInsets.all(spacing.lg),
+                        children: [AdminHomeBannerEmptyState(onAdd: _openCreate)],
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        padding: EdgeInsets.all(spacing.lg),
+                        itemCount: state.banners.length,
+                        separatorBuilder: (_, __) => SizedBox(height: spacing.sm),
+                        itemBuilder: (_, i) {
+                          final b = state.banners[i];
+                          return AdminHomeBannerCard(
+                            banner: b,
+                            onEdit: () => _openEdit(b),
+                            onDelete: () => _confirmDelete(b),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

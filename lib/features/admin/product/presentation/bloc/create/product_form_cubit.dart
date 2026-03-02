@@ -11,7 +11,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     : super(ProductFormState.initial());
 
   Future<void> submit({
-    required int ownerProjectId,
+   
     required int itemTypeId,
     required int? currencyId,
 
@@ -50,7 +50,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
 
     try {
       final Product p = await createProduct(
-        ownerProjectId: ownerProjectId,
+        
         itemTypeId: itemTypeId,
         currencyId: currencyId,
 

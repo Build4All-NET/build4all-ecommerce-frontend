@@ -20,13 +20,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   Future<UserProfile> getById({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) async {
-    final json = await api.getUserById(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
+    final json = await api.getUserById(token: token, userId: userId);
     return UserProfileModel.fromJson(json);
   }
 
@@ -34,7 +29,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   Future<UserProfile> updateProfile({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
     required String firstName,
     required String lastName,
     String? username,
@@ -46,7 +40,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     final json = await api.updateProfile(
       token: token,
       userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
       firstName: firstName,
       lastName: lastName,
       username: username,
@@ -68,7 +61,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     }
 
     if (userJson != null) {
-      // ✅ KEEP: merge flags from envelope
       final merged = <String, dynamic>{
         ...userJson,
         'emailVerificationRequired': json['emailVerificationRequired'],
@@ -77,41 +69,24 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       return UserProfileModel.fromJson(merged);
     }
 
-    return getById(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
+    return getById(token: token, userId: userId);
   }
 
-  // ✅ NEW
   @override
   Future<void> verifyEmailChange({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
     required String code,
   }) {
-    return api.verifyEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-      code: code,
-    );
+    return api.verifyEmailChange(token: token, userId: userId, code: code);
   }
 
-  // ✅ NEW
   @override
   Future<void> resendEmailChange({
     required String token,
     required int userId,
-    required int ownerProjectLinkId,
   }) {
-    return api.resendEmailChange(
-      token: token,
-      userId: userId,
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
+    return api.resendEmailChange(token: token, userId: userId);
   }
 
   @override

@@ -11,8 +11,10 @@ class OwnerPaymentConfigBloc
   final GetOwnerPaymentMethods getMethods;
   final SaveOwnerPaymentMethodConfig saveConfig;
 
-  OwnerPaymentConfigBloc({required this.getMethods, required this.saveConfig})
-    : super(OwnerPaymentConfigState.initial()) {
+  OwnerPaymentConfigBloc({
+    required this.getMethods,
+    required this.saveConfig,
+  }) : super(OwnerPaymentConfigState.initial()) {
     on<OwnerPaymentConfigLoad>(_onLoad);
     on<OwnerPaymentConfigSave>(_onSave);
   }
@@ -23,10 +25,10 @@ class OwnerPaymentConfigBloc
   ) async {
     emit(state.copyWith(loading: true, error: null));
     try {
-      final items = await getMethods(event.ownerProjectId);
+      final items = await getMethods();
       emit(state.copyWith(loading: false, items: items, error: null));
     } catch (e) {
-      emit(state.copyWith(loading: false, error: e.toString()));
+      emit(state.copyWith(loading: false, error: _prettyError(e)));
     }
   }
 
@@ -40,43 +42,40 @@ class OwnerPaymentConfigBloc
 
     try {
       await saveConfig(
-        ownerProjectId: event.ownerProjectId,
         methodName: event.methodName,
         enabled: event.enabled,
         configValues: event.configValues,
       );
 
-      // update local state (optimistic)
-     final updated = state.items.map((it) {
-  if (it.name.toUpperCase() != code) return it;
+      // optimistic UI update
+      final updated = state.items.map((it) {
+        if (it.name.toUpperCase() != code) return it;
 
-  return it.copyWith(
-    projectEnabled: event.enabled,
-    configValues: event.enabled
-        ? Map<String, dynamic>.from(event.configValues)
-        : it.configValues, // ✅ keep previous config when disabling
-  );
-}).toList();
+        return it.copyWith(
+          projectEnabled: event.enabled,
+          configValues: event.enabled
+              ? Map<String, dynamic>.from(event.configValues)
+              : it.configValues, // keep old values when disabling
+        );
+      }).toList();
 
       final afterSaving = {...state.savingCodes}..remove(code);
       emit(state.copyWith(items: updated, savingCodes: afterSaving));
     } catch (e) {
       final afterSaving = {...state.savingCodes}..remove(code);
-      emit(state.copyWith(savingCodes: afterSaving, error: e.toString()));
+      emit(state.copyWith(savingCodes: afterSaving, error: _prettyError(e)));
     }
   }
 
   String _prettyError(Object e) {
-  if (e is DioException) {
-    final data = e.response?.data;
-    if (data is Map) {
-      final msg = data['error'] ?? data['message'];
-      if (msg != null) return msg.toString();
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final msg = data['error'] ?? data['message'];
+        if (msg != null) return msg.toString();
+      }
+      return e.message ?? 'Request failed';
     }
-    return e.message ?? 'Request failed';
+    return e.toString();
   }
-  return e.toString();
 }
-}
-
-

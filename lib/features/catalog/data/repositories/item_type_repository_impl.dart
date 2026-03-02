@@ -1,4 +1,5 @@
-import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/globals.dart' as authState;
+
 import 'package:build4front/features/catalog/data/models/item_type_model.dart';
 import 'package:build4front/features/catalog/data/services/item_type_api_service.dart';
 import 'package:build4front/features/catalog/domain/entities/item_type.dart';
@@ -9,21 +10,21 @@ class ItemTypeRepositoryImpl implements ItemTypeRepository {
 
   ItemTypeRepositoryImpl({required this.api});
 
-  int _ownerProjectId() {
-    final v = Env.ownerProjectLinkId;
-    final parsed = int.tryParse('$v');
-    if (parsed == null || parsed <= 0) {
-      throw StateError('Env.ownerProjectLinkId is missing/invalid: $v');
+  String _requireToken() {
+    final t = (authState.token ?? '').trim();
+    if (t.isEmpty) {
+      throw Exception('Missing auth token');
     }
-    return parsed;
+    return t;
   }
 
   @override
   Future<List<ItemType>> getByProject(int projectId) async {
+    final token = _requireToken();
+
     final list = await api.getItemTypesByProject(
       projectId,
-      
-      // authToken: optional (only pass if your ApiFetch doesn't attach it globally)
+      authToken: token,
     );
 
     return list.map((m) => ItemTypeModel.fromJson(m).toEntity()).toList();
@@ -31,12 +32,16 @@ class ItemTypeRepositoryImpl implements ItemTypeRepository {
 
   @override
   Future<List<ItemType>> getByCategory(int categoryId) async {
+    final token = _requireToken();
+
     final list = await api.getItemTypesByCategory(
       categoryId,
-      
-      // authToken: optional (only pass if your ApiFetch doesn't attach it globally)
+      authToken: token,
     );
 
     return list.map((m) => ItemTypeModel.fromJson(m).toEntity()).toList();
   }
+
+  // Optional CRUD if you need it later:
+  // create/update/delete also must pass authToken.
 }

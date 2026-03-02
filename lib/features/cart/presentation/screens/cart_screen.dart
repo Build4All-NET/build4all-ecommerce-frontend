@@ -161,7 +161,7 @@ class _CartScreenState extends State<CartScreen> {
                       Navigator.of(context).pushNamed(
                         '/checkout',
                         arguments: {
-                          'ownerProjectId': ownerId,
+                          
                           'currencyId': currencyId,
                         },
                       );

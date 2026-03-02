@@ -22,19 +22,16 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     on<UpdateStatusPressed>(_onUpdateStatus);
   }
 
-  // ✅ NEW: direct method you can await from dialogs (no Provider drama, no event guessing)
   Future<void> updateStatusDirect({
     required String token,
     required int userId,
     required String status,
-    required int ownerProjectLinkId,
     String? password,
   }) async {
     await updateStatus(
       token: token,
       userId: userId,
       status: status,
-      ownerProjectLinkId: ownerProjectLinkId,
       password: password,
     );
   }
@@ -45,11 +42,7 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
   ) async {
     emit(const UserProfileLoading());
     try {
-      final user = await getUser(
-        token: e.token,
-        userId: e.userId,
-        ownerProjectLinkId: e.ownerProjectLinkId,
-      );
+      final user = await getUser(token: e.token, userId: e.userId);
       emit(UserProfileLoaded(user));
     } catch (err) {
       emit(UserProfileError(err.toString()));
@@ -64,14 +57,9 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     if (prev is! UserProfileLoaded) return;
 
     try {
-      await toggleVisibility(
-        token: e.token,
-        userId: e.userId,
-        isPublic: e.newValue,
-        ownerProjectLinkId: e.ownerProjectLinkId,
-      );
+      await toggleVisibility(token: e.token, isPublic: e.newValue);
 
-      add(LoadUserProfile(e.token, e.userId, e.ownerProjectLinkId));
+      add(LoadUserProfile(e.token, prev.user.id));
     } catch (err) {
       emit(UserProfileError(err.toString()));
     }
@@ -86,18 +74,12 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
         token: e.token,
         userId: e.userId,
         status: e.status,
-        ownerProjectLinkId: e.ownerProjectLinkId,
         password: e.password,
       );
 
-      // ✅ CRITICAL FIX:
-      // If INACTIVE -> backend may hide profile,
-      // so reloading causes "could not find the correct profile".
-      if (e.status.toUpperCase() == 'INACTIVE') {
-        return;
-      }
+      if (e.status.toUpperCase() == 'INACTIVE') return;
 
-      add(LoadUserProfile(e.token, e.userId, e.ownerProjectLinkId));
+      add(LoadUserProfile(e.token, e.userId));
     } catch (err) {
       emit(UserProfileError(err.toString()));
     }

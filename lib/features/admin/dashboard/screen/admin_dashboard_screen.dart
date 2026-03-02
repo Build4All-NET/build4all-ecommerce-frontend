@@ -145,28 +145,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Future<void> _loadLicense() async {
-    try {
-      setState(() {
-        _licenseLoading = true;
-        _licenseError = null;
-      });
+  try {
+    setState(() {
+      _licenseLoading = true;
+      _licenseError = null;
+    });
 
+    // get role from token store (you already load it)
+    final role = (await _store.getRole())?.toUpperCase() ?? '';
+
+    OwnerAppAccessResponse access;
+
+    if (role == 'OWNER') {
+      // ✅ tenant from token only
+      access = await _licensingApi.getAccessMe();
+    } else if (role == 'SUPER_ADMIN') {
+      // ✅ act-as with aupId
       final aupId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-      final access = await _licensingApi.getAccess(aupId);
-
-      if (!mounted) return;
-      setState(() {
-        _license = access;
-        _licenseLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _licenseLoading = false;
-        _licenseError = ExceptionMapper.toMessage(e);
-      });
+      access = await _licensingApi.getAccessAsSuperAdmin(aupId);
+    } else {
+      // If this dashboard is only for OWNER/SUPER_ADMIN, fail loudly.
+      throw Exception('Unsupported role for licensing: $role');
     }
+
+    if (!mounted) return;
+    setState(() {
+      _license = access;
+      _licenseLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _licenseLoading = false;
+      _licenseError = ExceptionMapper.toMessage(e);
+    });
   }
+}
 
  Future<void> _logout() async {
  final token = (await _store.getToken())?.trim() ?? '';
@@ -413,8 +427,28 @@ Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
     if (sent != true) return;
 
     try {
-      final aupId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-      await _licensingApi.requestUpgrade(aupId: aupId, planCode: selected);
+     try {
+  final role = (await _store.getRole())?.toUpperCase() ?? '';
+
+  if (role == 'OWNER') {
+    await _licensingApi.requestUpgradeMe(planCode: selected);
+  } else if (role == 'SUPER_ADMIN') {
+    final aupId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+    await _licensingApi.requestUpgradeAsSuperAdmin(
+      aupId: aupId,
+      planCode: selected,
+    );
+  } else {
+    throw Exception('Unsupported role for upgrade request: $role');
+  }
+
+  if (!mounted) return;
+  AppToast.show(context, l10n.upgradeRequestSent);
+  await _loadLicense();
+} catch (e) {
+  if (!mounted) return;
+  AppToast.show(context, ExceptionMapper.toMessage(e), isError: true);
+}
 
       if (!mounted) return;
       AppToast.show(context, l10n.upgradeRequestSent);
@@ -495,7 +529,7 @@ Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => OwnerPaymentConfigScreen(
-                ownerProjectId: ownerId,
+                
                 getToken: () => _store.getToken(),
               ),
             ),

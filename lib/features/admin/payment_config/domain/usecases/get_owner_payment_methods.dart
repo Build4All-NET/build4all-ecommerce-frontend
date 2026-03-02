@@ -5,7 +5,7 @@ class GetOwnerPaymentMethods {
   final OwnerPaymentConfigRepository repo;
   GetOwnerPaymentMethods(this.repo);
 
-  Future<List<PaymentMethodConfigItem>> call(int ownerProjectId) {
-    return repo.listMethods(ownerProjectId: ownerProjectId);
+  Future<List<PaymentMethodConfigItem>> call() {
+    return repo.listMethods();
   }
 }

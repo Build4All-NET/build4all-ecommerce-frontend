@@ -10,25 +10,17 @@ class HomeBannerRepositoryImpl implements HomeBannerRepository {
 
   @override
   Future<List<HomeBanner>> listActivePublic({
-    required int ownerProjectId,
     required String token,
   }) async {
-    final list = await api.listActivePublic(
-      ownerProjectId: ownerProjectId,
-      authToken: token,
-    );
+    final list = await api.listActivePublic(authToken: token);
     return list.map((e) => HomeBannerModel.fromJson(e)).toList();
   }
 
   @override
   Future<List<HomeBanner>> listForAdmin({
-    required int ownerProjectId,
     required String token,
   }) async {
-    final list = await api.listForAdmin(
-      ownerProjectId: ownerProjectId,
-      authToken: token,
-    );
+    final list = await api.listForAdmin(authToken: token);
     return list.map((e) => HomeBannerModel.fromJson(e)).toList();
   }
 

@@ -2,6 +2,8 @@ import 'package:build4front/features/auth/domain/entities/user_entity.dart';
 
 class ProfileUserDto {
   final int id;
+
+  /// informational only (do NOT use in requests anymore)
   final int ownerProjectLinkId;
 
   final String firstName;
@@ -48,7 +50,7 @@ class ProfileUserDto {
 
   UserEntity toEntity() => UserEntity(
         id: id,
-        ownerProjectLinkId: ownerProjectLinkId,
+        ownerProjectLinkId: ownerProjectLinkId, // keep it on entity, no harm
         username: null,
         firstName: firstName.isEmpty ? null : firstName,
         lastName: lastName.isEmpty ? null : lastName,
