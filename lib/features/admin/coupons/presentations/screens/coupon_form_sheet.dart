@@ -34,6 +34,11 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
   CouponDiscountType _type = CouponDiscountType.percent;
   bool _active = true;
 
+  // ✅ NEW: validity fields
+  DateTime? _startsAt;
+  DateTime? _expiresAt;
+  String? _dateError;
+
   bool get _isPercent => _type == CouponDiscountType.percent;
   bool get _isFreeShipping => _type == CouponDiscountType.freeShipping;
 
@@ -58,6 +63,10 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
     _type = c?.discountType ?? CouponDiscountType.percent;
     _active = c?.active ?? true;
 
+    // ✅ init validity from existing (edit mode)
+    _startsAt = c?.startsAt;
+    _expiresAt = c?.expiresAt;
+
     // ✅ If existing coupon is not percent, max discount must be empty
     if (_type != CouponDiscountType.percent) {
       _maxDiscountCtrl.text = '';
@@ -67,6 +76,8 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
     if (_type == CouponDiscountType.freeShipping) {
       _valueCtrl.text = ''; // keep UI clean (we save 0 later)
     }
+
+    _validateDates();
   }
 
   @override
@@ -80,12 +91,69 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
     super.dispose();
   }
 
+  // =========================
+  // Date helpers
+  // =========================
+
+  String _fmt(DateTime? dt) {
+    if (dt == null) return '—';
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '$y-$m-$d $hh:$mm';
+  }
+
+  Future<DateTime?> _pickDateTime(DateTime? initial) async {
+    final now = DateTime.now();
+    final base = initial ?? now;
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 10),
+    );
+    if (pickedDate == null) return null;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (pickedTime == null) return null;
+
+    return DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+  }
+
+  bool _validateDates() {
+    if (_startsAt != null &&
+        _expiresAt != null &&
+        _startsAt!.isAfter(_expiresAt!)) {
+      _dateError = 'Valid From must be before Valid To';
+      return false;
+    }
+    _dateError = null;
+    return true;
+  }
+
+  // =========================
+  // UI
+  // =========================
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final spacing = tokens.spacing;
     final t = Theme.of(context).textTheme;
+    final c = Theme.of(context).colorScheme;
 
     return BlocBuilder<CouponBloc, CouponState>(
       builder: (context, state) {
@@ -106,7 +174,9 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.existing == null ? l10n.coupons_add : l10n.coupons_edit,
+                    widget.existing == null
+                        ? l10n.coupons_add
+                        : l10n.coupons_edit,
                     style: t.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: spacing.lg),
@@ -184,13 +254,12 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                               ? l10n.coupons_value_percent
                               : l10n.coupons_value_amount,
                           controller: _valueCtrl,
-                          enabled: !_isFreeShipping, // ✅ disabled if free shipping
+                          enabled: !_isFreeShipping,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
                           textInputAction: TextInputAction.next,
                           validator: (v) {
-                            // ✅ Free shipping: no discount value needed
                             if (_isFreeShipping) return null;
 
                             if (v == null || v.trim().isEmpty) {
@@ -224,9 +293,8 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                         child: AppTextField(
                           label: l10n.coupons_min_order_amount,
                           controller: _minOrderCtrl,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
                           textInputAction: TextInputAction.next,
                         ),
                       ),
@@ -238,11 +306,117 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                   AppTextField(
                     label: l10n.coupons_max_discount_amount,
                     controller: _maxDiscountCtrl,
-                    enabled: _isPercent, // ✅ disabled if fixed/free shipping
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    enabled: _isPercent,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                   ),
+                  SizedBox(height: spacing.md),
+
+                  // ✅ Valid From / Valid To
+                  Text(
+                    'Validity',
+                    style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: spacing.sm),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await _pickDateTime(_startsAt);
+                            if (picked == null) return;
+                            setState(() {
+                              _startsAt = picked;
+                              _validateDates();
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(spacing.md),
+                            decoration: BoxDecoration(
+                              color: c.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: c.outline.withOpacity(0.18),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Valid From', style: t.labelMedium),
+                                SizedBox(height: spacing.xs),
+                                Text(_fmt(_startsAt), style: t.bodyMedium),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: spacing.sm),
+                      IconButton(
+                        tooltip: 'Clear',
+                        onPressed: () => setState(() {
+                          _startsAt = null;
+                          _validateDates();
+                        }),
+                        icon: const Icon(Icons.clear),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: spacing.sm),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await _pickDateTime(_expiresAt);
+                            if (picked == null) return;
+                            setState(() {
+                              _expiresAt = picked;
+                              _validateDates();
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(spacing.md),
+                            decoration: BoxDecoration(
+                              color: c.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: c.outline.withOpacity(0.18),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Valid To', style: t.labelMedium),
+                                SizedBox(height: spacing.xs),
+                                Text(_fmt(_expiresAt), style: t.bodyMedium),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: spacing.sm),
+                      IconButton(
+                        tooltip: 'Clear',
+                        onPressed: () => setState(() {
+                          _expiresAt = null;
+                          _validateDates();
+                        }),
+                        icon: const Icon(Icons.clear),
+                      ),
+                    ],
+                  ),
+
+                  if (_dateError != null) ...[
+                    SizedBox(height: spacing.sm),
+                    Text(
+                      _dateError!,
+                      style: t.bodySmall?.copyWith(color: c.error),
+                    ),
+                  ],
+
                   SizedBox(height: spacing.md),
 
                   // Active switch
@@ -276,6 +450,12 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
 
+    // ✅ validate validity range
+    if (!_validateDates()) {
+      setState(() {}); // show error
+      return;
+    }
+
     final existing = widget.existing;
     final bloc = context.read<CouponBloc>();
 
@@ -287,10 +467,8 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
 
     final safeOwnerProjectId = existing?.ownerProjectId ?? 0;
 
-    // ✅ Only send maxDiscountAmount if percent, otherwise null
     final maxDiscount = _isPercent ? parseDouble(_maxDiscountCtrl.text) : null;
 
-    // ✅ Free shipping → discountValue must be 0.0 (not required from UI)
     final discountValue =
         _isFreeShipping ? 0.0 : double.parse(_valueCtrl.text.trim());
 
@@ -304,8 +482,11 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
       maxUses: parseInt(_maxUsesCtrl.text),
       minOrderAmount: parseDouble(_minOrderCtrl.text),
       maxDiscountAmount: maxDiscount,
-      startsAt: existing?.startsAt,
-      expiresAt: existing?.expiresAt,
+
+      // ✅ IMPORTANT FIX: send chosen dates (not existing)
+      startsAt: _startsAt,
+      expiresAt: _expiresAt,
+
       active: _active,
     );
 

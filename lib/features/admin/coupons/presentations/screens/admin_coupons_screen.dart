@@ -23,10 +23,15 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Don’t dispatch inside build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CouponBloc>().add(const CouponsStarted());
     });
+  }
+
+  String _fmt(DateTime? d) {
+    if (d == null) return '—';
+    final s = d.toIso8601String().replaceFirst('T', ' ');
+    return s.length >= 16 ? s.substring(0, 16) : s;
   }
 
   @override
@@ -41,7 +46,6 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
       appBar: AppBar(title: Text(l10n.coupons_title)),
       body: BlocConsumer<CouponBloc, CouponState>(
         listener: (context, state) {
-          // ✅ Success toast
           if (state.lastMessage != null) {
             String text = '';
             switch (state.lastMessage) {
@@ -55,7 +59,6 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
             if (text.isNotEmpty) AppToast.show(context, text);
           }
 
-          // ✅ Error toast
           if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
             AppToast.show(context, state.errorMessage!, isError: true);
           }
@@ -100,13 +103,17 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                       l10n.coupons_type_free_shipping,
                   };
 
-                  // ✅ Better label for Free Shipping (don’t show 0.00)
                   final valueLabel = switch (coupon.discountType) {
                     CouponDiscountType.percent =>
                       '${coupon.discountValue.toStringAsFixed(0)} %',
-                    CouponDiscountType.fixed => coupon.discountValue.toStringAsFixed(2),
+                    CouponDiscountType.fixed =>
+                      coupon.discountValue.toStringAsFixed(2),
                     CouponDiscountType.freeShipping => '—',
                   };
+
+                  final validity = (coupon.startsAt == null && coupon.expiresAt == null)
+                      ? 'Always active'
+                      : '${_fmt(coupon.startsAt)} → ${_fmt(coupon.expiresAt)}';
 
                   return Container(
                     padding: EdgeInsets.all(spacing.md),
@@ -166,6 +173,13 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                                 style: t.bodySmall?.copyWith(
                                   color: c.primary,
                                   fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: spacing.xs),
+                              Text(
+                                validity,
+                                style: t.bodySmall?.copyWith(
+                                  color: c.onSurface.withOpacity(0.65),
                                 ),
                               ),
                             ],
