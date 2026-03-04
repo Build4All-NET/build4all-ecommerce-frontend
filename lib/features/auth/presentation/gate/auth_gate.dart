@@ -1,3 +1,5 @@
+// lib/features/auth/presentation/gate/auth_gate.dart
+
 import 'package:build4front/core/config/env.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:build4front/core/config/app_config.dart';
 import 'package:build4front/core/utils/jwt_utils.dart';
 import 'package:build4front/core/network/globals.dart' as g;
+
+import 'package:build4front/core/realtime/realtime_cubit.dart';
 
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/features/auth/data/services/auth_token_store.dart';
@@ -52,11 +56,44 @@ class _AuthGateState extends State<AuthGate> {
     return v;
   }
 
-  String _currentTenantId() {
+  String _currentTenantIdString() {
     // prefer runtime config, fallback env
     final fromConfig = widget.appConfig.ownerProjectId?.toString().trim();
     if (fromConfig != null && fromConfig.isNotEmpty) return fromConfig;
     return (Env.ownerProjectLinkId ?? '').toString().trim();
+  }
+
+  int _currentTenantIdInt() {
+    return int.tryParse(_currentTenantIdString()) ?? 0;
+  }
+
+  void _startRealtimeForAdmin(String rawJwt) {
+    if (!mounted) return;
+
+    final token = rawJwt.trim();
+    final tenant = _currentTenantIdInt();
+
+    debugPrint('[RT] AuthGate startRealtime(admin) tokenEmpty=${token.isEmpty} tenant=$tenant');
+
+    // Admin is logged in => token exists, but still guard
+    if (token.isEmpty || tenant <= 0) return;
+
+    // ✅ MATCH MainShell signature
+    context.read<RealtimeCubit>().bind(
+          tokenMaybeBearerOrRaw: token,
+          tenantId: tenant,
+        );
+  }
+
+  void _stopRealtime() {
+    if (!mounted) return;
+    try {
+      // ✅ disconnect
+      context.read<RealtimeCubit>().bind(
+            tokenMaybeBearerOrRaw: '',
+            tenantId: 0,
+          );
+    } catch (_) {}
   }
 
   Future<void> _logoutAll() async {
@@ -64,10 +101,11 @@ class _AuthGateState extends State<AuthGate> {
     await _adminStore.clear();
     await _roleStore.clear();
     g.setAuthToken('');
+    _stopRealtime();
   }
 
   Future<void> _enforceTenantMatchOrLogout() async {
-    final current = _currentTenantId();
+    final current = _currentTenantIdString();
     if (current.isEmpty) return; // fail-open
 
     final savedUser = (await _userStore.getTenantId())?.trim() ?? '';
@@ -107,7 +145,9 @@ class _AuthGateState extends State<AuthGate> {
     } on DioException catch (e) {
       if (e.response?.statusCode == 410) {
         final raw = e.response?.data;
-        final data = (raw is Map) ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
+        final data = (raw is Map)
+            ? Map<String, dynamic>.from(raw)
+            : <String, dynamic>{};
 
         if (!mounted) return false;
         setState(() {
@@ -139,8 +179,13 @@ class _AuthGateState extends State<AuthGate> {
     if (raw.isNotEmpty && !JwtUtils.isExpired(raw)) return raw;
 
     try {
-      final res = await g.dio().post('/api/auth/refresh', data: {'refreshToken': refresh});
-      final data = (res.data is Map) ? Map<String, dynamic>.from(res.data as Map) : <String, dynamic>{};
+      final res = await g.dio().post(
+        '/api/auth/refresh',
+        data: {'refreshToken': refresh},
+      );
+      final data = (res.data is Map)
+          ? Map<String, dynamic>.from(res.data as Map)
+          : <String, dynamic>{};
 
       final newAccess = _stripBearer((data['token'] ?? '').toString());
       final newRefresh = (data['refreshToken'] ?? '').toString().trim();
@@ -150,7 +195,7 @@ class _AuthGateState extends State<AuthGate> {
         token: newAccess,
         wasInactive: false,
         refreshToken: newRefresh,
-        tenantId: _currentTenantId(),
+        tenantId: _currentTenantIdString(),
       );
 
       return newAccess;
@@ -168,8 +213,13 @@ class _AuthGateState extends State<AuthGate> {
     if (raw.isNotEmpty && !JwtUtils.isExpired(raw)) return raw;
 
     try {
-      final res = await g.dio().post('/api/auth/refresh', data: {'refreshToken': refresh});
-      final data = (res.data is Map) ? Map<String, dynamic>.from(res.data as Map) : <String, dynamic>{};
+      final res = await g.dio().post(
+        '/api/auth/refresh',
+        data: {'refreshToken': refresh},
+      );
+      final data = (res.data is Map)
+          ? Map<String, dynamic>.from(res.data as Map)
+          : <String, dynamic>{};
 
       final newAccess = _stripBearer((data['token'] ?? '').toString());
       final newRefresh = (data['refreshToken'] ?? '').toString().trim();
@@ -178,10 +228,10 @@ class _AuthGateState extends State<AuthGate> {
       final role = (await _adminStore.getRole()) ?? '';
 
       await _adminStore.save(
-        token: newAccess, // ✅ store RAW, not Bearer
+        token: newAccess, // ✅ RAW
         role: role,
         refreshToken: newRefresh,
-        tenantId: _currentTenantId(),
+        tenantId: _currentTenantIdString(),
       );
 
       return newAccess;
@@ -195,6 +245,7 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _boot() async {
     await const AdminTokenStore().debugDump();
+
     try {
       final canOpen = await _checkPublicAppAccess();
       if (!canOpen) return;
@@ -213,8 +264,10 @@ class _AuthGateState extends State<AuthGate> {
         userWasInactive: userWasInactive,
       );
 
-      final adminValid = adminToken != null && adminToken.isNotEmpty && !JwtUtils.isExpired(adminToken);
-      final userValid = userToken != null && userToken.isNotEmpty && !JwtUtils.isExpired(userToken);
+      final adminValid =
+          adminToken != null && adminToken.isNotEmpty && !JwtUtils.isExpired(adminToken);
+      final userValid =
+          userToken != null && userToken.isNotEmpty && !JwtUtils.isExpired(userToken);
       final userAutoValid = userValid && !userWasInactive;
 
       if (!adminValid) await _adminStore.clear();
@@ -222,7 +275,7 @@ class _AuthGateState extends State<AuthGate> {
 
       if (!mounted) return;
 
-      // ✅ IMPORTANT: when we have a valid token, apply it before navigating
+      // ✅ IMPORTANT: apply token before navigating
       if (lastRole == 'admin' && adminValid) {
         _goAdminWithToken(adminToken!);
         return;
@@ -233,7 +286,9 @@ class _AuthGateState extends State<AuthGate> {
       }
 
       // if both valid but no lastRole -> ask
-      if (adminValid && userAutoValid && (lastRole == null || lastRole.trim().isEmpty)) {
+      if (adminValid &&
+          userAutoValid &&
+          (lastRole == null || lastRole.trim().isEmpty)) {
         setState(() => _loading = false);
         await _askRoleAndGo(adminToken!, userToken!);
         return;
@@ -272,7 +327,10 @@ class _AuthGateState extends State<AuthGate> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 6),
-              Text(bl10n.authGateContinueAs, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              Text(
+                bl10n.authGateContinueAs,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 12),
               ListTile(
                 leading: const Icon(Icons.verified_user_outlined),
@@ -310,6 +368,7 @@ class _AuthGateState extends State<AuthGate> {
   void _hydrateUserAndGo(String rawJwt) {
     g.setAuthToken(rawJwt);
 
+    // ❌ don't start realtime here (MainShell will do it once, with guards)
     context.read<AuthBloc>().add(
           AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
         );
@@ -321,10 +380,17 @@ class _AuthGateState extends State<AuthGate> {
 
   void _goAdminWithToken(String rawJwt) {
     g.setAuthToken(rawJwt);
+
+    // ✅ admin route might not have MainShell, so start realtime here
+    _startRealtimeForAdmin(rawJwt);
+
     Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
   }
 
   void _goLogin() {
+    g.setAuthToken('');
+    _stopRealtime();
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => UserLoginScreen(appConfig: widget.appConfig)),
     );
@@ -391,9 +457,17 @@ class _AuthGateState extends State<AuthGate> {
                   children: [
                     CircleAvatar(radius: 34, child: Icon(icon, size: 34)),
                     const SizedBox(height: 16),
-                    Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 8),
                     Text(message, textAlign: TextAlign.center),
+                    if (_serverBlockMessage.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(_serverBlockMessage, textAlign: TextAlign.center),
+                    ],
                     const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,

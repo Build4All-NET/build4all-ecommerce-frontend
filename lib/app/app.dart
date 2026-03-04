@@ -1,6 +1,7 @@
 // lib/app/app.dart
 
 import 'package:build4front/core/l10n/locale_cubit.dart';
+import 'package:build4front/core/realtime/realtime_cubit.dart';
 import 'package:build4front/features/admin/orders_admin/data/repository/admin_orders_repository_impl.dart';
 import 'package:build4front/features/admin/orders_admin/data/services/admin_orders_api_service.dart';
 import 'package:build4front/features/admin/orders_admin/domain/repositories/admin_orders_repository.dart';
@@ -211,6 +212,7 @@ RepositoryProvider<AdminTokenStore>.value(value: adminTokenStore),
             },
           ),
 
+BlocProvider<RealtimeCubit>(create: (_) => RealtimeCubit()),
           BlocProvider<AuthBloc>(
             create: (ctx) => AuthBloc(
               loginWithEmail: LoginWithEmail(

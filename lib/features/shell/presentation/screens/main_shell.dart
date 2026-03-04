@@ -5,7 +5,10 @@ import 'dart:typed_data';
 
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/l10n/locale_cubit.dart';
+import 'package:build4front/core/realtime/realtime_cubit.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/features/home/presentation/bloc/home_bloc.dart';
+import 'package:build4front/features/home/presentation/bloc/home_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -61,6 +64,10 @@ class _MainShellState extends State<MainShell> {
   int _lastProfileUserId = 0;
   int _lastProfileOwnerId = 0;
 
+  // ✅ guard so we don’t spam websocket reconnects
+  String _lastRealtimeToken = '';
+  int _lastRealtimeTenant = 0;
+
   // ----------------------------
   // ✅ Profile tab detection (robust)
   // ----------------------------
@@ -87,6 +94,44 @@ class _MainShellState extends State<MainShell> {
         builder: (_) => _ProfileTabShell(appConfig: widget.appConfig),
       ),
     );
+  }
+
+  int _envOwnerId() => int.tryParse((Env.ownerProjectLinkId ?? '').toString()) ?? 0;
+
+  String _pickToken(AuthState st) {
+    final a = (st.token ?? '').trim();
+    if (a.isNotEmpty) return a;
+    return g.readAuthToken().trim();
+  }
+
+  int _resolvedTenantId() {
+    // for USER realtime (guest too) we prefer env/app-config, not token
+    final env = _envOwnerId();
+    if (env > 0) return env;
+
+    final cfg = widget.appConfig.ownerProjectId;
+    if (cfg != null && cfg > 0) return cfg;
+
+    return 0;
+  }
+
+  void _bindRealtime({required String token}) {
+    final tenant = _resolvedTenantId();
+
+    // no tenant = no subscribe topic
+    if (tenant <= 0) return;
+
+    // ✅ avoid reconnect spam
+    if (_lastRealtimeTenant == tenant && _lastRealtimeToken == token) return;
+
+    _lastRealtimeTenant = tenant;
+    _lastRealtimeToken = token;
+
+    debugPrint('[RT] MainShell bind realtime tenant=$tenant tokenEmpty=${token.trim().isEmpty}');
+    context.read<RealtimeCubit>().bind(
+          tokenMaybeBearerOrRaw: token,
+          tenantId: tenant,
+        );
   }
 
   @override
@@ -119,7 +164,6 @@ class _MainShellState extends State<MainShell> {
           return HomeScreen(
             appConfig: widget.appConfig,
             sections: homeSections,
-            // ✅ important link: lets HomeScreen open profile tab
             onOpenProfileTab: _openProfileTab,
           );
 
@@ -140,7 +184,22 @@ class _MainShellState extends State<MainShell> {
       }
     }).toList();
 
-  
+    // ✅ start realtime immediately (guest allowed)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final st = context.read<AuthBloc>().state;
+      final token = _pickToken(st); // may be empty (guest)
+      _bindRealtime(token: token);
+    });
+  }
+
+  @override
+  void dispose() {
+    // stop realtime when leaving shell
+    try {
+      context.read<RealtimeCubit>().bind(tokenMaybeBearerOrRaw: '', tenantId: 0);
+    } catch (_) {}
+    super.dispose();
   }
 
   @override
@@ -149,11 +208,9 @@ class _MainShellState extends State<MainShell> {
     final body = IndexedStack(index: _currentIndex, children: _pages);
 
     // ✅ Use ThemeCubit menuType if available, otherwise AppConfig menuType
-    final themeMenuType =
-        context.watch<ThemeCubit>().state.menuType.trim().toLowerCase();
+    final themeMenuType = context.watch<ThemeCubit>().state.menuType.trim().toLowerCase();
     final appMenuType = widget.appConfig.menuType.trim().toLowerCase();
-    final effectiveMenuType =
-        themeMenuType.isNotEmpty ? themeMenuType : appMenuType;
+    final effectiveMenuType = themeMenuType.isNotEmpty ? themeMenuType : appMenuType;
     final isBottom = effectiveMenuType == 'bottom';
 
     // ✅ Hide AppBar on HOME only (but keep it in drawer mode so hamburger stays)
@@ -173,25 +230,48 @@ class _MainShellState extends State<MainShell> {
             updateStatus: UpdateUserStatus(repo),
           );
         },
-        child: BlocListener<AuthBloc, AuthState>(
-          listenWhen: (prev, next) {
-            final prevToken = (prev.token ?? '').trim();
-            final nextToken = (next.token ?? '').trim();
-            final prevId = prev.user?.id ?? 0;
-            final nextId = next.user?.id ?? 0;
+        child: MultiBlocListener(
+          listeners: [
+            // ✅ Profile auto-load
+            BlocListener<AuthBloc, AuthState>(
+              listenWhen: (prev, next) {
+                final prevToken = (prev.token ?? '').trim();
+                final nextToken = (next.token ?? '').trim();
+                final prevId = prev.user?.id ?? 0;
+                final nextId = next.user?.id ?? 0;
+                return prevToken != nextToken || prevId != nextId;
+              },
+              listener: (ctx, st) => _maybeLoadProfileFromAuthWithBloc(
+                bloc: ctx.read<UserProfileBloc>(),
+                authState: st,
+              ),
+            ),
 
-            // ownerId comes from env (same value used by service layer)
-            final prevOwner = _envOwnerId();
-            final nextOwner = _envOwnerId();
+            // ✅ Realtime re-bind when auth token changes (login/logout/refresh)
+            BlocListener<AuthBloc, AuthState>(
+              listenWhen: (p, n) => (p.token ?? '').trim() != (n.token ?? '').trim(),
+              listener: (ctx, st) {
+                final token = _pickToken(st); // may be empty
+                _bindRealtime(token: token);
+              },
+            ),
 
-            return prevToken != nextToken ||
-                prevId != nextId ||
-                prevOwner != nextOwner;
-          },
-          listener: (ctx, st) => _maybeLoadProfileFromAuthWithBloc(
-  bloc: ctx.read<UserProfileBloc>(),
-  authState: st,
-),
+            // ✅ When realtime says catalog changed, refresh Home
+            BlocListener<RealtimeCubit, RealtimeState>(
+              listenWhen: (p, n) => p.catalogTick != n.catalogTick,
+              listener: (ctx, _) {
+                final st = ctx.read<AuthBloc>().state;
+                final token = _pickToken(st);
+
+                debugPrint('[RT] catalogTick -> HomeRefreshRequested');
+                ctx.read<HomeBloc>().add(
+                      HomeRefreshRequested(
+                        token: token.isEmpty ? null : token,
+                      ),
+                    );
+              },
+            ),
+          ],
           child: Scaffold(
             appBar: hideAppBar
                 ? null
@@ -199,13 +279,8 @@ class _MainShellState extends State<MainShell> {
                     backgroundColor: c.surface,
                     title: Text(
                       _tabs[_currentIndex].label,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: c.onSurface),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: c.onSurface),
                     ),
-
-                    // ✅ Show hamburger ONLY in drawer mode
                     leading: isBottom
                         ? null
                         : Builder(
@@ -231,28 +306,19 @@ class _MainShellState extends State<MainShell> {
                           return ListTile(
                             leading: Icon(
                               t.icon,
-                              color: selected
-                                  ? c.primary
-                                  : c.onSurface.withOpacity(0.7),
+                              color: selected ? c.primary : c.onSurface.withOpacity(0.7),
                             ),
                             title: Text(
                               t.label,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: selected
-                                        ? c.primary
-                                        : c.onSurface.withOpacity(0.9),
-                                    fontWeight: selected
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: selected ? c.primary : c.onSurface.withOpacity(0.9),
+                                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                                   ),
                             ),
                             selected: selected,
                             onTap: () {
                               setState(() => _currentIndex = index);
-                              Navigator.of(context).pop(); // close drawer
+                              Navigator.of(context).pop();
                             },
                           );
                         },
@@ -267,16 +333,11 @@ class _MainShellState extends State<MainShell> {
                 ? BottomNavigationBar(
                     currentIndex: _currentIndex,
                     onTap: (i) => setState(() => _currentIndex = i),
-
-                    // ✅ force colors from current theme
                     backgroundColor: c.surface,
                     selectedItemColor: c.primary,
                     unselectedItemColor: c.onSurface.withOpacity(0.65),
-
-                    // ✅ stable style
                     type: BottomNavigationBarType.fixed,
                     elevation: 0,
-
                     items: _tabs
                         .map(
                           (t) => BottomNavigationBarItem(
@@ -293,34 +354,27 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  int _envOwnerId() => int.tryParse(Env.ownerProjectLinkId) ?? 0;
+  void _maybeLoadProfileFromAuthWithBloc({
+    required UserProfileBloc bloc,
+    required AuthState authState,
+  }) {
+    final token = _pickToken(authState);
 
-void _maybeLoadProfileFromAuthWithBloc({
-  required UserProfileBloc bloc,
-  required AuthState authState,
-}) {
-  // pick token (auth -> globals)
-  final token = ((authState.token ?? '').trim().isNotEmpty)
-      ? authState.token!.trim()
-      : g.readAuthToken().trim();
+    final userId = authState.user?.id ?? _userIdFromToken(token);
+    final ownerId = _envOwnerId();
 
-  final userId = authState.user?.id ?? _userIdFromToken(token);
-  final ownerId = _envOwnerId();
+    if (token.isEmpty || userId <= 0 || ownerId <= 0) return;
 
-  if (token.isEmpty || userId <= 0 || ownerId <= 0) return;
+    if (token == _lastProfileToken && userId == _lastProfileUserId && ownerId == _lastProfileOwnerId) {
+      return;
+    }
 
-  if (token == _lastProfileToken &&
-      userId == _lastProfileUserId &&
-      ownerId == _lastProfileOwnerId) {
-    return;
+    _lastProfileToken = token;
+    _lastProfileUserId = userId;
+    _lastProfileOwnerId = ownerId;
+
+    bloc.add(LoadUserProfile(token, userId));
   }
-
-  _lastProfileToken = token;
-  _lastProfileUserId = userId;
-  _lastProfileOwnerId = ownerId;
-
-  bloc.add(LoadUserProfile(token, userId));
-}
 
   int _userIdFromToken(String token) {
     try {
@@ -391,23 +445,28 @@ class NavItemView {
 }
 
 /// ===============================
-///  Profile tab wrapper (NO changes)
+///  Profile tab wrapper
 /// ===============================
 class _ProfileTabShell extends StatelessWidget {
   final AppConfig appConfig;
   const _ProfileTabShell({required this.appConfig});
 
   Future<void> _handleLogout(BuildContext context) async {
-  final authRepo = context.read<AuthRepositoryImpl>();
+    final authRepo = context.read<AuthRepositoryImpl>();
 
-  await authRepo.api.logoutRemote(); //  kills token server-side
-  await authRepo.api.clearAuth();    //  clears local token
+    // stop realtime
+    try {
+      context.read<RealtimeCubit>().bind(tokenMaybeBearerOrRaw: '', tenantId: 0);
+    } catch (_) {}
 
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (_) => UserLoginScreen(appConfig: appConfig)),
-    (route) => false,
-  );
-}
+    await authRepo.api.logoutRemote();
+    await authRepo.api.clearAuth();
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => UserLoginScreen(appConfig: appConfig)),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -442,6 +501,7 @@ class _ProfileTabShell extends StatelessWidget {
       final payload = utf8.decode(
         base64Url.decode(base64Url.normalize(parts[1])),
       );
+
       final map = jsonDecode(payload);
       if (map is! Map<String, dynamic>) return 0;
 
