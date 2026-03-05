@@ -350,7 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           if (state.error != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              AppToast.show(this.context, state.error!, isError: true);
+              AppToast.error(this.context, state.error!);
             });
           }
 
@@ -414,7 +414,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 if (!mounted) return;
 
                 // clean info message
-                AppToast.show(this.context, loc.editProfile_codeSentToast);
+                AppToast.error(this.context, loc.editProfile_codeSentToast);
 
                 final pending = (u.pendingEmail ?? '').trim();
                 final ok = await _showEmailOtpDialog(
@@ -541,14 +541,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 : () {
                                     final valid = _validateInputs(loc);
                                     if (!valid) {
-                                      AppToast.show(
+                                      AppToast.error(
                                         context,
                                         _emailError ??
                                             _userError ??
                                             _firstError ??
                                             _lastError ??
                                             loc.fieldRequired,
-                                        isError: true,
+                                        
                                       );
                                       return;
                                     }
@@ -804,10 +804,10 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
                   try {
                     await widget.onResend();
                     if (!mounted) return;
-                    AppToast.show(context, loc.editProfile_resend);
+                    AppToast.error(context, loc.editProfile_resend);
                   } catch (e) {
                     if (!mounted) return;
-                    AppToast.show(context, _cleanErr(e), isError: true);
+                    AppToast.error(context, _cleanErr(e));
                     Navigator.of(context, rootNavigator: true).pop(false);
                   } finally {
                     if (mounted) setState(() => _loading = false);
@@ -821,7 +821,7 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
               : () async {
                   final code = _codeCtrl.text.trim();
                   if (code.isEmpty) {
-                    AppToast.show(context, loc.editProfile_codeRequired, isError: true);
+                    AppToast.error(context, loc.editProfile_codeRequired);
                     Navigator.of(context, rootNavigator: true).pop(false);
                     return;
                   }
@@ -830,11 +830,11 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
                   try {
                     await widget.onVerify(code);
                     if (!mounted) return;
-                    AppToast.show(context, loc.editProfile_emailUpdatedToast);
+                    AppToast.error(context, loc.editProfile_emailUpdatedToast);
                     Navigator.of(context, rootNavigator: true).pop(true);
                   } catch (e) {
                     if (!mounted) return;
-                    AppToast.show(context, _cleanErr(e), isError: true);
+                    AppToast.error(context, _cleanErr(e));
                     Navigator.of(context, rootNavigator: true).pop(false);
                   } finally {
                     if (mounted) setState(() => _loading = false);

@@ -97,7 +97,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         : (_fullPhone ?? '').trim();
 
     if (identifier.isEmpty) {
-      AppToast.show(context, l10n.loginMissingIdentifier, isError: true);
+      AppToast.error(context, l10n.loginMissingIdentifier);
       return;
     }
 
@@ -126,10 +126,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       if (mounted) Navigator.of(context).pop();
 
       if (result.none) {
-        AppToast.show(
+        AppToast.error(
           context,
           result.error ?? l10n.authErrorGeneric,
-          isError: true,
+          
         );
         return;
       }
@@ -167,13 +167,13 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
             await authApi.reactivateUser();
             if (!mounted) return;
 
-            AppToast.show(context, 'Account restored successfully');
+            AppToast.error(context, 'Account restored successfully');
             await _hydrateUserAuth(false);
             await _roleStore.saveRole('user');
             _goToUserHome(context);
           } catch (e) {
             if (!mounted) return;
-            AppToast.show(context, ExceptionMapper.toMessage(e), isError: true);
+            AppToast.error(context, ExceptionMapper.toMessage(e));
           }
           return;
         }
@@ -190,13 +190,13 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
             await authApi.reactivateUser();
             if (!mounted) return;
 
-            AppToast.show(context, l10n.loginInactiveSuccess);
+            AppToast.error(context, l10n.loginInactiveSuccess);
             await _hydrateUserAuth(true);
             await _roleStore.saveRole('user');
             _goToUserHome(context);
           } catch (e) {
             if (!mounted) return;
-            AppToast.show(context, ExceptionMapper.toMessage(e), isError: true);
+            AppToast.error(context, ExceptionMapper.toMessage(e));
           }
           return;
         }
@@ -295,12 +295,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         return;
       }
 
-      AppToast.show(context, l10n.authErrorGeneric, isError: true);
+      AppToast.error(context, l10n.authErrorGeneric);
     } catch (e) {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
-      AppToast.show(context, ExceptionMapper.toMessage(e), isError: true);
+      AppToast.error(context, ExceptionMapper.toMessage(e));
     }
   }
 
@@ -485,8 +485,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
             child: BlocConsumer<AuthBloc, AuthState>(
               listener: (context, state) {
                 if (state.error != null) {
-                  AppToast.show(context, ExceptionMapper.toMessage(state.error!),
-                      isError: true);
+                  AppToast.error(context, ExceptionMapper.toMessage(state.error!),
+                      );
                 }
               },
               builder: (context, state) {

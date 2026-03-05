@@ -80,7 +80,7 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
 
   void _noToken() {
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminSessionExpired, isError: true);
+    AppToast.error(context, l.adminSessionExpired);
   }
 
   Future<void> _refresh() async {
@@ -237,7 +237,7 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
 
                     if (state.error != null) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        AppToast.show(context, state.error!, isError: true);
+                        AppToast.error(context, state.error!);
                       });
 
                       return Center(

@@ -211,10 +211,10 @@ class _ShippingMethodFormSheetState extends State<ShippingMethodFormSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedCountry == null) {
-      AppToast.show(
+      AppToast.error(
         context,
         l.adminShippingCountryRequired ?? 'Country is required',
-        isError: true,
+        
       );
       return;
     }

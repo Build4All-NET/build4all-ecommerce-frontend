@@ -286,7 +286,7 @@ class HomeItemsSection extends StatelessWidget {
     final auth = context.read<AuthBloc>().state;
 
     if (!auth.isLoggedIn) {
-      AppToast.show(context, l10n.cart_login_required_message, isError: true);
+      AppToast.error(context, l10n.cart_login_required_message);
       return;
     }
 
@@ -294,7 +294,7 @@ class HomeItemsSection extends StatelessWidget {
       context.read<CartBloc>().add(
             CartAddItemRequested(itemId: item.id, quantity: 1),
           );
-      AppToast.show(context, l10n.cart_item_added_snackbar);
+      AppToast.error(context, l10n.cart_item_added_snackbar);
       return;
     }
 

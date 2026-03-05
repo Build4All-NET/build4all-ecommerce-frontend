@@ -52,7 +52,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       listener: (context, state) {
         final err = state.error;
         if (err != null && err.trim().isNotEmpty) {
-          AppToast.show(context, err, isError: true);
+          AppToast.error(context, err);
         }
       },
       child: Scaffold(
@@ -149,10 +149,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                         onTap: () {
                           // ✅ Safety: never call details with 0
                           if (o.orderId <= 0) {
-                            AppToast.show(
+                            AppToast.error(
                               context,
                               'Order details not available (missing orderId from API).',
-                              isError: true,
+                              
                             );
                             return;
                           }

@@ -80,7 +80,7 @@ class _UserVerifyCodeScreenState extends State<UserVerifyCodeScreen> {
     final code = _getCode().trim();
 
     if (code.length < 4) {
-      AppToast.show(context, l10n.invalidVerificationCode, isError: true);
+      AppToast.error(context, l10n.invalidVerificationCode);
       return;
     }
 
@@ -95,14 +95,14 @@ class _UserVerifyCodeScreenState extends State<UserVerifyCodeScreen> {
         final usecase = VerifyEmailCode(repo);
         final result = await usecase(email: widget.contact, code: code);
         pendingId = result.fold((failure) {
-          AppToast.show(context, failure.message, isError: true);
+          AppToast.error(context, failure.message);
           throw failure;
         }, (id) => id);
       } else {
         final usecase = VerifyPhoneCode(repo);
         final result = await usecase(phoneNumber: widget.contact, code: code);
         pendingId = result.fold((failure) {
-          AppToast.show(context, failure.message, isError: true);
+          AppToast.error(context, failure.message);
           throw failure;
         }, (id) => id);
       }

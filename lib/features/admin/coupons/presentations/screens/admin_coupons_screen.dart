@@ -56,11 +56,11 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                 text = l10n.coupons_deleted;
                 break;
             }
-            if (text.isNotEmpty) AppToast.show(context, text);
+            if (text.isNotEmpty) AppToast.error(context, text);
           }
 
           if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-            AppToast.show(context, state.errorMessage!, isError: true);
+            AppToast.error(context, state.errorMessage!);
           }
         },
         builder: (context, state) {

@@ -500,50 +500,57 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   String? _metaLabelFor(ItemSummary item) {
-    final l10n = AppLocalizations.of(context)!;
+  final l10n = AppLocalizations.of(context)!;
 
-    switch (item.kind) {
-      case ItemKind.activity:
-        if (item.start == null) return null;
-        final dt = item.start!.toLocal();
-        final y = dt.year.toString().padLeft(4, '0');
-        final m = dt.month.toString().padLeft(2, '0');
-        final d = dt.day.toString().padLeft(2, '0');
-        final hh = dt.hour.toString().padLeft(2, '0');
-        final mm = dt.minute.toString().padLeft(2, '0');
-        return '$d/$m/$y  $hh:$mm';
+  switch (item.kind) {
+    case ItemKind.activity:
+      if (item.start == null) return null;
+      final dt = item.start!.toLocal();
+      final y = dt.year.toString().padLeft(4, '0');
+      final m = dt.month.toString().padLeft(2, '0');
+      final d = dt.day.toString().padLeft(2, '0');
+      final hh = dt.hour.toString().padLeft(2, '0');
+      final mm = dt.minute.toString().padLeft(2, '0');
+      return '$d/$m/$y  $hh:$mm';
 
-      case ItemKind.product:
-        // ✅ show Out of stock instead of Stock: 0
-        if (_isOutOfStock(item)) return l10n.outOfStock;
-        if (item.stock == null) return null;
-        return l10n.home_stock_label(item.stock!);
+    case ItemKind.product:
+      final stock = item.stock;
+      if (stock == null) return null;
 
-      default:
-        return null;
-    }
+      // ✅ out of stock
+      if (stock <= 0) return l10n.outOfStock;
+
+      // ✅ show only when low
+      if (stock <= 10) return l10n.home_stock_left_label(stock);
+
+      // ✅ hide when plenty
+      return null;
+
+    default:
+      return null;
   }
+}
 
   void _handleCtaPressed(BuildContext context, ItemSummary item) {
     final l10n = AppLocalizations.of(context)!;
     final auth = context.read<AuthBloc>().state;
 
     if (!auth.isLoggedIn) {
-      AppToast.show(context, l10n.cart_login_required_message, isError: true);
+      AppToast.error(context, l10n.cart_login_required_message);
       return;
     }
 
     if (item.kind == ItemKind.product) {
       // ✅ HARD GUARD (even if UI bug)
       if (_isOutOfStock(item)) {
-        AppToast.show(context, l10n.outOfStock, isError: true);
+        AppToast.error(context, l10n.outOfStock);
         return;
       }
 
       context.read<CartBloc>().add(
             CartAddItemRequested(itemId: item.id, quantity: 1),
           );
-      AppToast.show(context, l10n.cart_item_added_snackbar);
+      AppToast.error(context, l10n.cart_item_added_snackbar);
       return;
     }
 
@@ -591,7 +598,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       final cur = current.toDouble();
       if (base > 0) {
         final percent = ((1 - (cur / base)) * 100).round();
-        tagLabel = percent > 0 ? '-$percent%' : 'SALE';
+        final l10n = AppLocalizations.of(context)!;
+tagLabel = percent > 0 ? '-$percent%' : l10n.home_sale_tag;
       }
     }
 

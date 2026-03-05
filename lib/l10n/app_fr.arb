@@ -1159,7 +1159,42 @@
   "upgradeStatusRejected": "Refusée",
 
   "yesLabel": "Oui",
-  "noLabel": "Non"
+  "noLabel": "Non",
+  "checkoutCouponChecking": "Vérification du coupon…",
+  "checkoutCouponApplied": "Coupon appliqué",
+  "checkoutCouponAppliedDiscount": "Appliqué • -{discount}",
+  "@checkoutCouponAppliedDiscount": {
+    "placeholders": { "discount": { "type": "String" } }
+  },
+  "checkoutCouponInvalid": "Coupon invalide",
+  "checkoutCouponFailed": "Impossible d’appliquer le coupon",
+  "checkoutOrderPlacedWithCode": "Commande passée : {code}",
+  "@checkoutOrderPlacedWithCode": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+
+  "commonSomethingWentWrong": "Une erreur s’est produite",
+
+  "checkoutCartEmptyError": "Votre panier est vide",
+  "checkoutPaymentMissingCode": "Le code du moyen de paiement est manquant",
+  "checkoutCountryRequiredError": "Sélectionnez un pays",
+  "checkoutRegionRequiredError": "Sélectionnez une région",
+  "checkoutCityRequiredError": "Saisissez la ville",
+  "checkoutAddressRequiredError": "Saisissez l’adresse",
+  "checkoutPhoneRequiredError": "Saisissez le téléphone",
+  "checkoutShippingMissingError": "Le mode de livraison est manquant",
+  "checkoutStripeCanceled": "Paiement annulé",
+  "checkoutStripeClientSecretMissing": "Le checkout n’a pas renvoyé le client secret Stripe",
+  "checkoutStripePublishableKeyMissing": "Le checkout n’a pas renvoyé la clé publique Stripe",
+  "home_support_sheet_title": "Contacter le support",
+  "home_support_option_whatsapp": "WhatsApp",
+  "home_support_option_email": "E-mail",
+  "home_support_not_configured": "Les coordonnées du support ne sont pas configurées.",
+  "home_support_email_not_configured": "L’e-mail du support n’est pas configuré.",
+  "home_support_phone_not_configured": "Le numéro du support n’est pas configuré.",
+  "home_support_open_email_failed": "Impossible d’ouvrir l’application e-mail.",
+  "home_support_open_whatsapp_failed": "Impossible d’ouvrir WhatsApp.",
+  "home_support_invalid_phone": "Numéro du support invalide."
 
 
 

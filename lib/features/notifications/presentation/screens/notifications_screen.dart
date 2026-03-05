@@ -60,7 +60,7 @@ class NotificationsScreen extends StatelessWidget {
           listenWhen: (p, n) => (n.lastActionMessage ?? '').trim().isNotEmpty,
           listener: (context, state) {
             if ((state.lastActionMessage ?? '').trim().isNotEmpty) {
-              AppToast.show(context, state.lastActionMessage!, isError: true);
+              AppToast.error(context, state.lastActionMessage!);
             }
           },
           builder: (context, state) {

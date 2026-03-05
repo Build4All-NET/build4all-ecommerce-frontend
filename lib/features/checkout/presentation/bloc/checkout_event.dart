@@ -1,3 +1,5 @@
+// lib/features/checkout/presentation/bloc/checkout_event.dart
+
 import 'package:build4front/features/checkout/domain/entities/checkout_entities.dart';
 
 abstract class CheckoutEvent {
@@ -18,13 +20,20 @@ class CheckoutShippingSelected extends CheckoutEvent {
   const CheckoutShippingSelected(this.methodId);
 }
 
-class CheckoutCouponChanged extends CheckoutEvent {
+/// ✅ NEW: user typing only (NO API)
+class CheckoutCouponDraftChanged extends CheckoutEvent {
+  final String draft;
+  const CheckoutCouponDraftChanged(this.draft);
+}
+
+/// ✅ NEW: user applies coupon (THIS triggers quote API)
+class CheckoutCouponApplied extends CheckoutEvent {
   final String coupon;
-  const CheckoutCouponChanged(this.coupon);
+  const CheckoutCouponApplied(this.coupon);
 }
 
 class CheckoutPaymentSelected extends CheckoutEvent {
-  final int index; // ✅ index not code
+  final int index;
   const CheckoutPaymentSelected(this.index);
 }
 

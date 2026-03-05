@@ -67,12 +67,12 @@ String? _passwordValidator(String? value, AppLocalizations l10n) {
     final phone = _method == RegisterMethod.phone ? _fullPhone?.trim() : null;
 
     if (_method == RegisterMethod.email && (email == null || email.isEmpty)) {
-      AppToast.show(context, l10n.loginMissingIdentifier, isError: true);
+      AppToast.error(context, l10n.loginMissingIdentifier);
       return;
     }
 
     if (_method == RegisterMethod.phone && (phone == null || phone.isEmpty)) {
-      AppToast.show(context, l10n.loginMissingIdentifier, isError: true);
+      AppToast.error(context, l10n.loginMissingIdentifier);
       return;
     }
 
@@ -131,10 +131,10 @@ String? _passwordValidator(String? value, AppLocalizations l10n) {
 
     // ✅ 2) show error toast
     if (state.errorCode != null) {
-      AppToast.show(
+      AppToast.error(
         context,
         _l10nFromCode(l10n, state.errorCode!),
-        isError: true,
+        
       );
       return;
     }

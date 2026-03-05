@@ -65,14 +65,14 @@ class _ForgotPasswordVerifyScreenState
       child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
         listener: (ctx, state) {
           if (state.error != null) {
-            AppToast.show(
+            AppToast.error(
               ctx,
               ExceptionMapper.toMessage(state.error!),
-              isError: true,
+              
             );
           }
           if (state.successMessage != null) {
-            AppToast.show(ctx, state.successMessage!);
+            AppToast.error(ctx, state.successMessage!);
             Navigator.of(ctx).push(
               MaterialPageRoute(
                 builder: (_) => BlocProvider.value(

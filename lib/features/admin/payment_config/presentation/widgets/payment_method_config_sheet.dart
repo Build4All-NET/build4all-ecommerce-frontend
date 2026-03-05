@@ -263,7 +263,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           if (type == 'number') {
             final parsed = num.tryParse(raw);
             if (parsed == null) {
-              AppToast.show(context, 'Invalid number: $key', isError: true);
+              AppToast.error(context, 'Invalid number: $key');
               return;
             }
             finalValue = parsed;
@@ -277,7 +277,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           finalValue == null || finalValue.toString().trim().isEmpty;
 
       if (requiredField && missing) {
-        AppToast.show(context, 'Missing required field: $key', isError: true);
+        AppToast.error(context, 'Missing required field: $key');
         return;
       }
 

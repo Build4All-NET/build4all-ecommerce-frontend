@@ -1077,7 +1077,42 @@
   "upgradeStatusRejected": "تم الرفض",
 
   "yesLabel": "نعم",
-  "noLabel": "لا"
+  "noLabel": "لا",
+   "checkoutCouponChecking": "جارٍ التحقق من الكوبون…",
+  "checkoutCouponApplied": "تم تطبيق الكوبون",
+  "checkoutCouponAppliedDiscount": "تم التطبيق • -{discount}",
+  "@checkoutCouponAppliedDiscount": {
+    "placeholders": { "discount": { "type": "String" } }
+  },
+  "checkoutCouponInvalid": "كوبون غير صالح",
+  "checkoutCouponFailed": "تعذّر تطبيق الكوبون",
+  "checkoutOrderPlacedWithCode": "تم إنشاء الطلب: {code}",
+  "@checkoutOrderPlacedWithCode": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+
+  "commonSomethingWentWrong": "حدث خطأ ما",
+
+  "checkoutCartEmptyError": "سلة التسوق فارغة",
+  "checkoutPaymentMissingCode": "رمز طريقة الدفع مفقود",
+  "checkoutCountryRequiredError": "يرجى اختيار الدولة",
+  "checkoutRegionRequiredError": "يرجى اختيار المنطقة",
+  "checkoutCityRequiredError": "يرجى إدخال المدينة",
+  "checkoutAddressRequiredError": "يرجى إدخال العنوان",
+  "checkoutPhoneRequiredError": "يرجى إدخال رقم الهاتف",
+  "checkoutShippingMissingError": "طريقة الشحن مفقودة",
+  "checkoutStripeCanceled": "تم إلغاء الدفع",
+  "checkoutStripeClientSecretMissing": "لم يتم إرجاع client secret من Stripe",
+  "checkoutStripePublishableKeyMissing": "لم يتم إرجاع publishable key من Stripe",
+   "home_support_sheet_title": "تواصل مع الدعم",
+  "home_support_option_whatsapp": "واتساب",
+  "home_support_option_email": "البريد الإلكتروني",
+  "home_support_not_configured": "بيانات التواصل مع الدعم غير مُعدّة.",
+  "home_support_email_not_configured": "بريد الدعم غير مُعدّ.",
+  "home_support_phone_not_configured": "رقم هاتف الدعم غير مُعدّ.",
+  "home_support_open_email_failed": "تعذّر فتح تطبيق البريد.",
+  "home_support_open_whatsapp_failed": "تعذّر فتح واتساب.",
+  "home_support_invalid_phone": "رقم الدعم غير صالح."
 
 
 }

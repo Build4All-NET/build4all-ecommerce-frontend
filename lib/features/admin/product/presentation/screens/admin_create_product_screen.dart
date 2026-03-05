@@ -573,7 +573,7 @@ String _localizeError(Object e, AppLocalizations l) {
   final msg = _localizeError(e, l);
 
   // ✅ toast
-  AppToast.show(context, msg, isError: true);
+  AppToast.error(context, msg);
 
   // ✅ optional: show under dropdown too
   setState(() => _metaError = msg);
@@ -625,7 +625,7 @@ String _localizeError(Object e, AppLocalizations l) {
   if (!mounted) return;
 
   final msg = _localizeError(e, l);
-  AppToast.show(context, msg, isError: true);
+  AppToast.error(context, msg);
   setState(() => _metaError = msg);
 } finally {
       if (mounted) setState(() => _loadingItemTypes = false);

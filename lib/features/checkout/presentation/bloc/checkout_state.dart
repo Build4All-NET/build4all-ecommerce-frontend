@@ -7,7 +7,6 @@ class CheckoutState {
   final bool loading;
   final bool placing;
 
-  // ✅ NEW: quoting state
   final bool quoting;
   final CheckoutSummaryModel? quote;
 
@@ -23,7 +22,16 @@ class CheckoutState {
   final List<PaymentMethod> paymentMethods;
   final int? selectedPaymentIndex;
 
+  /// ✅ coupon = APPLIED coupon (used in quote + placeOrder)
   final String coupon;
+
+  /// ✅ couponDraft = user typing (NO API)
+  final String couponDraft;
+
+  /// ✅ couponError = only coupon-related error (no toast spam)
+  final String? couponError;
+
+  /// general errors (not coupon)
   final String? error;
 
   final int? orderId;
@@ -43,6 +51,8 @@ class CheckoutState {
     required this.paymentMethods,
     required this.selectedPaymentIndex,
     required this.coupon,
+    required this.couponDraft,
+    required this.couponError,
     required this.error,
     required this.orderId,
     required this.orderSummary,
@@ -63,6 +73,8 @@ class CheckoutState {
       paymentMethods: [],
       selectedPaymentIndex: null,
       coupon: '',
+      couponDraft: '',
+      couponError: null,
       error: null,
       orderId: null,
       orderSummary: null,
@@ -93,6 +105,10 @@ class CheckoutState {
     int? selectedPaymentIndex,
 
     String? coupon,
+    String? couponDraft,
+
+    String? couponError,
+    bool clearCouponError = false,
 
     String? error,
     bool clearError = false,
@@ -127,6 +143,9 @@ class CheckoutState {
       selectedPaymentIndex: selectedPaymentIndex ?? this.selectedPaymentIndex,
 
       coupon: coupon ?? this.coupon,
+      couponDraft: couponDraft ?? this.couponDraft,
+
+      couponError: clearCouponError ? null : (couponError ?? this.couponError),
 
       error: clearError ? null : (error ?? this.error),
 

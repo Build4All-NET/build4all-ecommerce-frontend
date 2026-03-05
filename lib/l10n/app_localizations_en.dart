@@ -2766,4 +2766,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noLabel => 'No';
+
+  @override
+  String get checkoutCouponChecking => 'Checking coupon…';
+
+  @override
+  String get checkoutCouponApplied => 'Coupon applied';
+
+  @override
+  String checkoutCouponAppliedDiscount(String discount) {
+    return 'Applied • -$discount';
+  }
+
+  @override
+  String get checkoutCouponInvalid => 'Invalid coupon';
+
+  @override
+  String get checkoutCouponFailed => 'Could not apply coupon';
+
+  @override
+  String checkoutOrderPlacedWithCode(String code) {
+    return 'Order placed: $code';
+  }
+
+  @override
+  String get commonSomethingWentWrong => 'Something went wrong';
+
+  @override
+  String get checkoutCartEmptyError => 'Your cart is empty';
+
+  @override
+  String get checkoutPaymentMissingCode => 'Payment method code is missing';
+
+  @override
+  String get checkoutCountryRequiredError => 'Select a country';
+
+  @override
+  String get checkoutRegionRequiredError => 'Select a region';
+
+  @override
+  String get checkoutCityRequiredError => 'Enter city';
+
+  @override
+  String get checkoutAddressRequiredError => 'Enter address';
+
+  @override
+  String get checkoutPhoneRequiredError => 'Enter phone';
+
+  @override
+  String get checkoutShippingMissingError => 'Shipping method is missing';
+
+  @override
+  String get checkoutStripeCanceled => 'Payment canceled';
+
+  @override
+  String get checkoutStripeClientSecretMissing => 'Checkout did not return Stripe client secret';
+
+  @override
+  String get checkoutStripePublishableKeyMissing => 'Checkout did not return Stripe publishable key';
+
+  @override
+  String get home_support_sheet_title => 'Contact support';
+
+  @override
+  String get home_support_option_whatsapp => 'WhatsApp';
+
+  @override
+  String get home_support_option_email => 'Email';
+
+  @override
+  String get home_support_not_configured => 'Support contact details are not configured.';
+
+  @override
+  String get home_support_email_not_configured => 'Support email is not configured.';
+
+  @override
+  String get home_support_phone_not_configured => 'Support phone number is not configured.';
+
+  @override
+  String get home_support_open_email_failed => 'Could not open email app.';
+
+  @override
+  String get home_support_open_whatsapp_failed => 'Could not open WhatsApp.';
+
+  @override
+  String get home_support_invalid_phone => 'Invalid support number.';
 }

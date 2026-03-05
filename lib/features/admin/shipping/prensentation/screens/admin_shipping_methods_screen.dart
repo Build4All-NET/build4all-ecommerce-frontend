@@ -145,7 +145,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
 
   void _showNoTokenMessage() {
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminSessionExpired, isError: true);
+    AppToast.error(context, l.adminSessionExpired);
   }
 
   // ----------------- Load / refresh -----------------
@@ -235,7 +235,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminCreated ?? 'Created');
+    AppToast.error(context, l.adminCreated ?? 'Created');
   }
 
   Future<void> _openEditSheet(ShippingMethod method) async {
@@ -264,7 +264,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminUpdated ?? 'Updated');
+    AppToast.error(context, l.adminUpdated ?? 'Updated');
   }
 
   Future<void> _confirmAndDelete(ShippingMethod method) async {
@@ -309,7 +309,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
           ),
         );
 
-    AppToast.show(context, l.adminDeleted ?? 'Deleted');
+    AppToast.error(context, l.adminDeleted ?? 'Deleted');
   }
 
   // ----------------- UI -----------------
@@ -376,7 +376,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (_lastShownError != friendly) {
                           _lastShownError = friendly;
-                          AppToast.show(context, friendly, isError: true);
+                          AppToast.error(context, friendly);
                         }
                       });
 

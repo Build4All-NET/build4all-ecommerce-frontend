@@ -89,7 +89,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
         listenWhen: (p, n) => p.error != n.error && n.error != null,
         listener: (context, state) {
           if (state.error != null) {
-            AppToast.show(context, state.error!, isError: true);
+            AppToast.error(context, state.error!);
           }
         },
         builder: (context, state) {
@@ -199,7 +199,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                                   ),
                                 );
 
-                            AppToast.show(context, l10n.paymentSavedKeepHint);
+                            AppToast.error(context, l10n.paymentSavedKeepHint);
                           },
                           onConfigure: () async {
                             if (saving) return;
@@ -231,7 +231,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                                   ),
                                 );
 
-                            AppToast.show(context, l10n.paymentSavedKeepHint);
+                            AppToast.error(context, l10n.paymentSavedKeepHint);
                           },
                         );
                       },

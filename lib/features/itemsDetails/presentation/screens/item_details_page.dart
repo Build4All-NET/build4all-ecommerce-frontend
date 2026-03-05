@@ -401,20 +401,20 @@ class ItemDetailsPage extends StatelessWidget {
                             final auth = context.read<AuthBloc>().state;
 
                             if (!auth.isLoggedIn) {
-                              AppToast.show(
+                              AppToast.error(
                                 context,
                                 l10n.cart_login_required_message,
-                                isError: true,
+                                
                               );
                               return;
                             }
 
                             // ✅ extra safety
                             if (outOfStock) {
-                              AppToast.show(
+                              AppToast.error(
                                 context,
                                 l10n.outOfStock,
-                                isError: true,
+                                
                               );
                               return;
                             }
@@ -426,7 +426,7 @@ class ItemDetailsPage extends StatelessWidget {
                                   ),
                                 );
 
-                            AppToast.show(
+                            AppToast.error(
                               context,
                               l10n.cart_item_added_snackbar,
                             );

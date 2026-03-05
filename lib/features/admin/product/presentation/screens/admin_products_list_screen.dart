@@ -206,7 +206,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
             LoadProductsForOwner(),
           );
 
-      AppToast.show(context, l10n.adminProductDeleteSuccess);
+      AppToast.error(context, l10n.adminProductDeleteSuccess);
     } catch (e) {
       if (!context.mounted) return;
 
@@ -220,7 +220,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
         msg = _friendlyDeleteErrorFromResponse(l10n, e);
       }
 
-      AppToast.show(context, msg, isError: true);
+      AppToast.error(context, msg);
     }
   }
 

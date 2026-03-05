@@ -65,14 +65,14 @@ class _ForgotPasswordNewPasswordScreenState
       child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
         listener: (ctx, state) {
           if (state.error != null) {
-            AppToast.show(
+            AppToast.error(
               ctx,
               ExceptionMapper.toMessage(state.error!),
-              isError: true,
+              
             );
           }
           if (state.successMessage != null) {
-            AppToast.show(ctx, state.successMessage!);
+            AppToast.error(ctx, state.successMessage!);
             // ✅ back to login
             Navigator.of(ctx).popUntil((r) => r.isFirst);
             ctx.read<ForgotPasswordBloc>().add(const ForgotClearMessage());

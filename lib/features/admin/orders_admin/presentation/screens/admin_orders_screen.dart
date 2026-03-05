@@ -27,7 +27,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     if (msg.trim().isEmpty) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      AppToast.show(context, msg, isError: error);
+      AppToast.error(context, msg);
     });
   }
 

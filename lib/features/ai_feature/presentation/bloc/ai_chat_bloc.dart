@@ -1,4 +1,6 @@
 // lib/features/ai_feature/presentation/bloc/ai_chat_bloc.dart
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
@@ -26,33 +28,49 @@ class AiChatBloc extends Bloc<AiChatEvent, AiChatState> {
       text: "Ask me anything about “${e.title}”. 👀",
       at: DateTime.now(),
     );
-    emit(state.copyWith(messages: [hello]));
+
+    emit(state.copyWith(messages: [hello], isSending: false));
   }
 
   Future<void> _onSend(AiChatSendPressed e, Emitter<AiChatState> emit) async {
     final msg = e.text.trim();
     if (msg.isEmpty || _itemId == null) return;
 
-    final token = (g.authToken ?? '').toString().trim(); // ✅ replace with your real token getter
+    final token = (g.authToken ?? '').toString().trim();
     if (token.isEmpty) {
-      emit(state.copyWith(isSending: false));
-      throw Exception('Not authenticated');
+      // ✅ don't throw -> don't crash UI
+      emit(state.copyWith(
+        isSending: false,
+        messages: [
+          ...state.messages,
+          AiMessage(
+            role: AiMessageRole.assistant,
+            text: "You’re not logged in. Please login first 🙂",
+            at: DateTime.now(),
+          ),
+        ],
+      ));
+      return;
     }
 
-    final now = DateTime.now();
-    final userMessage = AiMessage(role: AiMessageRole.user, text: msg, at: now);
+    final userMessage = AiMessage(
+      role: AiMessageRole.user,
+      text: msg,
+      at: DateTime.now(),
+    );
 
-    emit(state.copyWith(
-      isSending: true,
-      messages: [...state.messages, userMessage],
-    ));
+    // ✅ freeze the list for this request (avoid stale state issues)
+    final baseMessages = [...state.messages, userMessage];
+
+    emit(state.copyWith(isSending: true, messages: baseMessages));
 
     try {
+      // ✅ Keep this below Dio receiveTimeout (60s) so we can handle it nicely
       final answer = await useCase(
         token: token,
         itemId: _itemId!,
         message: msg,
-      );
+      ).timeout(const Duration(seconds: 55));
 
       final botMessage = AiMessage(
         role: AiMessageRole.assistant,
@@ -62,11 +80,60 @@ class AiChatBloc extends Bloc<AiChatEvent, AiChatState> {
 
       emit(state.copyWith(
         isSending: false,
-        messages: [...state.messages, botMessage],
+        messages: [...baseMessages, botMessage],
       ));
-    } catch (err) {
-      emit(state.copyWith(isSending: false));
-      rethrow;
+    } on TimeoutException {
+      emit(state.copyWith(
+        isSending: false,
+        messages: [
+          ...baseMessages,
+          AiMessage(
+            role: AiMessageRole.assistant,
+            text: "This is taking too long ⏳. Try again in a sec.",
+            at: DateTime.now(),
+          ),
+        ],
+      ));
+    } on DioException catch (ex) {
+      final isTimeout = ex.type == DioExceptionType.receiveTimeout ||
+          ex.type == DioExceptionType.connectionTimeout ||
+          ex.type == DioExceptionType.sendTimeout;
+
+      // Try to extract backend error msg if present
+      String backendMsg = "Request failed 😵‍💫";
+      final data = ex.response?.data;
+      if (data is Map) {
+        backendMsg = (data['error']?.toString() ??
+                data['message']?.toString() ??
+                backendMsg)
+            .trim();
+      }
+
+      emit(state.copyWith(
+        isSending: false,
+        messages: [
+          ...baseMessages,
+          AiMessage(
+            role: AiMessageRole.assistant,
+            text: isTimeout
+                ? "Server took too long ⏳. Please try again."
+                : "Error: $backendMsg",
+            at: DateTime.now(),
+          ),
+        ],
+      ));
+    } catch (_) {
+      emit(state.copyWith(
+        isSending: false,
+        messages: [
+          ...baseMessages,
+          AiMessage(
+            role: AiMessageRole.assistant,
+            text: "Something broke. Try again 😅",
+            at: DateTime.now(),
+          ),
+        ],
+      ));
     }
   }
 }

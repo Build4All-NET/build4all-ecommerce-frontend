@@ -1,3 +1,5 @@
+// lib/features/checkout/presentation/screens/checkout_screen.dart
+
 import 'package:build4front/features/catalog/cubit/money.dart';
 import 'package:build4front/features/checkout/presentation/screens/order_details_screen.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +103,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
   }
 
+  // ✅ Localize any error string BEFORE showing it to user
+  String _localizeCheckoutError(AppLocalizations l10n, String raw) {
+    final s = raw.trim().toLowerCase();
+
+    // Known bloc validation strings (avoid showing English)
+    if (s.contains('cart is empty')) return l10n.checkoutCartEmptyError;
+    if (s.contains('select a payment method')) return l10n.checkoutSelectPayment;
+    if (s.contains('payment method code is missing')) return l10n.checkoutPaymentMissingCode;
+
+    if (s.contains('select a country')) return l10n.checkoutCountryRequiredError;
+    if (s.contains('select a region')) return l10n.checkoutRegionRequiredError;
+    if (s.contains('enter city')) return l10n.checkoutCityRequiredError;
+    if (s.contains('enter address')) return l10n.checkoutAddressRequiredError;
+    if (s.contains('enter phone')) return l10n.checkoutPhoneRequiredError;
+
+    if (s.contains('select a shipping method')) return l10n.checkoutSelectShipping;
+    if (s.contains('shipping method is missing')) return l10n.checkoutShippingMissingError;
+
+    // Stripe errors
+    if (s.contains('stripe payment canceled')) return l10n.checkoutStripeCanceled;
+    if (s.contains('did not return stripe clientsecret')) return l10n.checkoutStripeClientSecretMissing;
+    if (s.contains('did not return stripe publishablekey')) return l10n.checkoutStripePublishableKeyMissing;
+
+    // Fallback
+    return l10n.commonSomethingWentWrong;
+  }
+
+  // ✅ Coupon errors: never show raw backend English
+  String _localizeCouponError(AppLocalizations l10n, String raw) {
+    final s = raw.trim().toLowerCase();
+    if (s.isEmpty) return '';
+    if (s.contains('invalid') || s.contains('not valid') || s.contains('coupon')) {
+      return l10n.checkoutCouponInvalid;
+    }
+    return l10n.checkoutCouponFailed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -112,22 +151,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       listenWhen: (prev, curr) =>
           prev.error != curr.error || prev.orderSummary != curr.orderSummary,
       listener: (context, state) {
-        final err = (state.error ?? '').trim();
-
-        // ✅ stop coupon errors from spamming toast
-        final isCouponErr = err.toLowerCase().contains('coupon');
-        if (err.isNotEmpty && !isCouponErr) {
-          AppToast.show(context, err, isError: true);
+        final rawErr = (state.error ?? '').trim();
+        if (rawErr.isNotEmpty) {
+          AppToast.error(context, _localizeCheckoutError(l10n, rawErr));
         }
 
         final summary = state.orderSummary;
         if (summary != null) {
           final code = (summary.orderCode ?? '').trim();
 
-          AppToast.show(
+          AppToast.error(
             context,
             code.isNotEmpty
-                ? 'Order placed: $code'
+                ? l10n.checkoutOrderPlacedWithCode(code)
                 : l10n.checkoutOrderPlacedToast(summary.orderId),
           );
 
@@ -136,7 +172,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           // ✅ BEST fallback: from quote lines first (they include itemName)
           final map = <int, String>{};
 
-          final q = state.quote; // assumes you added quote to state
+          final q = state.quote;
           if (q != null) {
             for (final l in q.lines) {
               final n = (l.itemName ?? '').trim();
@@ -226,37 +262,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 );
               }
 
-              // ✅ Coupon inline status
-              final couponInput = state.coupon.trim();
+              // ✅ Coupon inline status (localized)
+              final applied = state.coupon.trim();
               final quote = state.quote;
-              final err = (state.error ?? '').trim().toLowerCase();
-              final isCouponErr = err.contains('coupon');
+
+              final rawCouponErr = (state.couponError ?? '').trim();
+              final couponErrMsg =
+                  rawCouponErr.isEmpty ? '' : _localizeCouponError(l10n, rawCouponErr);
 
               bool? couponValid;
               String? couponMsg;
 
-              if (couponInput.isNotEmpty) {
-                if (isCouponErr) {
-                  couponValid = false;
-                  couponMsg = 'Invalid coupon';
-                } else if (quote == null) {
+              if (applied.isNotEmpty) {
+                if (state.quoting) {
                   couponValid = null;
-                  couponMsg = 'Checking...';
-                } else {
+                  couponMsg = l10n.checkoutCouponChecking;
+                } else if (couponErrMsg.isNotEmpty) {
+                  couponValid = false;
+                  couponMsg = couponErrMsg;
+                } else if (quote != null) {
                   final qCode = (quote.couponCode ?? '').trim();
                   final same = qCode.isNotEmpty &&
-                      qCode.toUpperCase() == couponInput.toUpperCase();
+                      qCode.toUpperCase() == applied.toUpperCase();
 
                   if (same) {
                     couponValid = true;
                     final disc = quote.couponDiscount ?? 0.0;
                     couponMsg = disc > 0
-                        ? 'Applied • -${money(context, disc)}'
-                        : 'Applied';
+                        ? l10n.checkoutCouponAppliedDiscount(money(context, disc))
+                        : l10n.checkoutCouponApplied;
                   } else {
-                    // if quote returned but couponCode empty => treat invalid
                     couponValid = false;
-                    couponMsg = 'Invalid coupon';
+                    couponMsg = l10n.checkoutCouponInvalid;
                   }
                 }
               }
@@ -269,7 +306,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   key: const PageStorageKey('checkout_list'),
                   cacheExtent: MediaQuery.of(context).size.height * 3,
                   addAutomaticKeepAlives: true,
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.all(spacing.md),
                   children: [
@@ -302,15 +340,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     SizedBox(height: spacing.md),
 
-                    // ✅ Coupon (inline result below field)
+                    // ✅ Coupon (draft typing does NOT call backend)
                     CheckoutSectionCard(
                       title: l10n.checkoutCouponTitle,
                       child: CheckoutCouponField(
-                        initial: state.coupon,
+                        draft: state.couponDraft,
+                        applied: state.coupon,
                         isValid: couponValid,
                         message: couponMsg,
-                        onChanged: (v) {
-                          context.read<CheckoutBloc>().add(CheckoutCouponChanged(v));
+                        onDraftChanged: (v) {
+                          context.read<CheckoutBloc>().add(CheckoutCouponDraftChanged(v));
+                        },
+                        onApply: (code) {
+                          context.read<CheckoutBloc>().add(CheckoutCouponApplied(code));
                         },
                       ),
                     ),
@@ -324,12 +366,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: CheckoutShippingMethods(
                           quotes: state.shippingQuotes,
                           selectedMethodId: state.selectedShippingMethodId,
-                          onSelect: (id) => context
-                              .read<CheckoutBloc>()
-                              .add(CheckoutShippingSelected(id)),
-                          onRefresh: () => context
-                              .read<CheckoutBloc>()
-                              .add(const CheckoutRefreshRequested()),
+                          onSelect: (id) =>
+                              context.read<CheckoutBloc>().add(CheckoutShippingSelected(id)),
+                          onRefresh: () =>
+                              context.read<CheckoutBloc>().add(const CheckoutRefreshRequested()),
                         ),
                       ),
                     ),
@@ -343,15 +383,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: CheckoutPaymentMethods(
                           methods: state.paymentMethods,
                           selectedIndex: state.selectedPaymentIndex,
-                          onSelectIndex: (i) => context
-                              .read<CheckoutBloc>()
-                              .add(CheckoutPaymentSelected(i)),
+                          onSelectIndex: (i) =>
+                              context.read<CheckoutBloc>().add(CheckoutPaymentSelected(i)),
                         ),
                       ),
                     ),
                     SizedBox(height: spacing.md),
 
-                    // ✅ Summary (uses quote if you have it)
+                    // ✅ Summary
                     CheckoutSectionCard(
                       title: l10n.checkoutSummaryTitle,
                       child: CheckoutOrderSummary(
@@ -406,10 +445,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                   if (!formOk || firstErr != null) {
                     await _scrollTo(_addressSectionKey);
-                    AppToast.show(
+                    AppToast.error(
                       context,
                       firstErr ?? '${l10n.checkoutAddressTitle}: ${l10n.fieldRequired}',
-                      isError: true,
                     );
                     return;
                   }
@@ -418,13 +456,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                   if (s.selectedPaymentIndex == null) {
                     await _scrollTo(_paymentSectionKey);
-                    AppToast.show(context, l10n.checkoutSelectPayment, isError: true);
+                    AppToast.error(context, l10n.checkoutSelectPayment);
                     return;
                   }
 
                   if (s.shippingQuotes.isNotEmpty && s.selectedShippingMethodId == null) {
                     await _scrollTo(_shippingSectionKey);
-                    AppToast.show(context, l10n.checkoutSelectShipping, isError: true);
+                    AppToast.error(context, l10n.checkoutSelectShipping);
                     return;
                   }
 

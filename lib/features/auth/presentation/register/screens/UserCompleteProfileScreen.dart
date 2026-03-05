@@ -89,7 +89,7 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
     });
 
     if (toastMessage != null && toastMessage.trim().isNotEmpty) {
-      AppToast.show(context, toastMessage.trim(), isError: true);
+      AppToast.error(context, toastMessage.trim());
     }
 
     if (focus != null) {
@@ -211,8 +211,8 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
     }
 
     // Fallback: show error and keep current step
-    AppToast.show(context, msg.isEmpty ? 'Something went wrong' : msg,
-        isError: true);
+    AppToast.error(context, msg.isEmpty ? 'Something went wrong' : msg,
+        );
   }
 
   Future<void> _submitProfile(BuildContext context) async {
@@ -237,14 +237,14 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
       if (!mounted) return;
 
       if (result == null) {
-        AppToast.show(context, 'Failed to complete profile', isError: true);
+        AppToast.error(context, 'Failed to complete profile');
         return;
       }
 
-      AppToast.show(
+      AppToast.error(
         context,
         l10n.profileCompletedSuccessMessage,
-        isError: false,
+       
       );
 
       Navigator.of(context).pushAndRemoveUntil(
@@ -259,7 +259,7 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
       _routeCompleteProfileError(msg);
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, l10n.authErrorGeneric, isError: true);
+      AppToast.error(context, l10n.authErrorGeneric);
     } finally {
       if (mounted) setState(() => _isLoading = false);
       _submitting = false;

@@ -270,7 +270,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     // ✅ hard block if already pending (backend blocks too, but UX matters)
     if (access.hasPendingUpgradeRequest) {
-      AppToast.show(context, l10n.upgradeRequestPending, isError: true);
+      AppToast.error(context, l10n.upgradeRequestPending);
       return;
     }
 
@@ -298,7 +298,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
 
     if (options.isEmpty) {
-      AppToast.show(context, l10n.noUpgradeAvailable);
+      AppToast.error(context, l10n.noUpgradeAvailable);
       return;
     }
 
@@ -466,11 +466,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       }
 
       if (!mounted) return;
-      AppToast.show(context, l10n.upgradeRequestSent);
+      AppToast.error(context, l10n.upgradeRequestSent);
       await _loadLicense();
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, ExceptionMapper.toMessage(e), isError: true);
+      AppToast.error(context, ExceptionMapper.toMessage(e));
     }
   }
 
@@ -501,7 +501,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     VoidCallback guarded(VoidCallback realAction) {
       return () {
         if (lockActions) {
-          AppToast.show(context, lockMsg, isError: true);
+          AppToast.error(context, lockMsg);
           return;
         }
         realAction();
@@ -666,8 +666,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         if (_license == null) return;
 
                         if (_license!.hasPendingUpgradeRequest) {
-                          AppToast.show(context, l10n.upgradeRequestPending,
-                              isError: true);
+                          AppToast.error(context, l10n.upgradeRequestPending
+                             );
                           return;
                         }
 
@@ -760,7 +760,7 @@ class _ProfileBottomSheet extends StatelessWidget {
   Future<void> _copy(BuildContext context, String text, String toast) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
-    AppToast.show(context, toast);
+    AppToast.error(context, toast);
   }
 
   @override

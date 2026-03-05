@@ -37,7 +37,7 @@ class _ForgotPasswordEmailScreenState extends State<ForgotPasswordEmailScreen> {
 
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
-      AppToast.show(context, l10n.fieldRequired, isError: true);
+      AppToast.error(context, l10n.fieldRequired);
       return;
     }
 
@@ -59,14 +59,14 @@ class _ForgotPasswordEmailScreenState extends State<ForgotPasswordEmailScreen> {
       child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
         listener: (ctx, state) {
           if (state.error != null) {
-            AppToast.show(
+            AppToast.error(
               ctx,
               ExceptionMapper.toMessage(state.error!),
-              isError: true,
+              
             );
           }
           if (state.successMessage != null) {
-            AppToast.show(ctx, state.successMessage!);
+            AppToast.error(ctx, state.successMessage!);
             // go to verify screen
            Navigator.of(ctx).push(
               MaterialPageRoute(

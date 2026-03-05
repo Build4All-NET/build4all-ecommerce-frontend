@@ -316,40 +316,40 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     // ✅ extra target validation
     if (_targetType == HomeBannerTargetTypeUi.category &&
         _selectedCategory == null) {
-      AppToast.show(
+      AppToast.error(
         context,
         l.adminHomeBannerCategoryRequired ?? 'Category is required',
-        isError: true,
+        
       );
       return;
     }
 
     if (_targetType == HomeBannerTargetTypeUi.product &&
         _selectedProduct == null) {
-      AppToast.show(
+      AppToast.error(
         context,
         l.adminHomeBannerProductRequired ?? 'Product is required',
-        isError: true,
+        
       );
       return;
     }
 
     if (_targetType == HomeBannerTargetTypeUi.url &&
         _targetUrlCtrl.text.trim().isEmpty) {
-      AppToast.show(
+      AppToast.error(
         context,
         l.adminHomeBannerUrlRequired ?? 'URL is required',
-        isError: true,
+        
       );
       return;
     }
 
     // ✅ Create requires an image
     if (!_isEdit && (_imagePath == null || _imagePath!.isEmpty)) {
-      AppToast.show(
+      AppToast.error(
         context,
         l.adminHomeBannerImageRequired ?? 'Image is required',
-        isError: true,
+        
       );
       return;
     }

@@ -5418,6 +5418,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No'**
   String get noLabel;
+
+  /// No description provided for @checkoutCouponChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking coupon…'**
+  String get checkoutCouponChecking;
+
+  /// No description provided for @checkoutCouponApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon applied'**
+  String get checkoutCouponApplied;
+
+  /// No description provided for @checkoutCouponAppliedDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied • -{discount}'**
+  String checkoutCouponAppliedDiscount(String discount);
+
+  /// No description provided for @checkoutCouponInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid coupon'**
+  String get checkoutCouponInvalid;
+
+  /// No description provided for @checkoutCouponFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not apply coupon'**
+  String get checkoutCouponFailed;
+
+  /// No description provided for @checkoutOrderPlacedWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Order placed: {code}'**
+  String checkoutOrderPlacedWithCode(String code);
+
+  /// No description provided for @commonSomethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get commonSomethingWentWrong;
+
+  /// No description provided for @checkoutCartEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get checkoutCartEmptyError;
+
+  /// No description provided for @checkoutPaymentMissingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method code is missing'**
+  String get checkoutPaymentMissingCode;
+
+  /// No description provided for @checkoutCountryRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a country'**
+  String get checkoutCountryRequiredError;
+
+  /// No description provided for @checkoutRegionRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a region'**
+  String get checkoutRegionRequiredError;
+
+  /// No description provided for @checkoutCityRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter city'**
+  String get checkoutCityRequiredError;
+
+  /// No description provided for @checkoutAddressRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter address'**
+  String get checkoutAddressRequiredError;
+
+  /// No description provided for @checkoutPhoneRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone'**
+  String get checkoutPhoneRequiredError;
+
+  /// No description provided for @checkoutShippingMissingError.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping method is missing'**
+  String get checkoutShippingMissingError;
+
+  /// No description provided for @checkoutStripeCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment canceled'**
+  String get checkoutStripeCanceled;
+
+  /// No description provided for @checkoutStripeClientSecretMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout did not return Stripe client secret'**
+  String get checkoutStripeClientSecretMissing;
+
+  /// No description provided for @checkoutStripePublishableKeyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout did not return Stripe publishable key'**
+  String get checkoutStripePublishableKeyMissing;
+
+  /// No description provided for @home_support_sheet_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get home_support_sheet_title;
+
+  /// No description provided for @home_support_option_whatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get home_support_option_whatsapp;
+
+  /// No description provided for @home_support_option_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get home_support_option_email;
+
+  /// No description provided for @home_support_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'Support contact details are not configured.'**
+  String get home_support_not_configured;
+
+  /// No description provided for @home_support_email_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'Support email is not configured.'**
+  String get home_support_email_not_configured;
+
+  /// No description provided for @home_support_phone_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'Support phone number is not configured.'**
+  String get home_support_phone_not_configured;
+
+  /// No description provided for @home_support_open_email_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open email app.'**
+  String get home_support_open_email_failed;
+
+  /// No description provided for @home_support_open_whatsapp_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open WhatsApp.'**
+  String get home_support_open_whatsapp_failed;
+
+  /// No description provided for @home_support_invalid_phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid support number.'**
+  String get home_support_invalid_phone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -2766,4 +2766,89 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noLabel => 'لا';
+
+  @override
+  String get checkoutCouponChecking => 'جارٍ التحقق من الكوبون…';
+
+  @override
+  String get checkoutCouponApplied => 'تم تطبيق الكوبون';
+
+  @override
+  String checkoutCouponAppliedDiscount(String discount) {
+    return 'تم التطبيق • -$discount';
+  }
+
+  @override
+  String get checkoutCouponInvalid => 'كوبون غير صالح';
+
+  @override
+  String get checkoutCouponFailed => 'تعذّر تطبيق الكوبون';
+
+  @override
+  String checkoutOrderPlacedWithCode(String code) {
+    return 'تم إنشاء الطلب: $code';
+  }
+
+  @override
+  String get commonSomethingWentWrong => 'حدث خطأ ما';
+
+  @override
+  String get checkoutCartEmptyError => 'سلة التسوق فارغة';
+
+  @override
+  String get checkoutPaymentMissingCode => 'رمز طريقة الدفع مفقود';
+
+  @override
+  String get checkoutCountryRequiredError => 'يرجى اختيار الدولة';
+
+  @override
+  String get checkoutRegionRequiredError => 'يرجى اختيار المنطقة';
+
+  @override
+  String get checkoutCityRequiredError => 'يرجى إدخال المدينة';
+
+  @override
+  String get checkoutAddressRequiredError => 'يرجى إدخال العنوان';
+
+  @override
+  String get checkoutPhoneRequiredError => 'يرجى إدخال رقم الهاتف';
+
+  @override
+  String get checkoutShippingMissingError => 'طريقة الشحن مفقودة';
+
+  @override
+  String get checkoutStripeCanceled => 'تم إلغاء الدفع';
+
+  @override
+  String get checkoutStripeClientSecretMissing => 'لم يتم إرجاع client secret من Stripe';
+
+  @override
+  String get checkoutStripePublishableKeyMissing => 'لم يتم إرجاع publishable key من Stripe';
+
+  @override
+  String get home_support_sheet_title => 'تواصل مع الدعم';
+
+  @override
+  String get home_support_option_whatsapp => 'واتساب';
+
+  @override
+  String get home_support_option_email => 'البريد الإلكتروني';
+
+  @override
+  String get home_support_not_configured => 'بيانات التواصل مع الدعم غير مُعدّة.';
+
+  @override
+  String get home_support_email_not_configured => 'بريد الدعم غير مُعدّ.';
+
+  @override
+  String get home_support_phone_not_configured => 'رقم هاتف الدعم غير مُعدّ.';
+
+  @override
+  String get home_support_open_email_failed => 'تعذّر فتح تطبيق البريد.';
+
+  @override
+  String get home_support_open_whatsapp_failed => 'تعذّر فتح واتساب.';
+
+  @override
+  String get home_support_invalid_phone => 'رقم الدعم غير صالح.';
 }

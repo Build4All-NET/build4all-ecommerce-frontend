@@ -68,10 +68,10 @@ class _AiItemChatSheetState extends State<AiItemChatSheet> {
       context.read<AiChatBloc>().add(AiChatSendPressed(txt));
     } catch (_) {
       final l10n = AppLocalizations.of(context)!;
-      AppToast.show(
+      AppToast.error(
         context,
         l10n.ai_chat_error_send_failed,
-        isError: true,
+        
       );
     }
   }

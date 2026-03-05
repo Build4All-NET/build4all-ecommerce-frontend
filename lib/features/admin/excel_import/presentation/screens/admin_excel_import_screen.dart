@@ -32,17 +32,17 @@ class AdminExcelImportScreen extends StatelessWidget {
           p.templateFilePath != c.templateFilePath,
       listener: (context, state) async {
         if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-          AppToast.show(context, state.errorMessage!);
+          AppToast.error(context, state.errorMessage!);
         }
 
         if (state.result != null) {
-          AppToast.show(context, state.result!.message);
+          AppToast.error(context, state.result!.message);
         }
 
         // ✅ After download: show toast + open file
         if (state.templateFilePath != null &&
             state.templateFilePath!.isNotEmpty) {
-          AppToast.show(context, l10n.adminExcelTemplateSavedToast);
+          AppToast.error(context, l10n.adminExcelTemplateSavedToast);
           await OpenFilex.open(state.templateFilePath!);
         }
       },
@@ -140,8 +140,8 @@ class AdminExcelImportScreen extends StatelessWidget {
                     if (state.validation!.errors.isNotEmpty)
                       ExcelIssuesList(
                         title: l10n.adminExcelErrorsTitle,
-                        items: state.validation!.errors,
-                        isError: true,
+                        items: state.validation!.errors, isError: true,
+                        
                       ),
                     if (state.validation!.warnings.isNotEmpty) ...[
                       const SizedBox(height: 12),

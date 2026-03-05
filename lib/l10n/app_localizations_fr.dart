@@ -2766,4 +2766,89 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noLabel => 'Non';
+
+  @override
+  String get checkoutCouponChecking => 'Vérification du coupon…';
+
+  @override
+  String get checkoutCouponApplied => 'Coupon appliqué';
+
+  @override
+  String checkoutCouponAppliedDiscount(String discount) {
+    return 'Appliqué • -$discount';
+  }
+
+  @override
+  String get checkoutCouponInvalid => 'Coupon invalide';
+
+  @override
+  String get checkoutCouponFailed => 'Impossible d’appliquer le coupon';
+
+  @override
+  String checkoutOrderPlacedWithCode(String code) {
+    return 'Commande passée : $code';
+  }
+
+  @override
+  String get commonSomethingWentWrong => 'Une erreur s’est produite';
+
+  @override
+  String get checkoutCartEmptyError => 'Votre panier est vide';
+
+  @override
+  String get checkoutPaymentMissingCode => 'Le code du moyen de paiement est manquant';
+
+  @override
+  String get checkoutCountryRequiredError => 'Sélectionnez un pays';
+
+  @override
+  String get checkoutRegionRequiredError => 'Sélectionnez une région';
+
+  @override
+  String get checkoutCityRequiredError => 'Saisissez la ville';
+
+  @override
+  String get checkoutAddressRequiredError => 'Saisissez l’adresse';
+
+  @override
+  String get checkoutPhoneRequiredError => 'Saisissez le téléphone';
+
+  @override
+  String get checkoutShippingMissingError => 'Le mode de livraison est manquant';
+
+  @override
+  String get checkoutStripeCanceled => 'Paiement annulé';
+
+  @override
+  String get checkoutStripeClientSecretMissing => 'Le checkout n’a pas renvoyé le client secret Stripe';
+
+  @override
+  String get checkoutStripePublishableKeyMissing => 'Le checkout n’a pas renvoyé la clé publique Stripe';
+
+  @override
+  String get home_support_sheet_title => 'Contacter le support';
+
+  @override
+  String get home_support_option_whatsapp => 'WhatsApp';
+
+  @override
+  String get home_support_option_email => 'E-mail';
+
+  @override
+  String get home_support_not_configured => 'Les coordonnées du support ne sont pas configurées.';
+
+  @override
+  String get home_support_email_not_configured => 'L’e-mail du support n’est pas configuré.';
+
+  @override
+  String get home_support_phone_not_configured => 'Le numéro du support n’est pas configuré.';
+
+  @override
+  String get home_support_open_email_failed => 'Impossible d’ouvrir l’application e-mail.';
+
+  @override
+  String get home_support_open_whatsapp_failed => 'Impossible d’ouvrir WhatsApp.';
+
+  @override
+  String get home_support_invalid_phone => 'Numéro du support invalide.';
 }

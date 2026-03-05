@@ -88,7 +88,7 @@ class _AdminTaxRulesViewState extends State<_AdminTaxRulesView> {
 
   void _showNoTokenMessage() {
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminSessionExpired, isError: true);
+    AppToast.error(context, l.adminSessionExpired);
   }
 
   Future<void> _refresh() async {
@@ -159,7 +159,7 @@ class _AdminTaxRulesViewState extends State<_AdminTaxRulesView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminCreated ?? 'Created');
+    AppToast.error(context, l.adminCreated ?? 'Created');
   }
 
   Future<void> _openEditSheet(TaxRule rule) async {
@@ -185,7 +185,7 @@ class _AdminTaxRulesViewState extends State<_AdminTaxRulesView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.show(context, l.adminUpdated ?? 'Updated');
+    AppToast.error(context, l.adminUpdated ?? 'Updated');
   }
 
   Future<void> _confirmAndDelete(TaxRule rule) async {
@@ -230,7 +230,7 @@ class _AdminTaxRulesViewState extends State<_AdminTaxRulesView> {
           ),
         );
 
-    AppToast.show(context, l.adminDeleted ?? 'Deleted');
+    AppToast.error(context, l.adminDeleted ?? 'Deleted');
   }
 
   @override
@@ -291,7 +291,7 @@ class _AdminTaxRulesViewState extends State<_AdminTaxRulesView> {
 
                     if (state.error != null) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        AppToast.show(context, state.error!, isError: true);
+                        AppToast.error(context, state.error!);
                       });
 
                       return Center(
