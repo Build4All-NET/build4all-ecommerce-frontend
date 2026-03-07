@@ -2872,4 +2872,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkoutCouponDidNotAffectOrder => 'Coupon did not affect this order.';
+
+  @override
+  String get adminProductStatusSectionTitle => 'Product status';
+
+  @override
+  String get adminProductStatusSectionSubtitle => 'Control product visibility and lifecycle';
+
+  @override
+  String get adminProductStatusUnavailable => 'No statuses available';
+
+  @override
+  String get adminProductStatusRequired => 'Please select a product status';
+
+  @override
+  String get home_coming_soon_button => 'Coming Soon';
 }

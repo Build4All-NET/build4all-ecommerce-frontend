@@ -1348,6 +1348,14 @@
   "checkoutCouponUsageLimitReached": "Coupon usage limit reached.",
   "checkoutCouponMinimumNotReached": "Minimum order amount not reached for this coupon.",
   "checkoutCouponDidNotAffectOrder": "Coupon did not affect this order.",
-  "checkoutCouponFailed": "Coupon could not be applied."
+  "checkoutCouponFailed": "Coupon could not be applied.",
+
+
+"adminProductStatusSectionTitle": "Product status",
+"adminProductStatusSectionSubtitle": "Control product visibility and lifecycle",
+"adminProductStatusLabel": "Status",
+"adminProductStatusUnavailable": "No statuses available",
+"adminProductStatusRequired": "Please select a product status",
+"home_coming_soon_button": "Coming Soon"
 
 }

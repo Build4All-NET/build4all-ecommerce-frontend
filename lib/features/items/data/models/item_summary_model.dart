@@ -21,6 +21,11 @@ class ItemSummaryModel {
 
   final int? categoryId;
 
+  // ✅ NEW
+  final int? statusId;
+  final String? statusCode;
+  final String? statusName;
+
   ItemSummaryModel({
     required this.id,
     required this.title,
@@ -37,6 +42,9 @@ class ItemSummaryModel {
     this.stock,
     this.sku,
     this.categoryId,
+    this.statusId,
+    this.statusCode,
+    this.statusName,
   });
 
   factory ItemSummaryModel.fromJson(Map<String, dynamic> j) {
@@ -87,6 +95,11 @@ class ItemSummaryModel {
       stock: _intOrNull(j['stock']),
       sku: j['sku']?.toString(),
       categoryId: _intOrNull(j['categoryId']),
+
+      // ✅ NEW
+      statusId: _intOrNull(j['statusId']),
+      statusCode: j['statusCode']?.toString(),
+      statusName: j['statusName']?.toString(),
     );
   }
 
@@ -108,6 +121,11 @@ class ItemSummaryModel {
       sku: sku,
       kind: currentItemKindFromEnv(),
       categoryId: categoryId,
+
+      // ✅ NEW
+      statusId: statusId,
+      statusCode: statusCode,
+      statusName: statusName,
     );
   }
 }

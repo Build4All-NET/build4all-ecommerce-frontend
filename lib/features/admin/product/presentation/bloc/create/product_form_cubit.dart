@@ -8,38 +8,29 @@ class ProductFormCubit extends Cubit<ProductFormState> {
   final CreateProduct createProduct;
 
   ProductFormCubit({required this.createProduct})
-    : super(ProductFormState.initial());
+      : super(ProductFormState.initial());
 
   Future<void> submit({
-   
     required int itemTypeId,
     required int? currencyId,
-
     required String name,
     String? description,
     required double price,
     int? stock,
-
+    String? statusCode,
     String? imageUrl,
     String? sku,
-
-    // ✅ New fields
-    String productType = 'SIMPLE', // SIMPLE / VARIABLE / GROUPED / EXTERNAL
+    String productType = 'SIMPLE',
     bool virtualProduct = false,
     bool downloadable = false,
     String? downloadUrl,
-
     String? externalUrl,
     String? buttonText,
-
     double? salePrice,
     DateTime? saleStart,
     DateTime? saleEnd,
-
-    /// attributes as code -> value
     Map<String, String>? attributes,
   }) async {
-    // Reset old success + error
     emit(
       state.copyWith(
         isSubmitting: true,
@@ -50,29 +41,24 @@ class ProductFormCubit extends Cubit<ProductFormState> {
 
     try {
       final Product p = await createProduct(
-        
         itemTypeId: itemTypeId,
         currencyId: currencyId,
-
         name: name,
         description: description,
         price: price,
         stock: stock,
-
+        statusCode: statusCode,
         imageUrl: imageUrl,
         sku: sku,
-
         productType: productType,
         virtualProduct: virtualProduct,
         downloadable: downloadable,
         downloadUrl: downloadUrl,
         externalUrl: externalUrl,
         buttonText: buttonText,
-
         salePrice: salePrice,
         saleStart: saleStart,
         saleEnd: saleEnd,
-
         attributes: attributes,
       );
 

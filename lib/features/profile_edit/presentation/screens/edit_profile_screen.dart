@@ -92,9 +92,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _lastCtrl = TextEditingController();
   final _userCtrl = TextEditingController();
 
-  // ✅ email field
+  // ✅ contact fields
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+
   String _originalEmail = '';
+  bool _isPhoneAccount = false;
 
   bool _public = true;
 
@@ -104,7 +107,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _filledOnce = false;
   bool _loggedOutAfterDelete = false;
 
-  // ✅ save + OTP flow guards (prevent dialog re-open loop)
+  // ✅ save + OTP flow guards
   bool _saveRequested = false;
   bool _emailFlowActive = false;
   bool _emailDialogOpen = false;
@@ -114,11 +117,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _firstError;
   String? _lastError;
   String? _userError;
-  String? _emailError;
+  String? _contactError;
 
   late final EditProfileBloc _bloc;
 
-  // ✅ RULES: all fields min 3 chars (first/last/username/email)
+  // ✅ RULES
   static const int _minLen = 3;
   static const int _maxName = 40;
   static const int _maxUsername = 20;
@@ -133,9 +136,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastCtrl.addListener(_clearFieldErrorsIfNeeded);
     _userCtrl.addListener(_clearFieldErrorsIfNeeded);
     _emailCtrl.addListener(_clearFieldErrorsIfNeeded);
+    _phoneCtrl.addListener(_clearFieldErrorsIfNeeded);
 
     final dio = g.appDio ?? Dio();
-    final has = dio.interceptors.any((i) => i is _EditProfileAuthDebugInterceptor);
+    final has =
+        dio.interceptors.any((i) => i is _EditProfileAuthDebugInterceptor);
     if (!has) {
       dio.interceptors.add(
         _EditProfileAuthDebugInterceptor(
@@ -165,17 +170,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   String _cleanToken(String token) {
     final t = token.trim();
-    return t.toLowerCase().startsWith('bearer ') ? t.substring(7).trim() : t;
+    return t.toLowerCase().startsWith('bearer ')
+        ? t.substring(7).trim()
+        : t;
   }
 
-  // ✅ Name validation (min 3 + basic allowed chars)
   bool _isNameValid(String s) {
     if (s.length < _minLen || s.length > _maxName) return false;
-    // letters + spaces + hyphen + apostrophe (supports most names)
     return RegExp(r"^[A-Za-zÀ-ÿ' -]+$").hasMatch(s);
   }
 
-  // ✅ Username validation (min 3, max 20, allowed A-Z a-z 0-9 _, no __, no leading/trailing _)
   bool _isUsernameValid(String s) {
     if (s.length < _minLen || s.length > _maxUsername) return false;
     if (!_usernameAllowed.hasMatch(s)) return false;
@@ -192,11 +196,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final last = _lastCtrl.text.trim();
     final username = _userCtrl.text.trim();
     final email = _emailCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
 
     String? firstError;
     String? lastError;
     String? userError;
-    String? emailError;
+    String? contactError;
 
     // Username
     if (username.isEmpty) {
@@ -225,26 +230,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       lastError = 'Invalid name';
     }
 
-    // ✅ Email REQUIRED (since you said ALL fields)
-    if (email.isEmpty) {
-      emailError = loc.fieldRequired;
-    } else if (email.length < _minLen) {
-      emailError = 'Minimum $_minLen characters';
-    } else if (!_isEmailValid(email)) {
-      emailError = loc.editProfile_invalidEmail;
+    // ✅ dynamic contact validation
+    if (_isPhoneAccount) {
+      if (phone.isEmpty) {
+        contactError = loc.fieldRequired;
+      }
+    } else {
+      if (email.isEmpty) {
+        contactError = loc.fieldRequired;
+      } else if (email.length < _minLen) {
+        contactError = 'Minimum $_minLen characters';
+      } else if (!_isEmailValid(email)) {
+        contactError = loc.editProfile_invalidEmail;
+      }
     }
 
     setState(() {
       _userError = userError;
       _firstError = firstError;
       _lastError = lastError;
-      _emailError = emailError;
+      _contactError = contactError;
     });
 
     return userError == null &&
         firstError == null &&
         lastError == null &&
-        emailError == null;
+        contactError == null;
   }
 
   void _clearFieldErrorsIfNeeded() {
@@ -254,30 +265,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final last = _lastCtrl.text.trim();
     final username = _userCtrl.text.trim();
     final email = _emailCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
 
-    if (_userError != null && username.length >= _minLen && _isUsernameValid(username)) {
+    if (_userError != null &&
+        username.length >= _minLen &&
+        _isUsernameValid(username)) {
       _userError = null;
       changed = true;
     }
 
-    if (_firstError != null && first.length >= _minLen && _isNameValid(first)) {
+    if (_firstError != null &&
+        first.length >= _minLen &&
+        _isNameValid(first)) {
       _firstError = null;
       changed = true;
     }
 
-    if (_lastError != null && last.length >= _minLen && _isNameValid(last)) {
+    if (_lastError != null &&
+        last.length >= _minLen &&
+        _isNameValid(last)) {
       _lastError = null;
       changed = true;
     }
 
-    if (_emailError != null) {
-      if (email.isNotEmpty && email.length >= _minLen && _isEmailValid(email)) {
-        _emailError = null;
-        changed = true;
+    if (_contactError != null) {
+      if (_isPhoneAccount) {
+        if (phone.isNotEmpty) {
+          _contactError = null;
+          changed = true;
+        }
+      } else {
+        if (email.isNotEmpty &&
+            email.length >= _minLen &&
+            _isEmailValid(email)) {
+          _contactError = null;
+          changed = true;
+        }
       }
     }
 
-    if (changed && mounted) setState(() {});
+    if (changed && mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _pickImage() async {
@@ -333,6 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastCtrl.dispose();
     _userCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -346,7 +376,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       value: _bloc,
       child: BlocConsumer<EditProfileBloc, EditProfileState>(
         listener: (context, state) {
-          // ✅ Errors -> toast (keep it clean)
           if (state.error != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
@@ -354,7 +383,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             });
           }
 
-          // ✅ delete success -> logout
           if (state.didDelete && !_loggedOutAfterDelete) {
             _loggedOutAfterDelete = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -366,7 +394,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           final u = state.user;
 
-          // ✅ initial fill (safe post-frame)
           if (u != null && !_filledOnce) {
             _filledOnce = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -377,15 +404,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _userCtrl.text = u.username ?? '';
               _public = u.publicProfile;
 
-              _emailCtrl.text = u.email ?? '';
-              _originalEmail = (u.email ?? '').trim();
+              final email = (u.email ?? '').trim();
+              final phone = (u.phoneNumber ?? '').trim();
+
+              _isPhoneAccount = email.isEmpty && phone.isNotEmpty;
+
+              _emailCtrl.text = email;
+              _phoneCtrl.text = phone;
+              _originalEmail = email;
 
               setState(() {});
             });
           }
 
-          // ✅ after verify reload: close flow + update email + close screen
-          if (_awaitingVerifyReload && u != null && !u.emailVerificationRequired) {
+          if (_awaitingVerifyReload &&
+              u != null &&
+              !u.emailVerificationRequired) {
             _awaitingVerifyReload = false;
             _emailFlowActive = false;
             _saveRequested = false;
@@ -393,39 +427,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
 
-              // update local original email so next save won't resend again
               _emailCtrl.text = u.email ?? '';
+              _phoneCtrl.text = u.phoneNumber ?? '';
               _originalEmail = (u.email ?? '').trim();
 
-              // return updated user to previous screen
               Navigator.pop(this.context, u);
             });
             return;
           }
 
-          // ✅ after SAVE request:
-          // open OTP dialog ONLY ONCE, only if user asked save, and backend requires verification
           if (_saveRequested && !state.saving && u != null) {
-            if (u.emailVerificationRequired) {
-              if (_emailFlowActive) return; // prevent reopen loop
+            if (!_isPhoneAccount && u.emailVerificationRequired) {
+              if (_emailFlowActive) return;
               _emailFlowActive = true;
 
               WidgetsBinding.instance.addPostFrameCallback((_) async {
                 if (!mounted) return;
 
-                // clean info message
                 AppToast.error(this.context, loc.editProfile_codeSentToast);
 
                 final pending = (u.pendingEmail ?? '').trim();
                 final ok = await _showEmailOtpDialog(
                   loc: loc,
-                  pendingEmail: pending.isNotEmpty ? pending : _emailCtrl.text.trim(),
+                  pendingEmail:
+                      pending.isNotEmpty ? pending : _emailCtrl.text.trim(),
                 );
 
                 if (!mounted) return;
 
                 if (ok) {
-                  // ✅ verified -> reload user then pop screen in the reload handler above
                   _awaitingVerifyReload = true;
                   _bloc.add(
                     LoadEditProfile(
@@ -434,7 +464,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   );
                 } else {
-                  // ✅ failed/canceled -> allow retry by pressing Save again
                   _emailFlowActive = false;
                   _saveRequested = false;
                 }
@@ -442,7 +471,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               return;
             } else {
-              // ✅ normal save (no email verification) -> pop back with updated user
               if (state.error == null) {
                 _saveRequested = false;
 
@@ -492,46 +520,76 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Email
-                          AppTextField(
-                            controller: _emailCtrl,
-                            label: loc.editProfile_emailLabel,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          if (_emailError != null) ...[
+                          // ✅ Dynamic contact field
+                          if (_isPhoneAccount)
+                            AppTextField(
+                              controller: _phoneCtrl,
+                              label: loc.phoneLabel,
+                              keyboardType: TextInputType.phone,
+                              enabled: false,
+                            )
+                          else
+                            AppTextField(
+                              controller: _emailCtrl,
+                              label: loc.editProfile_emailLabel,
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+
+                          if (_contactError != null) ...[
                             const SizedBox(height: 6),
-                            Text(_emailError!, style: const TextStyle(color: Colors.red)),
+                            Text(
+                              _contactError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ],
                           const SizedBox(height: 12),
 
-                          // Username
-                          AppTextField(controller: _userCtrl, label: loc.username),
+                          AppTextField(
+                            controller: _userCtrl,
+                            label: loc.username,
+                          ),
                           if (_userError != null) ...[
                             const SizedBox(height: 6),
-                            Text(_userError!, style: const TextStyle(color: Colors.red)),
+                            Text(
+                              _userError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ],
                           const SizedBox(height: 12),
 
-                          // First
-                          AppTextField(controller: _firstCtrl, label: loc.firstName),
+                          AppTextField(
+                            controller: _firstCtrl,
+                            label: loc.firstName,
+                          ),
                           if (_firstError != null) ...[
                             const SizedBox(height: 6),
-                            Text(_firstError!, style: const TextStyle(color: Colors.red)),
+                            Text(
+                              _firstError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ],
                           const SizedBox(height: 12),
 
-                          // Last
-                          AppTextField(controller: _lastCtrl, label: loc.lastName),
+                          AppTextField(
+                            controller: _lastCtrl,
+                            label: loc.lastName,
+                          ),
                           if (_lastError != null) ...[
                             const SizedBox(height: 6),
-                            Text(_lastError!, style: const TextStyle(color: Colors.red)),
+                            Text(
+                              _lastError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ],
                           const SizedBox(height: 12),
 
                           SwitchListTile(
                             value: _public,
                             onChanged: (v) => setState(() => _public = v),
-                            title: Text(loc.publicProfile, style: TextStyle(color: colors.label)),
+                            title: Text(
+                              loc.publicProfile,
+                              style: TextStyle(color: colors.label),
+                            ),
                           ),
                           const SizedBox(height: 16),
 
@@ -543,27 +601,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     if (!valid) {
                                       AppToast.error(
                                         context,
-                                        _emailError ??
+                                        _contactError ??
                                             _userError ??
                                             _firstError ??
                                             _lastError ??
                                             loc.fieldRequired,
-                                        
                                       );
                                       return;
                                     }
 
-                                    // ✅ user pressed save -> mark requested
                                     _saveRequested = true;
                                     _awaitingVerifyReload = false;
 
-                                    final newEmailRaw = _emailCtrl.text.trim();
-                                    final oldEmailRaw = _originalEmail.trim();
+                                    String? emailToSend;
 
-                                    final emailToSend = (newEmailRaw.toLowerCase() ==
-                                            oldEmailRaw.toLowerCase())
-                                        ? null
-                                        : newEmailRaw;
+                                    if (!_isPhoneAccount) {
+                                      final newEmailRaw =
+                                          _emailCtrl.text.trim();
+                                      final oldEmailRaw =
+                                          _originalEmail.trim();
+
+                                      emailToSend = (newEmailRaw
+                                                  .toLowerCase() ==
+                                              oldEmailRaw.toLowerCase())
+                                          ? null
+                                          : newEmailRaw;
+                                    } else {
+                                      emailToSend = null;
+                                    }
 
                                     _bloc.add(
                                       SaveEditProfile(
@@ -583,7 +648,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ? const SizedBox(
                                     height: 18,
                                     width: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(loc.save),
                           ),
@@ -642,7 +709,9 @@ class _ProfileHeader extends StatelessWidget {
     ImageProvider? provider;
     if (pickedPath != null) {
       provider = FileImage(File(pickedPath!));
-    } else if (!removeImage && imageUrl != null && imageUrl!.trim().isNotEmpty) {
+    } else if (!removeImage &&
+        imageUrl != null &&
+        imageUrl!.trim().isNotEmpty) {
       provider = NetworkImage(imageUrl!.trim());
     }
 
@@ -652,7 +721,9 @@ class _ProfileHeader extends StatelessWidget {
           radius: 44,
           backgroundColor: colors.surface,
           backgroundImage: provider,
-          child: provider == null ? Icon(Icons.person, color: colors.label, size: 40) : null,
+          child: provider == null
+              ? Icon(Icons.person, color: colors.label, size: 40)
+              : null,
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -707,7 +778,10 @@ class _DeleteSectionState extends State<_DeleteSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(loc.dangerZone, style: const TextStyle(fontWeight: FontWeight.w700)),
+        Text(
+          loc.dangerZone,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 8),
         AppTextField(
           controller: _passCtrl,
@@ -733,7 +807,11 @@ class _DeleteSectionState extends State<_DeleteSection> {
                   widget.onDelete(pwd);
                 },
           child: widget.deleting
-              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : Text(loc.deleteAccount),
         ),
       ],
@@ -741,7 +819,6 @@ class _DeleteSectionState extends State<_DeleteSection> {
   }
 }
 
-/// ✅ OTP dialog: closes automatically on SUCCESS and on FAILURE with clean toast
 class _EmailOtpDialog extends StatefulWidget {
   final AppLocalizations loc;
   final String pendingEmail;
@@ -785,7 +862,10 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
           children: [
             Text(loc.editProfile_codeSentTo),
             const SizedBox(height: 6),
-            Text(widget.pendingEmail, style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              widget.pendingEmail,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: _codeCtrl,
@@ -841,7 +921,11 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
                   }
                 },
           child: _loading
-              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : Text(loc.editProfile_verify),
         ),
       ],

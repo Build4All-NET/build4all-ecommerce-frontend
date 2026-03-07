@@ -1202,7 +1202,13 @@
   "checkoutCouponUsageLimitReached": "La limite d'utilisation du coupon a été atteinte.",
   "checkoutCouponMinimumNotReached": "Le montant minimum requis pour ce coupon n'a pas été atteint.",
   "checkoutCouponDidNotAffectOrder": "Le coupon n'a eu aucun effet sur cette commande.",
-  "checkoutCouponFailed": "Le coupon n'a pas pu être appliqué."
+  "checkoutCouponFailed": "Le coupon n'a pas pu être appliqué.",
+  "adminProductStatusSectionTitle": "Statut du produit",
+"adminProductStatusSectionSubtitle": " Gérer la disponibilité de ce produit",
+"adminProductStatusLabel": "Statut",
+"adminProductStatusUnavailable": "Indisponible",
+"adminProductStatusRequired": "Veuillez sélectionner un statut pour ce produit.",
+"home_coming_soon_button": "Bientôt disponible"
 
 
 

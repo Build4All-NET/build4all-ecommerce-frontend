@@ -9,7 +9,8 @@ class UpdateProductRequest {
   final double? price;
   final int? stock;
 
-  final String? status;
+  // ✅ new backend field
+  final String? statusCode;
   final String? sku;
 
   final ProductTypeDto? productType;
@@ -37,7 +38,7 @@ class UpdateProductRequest {
     this.description,
     this.price,
     this.stock,
-    this.status,
+    this.statusCode,
     this.sku,
     this.productType,
     this.virtualProduct,
@@ -69,7 +70,7 @@ class UpdateProductRequest {
       if (description != null) 'description': description,
       if (price != null) 'price': price,
       if (stock != null) 'stock': stock,
-      if (status != null) 'status': status,
+      if (statusCode != null) 'statusCode': statusCode,
 
       if (sku != null) 'sku': sku,
       if (productType != null) 'productType': productTypeDtoToApi(productType!),
@@ -93,7 +94,10 @@ class UpdateProductRequest {
       form.files.add(
         MapEntry(
           'image',
-          await MultipartFile.fromFile(image!.path, filename: image!.name),
+          await MultipartFile.fromFile(
+            image!.path,
+            filename: image!.name,
+          ),
         ),
       );
     }

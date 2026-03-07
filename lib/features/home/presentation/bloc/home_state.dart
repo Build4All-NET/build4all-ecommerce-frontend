@@ -52,7 +52,7 @@ class HomeState extends Equatable {
   HomeState copyWith({
     bool? isLoading,
     bool? hasLoaded,
-    Object? errorMessage = _unset, // ✅ allows explicit null
+    Object? errorMessage = _unset,
     List<ItemSummary>? popularItems,
     List<ItemSummary>? recommendedItems,
     List<String>? categories,

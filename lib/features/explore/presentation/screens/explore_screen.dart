@@ -1,5 +1,3 @@
-// lib/features/explore/presentation/screens/explore_screen.dart
-
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -14,17 +12,15 @@ import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 
 import 'package:build4front/features/home/presentation/bloc/home_bloc.dart';
-import 'package:build4front/features/home/presentation/bloc/home_state.dart';
 import 'package:build4front/features/home/presentation/bloc/home_event.dart';
+import 'package:build4front/features/home/presentation/bloc/home_state.dart';
 
 import 'package:build4front/features/items/domain/entities/item_summary.dart';
 import 'package:build4front/common/widgets/app_search_field.dart';
 import 'package:build4front/common/widgets/ItemCard.dart';
 
-// currency formatter (dynamic currency, not hardcoded $)
 import 'package:build4front/features/catalog/cubit/money.dart';
 
-// Auth + Cart + Toast
 import 'package:build4front/features/auth/presentation/login/bloc/auth_bloc.dart';
 import 'package:build4front/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:build4front/features/cart/presentation/bloc/cart_event.dart';
@@ -59,12 +55,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   int? _selectedCategoryId;
   ExploreSortOption _sortOption = ExploreSortOption.relevance;
 
-  // pagination (3 rows × 2 cols = 6 items per page)
   static const int _rowsPerPage = 3;
   static const int _itemsPerPage = _rowsPerPage * 2;
   int _page = 1;
 
-  // typing debounce
   Timer? _searchDebounce;
 
   @override
@@ -75,22 +69,41 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _selectedCategoryId = widget.initialCategoryId;
     _sortOption = ExploreSortOption.relevance;
 
-    final homeBloc = context.read<HomeBloc>();
-    if (!homeBloc.state.hasLoaded && !homeBloc.state.isLoading) {
-      final raw = (authState.token ?? '').trim();
-      final token = raw.isEmpty ? null : raw;
-
-      homeBloc.add(HomeStarted(token: token));
-       WidgetsBinding.instance.addPostFrameCallback((_) async {
-    await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
-  });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _ensureHomeLoaded();
+      await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
+    });
   }
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _ensureHomeLoaded() {
+    final homeBloc = context.read<HomeBloc>();
+    final state = homeBloc.state;
+
+    if (state.hasLoaded || state.isLoading) return;
+
+    final raw = (authState.token ?? '').trim();
+    final token = raw.isEmpty ? null : raw;
+
+    homeBloc.add(HomeStarted(token: token));
+  }
+
+  Future<void> _refreshData() async {
+    final raw = (authState.token ?? '').trim();
+    final token = raw.isEmpty ? null : raw;
+
+    context.read<HomeBloc>().add(HomeRefreshRequested(token: token));
+    await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
+
+    if (!mounted) return;
+    setState(() {
+      _page = 1;
+    });
   }
 
   void _resetToFirstPage() {
@@ -109,251 +122,62 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   List<ItemSummary> _mergeUniqueById(List<List<ItemSummary>> lists) {
-  final seen = <int>{};
-  final out = <ItemSummary>[];
+    final seen = <int>{};
+    final out = <ItemSummary>[];
 
-  for (final list in lists) {
-    for (final item in list) {
-      if (seen.add(item.id)) {
-        out.add(item);
+    for (final list in lists) {
+      for (final item in list) {
+        if (seen.add(item.id)) {
+          out.add(item);
+        }
       }
     }
-  }
-  return out;
-}
 
-  // detect if app has ANY items (all sections)
-  bool _hasAnyItems(HomeState s) {
-    return s.recommendedItems.isNotEmpty ||
-        s.popularItems.isNotEmpty ||
-        s.flashSaleItems.isNotEmpty ||
-        s.newArrivalsItems.isNotEmpty ||
-        s.bestSellersItems.isNotEmpty ||
-        s.topRatedItems.isNotEmpty;
+    return out;
   }
 
-  // category ids that actually appear in a given item list
+  bool _isVisibleForUser(ItemSummary item) {
+    if (item.kind != ItemKind.product) return true;
+    return item.isVisibleForUser;
+  }
+
+  bool _isComingSoon(ItemSummary item) {
+    if (item.kind != ItemKind.product) return false;
+    return item.isUpcoming;
+  }
+
+  List<ItemSummary> _allAvailableItems(HomeState homeState) {
+    final merged = _mergeUniqueById([
+      homeState.recommendedItems,
+      homeState.popularItems,
+      homeState.flashSaleItems,
+      homeState.newArrivalsItems,
+      homeState.bestSellersItems,
+      homeState.topRatedItems,
+    ]);
+
+    return merged.where(_isVisibleForUser).toList();
+  }
+
+  bool _hasAnyItems(HomeState homeState) {
+    return _allAvailableItems(homeState).isNotEmpty;
+  }
+
   Set<int> _categoryIdsFromItems(List<ItemSummary> items) {
     final set = <int>{};
-    for (final it in items) {
-      final cid = it.categoryId;
+    for (final item in items) {
+      if (!_isVisibleForUser(item)) continue;
+      final cid = item.categoryId;
       if (cid != null) set.add(cid);
     }
     return set;
   }
 
-  // ✅ NEW: out of stock helper (correct place)
   bool _isOutOfStock(ItemSummary item) {
     if (item.kind != ItemKind.product) return false;
-    final s = item.stock;
-    if (s == null) return false;
-    return s <= 0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final themeState = context.watch<ThemeCubit>().state;
-    final spacing = themeState.tokens.spacing;
-
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<HomeBloc, HomeState>(
-          builder: (context, homeState) {
-            if (homeState.isLoading && !homeState.hasLoaded) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final baseItems = _baseItemsForExplore(homeState);
-
-            // categories should be based on items that exist (base dataset)
-            final availableCategoryIds = _categoryIdsFromItems(baseItems);
-
-            // derive categories (entities) that have items
-            final catsWithItems = homeState.categoryEntities
-                .where((c) => availableCategoryIds.contains(c.id))
-                .toList();
-
-            final categoryNames = catsWithItems.map((c) => c.name).toList();
-
-            // if initialCategoryId/Label points to category that has no items -> treat as "All"
-            final rawSelectedLabel = _selectedCategoryLabel ??
-                _labelForCategoryId(homeState, _selectedCategoryId);
-
-            final effectiveSelectedLabel = (rawSelectedLabel != null &&
-                    categoryNames.contains(rawSelectedLabel))
-                ? rawSelectedLabel
-                : null;
-
-            final effectiveSelectedCategoryId =
-                (availableCategoryIds.contains(_selectedCategoryId))
-                    ? _selectedCategoryId
-                    : null;
-
-            final filtered = _buildFilteredAndSortedItems(
-              baseItems,
-              effectiveCategoryId: effectiveSelectedCategoryId,
-            );
-
-            // pagination math
-            final totalItems = filtered.length;
-            final totalPages =
-                totalItems == 0 ? 1 : ((totalItems / _itemsPerPage).ceil());
-
-            // clamp page
-            final safePage = _page.clamp(1, totalPages);
-
-            final start = (safePage - 1) * _itemsPerPage;
-            final end = math.min(start + _itemsPerPage, totalItems);
-            final pageItems = (totalItems == 0 || start >= totalItems)
-                ? <ItemSummary>[]
-                : filtered.sublist(start, end);
-
-            // show category chips only when items exist
-            final showCategories = _hasAnyItems(homeState) &&
-                baseItems.isNotEmpty &&
-                categoryNames.isNotEmpty;
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                final raw = (authState.token ?? '').trim();
-                final token = raw.isEmpty ? null : raw;
-
-                context
-                    .read<HomeBloc>()
-                    .add(HomeRefreshRequested(token: token));
-
-                await AiFeatureBootstrap().refresh(minInterval: Duration.zero);    
-
-                setState(() => _resetToFirstPage());
-              },
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxW = constraints.maxWidth;
-                  final contentMaxWidth = maxW > 900 ? 900.0 : maxW;
-
-                  return Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          spacing.lg,
-                          spacing.lg,
-                          spacing.lg,
-                          spacing.xl,
-                        ),
-                        children: [
-                          // Search
-                          AppSearchField(
-                            hintText: l10n.explore_search_hint,
-                            initialValue:
-                                _searchQuery.isEmpty ? null : _searchQuery,
-                            onChanged: _onSearchChangedDebounced,
-                            onSubmitted: (value) {
-                              setState(() {
-                                _searchQuery = value.trim();
-                                _resetToFirstPage();
-                              });
-                            },
-                          ),
-                          SizedBox(height: spacing.md),
-
-                          // Category chips (ONLY if items exist)
-                          if (showCategories) ...[
-                            _ExploreCategoryChips(
-                              categories: categoryNames,
-                              selectedCategoryLabel: effectiveSelectedLabel,
-                              onCategorySelected: (label) {
-                                int? foundId;
-
-                                if (label != null && label.trim().isNotEmpty) {
-                                  // IMPORTANT: search only in catsWithItems
-                                  for (final cat in catsWithItems) {
-                                    if (cat.name == label) {
-                                      foundId = cat.id;
-                                      break;
-                                    }
-                                  }
-                                }
-
-                                setState(() {
-                                  _selectedCategoryLabel = label;
-                                  _selectedCategoryId = foundId;
-                                  _resetToFirstPage();
-                                });
-                              },
-                            ),
-                            SizedBox(height: spacing.sm),
-                          ] else ...[
-                            SizedBox(height: spacing.sm),
-                          ],
-
-                          // Results + Sort
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  l10n.explore_results_label(totalItems),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              _SortDropdown(
-                                current: _sortOption,
-                                onChanged: (opt) {
-                                  setState(() {
-                                    _sortOption = opt;
-                                    _resetToFirstPage();
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: spacing.md),
-
-                          if (filtered.isEmpty)
-                            _EmptyExploreState(
-                              message: l10n.explore_empty_message,
-                            )
-                          else ...[
-                            // Grid
-                            _ExploreItemsGrid(
-                              items: pageItems,
-                              pricingFor: _pricingFor,
-                              subtitleFor: _subtitleFor,
-                              metaFor: _metaLabelFor,
-                              ctaLabelFor: _ctaLabelFor,
-                              isOutOfStock: _isOutOfStock, // ✅ pass helper
-                              onTapItem: (id) => _openDetails(context, id),
-                              onCtaPressed: (item) =>
-                                  _handleCtaPressed(context, item),
-                            ),
-
-                            SizedBox(height: spacing.lg),
-
-                            // Pagination bar ‹ 1 2 3 ›
-                            _PaginationBar(
-                              currentPage: safePage,
-                              totalPages: totalPages,
-                              onPageChanged: (p) {
-                                setState(() => _page = p);
-                              },
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
-    );
+    final stock = item.stock;
+    if (stock == null) return false;
+    return stock <= 0;
   }
 
   String? _labelForCategoryId(HomeState homeState, int? id) {
@@ -364,50 +188,74 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return null;
   }
 
+  List<ItemSummary> _visible(List<ItemSummary> items) {
+    return items.where(_isVisibleForUser).toList();
+  }
+
   List<ItemSummary> _baseItemsForExplore(HomeState homeState) {
-  final sid = (widget.initialSectionId ?? '').trim();
+    final sid = (widget.initialSectionId ?? '').trim();
+    final allItems = _allAvailableItems(homeState);
 
-  // For section-specific explore, keep section behavior
-  if (sid == 'flash_sale') {
-    return homeState.flashSaleItems.isNotEmpty
-        ? homeState.flashSaleItems
-        : homeState.popularItems;
-  }
-  if (sid == 'new_arrivals') {
-    return homeState.newArrivalsItems.isNotEmpty
-        ? homeState.newArrivalsItems
-        : homeState.popularItems;
-  }
-  if (sid == 'best_sellers') {
-    return homeState.bestSellersItems.isNotEmpty
-        ? homeState.bestSellersItems
-        : homeState.popularItems;
-  }
-  if (sid == 'top_rated') {
-    return homeState.topRatedItems.isNotEmpty
-        ? homeState.topRatedItems
-        : homeState.popularItems;
+    switch (sid) {
+      case 'flash_sale':
+        if (homeState.flashSaleItems.isNotEmpty) {
+          return _visible(homeState.flashSaleItems);
+        }
+        return allItems;
+
+      case 'new_arrivals':
+        if (homeState.newArrivalsItems.isNotEmpty) {
+          return _visible(homeState.newArrivalsItems);
+        }
+        if (homeState.popularItems.isNotEmpty) {
+          return _visible(homeState.popularItems);
+        }
+        if (homeState.recommendedItems.isNotEmpty) {
+          return _visible(homeState.recommendedItems);
+        }
+        return allItems;
+
+      case 'best_sellers':
+        if (homeState.bestSellersItems.isNotEmpty) {
+          return _visible(homeState.bestSellersItems);
+        }
+        if (homeState.popularItems.isNotEmpty) {
+          return _visible(homeState.popularItems);
+        }
+        if (homeState.recommendedItems.isNotEmpty) {
+          return _visible(homeState.recommendedItems);
+        }
+        if (homeState.newArrivalsItems.isNotEmpty) {
+          return _visible(homeState.newArrivalsItems);
+        }
+        return allItems;
+
+      case 'top_rated':
+        if (homeState.topRatedItems.isNotEmpty) {
+          return _visible(homeState.topRatedItems);
+        }
+        if (homeState.bestSellersItems.isNotEmpty) {
+          return _visible(homeState.bestSellersItems);
+        }
+        if (homeState.popularItems.isNotEmpty) {
+          return _visible(homeState.popularItems);
+        }
+        if (homeState.recommendedItems.isNotEmpty) {
+          return _visible(homeState.recommendedItems);
+        }
+        return allItems;
+
+      default:
+        return allItems;
+    }
   }
 
-  // ✅ Default Explore = ALL available items from all sections (deduped)
-  final merged = _mergeUniqueById([
-    homeState.recommendedItems,
-    homeState.popularItems,
-    homeState.flashSaleItems,
-    homeState.newArrivalsItems,
-    homeState.bestSellersItems,
-    homeState.topRatedItems,
-  ]);
-
-  return merged;
-}
   List<ItemSummary> _buildFilteredAndSortedItems(
     List<ItemSummary> base, {
     required int? effectiveCategoryId,
   }) {
-    List<ItemSummary> result = base;
+    var result = base.where(_isVisibleForUser).toList();
 
-    // search
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       result = result.where((item) {
@@ -420,15 +268,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
       }).toList();
     }
 
-    // categoryId filter
     if (effectiveCategoryId != null) {
       result = result
           .where((item) => item.categoryId == effectiveCategoryId)
           .toList();
     }
-
-    // sort
-    result = List<ItemSummary>.from(result);
 
     switch (_sortOption) {
       case ExploreSortOption.relevance:
@@ -476,7 +320,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     switch (item.kind) {
       case ItemKind.product:
-        // ✅ Out of stock label
+        if (_isComingSoon(item)) return l10n.home_coming_soon_button;
         if (_isOutOfStock(item)) return l10n.outOfStock;
         return l10n.cart_add_button;
 
@@ -500,36 +344,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   String? _metaLabelFor(ItemSummary item) {
-  final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
 
-  switch (item.kind) {
-    case ItemKind.activity:
-      if (item.start == null) return null;
-      final dt = item.start!.toLocal();
-      final y = dt.year.toString().padLeft(4, '0');
-      final m = dt.month.toString().padLeft(2, '0');
-      final d = dt.day.toString().padLeft(2, '0');
-      final hh = dt.hour.toString().padLeft(2, '0');
-      final mm = dt.minute.toString().padLeft(2, '0');
-      return '$d/$m/$y  $hh:$mm';
+    switch (item.kind) {
+      case ItemKind.activity:
+        if (item.start == null) return null;
+        final dt = item.start!.toLocal();
+        final y = dt.year.toString().padLeft(4, '0');
+        final m = dt.month.toString().padLeft(2, '0');
+        final d = dt.day.toString().padLeft(2, '0');
+        final hh = dt.hour.toString().padLeft(2, '0');
+        final mm = dt.minute.toString().padLeft(2, '0');
+        return '$d/$m/$y  $hh:$mm';
 
-    case ItemKind.product:
-      final stock = item.stock;
-      if (stock == null) return null;
+      case ItemKind.product:
+        final stock = item.stock;
+        if (stock == null) return null;
+        if (stock <= 0) return l10n.outOfStock;
+        if (stock <= 10) return l10n.home_stock_left_label(stock);
+        return null;
 
-      // ✅ out of stock
-      if (stock <= 0) return l10n.outOfStock;
-
-      // ✅ show only when low
-      if (stock <= 10) return l10n.home_stock_left_label(stock);
-
-      // ✅ hide when plenty
-      return null;
-
-    default:
-      return null;
+      default:
+        return null;
+    }
   }
-}
 
   void _handleCtaPressed(BuildContext context, ItemSummary item) {
     final l10n = AppLocalizations.of(context)!;
@@ -541,7 +379,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
 
     if (item.kind == ItemKind.product) {
-      // ✅ HARD GUARD (even if UI bug)
+      if (_isComingSoon(item)) {
+        AppToast.error(context, l10n.home_coming_soon_button);
+        return;
+      }
+
       if (_isOutOfStock(item)) {
         AppToast.error(context, l10n.outOfStock);
         return;
@@ -550,14 +392,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
       context.read<CartBloc>().add(
             CartAddItemRequested(itemId: item.id, quantity: 1),
           );
-      AppToast.error(context, l10n.cart_item_added_snackbar);
+
+      AppToast.show(context, l10n.cart_item_added_snackbar);
       return;
     }
 
     _openDetails(context, item.id);
   }
 
-  // pricing (sale window)
   bool _isSaleActiveNow(ItemSummary item) {
     final now = DateTime.now();
     final start = item.saleStart;
@@ -566,7 +408,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     if (start == null && end == null) return item.onSale;
     if (start != null && end == null) return !now.isBefore(start);
     if (start == null && end != null) return !now.isAfter(end);
-
     return !now.isBefore(start!) && !now.isAfter(end!);
   }
 
@@ -577,7 +418,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
         : item.price;
   }
 
-  // uses money(context, amount) so currency is dynamic
   _PricingView _pricingFor(BuildContext context, ItemSummary item) {
     final saleActive = item.onSale && _isSaleActiveNow(item);
     final current = _currentPrice(item);
@@ -599,7 +439,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       if (base > 0) {
         final percent = ((1 - (cur / base)) * 100).round();
         final l10n = AppLocalizations.of(context)!;
-tagLabel = percent > 0 ? '-$percent%' : l10n.home_sale_tag;
+        tagLabel = percent > 0 ? '-$percent%' : l10n.home_sale_tag;
       }
     }
 
@@ -609,11 +449,188 @@ tagLabel = percent > 0 ? '-$percent%' : l10n.home_sale_tag;
       tagLabel: tagLabel,
     );
   }
-}
 
-// =========================
-// UI pieces
-// =========================
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final themeState = context.watch<ThemeCubit>().state;
+    final spacing = themeState.tokens.spacing;
+
+    return Scaffold(
+      body: SafeArea(
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, homeState) {
+            if (!homeState.hasLoaded && !homeState.isLoading) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _ensureHomeLoaded();
+              });
+            }
+
+            if (homeState.isLoading && !homeState.hasLoaded) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final allItems = _allAvailableItems(homeState);
+            final baseItems = _baseItemsForExplore(homeState);
+
+            final availableCategoryIds = _categoryIdsFromItems(baseItems);
+
+            final catsWithItems = homeState.categoryEntities
+                .where((c) => availableCategoryIds.contains(c.id))
+                .toList();
+
+            final categoryNames = catsWithItems.map((c) => c.name).toList();
+
+            final rawSelectedLabel = _selectedCategoryLabel ??
+                _labelForCategoryId(homeState, _selectedCategoryId);
+
+            final effectiveSelectedLabel =
+                (rawSelectedLabel != null && categoryNames.contains(rawSelectedLabel))
+                    ? rawSelectedLabel
+                    : null;
+
+            final effectiveSelectedCategoryId =
+                (availableCategoryIds.contains(_selectedCategoryId))
+                    ? _selectedCategoryId
+                    : null;
+
+            final filtered = _buildFilteredAndSortedItems(
+              baseItems,
+              effectiveCategoryId: effectiveSelectedCategoryId,
+            );
+
+            final totalItems = filtered.length;
+            final totalPages =
+                totalItems == 0 ? 1 : (totalItems / _itemsPerPage).ceil();
+
+            final safePage = _page.clamp(1, totalPages);
+            final start = (safePage - 1) * _itemsPerPage;
+            final end = math.min(start + _itemsPerPage, totalItems);
+
+            final pageItems = (totalItems == 0 || start >= totalItems)
+                ? <ItemSummary>[]
+                : filtered.sublist(start, end);
+
+            final showCategories =
+                _hasAnyItems(homeState) &&
+                baseItems.isNotEmpty &&
+                categoryNames.isNotEmpty;
+
+            final emptyMessage = allItems.isEmpty
+                ? l10n.explore_empty_message
+                : l10n.explore_empty_message;
+
+            return RefreshIndicator(
+              onRefresh: _refreshData,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxW = constraints.maxWidth;
+                  final contentMaxWidth = maxW > 900 ? 900.0 : maxW;
+
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          spacing.lg,
+                          spacing.lg,
+                          spacing.lg,
+                          spacing.xl,
+                        ),
+                        children: [
+                          AppSearchField(
+                            hintText: l10n.explore_search_hint,
+                            initialValue: _searchQuery.isEmpty ? null : _searchQuery,
+                            onChanged: _onSearchChangedDebounced,
+                            onSubmitted: (value) {
+                              setState(() {
+                                _searchQuery = value.trim();
+                                _resetToFirstPage();
+                              });
+                            },
+                          ),
+                          SizedBox(height: spacing.md),
+
+                          if (showCategories) ...[
+                            _ExploreCategoryChips(
+                              categories: categoryNames,
+                              selectedCategoryLabel: effectiveSelectedLabel,
+                              onCategorySelected: (label) {
+                                int? foundId;
+
+                                if (label != null && label.trim().isNotEmpty) {
+                                  for (final cat in catsWithItems) {
+                                    if (cat.name == label) {
+                                      foundId = cat.id;
+                                      break;
+                                    }
+                                  }
+                                }
+
+                                setState(() {
+                                  _selectedCategoryLabel = label;
+                                  _selectedCategoryId = foundId;
+                                  _resetToFirstPage();
+                                });
+                              },
+                            ),
+                            SizedBox(height: spacing.sm),
+                          ] else ...[
+                            SizedBox(height: spacing.xs),
+                          ],
+
+                          _ExploreTopBar(
+                            totalItems: totalItems,
+                            current: _sortOption,
+                            onChanged: (opt) {
+                              setState(() {
+                                _sortOption = opt;
+                                _resetToFirstPage();
+                              });
+                            },
+                          ),
+
+                          SizedBox(height: spacing.md),
+
+                          if (filtered.isEmpty)
+                            _EmptyExploreState(message: emptyMessage)
+                          else ...[
+                            _ExploreItemsGrid(
+                              items: pageItems,
+                              pricingFor: _pricingFor,
+                              subtitleFor: _subtitleFor,
+                              metaFor: _metaLabelFor,
+                              ctaLabelFor: _ctaLabelFor,
+                              isOutOfStock: _isOutOfStock,
+                              onTapItem: (id) => _openDetails(context, id),
+                              onCtaPressed: (item) =>
+                                  _handleCtaPressed(context, item),
+                            ),
+                            SizedBox(height: spacing.lg),
+                            _PaginationBar(
+                              currentPage: safePage,
+                              totalPages: totalPages,
+                              onPageChanged: (p) {
+                                setState(() => _page = p);
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
 
 class _PricingView {
   final String? currentLabel;
@@ -625,6 +642,68 @@ class _PricingView {
     required this.oldLabel,
     required this.tagLabel,
   });
+}
+
+class _ExploreTopBar extends StatelessWidget {
+  final int totalItems;
+  final ExploreSortOption current;
+  final ValueChanged<ExploreSortOption> onChanged;
+
+  const _ExploreTopBar({
+    required this.totalItems,
+    required this.current,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
+    final t = Theme.of(context).textTheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 430;
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.explore_results_label(totalItems),
+                style: t.bodyMedium,
+              ),
+              SizedBox(height: spacing.sm),
+              Align(
+                alignment: Alignment.centerRight,
+                child: _SortDropdown(
+                  current: current,
+                  onChanged: onChanged,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.explore_results_label(totalItems),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: t.bodyMedium,
+              ),
+            ),
+            _SortDropdown(
+              current: current,
+              onChanged: onChanged,
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _ExploreCategoryChips extends StatelessWidget {
@@ -645,7 +724,7 @@ class _ExploreCategoryChips extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
 
-    final List<String?> allCats = [null, ...categories];
+    final allCats = <String?>[null, ...categories];
 
     return SizedBox(
       height: 38,
@@ -655,12 +734,11 @@ class _ExploreCategoryChips extends StatelessWidget {
         separatorBuilder: (_, __) => SizedBox(width: spacing.sm),
         itemBuilder: (context, index) {
           final cat = allCats[index];
-          final bool isSelected =
+          final isSelected =
               (cat == null && selectedCategoryLabel == null) ||
-                  (cat != null && cat == selectedCategoryLabel);
+              (cat != null && cat == selectedCategoryLabel);
 
-          final label =
-              cat ?? AppLocalizations.of(context)!.explore_category_all;
+          final label = cat ?? AppLocalizations.of(context)!.explore_category_all;
 
           return GestureDetector(
             onTap: () => onCategorySelected(cat),
@@ -743,7 +821,10 @@ class _SortDropdown extends StatelessWidget {
           items: ExploreSortOption.values.map((opt) {
             return DropdownMenuItem<ExploreSortOption>(
               value: opt,
-              child: Text(labelFor(opt), overflow: TextOverflow.ellipsis),
+              child: Text(
+                labelFor(opt),
+                overflow: TextOverflow.ellipsis,
+              ),
             );
           }).toList(),
         ),
@@ -758,9 +839,8 @@ class _ExploreItemsGrid extends StatelessWidget {
   final _PricingView Function(BuildContext, ItemSummary) pricingFor;
   final String? Function(ItemSummary) subtitleFor;
   final String? Function(ItemSummary) metaFor;
-
   final String Function(BuildContext, ItemSummary) ctaLabelFor;
-  final bool Function(ItemSummary) isOutOfStock; // ✅ NEW
+  final bool Function(ItemSummary) isOutOfStock;
 
   final void Function(int itemId) onTapItem;
   final void Function(ItemSummary) onCtaPressed;
@@ -784,7 +864,17 @@ class _ExploreItemsGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final double aspect = w <= 420 ? 0.52 : (w <= 700 ? 0.60 : 0.70);
+
+        double aspect;
+        if (w <= 360) {
+          aspect = 0.48;
+        } else if (w <= 420) {
+          aspect = 0.52;
+        } else if (w <= 700) {
+          aspect = 0.60;
+        } else {
+          aspect = 0.70;
+        }
 
         return GridView.builder(
           shrinkWrap: true,
@@ -802,8 +892,10 @@ class _ExploreItemsGrid extends StatelessWidget {
             return Builder(
               builder: (ctx) {
                 final pricing = pricingFor(ctx, item);
-
-                final bool out = isOutOfStock(item);
+                final out = isOutOfStock(item);
+                final disabled =
+                    (item.kind == ItemKind.product) &&
+                    (item.isUpcoming || out);
 
                 return ItemCard(
                   itemId: item.id,
@@ -820,9 +912,7 @@ class _ExploreItemsGrid extends StatelessWidget {
                   metaLabel: metaFor(item),
                   ctaLabel: ctaLabelFor(ctx, item),
                   onTap: () => onTapItem(item.id),
-
-                  // ✅ KEY: null => disabled button
-                  onCtaPressed: out ? null : () => onCtaPressed(item),
+                  onCtaPressed: disabled ? null : () => onCtaPressed(item),
                 );
               },
             );
@@ -854,6 +944,7 @@ class _PaginationBar extends StatelessWidget {
       if (totalPages <= 5) {
         return List.generate(totalPages, (i) => i + 1);
       }
+
       final set = <int>{
         1,
         totalPages,
@@ -861,6 +952,7 @@ class _PaginationBar extends StatelessWidget {
         currentPage,
         currentPage + 1,
       };
+
       final list = set.where((p) => p >= 1 && p <= totalPages).toList()..sort();
       return list;
     }
@@ -869,6 +961,7 @@ class _PaginationBar extends StatelessWidget {
 
     Widget pageButton(int p) {
       final selected = p == currentPage;
+
       return InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => onPageChanged(p),
@@ -900,8 +993,7 @@ class _PaginationBar extends StatelessWidget {
       children: [
         IconButton(
           tooltip: 'Prev',
-          onPressed:
-              currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
+          onPressed: currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
           icon: const Icon(Icons.chevron_left_rounded),
         ),
         SizedBox(width: spacing.xs),
@@ -931,6 +1023,7 @@ class _PaginationBar extends StatelessWidget {
     required dynamic spacing,
   }) {
     final widgets = <Widget>[];
+
     for (var i = 0; i < pages.length; i++) {
       widgets.add(buildPage(pages[i]));
 
@@ -946,13 +1039,18 @@ class _PaginationBar extends StatelessWidget {
         }
       }
     }
+
     return widgets;
   }
 }
 
 class _EmptyExploreState extends StatelessWidget {
   final String message;
-  const _EmptyExploreState({super.key, required this.message});
+
+  const _EmptyExploreState({
+    super.key,
+    required this.message,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -972,7 +1070,12 @@ class _EmptyExploreState extends StatelessWidget {
         children: [
           Icon(Icons.search_off_rounded, color: c.primary),
           SizedBox(width: spacing.sm),
-          Expanded(child: Text(message, style: t.bodyMedium)),
+          Expanded(
+            child: Text(
+              message,
+              style: t.bodyMedium,
+            ),
+          ),
         ],
       ),
     );

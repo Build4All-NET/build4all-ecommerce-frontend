@@ -60,6 +60,8 @@ class _AdminProductsListView extends StatefulWidget {
 class _AdminProductsListViewState extends State<_AdminProductsListView> {
   String _searchQuery = '';
   String _typeFilter = 'ALL';
+  String _statusFilter = 'ALL';
+  String _stockFilter = 'ALL';
 
   late final CurrencySymbolCache _currencyCache = CurrencySymbolCache(
     api: CurrencyApiService(),
@@ -69,6 +71,12 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
   Map<int, String> _symbolByCurrencyId = {};
   bool _warmingCurrency = false;
   bool _warmScheduled = false;
+
+  Future<void> _reload() async {
+    context.read<ProductListBloc>().add(
+          LoadProductsForOwner(ownerProjectId: widget.ownerProjectId),
+        );
+  }
 
   Future<void> _warmCurrencySymbols(List<Product> products) async {
     if (_warmingCurrency) return;
@@ -123,18 +131,21 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
 
     if (data is Map) {
       code = data['code']?.toString();
-      err = data['error']?.toString();
+      err = (data['error'] ?? data['message'])?.toString();
     } else if (data is String) {
       err = data;
     }
 
     final errLower = (err ?? '').toLowerCase();
+    final codeUpper = (code ?? '').toUpperCase();
 
-    final isCart = code == 'PRODUCT_IN_CART' ||
+    final isCart = codeUpper == 'PRODUCT_DELETE_BLOCKED_CART' ||
+        codeUpper == 'PRODUCT_IN_CART' ||
         errLower.contains('cart_items') ||
         errLower.contains('cart');
 
-    final isOrders = code == 'PRODUCT_IN_ORDERS' ||
+    final isOrders = codeUpper == 'PRODUCT_DELETE_BLOCKED_ORDERS' ||
+        codeUpper == 'PRODUCT_IN_ORDERS' ||
         errLower.contains('order_items') ||
         errLower.contains('order');
 
@@ -209,19 +220,15 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
       if (!context.mounted) return;
 
       Navigator.of(context).pop();
+      await _reload();
 
-      context.read<ProductListBloc>().add(
-            LoadProductsForOwner(ownerProjectId: widget.ownerProjectId),
-          );
-
-      AppToast.error(context, l10n.adminProductDeleteSuccess);
+      AppToast.show(context, l10n.adminProductDeleteSuccess);
     } catch (e) {
       if (!context.mounted) return;
 
       Navigator.of(context).pop();
 
       String msg = l10n.adminProductDeleteFailed;
-
       if (e is DioException) {
         msg = _friendlyDeleteErrorFromResponse(l10n, e);
       }
@@ -237,22 +244,85 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     return raw.replaceFirst(RegExp(r'^sku[\s\-_:#]*'), '');
   }
 
+  String _statusCodeOf(Product p) {
+    final raw = (p.statusCode ?? '').trim().toUpperCase();
+    if (raw.isNotEmpty) return raw;
+
+    final legacy = (p.statusName ?? '').trim().toUpperCase();
+    if (legacy.isNotEmpty) return legacy;
+
+    return 'UNKNOWN';
+  }
+
+  String _statusLabelOf(Product p) {
+    final rawName = (p.statusName ?? '').trim();
+    if (rawName.isNotEmpty) return rawName;
+
+    switch (_statusCodeOf(p)) {
+      case 'DRAFT':
+        return 'Draft';
+      case 'PUBLISHED':
+        return 'Published';
+      case 'ARCHIVED':
+        return 'Archived';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  String _stockCodeOf(Product p) {
+    final stock = p.safeStock;
+    if (stock <= 0) return 'OUT_OF_STOCK';
+    if (stock <= 5) return 'LOW_STOCK';
+    return 'IN_STOCK';
+  }
+
+  String _stockLabelOf(Product p) {
+    switch (_stockCodeOf(p)) {
+      case 'OUT_OF_STOCK':
+        return 'Out of stock';
+      case 'LOW_STOCK':
+        return 'Low stock';
+      case 'IN_STOCK':
+      default:
+        return 'In stock';
+    }
+  }
+
   bool _matchesSearch(Product p, String query) {
     final q = _norm(query);
     if (q.isEmpty) return true;
 
     final name = _norm(p.name);
     final sku = _normSku(p.sku);
+    final status = _norm(_statusLabelOf(p));
+    final stock = _norm(_stockLabelOf(p));
 
     if (q.length == 1) {
-      return name.startsWith(q) || sku.startsWith(q);
+      return name.startsWith(q) ||
+          sku.startsWith(q) ||
+          status.startsWith(q) ||
+          stock.startsWith(q);
     }
 
-    return name.contains(q) || sku.contains(q);
+    return name.contains(q) ||
+        sku.contains(q) ||
+        status.contains(q) ||
+        stock.contains(q);
+  }
+
+  bool _matchesStatusFilter(Product p) {
+    if (_statusFilter == 'ALL') return true;
+    return _statusCodeOf(p) == _statusFilter;
+  }
+
+  bool _matchesStockFilter(Product p) {
+    if (_stockFilter == 'ALL') return true;
+    return _stockCodeOf(p) == _stockFilter;
   }
 
   List<Product> _applyFilters(ProductListState state) {
-    var list = state.products;
+    var list = [...state.products];
 
     if (_searchQuery.trim().isNotEmpty) {
       list = list.where((p) => _matchesSearch(p, _searchQuery)).toList();
@@ -264,7 +334,74 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
           .toList();
     }
 
+    if (_statusFilter != 'ALL') {
+      list = list.where(_matchesStatusFilter).toList();
+    }
+
+    if (_stockFilter != 'ALL') {
+      list = list.where(_matchesStockFilter).toList();
+    }
+
     return list;
+  }
+
+  Map<String, int> _buildStatusCounts(List<Product> products) {
+    int draft = 0;
+    int published = 0;
+    int archived = 0;
+
+    for (final p in products) {
+      switch (_statusCodeOf(p)) {
+        case 'DRAFT':
+          draft++;
+          break;
+        case 'PUBLISHED':
+          published++;
+          break;
+        case 'ARCHIVED':
+          archived++;
+          break;
+      }
+    }
+
+    return {
+      'DRAFT': draft,
+      'PUBLISHED': published,
+      'ARCHIVED': archived,
+    };
+  }
+
+  Map<String, int> _buildStockCounts(List<Product> products) {
+    int inStock = 0;
+    int lowStock = 0;
+    int outOfStock = 0;
+
+    for (final p in products) {
+      switch (_stockCodeOf(p)) {
+        case 'OUT_OF_STOCK':
+          outOfStock++;
+          break;
+        case 'LOW_STOCK':
+          lowStock++;
+          break;
+        case 'IN_STOCK':
+          inStock++;
+          break;
+      }
+    }
+
+    return {
+      'IN_STOCK': inStock,
+      'LOW_STOCK': lowStock,
+      'OUT_OF_STOCK': outOfStock,
+    };
+  }
+
+  int _crossAxisCount(double width) {
+    if (width < 700) return 2;
+    if (width < 1000) return 3;
+    if (width < 1400) return 4;
+    return 5;
   }
 
   @override
@@ -279,6 +416,8 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
       backgroundColor: colors.background,
       appBar: AppBar(
         backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           l10n.adminProductsTitle,
           style: text.titleMedium.copyWith(
@@ -298,9 +437,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
           );
 
           if (changed == true && context.mounted) {
-            context.read<ProductListBloc>().add(
-                  LoadProductsForOwner(ownerProjectId: widget.ownerProjectId),
-                );
+            await _reload();
           }
         },
         backgroundColor: colors.primary,
@@ -337,14 +474,15 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
 
             final filtered = _applyFilters(state);
             final width = MediaQuery.of(context).size.width;
+            final crossAxisCount = _crossAxisCount(width);
+            final statusCounts = _buildStatusCounts(state.products);
+            final stockCounts = _buildStockCounts(state.products);
 
-            final crossAxisCount = width >= 1100
-                ? 5
-                : width >= 900
-                    ? 4
-                    : width >= 600
-                        ? 3
-                        : 2;
+            final cardExtent = width < 380
+                ? 208.0
+                : width < 700
+                    ? 216.0
+                    : 240.0;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,57 +497,78 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
                   typeFilter: _typeFilter,
                   onTypeFilterChanged: (val) =>
                       setState(() => _typeFilter = val),
+                  statusFilter: _statusFilter,
+                  onStatusFilterChanged: (val) =>
+                      setState(() => _statusFilter = val),
+                  stockFilter: _stockFilter,
+                  onStockFilterChanged: (val) =>
+                      setState(() => _stockFilter = val),
+                  statusCounts: statusCounts,
+                  stockCounts: stockCounts,
                 ),
                 SizedBox(height: spacing.md),
                 Expanded(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio: 0.70,
-                      crossAxisSpacing: spacing.md,
-                      mainAxisSpacing: spacing.md,
-                    ),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final product = filtered[index];
-
-                      final sym = product.currencyId != null
-                          ? _symbolByCurrencyId[product.currencyId!]
-                          : null;
-
-                      final bool showCurrencyLoading = _warmingCurrency &&
-                          product.currencyId != null &&
-                          ((sym ?? '').trim().isEmpty);
-
-                      return AdminProductCard(
-                        product: product,
-                        currencySymbol: sym,
-                        currencyLoading: showCurrencyLoading,
-                        onEdit: () async {
-                          final changed = await Navigator.of(context).push<bool>(
-                            MaterialPageRoute(
-                              builder: (_) => AdminCreateProductScreen(
-                                ownerProjectId: widget.ownerProjectId,
-                                categoryId: product.categoryId,
-                                itemTypeId: product.itemTypeId,
-                                currencyId: product.currencyId,
-                                initialProduct: product,
-                              ),
+                  child: filtered.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No products match the current filters.',
+                            style: text.bodyMedium.copyWith(
+                              color: colors.body,
                             ),
-                          );
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _reload,
+                          child: GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: spacing.md,
+                              mainAxisSpacing: spacing.md,
+                              mainAxisExtent: cardExtent,
+                            ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final product = filtered[index];
 
-                          if (changed == true && context.mounted) {
-                            context.read<ProductListBloc>().add(
-                                  LoadProductsForOwner(
-                                    ownerProjectId: widget.ownerProjectId,
-                                  ),
-                                );
-                          }
-                        },
-                        onDelete: () => _confirmDelete(context, product),
-                      );
-                    },
-                  ),
+                              final sym = product.currencyId != null
+                                  ? _symbolByCurrencyId[product.currencyId!]
+                                  : null;
+
+                              final bool showCurrencyLoading =
+                                  _warmingCurrency &&
+                                      product.currencyId != null &&
+                                      ((sym ?? '').trim().isEmpty);
+
+                              return AdminProductCard(
+                                product: product,
+                                currencySymbol: sym,
+                                currencyLoading: showCurrencyLoading,
+                                onEdit: () async {
+                                  final changed =
+                                      await Navigator.of(context).push<bool>(
+                                    MaterialPageRoute(
+                                      builder: (_) => AdminCreateProductScreen(
+                                        ownerProjectId: widget.ownerProjectId,
+                                        categoryId: product.categoryId,
+                                        itemTypeId: product.itemTypeId,
+                                        currencyId: product.currencyId,
+                                        initialProduct: product,
+                                      ),
+                                    ),
+                                  );
+
+                                  if (changed == true && context.mounted) {
+                                    await _reload();
+                                  }
+                                },
+                                onDelete: () => _confirmDelete(context, product),
+                              );
+                            },
+                          ),
+                        ),
                 ),
               ],
             );
@@ -429,6 +588,12 @@ class _AdminProductsHeaderBar extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final String typeFilter;
   final ValueChanged<String> onTypeFilterChanged;
+  final String statusFilter;
+  final ValueChanged<String> onStatusFilterChanged;
+  final String stockFilter;
+  final ValueChanged<String> onStockFilterChanged;
+  final Map<String, int> statusCounts;
+  final Map<String, int> stockCounts;
 
   const _AdminProductsHeaderBar({
     required this.tokens,
@@ -437,8 +602,14 @@ class _AdminProductsHeaderBar extends StatelessWidget {
     required this.filteredCount,
     required this.searchQuery,
     required this.onSearchChanged,
-    required this.typeFilter,
     required this.onTypeFilterChanged,
+    required this.typeFilter,
+    required this.onStatusFilterChanged,
+    required this.statusFilter,
+    required this.onStockFilterChanged,
+    required this.stockFilter,
+    required this.statusCounts,
+    required this.stockCounts,
   });
 
   @override
@@ -487,75 +658,243 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                 ),
                 child: Text(
                   l10n.adminProductsCountPill(filteredCount, totalCount),
-                  style: text.bodySmall.copyWith(color: c.primary),
+                  style: text.bodySmall.copyWith(
+                    color: c.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
+          SizedBox(height: spacing.sm),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'Draft',
+                  count: statusCounts['DRAFT'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'Published',
+                  count: statusCounts['PUBLISHED'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'Archived',
+                  count: statusCounts['ARCHIVED'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'Out',
+                  count: stockCounts['OUT_OF_STOCK'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'Low',
+                  count: stockCounts['LOW_STOCK'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
+                  label: 'In',
+                  count: stockCounts['IN_STOCK'] ?? 0,
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: spacing.md),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    hintText: l10n.adminProductsSearchHint,
-                  ),
-                  onChanged: onSearchChanged,
-                ),
-              ),
-              SizedBox(width: spacing.md),
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: spacing.sm,
-                    vertical: spacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: c.background,
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: c.border.withOpacity(0.4)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: typeFilter,
-                      isExpanded: true,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'ALL',
-                          child: Text(l10n.adminProductsFilterAll),
-                        ),
-                        DropdownMenuItem(
-                          value: 'SIMPLE',
-                          child: Text(l10n.adminProductTypeSimple),
-                        ),
-                        DropdownMenuItem(
-                          value: 'VARIABLE',
-                          child: Text(l10n.adminProductTypeVariable),
-                        ),
-                        DropdownMenuItem(
-                          value: 'GROUPED',
-                          child: Text(l10n.adminProductTypeGrouped),
-                        ),
-                        DropdownMenuItem(
-                          value: 'EXTERNAL',
-                          child: Text(l10n.adminProductTypeExternal),
-                        ),
-                      ],
-                      onChanged: (val) {
-                        if (val == null) return;
-                        onTypeFilterChanged(val);
-                      },
-                    ),
+          TextField(
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.adminProductsSearchHint,
+            ),
+            onChanged: onSearchChanged,
+          ),
+          SizedBox(height: spacing.sm),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 150,
+                  child: _CompactFilterDropdown(
+                    tokens: tokens,
+                    label: 'Type',
+                    value: typeFilter,
+                    items: const [
+                      _FilterItem(value: 'ALL', label: 'All'),
+                      _FilterItem(value: 'SIMPLE', label: 'Simple'),
+                      _FilterItem(value: 'VARIABLE', label: 'Variable'),
+                      _FilterItem(value: 'GROUPED', label: 'Grouped'),
+                      _FilterItem(value: 'EXTERNAL', label: 'External'),
+                    ],
+                    onChanged: onTypeFilterChanged,
                   ),
                 ),
-              ),
-            ],
+                SizedBox(width: spacing.sm),
+                SizedBox(
+                  width: 150,
+                  child: _CompactFilterDropdown(
+                    tokens: tokens,
+                    label: 'Status',
+                    value: statusFilter,
+                    items: const [
+                      _FilterItem(value: 'ALL', label: 'All'),
+                      _FilterItem(value: 'DRAFT', label: 'Draft'),
+                      _FilterItem(value: 'PUBLISHED', label: 'Published'),
+                      _FilterItem(value: 'ARCHIVED', label: 'Archived'),
+                    ],
+                    onChanged: onStatusFilterChanged,
+                  ),
+                ),
+                SizedBox(width: spacing.sm),
+                SizedBox(
+                  width: 150,
+                  child: _CompactFilterDropdown(
+                    tokens: tokens,
+                    label: 'Stock',
+                    value: stockFilter,
+                    items: const [
+                      _FilterItem(value: 'ALL', label: 'All'),
+                      _FilterItem(value: 'IN_STOCK', label: 'In stock'),
+                      _FilterItem(value: 'LOW_STOCK', label: 'Low stock'),
+                      _FilterItem(value: 'OUT_OF_STOCK', label: 'Out of stock'),
+                    ],
+                    onChanged: onStockFilterChanged,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _SummaryPill extends StatelessWidget {
+  final dynamic tokens;
+  final String label;
+  final int count;
+
+  const _SummaryPill({
+    required this.tokens,
+    required this.label,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = tokens.colors;
+    final spacing = tokens.spacing;
+    final text = tokens.typography;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: spacing.sm,
+        vertical: spacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: c.background,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: c.border.withOpacity(0.4)),
+      ),
+      child: Text(
+        '$label • $count',
+        style: text.bodySmall.copyWith(
+          color: c.label,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactFilterDropdown extends StatelessWidget {
+  final dynamic tokens;
+  final String label;
+  final String value;
+  final List<_FilterItem> items;
+  final ValueChanged<String> onChanged;
+
+  const _CompactFilterDropdown({
+    required this.tokens,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = tokens.colors;
+    final spacing = tokens.spacing;
+    final text = tokens.typography;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: spacing.xs, bottom: spacing.xs),
+          child: Text(
+            label,
+            style: text.bodySmall.copyWith(
+              color: c.muted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Container(
+          height: 44,
+          padding: EdgeInsets.symmetric(horizontal: spacing.sm),
+          decoration: BoxDecoration(
+            color: c.background,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: c.border.withOpacity(0.4)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              items: items
+                  .map(
+                    (item) => DropdownMenuItem<String>(
+                      value: item.value,
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium.copyWith(color: c.label),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (val) {
+                if (val == null) return;
+                onChanged(val);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterItem {
+  final String value;
+  final String label;
+
+  const _FilterItem({
+    required this.value,
+    required this.label,
+  });
 }

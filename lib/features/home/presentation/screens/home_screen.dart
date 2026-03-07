@@ -37,20 +37,15 @@ import 'package:build4front/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:build4front/features/cart/presentation/bloc/cart_event.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 
-// ✅ dynamic currency formatter
 import 'package:build4front/features/catalog/cubit/money.dart';
-
-// ✅ real Category entity for See All chips
 import 'package:build4front/features/catalog/domain/entities/category.dart';
-
-// ✅ IMPORTANT: Env
 import 'package:build4front/core/config/env.dart';
 
 class HomeScreen extends StatefulWidget {
   final AppConfig appConfig;
   final List<HomeSectionConfig> sections;
-
   final VoidCallback? onOpenProfileTab;
+
   const HomeScreen({
     super.key,
     required this.appConfig,
@@ -73,16 +68,12 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   bool get wantKeepAlive => true;
 
-  // -----------------------------
-  // ✅ Support info state
-  // -----------------------------
   final OwnerSupportService _supportService = OwnerSupportService();
   SupportInfo? _supportInfo;
   bool _supportLoading = false;
   String? _supportError;
   DateTime? _supportLoadedAt;
 
-  // prevent log spam (helps scroll perf)
   int _lastBottomLogHash = 0;
 
   void _log(String msg) => debugPrint('[HomeScreen] $msg');
@@ -98,7 +89,6 @@ class _HomeScreenState extends State<HomeScreen>
     return int.tryParse('$v') ?? 0;
   }
 
-  /// ✅ Force initial Home load (helps when tab is cached / kept alive)
   void _ensureHomeDataLoaded() {
     final homeBloc = context.read<HomeBloc>();
     final s = homeBloc.state;
@@ -108,19 +98,20 @@ class _HomeScreenState extends State<HomeScreen>
     final raw = (authState.token ?? '').trim();
     final token = raw.isEmpty ? null : raw;
 
-    _log('Dispatch HomeStarted (initial load) | token=${token == null ? "null" : "yes"}');
+    _log(
+      'Dispatch HomeStarted (initial load) | token=${token == null ? "null" : "yes"}',
+    );
     homeBloc.add(HomeStarted(token: token));
   }
 
-  /// ✅ Your rule: "linkId = ownerProjectId"
   int get _resolvedOwnerProjectLinkId {
-    final envLink = _asInt((Env.ownerProjectLinkId));
+    final envLink = _asInt(Env.ownerProjectLinkId);
     if (envLink > 0) return envLink;
 
     final cfgOwnerProjectId = _asInt(widget.appConfig.ownerProjectId);
     if (cfgOwnerProjectId > 0) return cfgOwnerProjectId;
 
-    final envOwner = _asInt((Env.ownerProjectLinkId));
+    final envOwner = _asInt(Env.ownerProjectLinkId);
     if (envOwner > 0) return envOwner;
 
     return 0;
@@ -133,48 +124,50 @@ class _HomeScreenState extends State<HomeScreen>
     final link = _resolvedOwnerProjectLinkId;
     if (link > 0) return link;
 
-    final envOwner = _asInt((Env.ownerProjectLinkId));
+    final envOwner = _asInt(Env.ownerProjectLinkId);
     if (envOwner > 0) return envOwner;
 
     return 0;
   }
 
-  Future<void> _loadSupportInfo({bool silent = true, String reason = ''}) async {
-  if (!silent) {
-    setState(() {
-      _supportLoading = true;
-      _supportError = null;
-    });
+  Future<void> _loadSupportInfo({
+    bool silent = true,
+    String reason = '',
+  }) async {
+    if (!silent) {
+      setState(() {
+        _supportLoading = true;
+        _supportError = null;
+      });
+    }
+
+    try {
+      final raw = (authState.token ?? '').trim();
+      final token = raw.isEmpty ? '' : raw;
+
+      final info = await _supportService.fetchSupportInfo(token: token);
+
+      if (!mounted) return;
+      setState(() {
+        _supportInfo = info;
+        _supportError = null;
+        _supportLoading = false;
+        _supportLoadedAt = DateTime.now();
+      });
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() {
+        _supportInfo = null;
+        _supportError = '$e';
+        _supportLoading = false;
+        _supportLoadedAt = null;
+      });
+      _logErr('SupportInfo FAIL', e, st);
+    }
   }
-
-  try {
-    final raw = (authState.token ?? '').trim();
-    final token = raw.isEmpty ? '' : raw;
-
-    final info = await _supportService.fetchSupportInfo(token: token);
-
-    if (!mounted) return;
-    setState(() {
-      _supportInfo = info;
-      _supportError = null;
-      _supportLoading = false;
-      _supportLoadedAt = DateTime.now();
-    });
-  } catch (e, st) {
-    if (!mounted) return;
-    setState(() {
-      _supportInfo = null;
-      _supportError = '$e';
-      _supportLoading = false;
-      _supportLoadedAt = null;
-    });
-    _logErr('SupportInfo FAIL', e, st);
-  }
-}
 
   void _resetPaging() => _filterVersion++;
 
-  // ✅ fallback ONLY (if support api fails)
   String? _fallbackOwnerPhoneFromConfig(AppConfig cfg) {
     String? clean(dynamic v) {
       final s = (v ?? '').toString().trim();
@@ -186,7 +179,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     try {
       final d = cfg as dynamic;
-      final direct = clean(d.ownerPhoneNumber) ??
+      final direct =
+          clean(d.ownerPhoneNumber) ??
           clean(d.ownerPhone) ??
           clean(d.contactPhoneNumber) ??
           clean(d.contactPhone) ??
@@ -223,20 +217,39 @@ class _HomeScreenState extends State<HomeScreen>
         fromKey('supportWhatsappNumber');
   }
 
+  bool _isVisibleForUser(ItemSummary item) {
+    if (item.kind != ItemKind.product) return true;
+    return item.isVisibleForUser;
+  }
+
+  bool _canUserPurchase(ItemSummary item) {
+    if (item.kind != ItemKind.product) return true;
+    return item.isAvailableForPurchase;
+  }
+
+  bool _isComingSoon(ItemSummary item) {
+    if (item.kind != ItemKind.product) return false;
+    return item.isUpcoming;
+  }
+
+  List<ItemSummary> _visibleItemsOnly(List<ItemSummary> items) {
+    return items.where(_isVisibleForUser).toList();
+  }
+
   bool _hasAnyItems(HomeState s) {
-    return s.recommendedItems.isNotEmpty ||
-        s.popularItems.isNotEmpty ||
-        s.flashSaleItems.isNotEmpty ||
-        s.newArrivalsItems.isNotEmpty ||
-        s.bestSellersItems.isNotEmpty ||
-        s.topRatedItems.isNotEmpty;
+    return _visibleItemsOnly(s.recommendedItems).isNotEmpty ||
+        _visibleItemsOnly(s.popularItems).isNotEmpty ||
+        _visibleItemsOnly(s.flashSaleItems).isNotEmpty ||
+        _visibleItemsOnly(s.newArrivalsItems).isNotEmpty ||
+        _visibleItemsOnly(s.bestSellersItems).isNotEmpty ||
+        _visibleItemsOnly(s.topRatedItems).isNotEmpty;
   }
 
   Set<int> _availableCategoryIds(HomeState s) {
     final set = <int>{};
 
     void add(List<ItemSummary> list) {
-      for (final it in list) {
+      for (final it in _visibleItemsOnly(list)) {
         final id = it.categoryId;
         if (id != null) set.add(id);
       }
@@ -252,17 +265,15 @@ class _HomeScreenState extends State<HomeScreen>
     return set;
   }
 
- @override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    _ensureHomeDataLoaded();
-    _loadSupportInfo(silent: true, reason: 'init');
-
-    //  refresh AI flag once
-    await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _ensureHomeDataLoaded();
+      _loadSupportInfo(silent: true, reason: 'init');
+      await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
+    });
+  }
 
   @override
   void dispose() {
@@ -338,8 +349,8 @@ void initState() {
               final hasLast = (user.lastName ?? '').trim().isNotEmpty;
 
               if (hasFirst || hasLast) {
-                fullName =
-                    '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim();
+                fullName = '${user.firstName ?? ''} ${user.lastName ?? ''}'
+                    .trim();
               } else if ((user.username ?? '').trim().isNotEmpty) {
                 fullName = user.username!.trim();
               } else if ((user.email ?? '').trim().isNotEmpty) {
@@ -353,7 +364,6 @@ void initState() {
 
             return BlocBuilder<HomeBloc, HomeState>(
               builder: (context, homeState) {
-                // ✅ self-heal if bloc was recreated and home wasn't started
                 if (!homeState.hasLoaded && !homeState.isLoading) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted) return;
@@ -376,13 +386,13 @@ void initState() {
                     final raw = (authState.token ?? '').trim();
                     final token = raw.isEmpty ? null : raw;
 
+                    context.read<HomeBloc>().add(
+                      HomeRefreshRequested(token: token),
+                    );
 
-                    context
-                        .read<HomeBloc>()
-                        .add(HomeRefreshRequested(token: token));
-
-
-await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
+                    await AiFeatureBootstrap().refresh(
+                      minInterval: Duration.zero,
+                    );
                     await _loadSupportInfo(
                       silent: false,
                       reason: 'pull-to-refresh',
@@ -532,14 +542,12 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
         return Padding(
           padding: EdgeInsets.only(bottom: spacing.xs),
           child: HomeBannerSlider(
-           
             token: authState.token ?? '',
             onBannerTap: (banner) {
               if (banner.targetType == 'CATEGORY' && banner.targetId != null) {
-                Navigator.of(context).pushNamed(
-                  '/explore',
-                  arguments: {'categoryId': banner.targetId},
-                );
+                Navigator.of(
+                  context,
+                ).pushNamed('/explore', arguments: {'categoryId': banner.targetId});
               } else if (banner.targetType == 'URL' &&
                   (banner.targetUrl ?? '').isNotEmpty) {
                 // TODO url_launcher
@@ -549,13 +557,15 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
         );
 
       case HomeSectionType.itemList:
-        final rawItems = _mapItemsForSection(section, homeState);
+        final rawItems = _visibleItemsOnly(
+          _mapItemsForSection(section, homeState),
+        );
 
-        // Home view respects your filters
         final itemsForHome = _applyFilters(rawItems);
         if (itemsForHome.isEmpty) return const SizedBox.shrink();
 
-        final sectionTitle = section.title ??
+        final sectionTitle =
+            section.title ??
             (section.id == 'recommended'
                 ? l10n.home_recommended_title
                 : section.id == 'popular'
@@ -572,7 +582,6 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
 
         final icon = _iconForSection(section);
         final trailing = _trailingForSection(section, l10n);
-
         final layout = _HomePagerLayout.rowPages2;
 
         return Padding(
@@ -590,7 +599,7 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
                 context,
                 title: sectionTitle,
                 sectionId: section.id,
-                sectionItems: rawItems, // show ALL of that section
+                sectionItems: rawItems,
                 categories: homeState.categoryEntities,
               );
             },
@@ -647,7 +656,7 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
   }
 
   List<ItemSummary> _applyFilters(List<ItemSummary> items) {
-    var result = items;
+    var result = _visibleItemsOnly(items);
 
     if (_selectedCategoryId != null) {
       result = result
@@ -668,7 +677,6 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
     return result;
   }
 
-  // ✅ FIXED: fallback added so Home is less likely to appear empty
   List<ItemSummary> _mapItemsForSection(
     HomeSectionConfig section,
     HomeState homeState,
@@ -677,32 +685,42 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
       case 'recommended':
         return homeState.recommendedItems.isNotEmpty
             ? homeState.recommendedItems
-            : homeState.popularItems;
+            : homeState.popularItems.isNotEmpty
+                ? homeState.popularItems
+                : homeState.newArrivalsItems;
 
       case 'popular':
         return homeState.popularItems.isNotEmpty
             ? homeState.popularItems
-            : homeState.recommendedItems;
+            : homeState.recommendedItems.isNotEmpty
+                ? homeState.recommendedItems
+                : homeState.newArrivalsItems;
 
-     case 'flash_sale':
-  //  flash sale only (no fallback)
-  return homeState.flashSaleItems;
+      case 'flash_sale':
+        return homeState.flashSaleItems;
 
       case 'new_arrivals':
         return homeState.newArrivalsItems.isNotEmpty
             ? homeState.newArrivalsItems
-            : homeState.popularItems;
+            : homeState.popularItems.isNotEmpty
+                ? homeState.popularItems
+                : homeState.recommendedItems;
 
       case 'best_sellers':
-        return 
-             homeState.popularItems;
+        return homeState.bestSellersItems.isNotEmpty
+            ? homeState.bestSellersItems
+            : homeState.popularItems.isNotEmpty
+                ? homeState.popularItems
+                : homeState.recommendedItems;
 
       case 'top_rated':
         return homeState.topRatedItems.isNotEmpty
             ? homeState.topRatedItems
             : homeState.bestSellersItems.isNotEmpty
                 ? homeState.bestSellersItems
-                : homeState.popularItems;
+                : homeState.popularItems.isNotEmpty
+                    ? homeState.popularItems
+                    : homeState.recommendedItems;
 
       default:
         return const <ItemSummary>[];
@@ -725,9 +743,9 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
   }
 
   void _openDetails(BuildContext context, int itemId) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ItemDetailsPage(itemId: itemId)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ItemDetailsPage(itemId: itemId)));
   }
 
   bool _isOutOfStock(ItemSummary item) {
@@ -742,10 +760,13 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
 
     switch (item.kind) {
       case ItemKind.product:
+        if (_isComingSoon(item)) return l10n.home_coming_soon_button;
         if (_isOutOfStock(item)) return l10n.outOfStock;
         return l10n.cart_add_button;
+
       case ItemKind.activity:
         return l10n.home_book_now_button;
+
       default:
         return l10n.home_view_details_button;
     }
@@ -762,36 +783,33 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
     }
   }
 
- String? _metaLabelFor(BuildContext context, ItemSummary item) {
-  final l10n = AppLocalizations.of(context)!;
+  String? _metaLabelFor(BuildContext context, ItemSummary item) {
+    final l10n = AppLocalizations.of(context)!;
 
-  switch (item.kind) {
-    case ItemKind.activity:
-      if (item.start == null) return null;
-      final dt = item.start!.toLocal();
-      final y = dt.year.toString().padLeft(4, '0');
-      final m = dt.month.toString().padLeft(2, '0');
-      final d = dt.day.toString().padLeft(2, '0');
-      final hh = dt.hour.toString().padLeft(2, '0');
-      final mm = dt.minute.toString().padLeft(2, '0');
-      return '$d/$m/$y  $hh:$mm';
+    switch (item.kind) {
+      case ItemKind.activity:
+        if (item.start == null) return null;
+        final dt = item.start!.toLocal();
+        final y = dt.year.toString().padLeft(4, '0');
+        final m = dt.month.toString().padLeft(2, '0');
+        final d = dt.day.toString().padLeft(2, '0');
+        final hh = dt.hour.toString().padLeft(2, '0');
+        final mm = dt.minute.toString().padLeft(2, '0');
+        return '$d/$m/$y  $hh:$mm';
 
-    case ItemKind.product:
-      final stock = item.stock;
+      case ItemKind.product:
+        final stock = item.stock;
 
-      if (stock == null) return null;
-      if (stock <= 0) return l10n.outOfStock;
+        if (stock == null) return null;
+        if (stock <= 0) return l10n.outOfStock;
+        if (stock <= 10) return l10n.home_stock_left_label(stock);
 
-      // ✅ only show when low
-      if (stock <= 10) return l10n.home_stock_left_label(stock);
+        return null;
 
-      // ✅ hide when plenty
-      return null;
-
-    default:
-      return null;
+      default:
+        return null;
+    }
   }
-}
 
   void _handleCtaPressed(BuildContext context, ItemSummary item) {
     final l10n = AppLocalizations.of(context)!;
@@ -803,15 +821,20 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
     }
 
     if (item.kind == ItemKind.product) {
-      if (_isOutOfStock(item)) {
+      if (_isComingSoon(item)) {
+        AppToast.error(context, l10n.home_coming_soon_button);
+        return;
+      }
+
+      if (!_canUserPurchase(item)) {
         AppToast.error(context, l10n.outOfStock);
         return;
       }
 
-      context
-          .read<CartBloc>()
-          .add(CartAddItemRequested(itemId: item.id, quantity: 1));
-      AppToast.error(context, l10n.cart_item_added_snackbar);
+      context.read<CartBloc>().add(
+        CartAddItemRequested(itemId: item.id, quantity: 1),
+      );
+      AppToast.show(context, l10n.cart_item_added_snackbar);
       return;
     }
 
@@ -869,7 +892,9 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
   }
 
   _TrailingData _trailingForSection(
-      HomeSectionConfig section, AppLocalizations l10n) {
+    HomeSectionConfig section,
+    AppLocalizations l10n,
+  ) {
     switch (section.id) {
       case 'flash_sale':
         return _TrailingData(text: l10n.home_trailing_limited_time);
@@ -886,30 +911,21 @@ await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
   }
 }
 
-// ================================
-// ✅ PAGINATION (same style as before)
-// ================================
-
 enum _HomePagerLayout { rowPages2 }
 
 class _HomeItemsPagerSection extends StatefulWidget {
   final String storageId;
   final String title;
   final IconData icon;
-
   final _HomePagerLayout layout;
-
   final String? trailingText;
   final IconData? trailingIcon;
   final VoidCallback? onTrailingTap;
-
   final List<ItemSummary> items;
-
   final _PricingView Function(BuildContext, ItemSummary) pricingFor;
   final String? Function(ItemSummary) subtitleFor;
   final String? Function(BuildContext, ItemSummary) metaFor;
   final String Function(BuildContext, ItemSummary) ctaLabelFor;
-
   final void Function(int itemId) onTapItem;
   final void Function(ItemSummary item) onCtaPressed;
 
@@ -1023,115 +1039,115 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
       children: [
         header,
         SizedBox(height: spacing.xs),
-      LayoutBuilder(
-  builder: (context, constraints) {
-    final w = constraints.maxWidth;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
 
-    // base aspect
-    var aspect = _aspect(w);
+            var aspect = _aspect(w);
+            if (widget.storageId == 'flash_sale') {
+              aspect = math.max(0.48, aspect - 0.06);
+            }
 
-    // ✅ Flash sale cards have extra UI (old price + stock + CTA + Ask AI)
-    // so give them a bit more height (smaller aspect => taller card)
-    if (widget.storageId == 'flash_sale') {
-      aspect = math.max(0.48, aspect - 0.06);
-    }
+            final cols = 2;
+            const perPage = 2;
 
-    final cols = 2;
-    const perPage = 2;
+            final totalPages = (items.length / perPage).ceil().clamp(1, 999999);
+            final safePage = _page.clamp(0, totalPages - 1);
 
-    final totalPages = (items.length / perPage).ceil().clamp(1, 999999);
+            if (safePage != _page) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _page = safePage;
+                if (_pc.hasClients) _pc.jumpToPage(safePage);
+              });
+            }
 
-    final safePage = _page.clamp(0, totalPages - 1);
-    if (safePage != _page) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _page = safePage;
-        if (_pc.hasClients) _pc.jumpToPage(safePage);
-      });
-    }
+            final cardW = (w - ((cols - 1) * spacing.md)) / cols;
+            final cardH = cardW / aspect;
+            final extraH = widget.storageId == 'flash_sale' ? spacing.sm : 0.0;
 
-    final cardW = (w - ((cols - 1) * spacing.md)) / cols;
-    final cardH = cardW / aspect;
+            Widget card(ItemSummary item) {
+              return Builder(
+                builder: (ctx) {
+                  final pricing = widget.pricingFor(ctx, item);
+                  final fit = item.kind == ItemKind.product
+                      ? BoxFit.contain
+                      : BoxFit.cover;
 
-    // ✅ tiny extra safety padding for flash sale only
-    final extraH = widget.storageId == 'flash_sale' ? spacing.sm : 0.0;
+                  final bool ctaDisabled =
+                      item.kind == ItemKind.product &&
+                      !item.isAvailableForPurchase;
 
-    Widget card(ItemSummary item) {
-      return Builder(
-        builder: (ctx) {
-          final pricing = widget.pricingFor(ctx, item);
-          final fit = item.kind == ItemKind.product ? BoxFit.contain : BoxFit.cover;
-
-          final bool outOfStock = item.kind == ItemKind.product &&
-              (item.stock != null) &&
-              item.stock! <= 0;
-
-          return ItemCard(
-            itemId: item.id,
-
-            // ✅ pass real width (important if ItemCard calculates internal sizes)
-            width: cardW,
-
-            imageFit: fit,
-            title: item.title,
-            subtitle: widget.subtitleFor(item),
-            imageUrl: item.imageUrl,
-            badgeLabel: pricing.currentLabel,
-            oldPriceLabel: pricing.oldLabel,
-            tagLabel: pricing.tagLabel,
-            metaLabel: widget.metaFor(ctx, item),
-            ctaLabel: widget.ctaLabelFor(ctx, item),
-            onTap: () => widget.onTapItem(item.id),
-            onCtaPressed: outOfStock ? null : () => widget.onCtaPressed(item),
-          );
-        },
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: cardH + extraH,
-          child: PageView.builder(
-            key: PageStorageKey('home_pager_${widget.storageId}'),
-            controller: _pc,
-            physics: const PageScrollPhysics(),
-            onPageChanged: (i) => setState(() => _page = i),
-            itemCount: totalPages,
-            itemBuilder: (context, pageIndex) {
-              final start = pageIndex * perPage;
-              final end = math.min(start + perPage, items.length);
-              final pageItems = start >= items.length ? <ItemSummary>[] : items.sublist(start, end);
-
-              return Align(
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < pageItems.length; i++) ...[
-                      SizedBox(width: cardW, child: card(pageItems[i])),
-                      if (i != pageItems.length - 1) SizedBox(width: spacing.md),
-                    ],
-                  ],
-                ),
+                  return ItemCard(
+                    itemId: item.id,
+                    width: cardW,
+                    imageFit: fit,
+                    title: item.title,
+                    subtitle: widget.subtitleFor(item),
+                    imageUrl: item.imageUrl,
+                    badgeLabel: pricing.currentLabel,
+                    oldPriceLabel: pricing.oldLabel,
+                    tagLabel: pricing.tagLabel,
+                    metaLabel: widget.metaFor(ctx, item),
+                    ctaLabel: widget.ctaLabelFor(ctx, item),
+                    onTap: () => widget.onTapItem(item.id),
+                    onCtaPressed: ctaDisabled
+                        ? null
+                        : () => widget.onCtaPressed(item),
+                  );
+                },
               );
-            },
-          ),
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: cardH + extraH,
+                  child: PageView.builder(
+                    key: PageStorageKey('home_pager_${widget.storageId}'),
+                    controller: _pc,
+                    physics: const PageScrollPhysics(),
+                    onPageChanged: (i) => setState(() => _page = i),
+                    itemCount: totalPages,
+                    itemBuilder: (context, pageIndex) {
+                      final start = pageIndex * perPage;
+                      final end = math.min(start + perPage, items.length);
+                      final pageItems = start >= items.length
+                          ? <ItemSummary>[]
+                          : items.sublist(start, end);
+
+                      return Align(
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (int i = 0; i < pageItems.length; i++) ...[
+                              SizedBox(width: cardW, child: card(pageItems[i])),
+                              if (i != pageItems.length - 1)
+                                SizedBox(width: spacing.md),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: spacing.sm),
+                if (totalPages > 1)
+                  _ProPagerBar(
+                    currentPage0: safePage,
+                    totalPages: totalPages,
+                    onPrev: safePage > 0 ? () => _jumpTo(safePage - 1) : null,
+                    onNext: safePage < totalPages - 1
+                        ? () => _jumpTo(safePage + 1)
+                        : null,
+                    onDotTap: (p0) => _jumpTo(p0),
+                  ),
+              ],
+            );
+          },
         ),
-        SizedBox(height: spacing.sm),
-        if (totalPages > 1)
-          _ProPagerBar(
-            currentPage0: safePage,
-            totalPages: totalPages,
-            onPrev: safePage > 0 ? () => _jumpTo(safePage - 1) : null,
-            onNext: safePage < totalPages - 1 ? () => _jumpTo(safePage + 1) : null,
-            onDotTap: (p0) => _jumpTo(p0),
-          ),
-      ],
-    );
-  },
-),
       ],
     );
   }
@@ -1166,6 +1182,7 @@ class _ProPagerBar extends StatelessWidget {
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
 
     final dots = _windowDots(totalPages, currentPage0);
+    final label = '${currentPage0 + 1}/$totalPages';
 
     Widget dot(int p0) {
       final selected = p0 == currentPage0;
@@ -1182,8 +1199,6 @@ class _ProPagerBar extends StatelessWidget {
         ),
       );
     }
-
-    final label = '${currentPage0 + 1}/$totalPages';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1258,6 +1273,7 @@ class _PricingView {
 class _TrailingData {
   final String? text;
   final IconData? icon;
+
   const _TrailingData({this.text, this.icon});
 }
 
@@ -1265,7 +1281,10 @@ class _BookingSection extends StatelessWidget {
   final String title;
   final String placeholderText;
 
-  const _BookingSection({required this.title, required this.placeholderText});
+  const _BookingSection({
+    required this.title,
+    required this.placeholderText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1304,24 +1323,17 @@ class _BookingSection extends StatelessWidget {
   }
 }
 
-// ================================
-// ✅ SEE ALL SCREEN (real category names, show all items)
-// ================================
-
 class HomeSectionSeeAllScreen extends StatefulWidget {
   final String title;
   final String sectionId;
   final List<ItemSummary> items;
   final List<Category> categories;
-
   final String initialQuery;
   final int? initialCategoryId;
-
   final _PricingView Function(BuildContext, ItemSummary) pricingFor;
   final String? Function(ItemSummary) subtitleFor;
   final String? Function(BuildContext, ItemSummary) metaFor;
   final String Function(BuildContext, ItemSummary) ctaLabelFor;
-
   final void Function(int itemId) onTapItem;
   final void Function(ItemSummary item) onCtaPressed;
 
@@ -1365,6 +1377,11 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
     super.dispose();
   }
 
+  bool _isVisibleForUser(ItemSummary item) {
+    if (item.kind != ItemKind.product) return true;
+    return item.isVisibleForUser;
+  }
+
   Map<int, String> _catNameMap() {
     final map = <int, String>{};
     for (final c in widget.categories) {
@@ -1375,17 +1392,19 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
 
   List<int> _categoryIdsInItems() {
     final set = <int>{};
+
     for (final it in widget.items) {
+      if (!_isVisibleForUser(it)) continue;
       final cid = it.categoryId;
       if (cid != null) set.add(cid);
     }
-    final list = set.toList();
-    list.sort();
+
+    final list = set.toList()..sort();
     return list;
   }
 
   List<ItemSummary> _filter(List<ItemSummary> items) {
-    var res = items;
+    var res = items.where(_isVisibleForUser).toList();
 
     if (_catId != null) {
       res = res.where((e) => e.categoryId == _catId).toList();
@@ -1415,9 +1434,7 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
     final filtered = _filter(widget.items);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(spacing.md),
@@ -1487,8 +1504,9 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                       itemBuilder: (ctx, i) {
                         final item = filtered[i];
                         final pricing = widget.pricingFor(ctx, item);
-                        final outOfStock = item.kind == ItemKind.product &&
-                            (item.stock ?? 1) <= 0;
+                        final disabled =
+                            item.kind == ItemKind.product &&
+                            !item.isAvailableForPurchase;
 
                         return ItemCard(
                           itemId: item.id,
@@ -1505,8 +1523,9 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                           metaLabel: widget.metaFor(ctx, item),
                           ctaLabel: widget.ctaLabelFor(ctx, item),
                           onTap: () => widget.onTapItem(item.id),
-                          onCtaPressed:
-                              outOfStock ? null : () => widget.onCtaPressed(item),
+                          onCtaPressed: disabled
+                              ? null
+                              : () => widget.onCtaPressed(item),
                         );
                       },
                     );

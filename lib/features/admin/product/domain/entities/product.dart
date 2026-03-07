@@ -9,7 +9,12 @@ class Product {
   final String? description;
   final double price;
   final int? stock;
-  final String status;
+
+  // ✅ new backend status shape
+  final int? statusId;
+  final String? statusCode;
+  final String? statusName;
+
   final String? imageUrl;
 
   final String? sku;
@@ -30,7 +35,7 @@ class Product {
 
   final Map<String, String> attributes; // code -> value
 
-  Product({
+  const Product({
     required this.id,
     required this.ownerProjectId,
     this.itemTypeId,
@@ -40,7 +45,9 @@ class Product {
     this.description,
     required this.price,
     this.stock,
-    required this.status,
+    this.statusId,
+    this.statusCode,
+    this.statusName,
     this.imageUrl,
     this.sku,
     required this.productType,
@@ -61,8 +68,22 @@ class Product {
 
   bool get isOutOfStock => safeStock <= 0;
 
-  bool get isAvailable => !isOutOfStock;
+  /// real purchasable backend lifecycle status
+  bool get isPublished => statusCode == 'PUBLISHED';
 
+  bool get isDraft => statusCode == 'DRAFT';
+
+  bool get isUpcoming => statusCode == 'UPCOMING';
+
+  bool get isArchived => statusCode == 'ARCHIVED';
+
+  /// product can be bought only if published and has stock
+  bool get isAvailableForPurchase => isPublished && !isOutOfStock;
+
+  /// UI-only availability label, NOT backend status
   String get computedAvailabilityStatus =>
-      isOutOfStock ? 'OUT_OF_STOCK' : 'AVAILABLE';
+      isOutOfStock ? 'OUT_OF_STOCK' : 'IN_STOCK';
+
+  /// display label for lifecycle status
+  String get displayStatus => statusName ?? statusCode ?? 'UNKNOWN';
 }

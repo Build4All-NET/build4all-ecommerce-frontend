@@ -5622,6 +5622,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coupon did not affect this order.'**
   String get checkoutCouponDidNotAffectOrder;
+
+  /// No description provided for @adminProductStatusSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product status'**
+  String get adminProductStatusSectionTitle;
+
+  /// No description provided for @adminProductStatusSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control product visibility and lifecycle'**
+  String get adminProductStatusSectionSubtitle;
+
+  /// No description provided for @adminProductStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No statuses available'**
+  String get adminProductStatusUnavailable;
+
+  /// No description provided for @adminProductStatusRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a product status'**
+  String get adminProductStatusRequired;
+
+  /// No description provided for @home_coming_soon_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get home_coming_soon_button;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

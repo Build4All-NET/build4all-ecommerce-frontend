@@ -1120,7 +1120,14 @@
   "checkoutCouponUsageLimitReached": "تم الوصول إلى الحد الأقصى لاستخدام الكوبون.",
   "checkoutCouponMinimumNotReached": "لم يتم الوصول إلى الحد الأدنى المطلوب لهذا الكوبون.",
   "checkoutCouponDidNotAffectOrder": "هذا الكوبون لم يؤثر على هذا الطلب.",
-  "checkoutCouponFailed": "تعذر تطبيق الكوبون."
+  "checkoutCouponFailed": "تعذر تطبيق الكوبون.",
+  "adminProductStatusSectionTitle": "حالة المنتج",
+"adminProductStatusSectionSubtitle": "حدد حالة المنتج لتتبع توافره وإدارته بشكل أفضل.",
+"adminProductStatusLabel":  "الحالة",
+"adminProductStatusUnavailable":  "غير متوفر",
+"adminProductStatusRequired": "مطلوب",
+"home_coming_soon_button": "قريبًا"
+
 
 
 }

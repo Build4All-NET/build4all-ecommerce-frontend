@@ -27,7 +27,6 @@ class ItemCard extends StatelessWidget {
   final String? ctaLabel;
   final VoidCallback? onCtaPressed;
 
-  // ✅ allow product images to be "contain"
   final BoxFit imageFit;
 
   const ItemCard({
@@ -64,45 +63,35 @@ class ItemCard extends StatelessWidget {
     final hasCta = (ctaLabel ?? '').trim().isNotEmpty;
     final showOld = (oldPriceLabel ?? '').trim().isNotEmpty;
     final showMeta = (metaLabel ?? '').trim().isNotEmpty;
+    final showSubtitle = (subtitle ?? '').trim().isNotEmpty;
 
-    // ✅ CTA disabled if null
     final bool ctaDisabled = hasCta && onCtaPressed == null;
 
     Widget card = LayoutBuilder(
       builder: (context, constraints) {
         final maxW = constraints.maxWidth;
-
-        final boundedH =
+        final bool boundedH =
             constraints.hasBoundedHeight && constraints.maxHeight.isFinite;
-        final maxH = boundedH ? constraints.maxHeight : 0.0;
 
-        final bool compact = (maxW <= 230) || (boundedH && maxH <= 300);
-        final bool veryCompact = (maxW <= 210) || (boundedH && maxH <= 270);
-
-        final int subtitleLines = veryCompact ? 1 : (compact ? 1 : 2);
-
-        final double minImgH = veryCompact ? 86.0 : (compact ? 98.0 : 120.0);
-
-        final double targetImgH = boundedH
-            ? maxH * (veryCompact ? 0.44 : (compact ? 0.48 : 0.52))
-            : cardTokens.imageHeight.toDouble();
-
-        final double maxImgH = boundedH ? maxH * 0.58 : double.infinity;
-
-        final double imgH = boundedH
-            ? targetImgH.clamp(minImgH, maxImgH)
-            : cardTokens.imageHeight.toDouble();
+        final bool compact = maxW <= 230;
+        final bool veryCompact = maxW <= 210;
 
         final double contentPad = veryCompact
             ? cardTokens.padding * 0.72
             : (compact ? cardTokens.padding * 0.82 : cardTokens.padding);
 
         final double ctaH = veryCompact ? 34 : (compact ? 36 : 40);
+        final double aiBtnH = veryCompact ? 34 : (compact ? 36 : 40);
 
         final double gapXS = veryCompact ? (spacing.xs * 0.6) : spacing.xs;
         final double gapSM = veryCompact
             ? (spacing.sm * 0.65)
             : (compact ? (spacing.sm * 0.85) : spacing.sm);
+
+        final double imgH = boundedH
+            ? (constraints.maxHeight * (veryCompact ? 0.32 : 0.34))
+                .clamp(92.0, 135.0)
+            : (veryCompact ? 92.0 : (compact ? 105.0 : 125.0));
 
         final ButtonStyle ctaStyle = ButtonStyle(
           padding: MaterialStateProperty.all(EdgeInsets.zero),
@@ -124,6 +113,159 @@ class ItemCard extends StatelessWidget {
             }
             return c.onPrimary;
           }),
+        );
+
+        Widget contentColumn = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: t.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            if (showSubtitle) ...[
+              SizedBox(height: gapXS),
+              Text(
+                subtitle!.trim(),
+                style: t.bodySmall?.copyWith(
+                  color: c.onSurface.withOpacity(0.75),
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+
+            if (showOld) ...[
+              SizedBox(height: gapXS),
+              Text(
+                oldPriceLabel!.trim(),
+                style: t.bodySmall?.copyWith(
+                  decoration: TextDecoration.lineThrough,
+                  color: c.onSurface.withOpacity(0.55),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+
+            if (showMeta) ...[
+              SizedBox(height: gapSM),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: veryCompact ? 12 : 14,
+                      color: c.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  SizedBox(width: gapXS),
+                  Expanded(
+                    child: Text(
+                      metaLabel!.trim(),
+                      style: t.bodySmall?.copyWith(
+                        color: c.onSurface.withOpacity(0.6),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            if (boundedH) const Spacer(),
+
+            ValueListenableBuilder<bool>(
+              valueListenable: net.aiEnabledNotifier,
+              builder: (_, enabled, __) {
+                final canShow = enabled && itemId != null;
+                if (!canShow) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    top: boundedH ? 0 : gapSM,
+                    bottom: hasCta ? gapXS : 0,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: aiBtnH,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) {
+                            final remote = AiChatRemoteDataSource();
+                            final repo = AiChatRepositoryImpl(remote);
+                            final usecase = ChatItemUseCase(repo);
+
+                            return BlocProvider(
+                              create: (_) => AiChatBloc(useCase: usecase),
+                              child: AiItemChatSheet(
+                                itemId: itemId!,
+                                title: title,
+                                imageUrl: resolvedImageUrl,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: c.primary.withOpacity(0.35)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            cardTokens.radius / 1.5,
+                          ),
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.auto_awesome,
+                        size: veryCompact ? 16 : 18,
+                      ),
+                      label: Text(
+                        "Ask AI",
+                        style: t.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            if (hasCta)
+              SizedBox(
+                width: double.infinity,
+                height: ctaH,
+                child: ElevatedButton(
+                  onPressed: onCtaPressed,
+                  style: ctaStyle,
+                  child: Text(
+                    ctaLabel!.trim(),
+                    style: t.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: ctaDisabled
+                          ? c.onSurface.withOpacity(0.45)
+                          : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
+                ),
+              ),
+          ],
         );
 
         return Material(
@@ -151,7 +293,6 @@ class ItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // IMAGE
                   ClipRRect(
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(cardTokens.radius),
@@ -209,164 +350,18 @@ class ItemCard extends StatelessWidget {
                     ),
                   ),
 
-                  // CONTENT
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.all(contentPad),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: t.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                          if ((subtitle ?? '').trim().isNotEmpty) ...[
-                            SizedBox(height: gapXS),
-                            Text(
-                              subtitle!.trim(),
-                              style: t.bodySmall?.copyWith(
-                                color: c.onSurface.withOpacity(0.75),
-                              ),
-                              maxLines: subtitleLines,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-
-                          if (showOld) ...[
-                            SizedBox(height: gapXS),
-                            Text(
-                              oldPriceLabel!.trim(),
-                              style: t.bodySmall?.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                color: c.onSurface.withOpacity(0.55),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: false,
-                            ),
-                          ],
-
-                          if (showMeta) ...[
-                            SizedBox(height: gapSM),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: veryCompact ? 12 : 14,
-                                  color: c.onSurface.withOpacity(0.6),
-                                ),
-                                SizedBox(width: gapXS),
-                                Expanded(
-                                  child: Text(
-                                    metaLabel!.trim(),
-                                    style: t.bodySmall?.copyWith(
-                                      color: c.onSurface.withOpacity(0.6),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    softWrap: false,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-
-                          const Spacer(),
-
-                          /// ✅ Ask AI (only if enabled + itemId exists)
-                          ValueListenableBuilder<bool>(
-                            valueListenable: net.aiEnabledNotifier,
-                            builder: (_, enabled, __) {
-                              final canShow = enabled && itemId != null;
-                              if (!canShow) return const SizedBox.shrink();
-
-                              return Padding(
-                                padding:
-                                    EdgeInsets.only(bottom: hasCta ? gapXS : 0),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height:
-                                      veryCompact ? 34 : (compact ? 36 : 40),
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        builder: (_) {
-                                          final remote =
-                                              AiChatRemoteDataSource();
-                                          final repo =
-                                              AiChatRepositoryImpl(remote);
-                                          final usecase = ChatItemUseCase(repo);
-
-                                          return BlocProvider(
-                                            create: (_) =>
-                                                AiChatBloc(useCase: usecase),
-                                            child: AiItemChatSheet(
-                                              itemId: itemId!,
-                                              title: title,
-                                              imageUrl: resolvedImageUrl,
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      side: BorderSide(
-                                          color: c.primary.withOpacity(0.35)),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            cardTokens.radius / 1.5),
-                                      ),
-                                    ),
-                                    icon: Icon(Icons.auto_awesome,
-                                        size: veryCompact ? 16 : 18),
-                                    label: Text(
-                                      "Ask AI",
-                                      style: t.labelLarge?.copyWith(
-                                          fontWeight: FontWeight.w800),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                          if (hasCta)
-                            SizedBox(
-                              width: double.infinity,
-                              height: ctaH,
-                              child: ElevatedButton(
-                                // ✅ null => disabled
-                                onPressed: onCtaPressed,
-                                style: ctaStyle,
-                                child: Text(
-                                  ctaLabel!.trim(),
-                                  style: t.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    // ✅ optional: make disabled text slightly smaller-looking
-                                    color: ctaDisabled
-                                        ? c.onSurface.withOpacity(0.45)
-                                        : null,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  softWrap: false,
-                                ),
-                              ),
-                            ),
-                        ],
+                  if (boundedH)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.all(contentPad),
+                        child: contentColumn,
                       ),
+                    )
+                  else
+                    Padding(
+                      padding: EdgeInsets.all(contentPad),
+                      child: contentColumn,
                     ),
-                  ),
                 ],
               ),
             ),
@@ -378,6 +373,7 @@ class ItemCard extends StatelessWidget {
     if (width != null && width != double.infinity) {
       card = SizedBox(width: width, child: card);
     }
+
     return card;
   }
 }

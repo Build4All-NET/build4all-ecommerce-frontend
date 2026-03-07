@@ -520,7 +520,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminProductStockLabel => 'Stock';
 
   @override
-  String get adminProductStatusLabel => 'Status';
+  String get adminProductStatusLabel => 'Statut';
 
   @override
   String get adminProductImageUrlLabel => 'Image URL';
@@ -2872,4 +2872,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get checkoutCouponDidNotAffectOrder => 'Le coupon n\'a eu aucun effet sur cette commande.';
+
+  @override
+  String get adminProductStatusSectionTitle => 'Statut du produit';
+
+  @override
+  String get adminProductStatusSectionSubtitle => ' Gérer la disponibilité de ce produit';
+
+  @override
+  String get adminProductStatusUnavailable => 'Indisponible';
+
+  @override
+  String get adminProductStatusRequired => 'Veuillez sélectionner un statut pour ce produit.';
+
+  @override
+  String get home_coming_soon_button => 'Bientôt disponible';
 }

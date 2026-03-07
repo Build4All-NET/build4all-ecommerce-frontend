@@ -520,7 +520,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductStockLabel => 'المخزون';
 
   @override
-  String get adminProductStatusLabel => 'Status';
+  String get adminProductStatusLabel => 'الحالة';
 
   @override
   String get adminProductImageUrlLabel => 'Image URL';
@@ -2872,4 +2872,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checkoutCouponDidNotAffectOrder => 'هذا الكوبون لم يؤثر على هذا الطلب.';
+
+  @override
+  String get adminProductStatusSectionTitle => 'حالة المنتج';
+
+  @override
+  String get adminProductStatusSectionSubtitle => 'حدد حالة المنتج لتتبع توافره وإدارته بشكل أفضل.';
+
+  @override
+  String get adminProductStatusUnavailable => 'غير متوفر';
+
+  @override
+  String get adminProductStatusRequired => 'مطلوب';
+
+  @override
+  String get home_coming_soon_button => 'قريبًا';
 }

@@ -458,10 +458,57 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
     required this.onChanged,
   });
 
+  String _normalizeLbNumber(String input) {
+    String v = input.trim().replaceAll(RegExp(r'\s+'), '');
+
+    // remove any non-digit chars just in case
+    v = v.replaceAll(RegExp(r'[^0-9]'), '');
+
+    // if user typed local Lebanese number with leading 0 => remove it
+    if (v.startsWith('0')) {
+      v = v.substring(1);
+    }
+
+    return v;
+  }
+
+  bool _isValidLebaneseMobile(String raw) {
+    final v = _normalizeLbNumber(raw);
+
+    // Lebanese mobile examples after removing leading 0:
+    // 3xxxxxx  -> 7 digits
+    // 70xxxxxx -> 8 digits
+    // 71xxxxxx -> 8 digits
+    // 76xxxxxx -> 8 digits
+    // 78xxxxxx -> 8 digits
+    // 79xxxxxx -> 8 digits
+    // 81xxxxxx -> 8 digits
+
+    // Case 1: old style 03xxxxxx => becomes 3xxxxxx
+    if (v.startsWith('3') && v.length == 7) {
+      return true;
+    }
+
+    // Case 2: other Lebanese mobile prefixes
+    const validTwoDigitPrefixes = ['70', '71', '76', '78', '79', '81'];
+    if (v.length == 8 &&
+        validTwoDigitPrefixes.any((prefix) => v.startsWith(prefix))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  String _toE164Lebanese(String raw) {
+    final v = _normalizeLbNumber(raw);
+    return '+961$v';
+  }
+
   @override
   Widget build(BuildContext context) {
     return IntlPhoneField(
       initialCountryCode: 'LB',
+      disableLengthCheck: true,
       decoration: InputDecoration(
         labelText: l10n.phoneLabel,
         filled: true,
@@ -482,14 +529,37 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
       dropdownTextStyle: textTheme.bodyMedium?.copyWith(color: colors.label),
       style: textTheme.bodyMedium?.copyWith(color: colors.label),
       flagsButtonPadding: const EdgeInsets.only(left: 8),
-      onChanged: (phone) => onChanged(phone.completeNumber),
+
+      onChanged: (phone) {
+        final raw = phone.number;
+        final normalized = _normalizeLbNumber(raw);
+
+        if (phone.countryCode == '+961') {
+          onChanged('+961$normalized');
+        } else {
+          onChanged(phone.completeNumber);
+        }
+      },
+
       validator: (phone) {
         if (phone == null || phone.number.trim().isEmpty) {
           return l10n.fieldRequired;
         }
-        if (phone.number.trim().length < 6) {
+
+        final raw = phone.number.trim();
+
+        if (phone.countryCode == '+961') {
+          if (!_isValidLebaneseMobile(raw)) {
+            return l10n.invalidPhone;
+          }
+          return null;
+        }
+
+        // fallback for non-LB numbers
+        if (raw.length < 6) {
           return l10n.invalidPhone;
         }
+
         return null;
       },
     );

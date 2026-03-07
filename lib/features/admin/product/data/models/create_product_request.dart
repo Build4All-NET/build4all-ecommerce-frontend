@@ -21,7 +21,10 @@ class AttributeValueDto {
 
   AttributeValueDto({required this.code, required this.value});
 
-  Map<String, dynamic> toJson() => {'code': code, 'value': value};
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'value': value,
+      };
 }
 
 class CreateProductRequest {
@@ -34,7 +37,8 @@ class CreateProductRequest {
   final double price;
   final int? stock;
 
-  final String? status;
+  // ✅ new backend field
+  final String? statusCode;
   final String? sku;
 
   final ProductTypeDto productType;
@@ -59,7 +63,7 @@ class CreateProductRequest {
     this.description,
     required this.price,
     this.stock,
-    this.status,
+    this.statusCode,
     this.sku,
     required this.productType,
     this.virtualProduct = false,
@@ -80,22 +84,22 @@ class CreateProductRequest {
     return {
       if (itemTypeId != null) 'itemTypeId': itemTypeId,
       if (categoryId != null) 'categoryId': categoryId,
-      'currencyId': currencyId,
+      if (currencyId != null) 'currencyId': currencyId,
       'name': name,
-      'description': description,
+      if (description != null) 'description': description,
       'price': price,
-      'stock': stock,
-      'status': status,
-      'sku': sku,
+      if (stock != null) 'stock': stock,
+      if (statusCode != null) 'statusCode': statusCode,
+      if (sku != null) 'sku': sku,
       'productType': productTypeDtoToApi(productType),
       'virtualProduct': virtualProduct,
       'downloadable': downloadable,
-      'downloadUrl': downloadUrl,
-      'externalUrl': externalUrl,
-      'buttonText': buttonText,
-      'salePrice': salePrice,
-      'saleStart': saleStart,
-      'saleEnd': saleEnd,
+      if (downloadUrl != null) 'downloadUrl': downloadUrl,
+      if (externalUrl != null) 'externalUrl': externalUrl,
+      if (buttonText != null) 'buttonText': buttonText,
+      if (salePrice != null) 'salePrice': salePrice,
+      if (saleStart != null) 'saleStart': saleStart,
+      if (saleEnd != null) 'saleEnd': saleEnd,
       if (attributes.isNotEmpty)
         'attributes': attributes.map((e) => e.toJson()).toList(),
     };

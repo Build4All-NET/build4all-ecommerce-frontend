@@ -7,7 +7,10 @@ class ProductRepositoryImpl implements ProductRepository {
   final ProductApiService api;
   final Future<String?> Function() getToken;
 
-  ProductRepositoryImpl({required this.api, required this.getToken});
+  ProductRepositoryImpl({
+    required this.api,
+    required this.getToken,
+  });
 
   Future<String> _requireToken() async {
     final token = await getToken();
@@ -97,6 +100,8 @@ class ProductRepositoryImpl implements ProductRepository {
     String? description,
     required double price,
     int? stock,
+    String? statusCode,
+    String? imageUrl,
     String? sku,
     String productType = 'SIMPLE',
     bool virtualProduct = false,
@@ -106,7 +111,6 @@ class ProductRepositoryImpl implements ProductRepository {
     String? buttonText,
     double? salePrice,
     DateTime? saleStart,
-    String? imageUrl,
     DateTime? saleEnd,
     Map<String, String>? attributes,
   }) async {
@@ -119,6 +123,7 @@ class ProductRepositoryImpl implements ProductRepository {
       'description': description,
       'price': price,
       'stock': stock,
+      'statusCode': statusCode,
       'sku': sku,
       'productType': productType,
       'virtualProduct': virtualProduct,
@@ -160,6 +165,7 @@ class ProductRepositoryImpl implements ProductRepository {
     String? description,
     double? price,
     int? stock,
+    String? statusCode,
     String? sku,
     String? productType,
     bool? virtualProduct,
@@ -179,6 +185,7 @@ class ProductRepositoryImpl implements ProductRepository {
       if (description != null) 'description': description,
       if (price != null) 'price': price,
       if (stock != null) 'stock': stock,
+      if (statusCode != null) 'statusCode': statusCode,
       if (sku != null) 'sku': sku,
       if (productType != null) 'productType': productType,
       if (virtualProduct != null) 'virtualProduct': virtualProduct,

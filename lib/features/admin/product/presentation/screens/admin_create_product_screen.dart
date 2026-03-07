@@ -4,27 +4,26 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/exceptions/app_exception.dart';
+import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/features/admin/product/presentation/sections/admin_product_status_section.dart';
+import 'package:build4front/features/auth/data/services/admin_token_store.dart';
+import 'package:build4front/features/catalog/data/models/item_type_model.dart';
+import 'package:build4front/features/catalog/data/services/category_api_service.dart';
+import 'package:build4front/features/catalog/data/services/currency_api_service.dart';
+import 'package:build4front/features/catalog/data/services/item_status_api_service.dart';
+import 'package:build4front/features/catalog/data/services/item_type_api_service.dart';
+import 'package:build4front/features/catalog/domain/entities/item_type.dart';
+import 'package:build4front/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:build4front/core/theme/theme_cubit.dart';
-import 'package:build4front/l10n/app_localizations.dart';
-import 'package:build4front/core/config/env.dart';
-import 'package:build4front/features/auth/data/services/admin_token_store.dart';
-
-import '../../data/services/product_api_service.dart';
 import '../../data/models/create_product_request.dart';
+import '../../data/services/product_api_service.dart';
 import '../../domain/entities/product.dart';
-
-import 'package:build4front/features/catalog/data/services/category_api_service.dart';
-import 'package:build4front/features/catalog/data/services/item_type_api_service.dart';
-import 'package:build4front/features/catalog/data/services/currency_api_service.dart';
-
-import 'package:build4front/features/catalog/data/models/item_type_model.dart';
-import 'package:build4front/features/catalog/domain/entities/item_type.dart';
 
 String productTypeDtoToApi(ProductTypeDto t) {
   switch (t) {
@@ -62,7 +61,6 @@ class AdminCreateProductScreen extends StatefulWidget {
 }
 
 class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
-  // ---------------- Form ----------------
   final _formKey = GlobalKey<FormState>();
 
   final _nameCtrl = TextEditingController();
@@ -73,7 +71,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
 
   final _downloadUrlCtrl = TextEditingController();
   final _externalUrlCtrl = TextEditingController();
-  final _buttonTextCtrl = TextEditingController(); // l10n default set later
+  final _buttonTextCtrl = TextEditingController();
 
   final _salePriceCtrl = TextEditingController();
   final _saleStartCtrl = TextEditingController();
@@ -97,26 +95,25 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     'model',
   ];
 
-  // image
   final _picker = ImagePicker();
   XFile? _pickedImage;
 
-  // ---------------- Meta dropdowns ----------------
   List<_CategoryOption> _categories = [];
   int? _selectedCategoryId;
 
   List<ItemType> _itemTypes = [];
   int? _selectedItemTypeId;
 
-  // ---------------- Currency ----------------
+  List<ItemStatusOptionUi> _itemStatuses = [];
+  String? _selectedStatusCode;
+  bool _loadingStatuses = false;
+
   int? _effectiveCurrencyId;
   bool _loadingCurrency = false;
   String? _currencyLabel;
 
-  // ---------------- States ----------------
   bool _loadingCategories = false;
   bool _loadingItemTypes = false;
-
   bool _isSubmitting = false;
 
   String? _errorMessage;
@@ -124,12 +121,10 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
 
   bool get _isEdit => widget.initialProduct != null;
 
-  // ---------------- Lifecycle ----------------
   @override
   void initState() {
     super.initState();
 
-    // Set l10n default button text after first frame (safe for localization).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final l = AppLocalizations.of(context)!;
@@ -154,6 +149,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
       await _loadCurrency(_effectiveCurrencyId!);
     }
 
+    await _loadItemStatuses();
     await _loadCategories();
   }
 
@@ -164,11 +160,9 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     _priceCtrl.dispose();
     _stockCtrl.dispose();
     _skuCtrl.dispose();
-
     _downloadUrlCtrl.dispose();
     _externalUrlCtrl.dispose();
     _buttonTextCtrl.dispose();
-
     _salePriceCtrl.dispose();
     _saleStartCtrl.dispose();
     _saleEndCtrl.dispose();
@@ -176,23 +170,28 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     for (final row in _attributes) {
       row.dispose();
     }
+
     super.dispose();
   }
 
-  // ---------------- Initial edit mapping ----------------
   void _applyInitialProduct(Product p) {
     _nameCtrl.text = p.name;
     _descriptionCtrl.text = p.description ?? '';
     _priceCtrl.text = p.price.toStringAsFixed(2);
-    if (p.stock != null) _stockCtrl.text = p.stock.toString();
+
+    if (p.stock != null) {
+      _stockCtrl.text = p.stock.toString();
+    }
+
     _skuCtrl.text = p.sku ?? '';
+    _selectedStatusCode = p.statusCode;
 
     _virtualProduct = p.virtualProduct;
     _downloadable = p.downloadable;
 
     _downloadUrlCtrl.text = p.downloadUrl ?? '';
     _externalUrlCtrl.text = p.externalUrl ?? '';
-    _buttonTextCtrl.text = p.buttonText ?? ''; // default set via post-frame
+    _buttonTextCtrl.text = p.buttonText ?? '';
 
     _selectedProductType = _productTypeFromString(p.productType);
 
@@ -235,7 +234,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     }
   }
 
-  // ---------------- Helpers ----------------
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   DateTime? _parseBackendDate(String text) {
@@ -259,24 +257,23 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     );
   }
 
-  String? _validateSaleFields(AppLocalizations l,
-      {required double regularPrice}) {
+  String? _validateSaleFields(
+    AppLocalizations l, {
+    required double regularPrice,
+  }) {
     final salePriceText = _salePriceCtrl.text.trim();
     final hasSalePrice = salePriceText.isNotEmpty;
 
-    // Fallback parse (in case state vars are null but controllers have values)
     final startRaw = _saleStartDate ?? _parseBackendDate(_saleStartCtrl.text);
     final endRaw = _saleEndDate ?? _parseBackendDate(_saleEndCtrl.text);
 
     final hasStart = startRaw != null;
     final hasEnd = endRaw != null;
 
-    // ✅ On CREATE: if user sets one date, force both
     if (!_isEdit && (hasStart != hasEnd)) {
       return l.adminProductSaleDatesBothRequired;
     }
 
-    // ✅ If both dates exist: order + (create) not past + salePrice required
     if (hasStart && hasEnd) {
       final start = _dateOnly(startRaw!);
       final end = _dateOnly(endRaw!);
@@ -285,7 +282,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
         return l.adminProductSaleEndBeforeStart;
       }
 
-      // Block past sale scheduling on CREATE (edit allowed)
       if (!_isEdit) {
         final today = _dateOnly(DateTime.now());
         if (start.isBefore(today)) return l.adminProductSaleStartInPast;
@@ -297,7 +293,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
       }
     }
 
-    // ✅ If salePrice exists: validate number + compare with regular price
     if (hasSalePrice) {
       final v = double.tryParse(salePriceText);
       if (v == null || v <= 0) return l.adminProductSalePriceInvalid;
@@ -340,7 +335,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
         _saleStartDate = picked;
         _saleStartCtrl.text = _formatDateForBackend(picked);
 
-        // ✅ If end date exists but becomes invalid, clear it.
         if (_saleEndDate != null &&
             _dateOnly(_saleEndDate!).isBefore(_dateOnly(picked))) {
           _saleEndDate = null;
@@ -352,12 +346,9 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   }
 
   Future<void> _pickSaleEndDate() async {
-    final l = AppLocalizations.of(context)!;
-
     final now = DateTime.now();
     final today = _dateOnly(now);
 
-    // ✅ If start exists: end cannot be before start
     final first = _saleStartDate != null
         ? _dateOnly(_saleStartDate!)
         : (_isEdit ? DateTime(now.year - 5, 1, 1) : today);
@@ -401,84 +392,77 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   Future<String> _requireAdminToken() async {
     final token = await AdminTokenStore().getToken();
     if (token == null || token.isEmpty) {
-      // internal code; localized later in UI
       throw Exception('ADMIN_TOKEN_MISSING');
     }
     return token;
   }
 
-String _localizeError(Object e, AppLocalizations l) {
-  // ✅ 1) Unwrap AppException -> original (usually DioException)
-  if (e is AppException) {
-    final dynamic ex = e; // avoid compile issues if fields differ
-    final Object? orig = ex.original;
-    if (orig != null) {
-      return _localizeError(orig, l);
+  String _localizeError(Object e, AppLocalizations l) {
+    if (e is AppException) {
+      final dynamic ex = e;
+      final Object? orig = ex.original;
+      if (orig != null) {
+        return _localizeError(orig, l);
+      }
+
+      final String msg = (ex.message ?? e.toString()).toString();
+      if (msg.trim().isNotEmpty) return msg;
+
+      return l.adminGenericError;
     }
 
-    // if no original, try message
-    final String msg = (ex.message ?? e.toString()).toString();
-    if (msg.trim().isNotEmpty) return msg;
+    if (e is DioException) {
+      final status = e.response?.statusCode;
+      final data = e.response?.data;
 
-    return l.adminGenericError;
-  }
+      Map<String, dynamic>? m;
 
-  // ✅ 2) Handle DioException (409 payload comes here)
-  if (e is DioException) {
-    final status = e.response?.statusCode;
-    final data = e.response?.data;
-
-    Map<String, dynamic>? m;
-
-    // data can be Map OR String JSON
-    if (data is Map) {
-      m = Map<String, dynamic>.from(data);
-    } else if (data is String) {
-      try {
-        final decoded = jsonDecode(data);
-        if (decoded is Map) m = Map<String, dynamic>.from(decoded);
-      } catch (_) {}
-    }
-
-    final code = m?['code']?.toString();
-    final rawError = (m?['error'] ?? m?['message'])?.toString();
-
-    final countRaw = m?['count'];
-    final int? count = (countRaw is num)
-        ? countRaw.toInt()
-        : int.tryParse(countRaw?.toString() ?? '');
-
-    if (status == 409) {
-      if (code == 'CATEGORY_DELETE_HAS_ITEMS') {
-        return l.adminCategoryDeleteBlockedItems(count ?? 0);
-      }
-      if (code == 'ITEMTYPE_DELETE_HAS_ITEMS') {
-        return l.adminItemTypeDeleteBlockedItems(count ?? 0);
-      }
-      if (code == 'CATEGORY_DELETE_HAS_TYPES') {
-        return l.adminCategoryDeleteBlockedTypes(count ?? 0);
+      if (data is Map) {
+        m = Map<String, dynamic>.from(data);
+      } else if (data is String) {
+        try {
+          final decoded = jsonDecode(data);
+          if (decoded is Map) m = Map<String, dynamic>.from(decoded);
+        } catch (_) {}
       }
 
-      // fallback if code missing
+      final code = m?['code']?.toString();
+      final rawError = (m?['error'] ?? m?['message'])?.toString();
+
+      final countRaw = m?['count'];
+      final int? count = (countRaw is num)
+          ? countRaw.toInt()
+          : int.tryParse(countRaw?.toString() ?? '');
+
+      if (status == 409) {
+        if (code == 'CATEGORY_DELETE_HAS_ITEMS') {
+          return l.adminCategoryDeleteBlockedItems(count ?? 0);
+        }
+        if (code == 'ITEMTYPE_DELETE_HAS_ITEMS') {
+          return l.adminItemTypeDeleteBlockedItems(count ?? 0);
+        }
+        if (code == 'CATEGORY_DELETE_HAS_TYPES') {
+          return l.adminCategoryDeleteBlockedTypes(count ?? 0);
+        }
+
+        if (rawError != null && rawError.trim().isNotEmpty) return rawError;
+        return l.adminConflictGeneric;
+      }
+
+      if (status == 401) return l.errSessionExpired;
+      if (status == 403) return l.errForbidden;
+      if (status == 404) return l.errNotFound;
+
       if (rawError != null && rawError.trim().isNotEmpty) return rawError;
-      return l.adminConflictGeneric;
+
+      return l.adminGenericError;
     }
 
-    if (status == 401) return l.errSessionExpired;
-    if (status == 403) return l.errForbidden;
-    if (status == 404) return l.errNotFound;
-
-    if (rawError != null && rawError.trim().isNotEmpty) return rawError;
+    final s = e.toString();
+    if (s.contains('ADMIN_TOKEN_MISSING')) return l.adminMissingAdminToken;
 
     return l.adminGenericError;
   }
-
-  // ✅ 3) Non-dio fallback
-  final s = e.toString();
-  if (s.contains('ADMIN_TOKEN_MISSING')) return l.adminMissingAdminToken;
-
-  return l.adminGenericError;
-}
 
   String? _resolveImageUrl(String? url) {
     if (url == null || url.trim().isEmpty) return null;
@@ -490,7 +474,6 @@ String _localizeError(Object e, AppLocalizations l) {
     return '${Env.apiBaseUrl}$trimmed';
   }
 
-  // ---------------- Confirm delete dialog ----------------
   Future<bool> _confirmDelete({
     required String title,
     required String message,
@@ -509,7 +492,7 @@ String _localizeError(Object e, AppLocalizations l) {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l.adminRemove), // reuse existing key
+            child: Text(l.adminRemove),
           ),
         ],
       ),
@@ -568,16 +551,12 @@ String _localizeError(Object e, AppLocalizations l) {
         await _loadItemTypesForCategory(nextSelected);
       }
     } catch (e) {
-  if (!mounted) return;
+      if (!mounted) return;
 
-  final msg = _localizeError(e, l);
-
-  // ✅ toast
-  AppToast.error(context, msg);
-
-  // ✅ optional: show under dropdown too
-  setState(() => _metaError = msg);
-} finally {
+      final msg = _localizeError(e, l);
+      AppToast.error(context, msg);
+      setState(() => _metaError = msg);
+    } finally {
       if (mounted) setState(() => _loadingCategories = false);
     }
   }
@@ -622,17 +601,16 @@ String _localizeError(Object e, AppLocalizations l) {
         _selectedItemTypeId = nextSelected;
       });
     } catch (e) {
-  if (!mounted) return;
+      if (!mounted) return;
 
-  final msg = _localizeError(e, l);
-  AppToast.error(context, msg);
-  setState(() => _metaError = msg);
-} finally {
+      final msg = _localizeError(e, l);
+      AppToast.error(context, msg);
+      setState(() => _metaError = msg);
+    } finally {
       if (mounted) setState(() => _loadingItemTypes = false);
     }
   }
 
-  // ---------------- Currency ----------------
   Future<void> _loadCurrency(int id) async {
     setState(() => _loadingCurrency = true);
 
@@ -664,7 +642,59 @@ String _localizeError(Object e, AppLocalizations l) {
     }
   }
 
-  // ---------------- Categories + ItemTypes ----------------
+  Future<void> _loadItemStatuses() async {
+    setState(() {
+      _loadingStatuses = true;
+      _metaError = null;
+    });
+
+    try {
+      final token = await _requireAdminToken();
+      final api = ItemStatusApiService();
+
+      final rawList = await api.getItemStatuses(authToken: token);
+
+      final statuses = rawList
+          .whereType<Map>()
+          .map(
+            (m) => ItemStatusOptionUi(
+              id: int.tryParse('${m['id']}') ?? 0,
+              code: (m['code'] ?? '').toString(),
+              name: (m['name'] ?? '').toString(),
+            ),
+          )
+          .toList();
+
+      String? initialStatusCode;
+
+      final p = widget.initialProduct;
+      if (p != null &&
+          p.statusCode != null &&
+          statuses.any((s) => s.code == p.statusCode)) {
+        initialStatusCode = p.statusCode;
+      } else if (_selectedStatusCode != null &&
+          statuses.any((s) => s.code == _selectedStatusCode)) {
+        initialStatusCode = _selectedStatusCode;
+      } else if (statuses.isNotEmpty) {
+        initialStatusCode = statuses.first.code;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _itemStatuses = statuses;
+        _selectedStatusCode = initialStatusCode;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final l = AppLocalizations.of(context)!;
+      setState(() => _metaError = _localizeError(e, l));
+    } finally {
+      if (mounted) {
+        setState(() => _loadingStatuses = false);
+      }
+    }
+  }
+
   Future<void> _loadCategories() async {
     setState(() {
       _loadingCategories = true;
@@ -726,8 +756,8 @@ String _localizeError(Object e, AppLocalizations l) {
 
     try {
       final token = await _requireAdminToken();
-
       final api = ItemTypeApiService();
+
       final rawList =
           await api.getItemTypesByCategory(categoryId, authToken: token);
 
@@ -765,7 +795,6 @@ String _localizeError(Object e, AppLocalizations l) {
     }
   }
 
-  // ---------------- Create Category / Type ----------------
   Future<void> _showCreateCategoryDialog() async {
     final l = AppLocalizations.of(context)!;
     final ctrl = TextEditingController();
@@ -899,8 +928,8 @@ String _localizeError(Object e, AppLocalizations l) {
   Future<void> _createItemType(String name, int categoryId) async {
     try {
       final token = await _requireAdminToken();
-
       final api = ItemTypeApiService();
+
       final data = await api.createItemType(
         name: name,
         categoryId: categoryId,
@@ -921,7 +950,6 @@ String _localizeError(Object e, AppLocalizations l) {
     }
   }
 
-  // ---------------- Attributes ----------------
   void _addAttributeRow() {
     setState(() {
       _attributes.add(
@@ -937,7 +965,6 @@ String _localizeError(Object e, AppLocalizations l) {
     });
   }
 
-  // ---------------- Submit ----------------
   Future<void> _submit() async {
     final l = AppLocalizations.of(context)!;
 
@@ -955,6 +982,11 @@ String _localizeError(Object e, AppLocalizations l) {
       return;
     }
 
+    if (_selectedStatusCode == null || _selectedStatusCode!.trim().isEmpty) {
+      setState(() => _errorMessage = l.adminProductStatusRequired);
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -963,7 +995,6 @@ String _localizeError(Object e, AppLocalizations l) {
     try {
       final price = double.parse(_priceCtrl.text.trim());
 
-      // ✅ NEW: strong sale date validation (blocks invalid dates)
       final saleErr = _validateSaleFields(l, regularPrice: price);
       if (saleErr != null) {
         setState(() => _errorMessage = saleErr);
@@ -973,6 +1004,7 @@ String _localizeError(Object e, AppLocalizations l) {
       final stock = _stockCtrl.text.trim().isEmpty
           ? null
           : int.parse(_stockCtrl.text.trim());
+
       final salePrice = _salePriceCtrl.text.trim().isEmpty
           ? null
           : double.parse(_salePriceCtrl.text.trim());
@@ -1017,38 +1049,39 @@ String _localizeError(Object e, AppLocalizations l) {
       final saleStartText = _saleStartCtrl.text.trim().isEmpty
           ? null
           : _saleStartCtrl.text.trim();
-      final saleEndText =
-          _saleEndCtrl.text.trim().isEmpty ? null : _saleEndCtrl.text.trim();
+
+      final saleEndText = _saleEndCtrl.text.trim().isEmpty
+          ? null
+          : _saleEndCtrl.text.trim();
 
       if (!_isEdit) {
         final req = CreateProductRequest(
-  itemTypeId: itemTypeId,
-  categoryId: categoryId,
-  currencyId: currencyId,
-  name: _nameCtrl.text.trim(),
-  description: description,
-  price: price,
-  stock: stock,
-  status: null,
-  sku: sku,
-  productType: _selectedProductType,
-  virtualProduct: _virtualProduct,
-  downloadable: _downloadable,
-  downloadUrl: downloadUrl,
-  externalUrl: externalUrl,
-  buttonText: buttonText,
-  salePrice: salePrice,
-  saleStart: saleStartText,
-  saleEnd: saleEndText,
-  attributes: attrs,
-);
+          itemTypeId: itemTypeId,
+          categoryId: categoryId,
+          currencyId: currencyId,
+          name: _nameCtrl.text.trim(),
+          description: description,
+          price: price,
+          stock: stock,
+          statusCode: _selectedStatusCode,
+          sku: sku,
+          productType: _selectedProductType,
+          virtualProduct: _virtualProduct,
+          downloadable: _downloadable,
+          downloadUrl: downloadUrl,
+          externalUrl: externalUrl,
+          buttonText: buttonText,
+          salePrice: salePrice,
+          saleStart: saleStartText,
+          saleEnd: saleEndText,
+          attributes: attrs,
+        );
 
         await _createProduct(req);
       } else {
         await _updateProduct(
           productId: widget.initialProduct!.id,
           reqBody: {
-            
             'categoryId': categoryId,
             if (itemTypeId != null) 'itemTypeId': itemTypeId,
             'currencyId': currencyId,
@@ -1056,6 +1089,7 @@ String _localizeError(Object e, AppLocalizations l) {
             'description': description,
             'price': price,
             'stock': stock,
+            'statusCode': _selectedStatusCode,
             'sku': sku,
             'productType': productTypeDtoToApi(_selectedProductType),
             'virtualProduct': _virtualProduct,
@@ -1115,7 +1149,6 @@ String _localizeError(Object e, AppLocalizations l) {
     }
   }
 
-  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
     final tokens = context.watch<ThemeCubit>().state.tokens;
@@ -1185,13 +1218,24 @@ String _localizeError(Object e, AppLocalizations l) {
                   currencyLabel: _currencyLabel,
                 ),
                 SizedBox(height: spacing.md),
+                AdminProductStatusSection(
+                  tokens: tokens,
+                  l: l,
+                  statuses: _itemStatuses,
+                  selectedStatusCode: _selectedStatusCode,
+                  loadingStatuses: _loadingStatuses,
+                  onChanged: (code) {
+                    setState(() => _selectedStatusCode = code);
+                  },
+                  errorText: null,
+                ),
+                SizedBox(height: spacing.md),
                 AdminProductImageSection(
                   tokens: tokens,
                   l: l,
                   pickedImage: _pickedImage,
-                  existingImageUrl: _resolveImageUrl(
-                    widget.initialProduct?.imageUrl,
-                  ),
+                  existingImageUrl:
+                      _resolveImageUrl(widget.initialProduct?.imageUrl),
                   onPickImage: _pickImage,
                   onRemoveImage: _removePickedImage,
                 ),
@@ -1206,7 +1250,8 @@ String _localizeError(Object e, AppLocalizations l) {
                       _selectedProductType = val;
                       if (val != ProductTypeDto.external) {
                         _externalUrlCtrl.clear();
-                        _buttonTextCtrl.text = l.adminButtonTextDefaultAddToCart;
+                        _buttonTextCtrl.text =
+                            l.adminButtonTextDefaultAddToCart;
                       }
                     });
                   },
@@ -1276,8 +1321,6 @@ String _localizeError(Object e, AppLocalizations l) {
   }
 }
 
-// ---------------- Shared Card Wrapper ----------------
-
 class AdminFormSectionCard extends StatelessWidget {
   final dynamic tokens;
   final Widget child;
@@ -1345,8 +1388,6 @@ class AdminFormSectionCard extends StatelessWidget {
   }
 }
 
-// ---------------- Header ----------------
-
 class _AdminFormHeader extends StatelessWidget {
   final dynamic tokens;
   final AppLocalizations l;
@@ -1398,8 +1439,6 @@ class _AdminFormHeader extends StatelessWidget {
   }
 }
 
-// ---------------- Sections ----------------
-
 class AdminProductBasicInfoSection extends StatelessWidget {
   final dynamic tokens;
   final AppLocalizations l;
@@ -1432,8 +1471,9 @@ class AdminProductBasicInfoSection extends StatelessWidget {
           TextFormField(
             controller: nameCtrl,
             decoration: InputDecoration(hintText: l.adminProductNameHint),
-            validator: (v) =>
-                v == null || v.trim().isEmpty ? l.adminProductNameRequired : null,
+            validator: (v) => v == null || v.trim().isEmpty
+                ? l.adminProductNameRequired
+                : null,
           ),
           SizedBox(height: spacing.md),
           Text(l.adminProductDescriptionLabel, style: text.titleMedium),
@@ -1441,7 +1481,8 @@ class AdminProductBasicInfoSection extends StatelessWidget {
           TextFormField(
             controller: descriptionCtrl,
             maxLines: 3,
-            decoration: InputDecoration(hintText: l.adminProductDescriptionHint),
+            decoration:
+                InputDecoration(hintText: l.adminProductDescriptionHint),
           ),
         ],
       ),
@@ -1497,7 +1538,8 @@ class AdminProductCategoryTypeSection extends StatelessWidget {
     final spacing = tokens.spacing;
     final text = tokens.typography;
 
-    final canDeleteCategory = selectedCategoryId != null && categories.isNotEmpty;
+    final canDeleteCategory =
+        selectedCategoryId != null && categories.isNotEmpty;
     final canDeleteType = selectedItemTypeId != null && itemTypes.isNotEmpty;
 
     return AdminFormSectionCard(
@@ -1949,7 +1991,8 @@ class AdminProductConfigSection extends StatelessWidget {
             SizedBox(height: spacing.xs),
             TextFormField(
               controller: downloadUrlCtrl,
-              decoration: InputDecoration(hintText: l.adminProductDownloadUrlHint),
+              decoration:
+                  InputDecoration(hintText: l.adminProductDownloadUrlHint),
             ),
           ],
           if (selectedProductType == ProductTypeDto.external) ...[
@@ -1958,14 +2001,16 @@ class AdminProductConfigSection extends StatelessWidget {
             SizedBox(height: spacing.xs),
             TextFormField(
               controller: externalUrlCtrl,
-              decoration: InputDecoration(hintText: l.adminProductExternalUrlHint),
+              decoration:
+                  InputDecoration(hintText: l.adminProductExternalUrlHint),
             ),
             SizedBox(height: spacing.md),
             Text(l.adminProductButtonTextLabel, style: text.titleMedium),
             SizedBox(height: spacing.xs),
             TextFormField(
               controller: buttonTextCtrl,
-              decoration: InputDecoration(hintText: l.adminProductButtonTextHint),
+              decoration:
+                  InputDecoration(hintText: l.adminProductButtonTextHint),
             ),
           ],
         ],
@@ -2092,7 +2137,6 @@ class AdminProductAttributesSection extends StatelessWidget {
             final index = entry.key;
             final row = entry.value;
 
-            // ✅ Ensure the row always has a valid selectedCode
             row.selectedCode ??= allowedAttributeCodes.first;
 
             return Padding(
@@ -2168,7 +2212,6 @@ class AdminProductAttributesSection extends StatelessWidget {
   }
 }
 
-// ---------------- local helper row ----------------
 class _AttributeRow {
   String? selectedCode;
   final TextEditingController valueCtrl = TextEditingController();
@@ -2178,7 +2221,6 @@ class _AttributeRow {
   void dispose() => valueCtrl.dispose();
 }
 
-// ---------------- local category option ----------------
 class _CategoryOption {
   final int id;
   final String name;
@@ -2188,6 +2230,9 @@ class _CategoryOption {
   factory _CategoryOption.fromJson(Map<String, dynamic> j) {
     final raw = j['id'];
     final id = raw is int ? raw : int.tryParse('$raw') ?? 0;
-    return _CategoryOption(id: id, name: (j['name'] ?? '').toString());
+    return _CategoryOption(
+      id: id,
+      name: (j['name'] ?? '').toString(),
+    );
   }
 }

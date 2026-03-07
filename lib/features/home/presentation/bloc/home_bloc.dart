@@ -57,28 +57,34 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Set<int> _collectUsedCategoryIds(List<List<ItemSummary>> lists) {
     final set = <int>{};
+
     for (final list in lists) {
       for (final item in list) {
         final cid = item.categoryId;
         if (cid != null) set.add(cid);
       }
     }
+
     return set;
   }
 
-  List<ItemSummary> _dedupeById(List<ItemSummary> items) {
+  List<ItemSummary> _dedupeInsideSameList(List<ItemSummary> items) {
     final seen = <int>{};
     final out = <ItemSummary>[];
+
     for (final item in items) {
-      if (seen.add(item.id)) out.add(item);
+      if (seen.add(item.id)) {
+        out.add(item);
+      }
     }
+
     return out;
   }
 
   Future<List<ItemSummary>> _safeItems(Future<List<ItemSummary>> future) async {
     try {
       final res = await future;
-      return _dedupeById(res);
+      return _dedupeInsideSameList(res);
     } catch (_) {
       return <ItemSummary>[];
     }
@@ -101,112 +107,114 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _loadHome(Emitter<HomeState> emit, {String? token}) async {
-  if (state.isLoading) return;
-
-  emit(state.copyWith(isLoading: true, errorMessage: null));
-
-  try {
-    final projectId = int.tryParse(Env.projectId) ?? 0;
-
-    // ✅ parallel calls
-    final popularF = getGuestUpcomingItems(token: token);
-    final flashF = getDiscountedItems.call(token: token);
-
-    // ✅ FIX: don't use 3650 (too wide)
-    final newF = getNewArrivalsItems.call(days: 14, token: token);
-
-    final bestF = getBestSellersItems.call(limit: 20, token: token);
-
-    final typesF = projectId > 0
-        ? getItemTypesByProject(projectId)
-        : Future.value(<ItemType>[]);
-
-    final catsF = projectId > 0
-        ? getCategoriesByProject(projectId)
-        : Future.value(<Category>[]);
-
-    // ✅ await all
-    final popularItemsRaw = await popularF;
-    final flashSaleItemsRaw = await flashF;
-    final newArrivalsItemsRaw = await newF;
-    final bestSellersItemsRaw = await bestF;
-
-    // ✅ Dedup by priority (you can change order)
-    final usedIds = <int>{};
-
-    List<ItemSummary> dedup(List<ItemSummary> source) {
-      final out = <ItemSummary>[];
-      for (final item in source) {
-        if (usedIds.add(item.id)) {
-          out.add(item);
-        }
-      }
-      return out;
-    }
-
-    // Priority example:
-    final flashSaleItems = dedup(flashSaleItemsRaw);
-    final newArrivalsItems = dedup(newArrivalsItemsRaw);
-    final bestSellersItems = dedup(bestSellersItemsRaw);
-
-    // Popular after specialty sections (so it won't repeat same items)
-    final popularItems = dedup(popularItemsRaw);
-
-    // ✅ TEMP (until real endpoints exist) - avoid fake duplicates
-    final recommendedItems = <ItemSummary>[]; // was: popularItems
-    final topRatedItems = <ItemSummary>[];    // was: bestSellersItems
-
-    // fetch types/categories
-    final types = await typesF;
-    // ignore: unused_local_variable
-    final _ = types;
-
-    final allCategories = await catsF;
-
-    List<String> categoryLabels = <String>[];
-    List<Category> categoryEntities = <Category>[];
-
-    if (projectId > 0) {
-      final usedCategoryIds = _collectUsedCategoryIds([
-        popularItems,
-        recommendedItems,
-        flashSaleItems,
-        newArrivalsItems,
-        bestSellersItems,
-        topRatedItems,
-      ]);
-
-      final filteredCategories = usedCategoryIds.isEmpty
-          ? allCategories
-          : allCategories.where((c) => usedCategoryIds.contains(c.id)).toList();
-
-      categoryLabels = filteredCategories.map((c) => c.name).toList();
-      categoryEntities = filteredCategories;
-    }
+    if (state.isLoading) return;
 
     emit(
       state.copyWith(
-        isLoading: false,
-        hasLoaded: true,
+        isLoading: true,
         errorMessage: null,
-        popularItems: popularItems,
-        recommendedItems: recommendedItems,
-        categories: categoryLabels,
-        categoryEntities: categoryEntities,
-        flashSaleItems: flashSaleItems,
-        newArrivalsItems: newArrivalsItems,
-        bestSellersItems: bestSellersItems,
-        topRatedItems: topRatedItems,
       ),
     );
-  } catch (e) {
-    emit(
-      state.copyWith(
-        isLoading: false,
-        hasLoaded: true,
-        errorMessage: e.toString(),
-      ),
-    );
+
+    try {
+      final projectId = int.tryParse(Env.projectId) ?? 0;
+
+      // ------------------------------------------------
+      // Run all requests safely in parallel
+      // One bad endpoint must NOT kill the whole home
+      // ------------------------------------------------
+      final popularFuture = _safeItems(
+        getGuestUpcomingItems(token: token),
+      );
+
+      final flashSaleFuture = _safeItems(
+        getDiscountedItems.call(token: token),
+      );
+
+      final newArrivalsFuture = _safeItems(
+        getNewArrivalsItems.call(days: 14, token: token),
+      );
+
+      final bestSellersFuture = _safeItems(
+        getBestSellersItems.call(limit: 20, token: token),
+      );
+
+      final itemTypesFuture = projectId > 0
+          ? _safeTypes(getItemTypesByProject(projectId))
+          : Future.value(<ItemType>[]);
+
+      final categoriesFuture = projectId > 0
+          ? _safeCategories(getCategoriesByProject(projectId))
+          : Future.value(<Category>[]);
+
+      final popularItems = await popularFuture;
+      final flashSaleItems = await flashSaleFuture;
+      final newArrivalsItems = await newArrivalsFuture;
+      final bestSellersItems = await bestSellersFuture;
+
+      // kept only so constructor stays compatible with your existing DI
+      final itemTypes = await itemTypesFuture;
+      // ignore: unused_local_variable
+      final _ = itemTypes;
+
+      final allCategories = await categoriesFuture;
+
+      // ------------------------------------------------
+      // IMPORTANT:
+      // do NOT dedupe across sections
+      // one product can appear in New Arrivals + Popular
+      // that's normal in ecommerce
+      // ------------------------------------------------
+
+      // keep these empty for now unless you later add real endpoints
+      final recommendedItems = <ItemSummary>[];
+      final topRatedItems = <ItemSummary>[];
+
+      // categories only for categories that actually have visible items
+      List<String> categoryLabels = <String>[];
+      List<Category> categoryEntities = <Category>[];
+
+      if (projectId > 0) {
+        final usedCategoryIds = _collectUsedCategoryIds([
+          popularItems,
+          recommendedItems,
+          flashSaleItems,
+          newArrivalsItems,
+          bestSellersItems,
+          topRatedItems,
+        ]);
+
+        final filteredCategories = usedCategoryIds.isEmpty
+            ? allCategories
+            : allCategories.where((c) => usedCategoryIds.contains(c.id)).toList();
+
+        categoryLabels = filteredCategories.map((c) => c.name).toList();
+        categoryEntities = filteredCategories;
+      }
+
+      emit(
+        state.copyWith(
+          isLoading: false,
+          hasLoaded: true,
+          errorMessage: null,
+          popularItems: popularItems,
+          recommendedItems: recommendedItems,
+          categories: categoryLabels,
+          categoryEntities: categoryEntities,
+          flashSaleItems: flashSaleItems,
+          newArrivalsItems: newArrivalsItems,
+          bestSellersItems: bestSellersItems,
+          topRatedItems: topRatedItems,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          hasLoaded: true,
+          errorMessage: e.toString(),
+        ),
+      );
+    }
   }
-}
 }

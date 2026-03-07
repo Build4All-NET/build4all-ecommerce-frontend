@@ -11,7 +11,9 @@ class ProductModel extends Product {
     super.description,
     required super.price,
     super.stock,
-    required super.status,
+    super.statusId,
+    super.statusCode,
+    super.statusName,
     super.imageUrl,
     super.sku,
     required super.productType,
@@ -68,7 +70,9 @@ class ProductModel extends Product {
       raw.forEach((k, v) {
         final key = k.toString().trim();
         final val = (v ?? '').toString().trim();
-        if (key.isNotEmpty && val.isNotEmpty) out[key] = val;
+        if (key.isNotEmpty && val.isNotEmpty) {
+          out[key] = val;
+        }
       });
       return out;
     }
@@ -78,7 +82,9 @@ class ProductModel extends Product {
         if (e is Map) {
           final code = (e['code'] ?? e['key'] ?? '').toString().trim();
           final value = (e['value'] ?? '').toString().trim();
-          if (code.isNotEmpty && value.isNotEmpty) out[code] = value;
+          if (code.isNotEmpty && value.isNotEmpty) {
+            out[code] = value;
+          }
         }
       }
     }
@@ -102,11 +108,11 @@ class ProductModel extends Product {
         _toDouble(json['effectivePrice']) ?? salePrice ?? price;
 
     final parsedStock = _toInt(json['stock']);
-    final rawStatus = (json['status'] ?? '').toString().trim();
 
-    final resolvedStatus = (parsedStock ?? 0) <= 0
-        ? 'OUT_OF_STOCK'
-        : (rawStatus.isEmpty ? 'AVAILABLE' : rawStatus);
+    // ✅ new backend status shape
+    final parsedStatusId = _toInt(json['statusId']);
+    final parsedStatusCode = json['statusCode']?.toString().trim();
+    final parsedStatusName = json['statusName']?.toString().trim();
 
     return ProductModel(
       id: _toInt(json['id']) ?? 0,
@@ -121,7 +127,9 @@ class ProductModel extends Product {
       description: json['description']?.toString(),
       price: price,
       stock: parsedStock,
-      status: resolvedStatus,
+      statusId: parsedStatusId,
+      statusCode: parsedStatusCode,
+      statusName: parsedStatusName,
       imageUrl: json['imageUrl']?.toString(),
       sku: json['sku']?.toString(),
       productType: (json['productType'] ?? 'SIMPLE').toString(),
