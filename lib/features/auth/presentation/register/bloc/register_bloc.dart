@@ -15,7 +15,6 @@ import 'package:build4front/core/exceptions/app_exception.dart';
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   final SendVerificationCode sendVerificationCode;
-  
 
   RegisterBloc({required this.sendVerificationCode})
       : super(RegisterState.initial()) {
@@ -34,7 +33,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         contact: null,
         method: null,
         resumeCompleteProfile: false,
-resumePendingId: null,
+        resumePendingId: null,
       ),
     );
 
@@ -55,57 +54,55 @@ resumePendingId: null,
         ownerProjectLinkId: ownerId,
       );
 
-      // ✅ If the usecase returns Either => handle Left/Right properly
       if (result is Either) {
         result.fold(
-  (failure) {
-    // ✅ special case: already verified pending user -> resume complete profile
-    if (failure.code == 'PENDING_ALREADY_VERIFIED' && failure.pendingId != null) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorCode: null,
-          codeSent: false,
-          contact: email ?? phone,
-          method: event.method,
-          resumeCompleteProfile: true,
-          resumePendingId: failure.pendingId,
-        ),
-      );
-      return;
-    }
+          (failure) {
+            if (failure.code == 'PENDING_ALREADY_VERIFIED' &&
+                failure.pendingId != null) {
+              emit(
+                state.copyWith(
+                  isLoading: false,
+                  errorCode: null,
+                  codeSent: false,
+                  contact: email ?? phone,
+                  method: event.method,
+                  resumeCompleteProfile: true,
+                  resumePendingId: failure.pendingId,
+                ),
+              );
+              return;
+            }
 
-    final code = _mapFailureToCode(failure);
-    emit(
-      state.copyWith(
-        isLoading: false,
-        errorCode: code,
-        codeSent: false,
-        contact: null,
-        method: null,
-        resumeCompleteProfile: false,
-        resumePendingId: null,
-      ),
-    );
-  },
-  (_) {
-    emit(
-      state.copyWith(
-        isLoading: false,
-        errorCode: null,
-        codeSent: true,
-        contact: email ?? phone,
-        method: event.method,
-        resumeCompleteProfile: false,
-        resumePendingId: null,
-      ),
-    );
-  },
-);
+            final code = _mapFailureToCode(failure);
+            emit(
+              state.copyWith(
+                isLoading: false,
+                errorCode: code,
+                codeSent: false,
+                contact: null,
+                method: null,
+                resumeCompleteProfile: false,
+                resumePendingId: null,
+              ),
+            );
+          },
+          (_) {
+            emit(
+              state.copyWith(
+                isLoading: false,
+                errorCode: null,
+                codeSent: true,
+                contact: email ?? phone,
+                method: event.method,
+                resumeCompleteProfile: false,
+                resumePendingId: null,
+              ),
+            );
+          },
+        );
         return;
       }
 
-      // ✅ If the usecase returns "void"/success directly
       emit(
         state.copyWith(
           isLoading: false,
@@ -113,6 +110,8 @@ resumePendingId: null,
           codeSent: true,
           contact: email ?? phone,
           method: event.method,
+          resumeCompleteProfile: false,
+          resumePendingId: null,
         ),
       );
     } catch (e) {
@@ -124,6 +123,8 @@ resumePendingId: null,
           codeSent: false,
           contact: null,
           method: null,
+          resumeCompleteProfile: false,
+          resumePendingId: null,
         ),
       );
     }
@@ -134,28 +135,41 @@ resumePendingId: null,
   // ---------------------------------------------------------------------------
 
   String _mapFailureToCode(dynamic failure) {
-    if (failure is AuthFailure && failure.code != null && failure.code!.trim().isNotEmpty) {
-  return _normalizeCode(failure.code!);
-}
-    if (failure is AuthException) return failure.code ?? 'AUTH_ERROR';
-    if (failure is NetworkException) return _mapNetworkFailure(failure);
-    if (failure is AppException) {
-      final code = _tryReadDynamicCode(failure);
-      if (code != null) return _normalizeCode(code);
-      final msg = _tryReadDynamicMessage(failure) ?? failure.toString();
-      return _mapMessageToAuthCode(msg) ?? 'GENERIC';
-    }
-
     final rawCode = _tryReadDynamicCode(failure);
     final rawMsg = _tryReadDynamicMessage(failure) ?? failure.toString();
 
-    if (rawCode != null) {
-      final normalized = _normalizeCode(rawCode);
-      final byMsg = _mapMessageToAuthCode(rawMsg);
-      return byMsg ?? normalized;
+    // 1) message has highest priority if it contains something useful
+    final byMessage = _mapMessageToAuthCode(rawMsg);
+    if (byMessage != null) return byMessage;
+
+    // 2) explicit backend code mapping
+    final byBackendCode = _mapBackendCodeToUiCode(rawCode);
+    if (byBackendCode != null) return byBackendCode;
+
+    if (failure is AuthException) {
+      final code = failure.code;
+      if (code != null && !_isGenericCode(code)) {
+        return _normalizeCode(code);
+      }
+      return 'AUTH_ERROR';
     }
 
-    return _mapMessageToAuthCode(rawMsg) ?? 'GENERIC';
+    if (failure is NetworkException) {
+      return _mapNetworkFailure(failure);
+    }
+
+    if (failure is AppException) {
+      if (rawCode != null && !_isGenericCode(rawCode)) {
+        return _normalizeCode(rawCode);
+      }
+      return 'GENERIC';
+    }
+
+    if (rawCode != null && !_isGenericCode(rawCode)) {
+      return _normalizeCode(rawCode);
+    }
+
+    return 'GENERIC';
   }
 
   String _mapNetworkFailure(NetworkException e) {
@@ -170,32 +184,59 @@ resumePendingId: null,
   // ---------------------------------------------------------------------------
 
   String _mapErrorToCode(Object e) {
-    if (e is AuthException) return e.code ?? 'AUTH_ERROR';
+    if (e is AuthException) {
+      final byMessage = _mapMessageToAuthCode(e.message ?? '');
+      if (byMessage != null) return byMessage;
+
+      final byCode = _mapBackendCodeToUiCode(e.code);
+      if (byCode != null) return byCode;
+
+      if (e.code != null && !_isGenericCode(e.code!)) {
+        return _normalizeCode(e.code!);
+      }
+
+      return 'AUTH_ERROR';
+    }
+
     if (e is NetworkException) return _mapNetworkFailure(e);
 
     if (e is AppException) {
       final code = _tryReadDynamicCode(e);
-      if (code != null) return _normalizeCode(code);
-
       final msg = _tryReadDynamicMessage(e) ?? e.toString();
-      return _mapMessageToAuthCode(msg) ?? 'GENERIC';
+
+      final byMessage = _mapMessageToAuthCode(msg);
+      if (byMessage != null) return byMessage;
+
+      final byCode = _mapBackendCodeToUiCode(code);
+      if (byCode != null) return byCode;
+
+      if (code != null && !_isGenericCode(code)) {
+        return _normalizeCode(code);
+      }
+
+      return 'GENERIC';
     }
 
     if (e is DioException) {
       final parsed = _parseBackendErrorFromDio(e);
 
-      final byMsg =
+      final byMessage =
           parsed.message != null ? _mapMessageToAuthCode(parsed.message!) : null;
-      if (byMsg != null) return byMsg;
+      if (byMessage != null) return byMessage;
 
       final byCode =
-          parsed.code != null ? _normalizeCode(parsed.code!) : null;
-      if (byCode != null && byCode != 'BAD_REQUEST') return byCode;
+          parsed.code != null ? _mapBackendCodeToUiCode(parsed.code!) : null;
+      if (byCode != null) return byCode;
+
+      if (parsed.code != null && !_isGenericCode(parsed.code!)) {
+        return _normalizeCode(parsed.code!);
+      }
 
       final s = parsed.status;
       if (s == 401) return 'UNAUTHORIZED';
       if (s == 403) return 'FORBIDDEN';
       if (s == 404) return 'NOT_FOUND';
+      if (s == 409) return 'CONFLICT';
       if (s != null && s >= 500) return 'SERVER_ERROR';
       if (s == 400) return 'VALIDATION_ERROR';
 
@@ -219,15 +260,13 @@ resumePendingId: null,
       final data = e.response?.data;
 
       if (data is Map) {
-        message = (data['error'] ??
-                data['message'] ??
-                data['details'] ??
-                data['detail'] ??
-                data['msg'])
-            ?.toString()
-            .trim();
+        code = _firstNonEmpty([
+          data['code']?.toString(),
+          data['errorCode']?.toString(),
+          data['error_code']?.toString(),
+        ]);
 
-        code = data['code']?.toString().trim();
+        message = _extractMessageFromMap(data);
 
         final s = data['status'];
         if (s is int) status = s;
@@ -244,30 +283,197 @@ resumePendingId: null,
     return _BackendErr(code: code, message: message, status: status);
   }
 
+  String? _extractMessageFromMap(Map data) {
+    final direct = _firstNonEmpty([
+      data['error']?.toString(),
+      data['message']?.toString(),
+      data['details']?.toString(),
+      data['detail']?.toString(),
+      data['msg']?.toString(),
+    ]);
+
+    if (direct != null) return direct;
+
+    final errors = data['errors'];
+    if (errors is Map) {
+      for (final value in errors.values) {
+        if (value is List && value.isNotEmpty) {
+          final first = value.first?.toString().trim();
+          if (first != null && first.isNotEmpty) return first;
+        }
+        final s = value?.toString().trim();
+        if (s != null && s.isNotEmpty) return s;
+      }
+    }
+
+    if (errors is List && errors.isNotEmpty) {
+      final first = errors.first?.toString().trim();
+      if (first != null && first.isNotEmpty) return first;
+    }
+
+    return null;
+  }
+
+  String? _firstNonEmpty(List<String?> values) {
+    for (final v in values) {
+      final s = v?.trim();
+      if (s != null && s.isNotEmpty && s.toLowerCase() != 'null') {
+        return s;
+      }
+    }
+    return null;
+  }
+
   // ---------------------------------------------------------------------------
   // Message -> Stable code mapping
   // ---------------------------------------------------------------------------
 
   String? _mapMessageToAuthCode(String msg) {
-    final m = msg.toLowerCase();
+    final m = msg.toLowerCase().trim();
 
-    if (m.contains('email') && m.contains('already') && m.contains('in use')) {
+    // email
+    if (m.contains('email') &&
+        (m.contains('already') ||
+            m.contains('exists') ||
+            m.contains('used') ||
+            m.contains('in use') ||
+            m.contains('registered') ||
+            m.contains('taken') ||
+            m.contains('duplicate'))) {
       return 'EMAIL_ALREADY_EXISTS';
     }
 
-    if (m.contains('phone') && m.contains('already') && m.contains('in use')) {
+    // phone
+    if ((m.contains('phone') || m.contains('phone number') || m.contains('mobile')) &&
+        (m.contains('already') ||
+            m.contains('exists') ||
+            m.contains('used') ||
+            m.contains('in use') ||
+            m.contains('registered') ||
+            m.contains('taken') ||
+            m.contains('duplicate'))) {
       return 'PHONE_ALREADY_EXISTS';
     }
 
-    if (m.contains('username') && (m.contains('taken') || m.contains('already'))) {
+    // username
+    if (m.contains('username') &&
+        (m.contains('taken') ||
+            m.contains('already') ||
+            m.contains('exists') ||
+            m.contains('used'))) {
       return 'USERNAME_TAKEN';
     }
 
-    if (m.contains('invalid') && (m.contains('code') || m.contains('otp'))) {
+    // otp / code
+    if ((m.contains('invalid') || m.contains('wrong')) &&
+        (m.contains('code') || m.contains('otp') || m.contains('verification'))) {
       return 'INVALID_CODE';
     }
 
+    if (m.contains('already verified')) {
+      return 'PENDING_ALREADY_VERIFIED';
+    }
+
     return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Backend code -> Stable UI code mapping
+  // ---------------------------------------------------------------------------
+
+  String? _mapBackendCodeToUiCode(String? rawCode) {
+    if (rawCode == null || rawCode.trim().isEmpty) return null;
+
+    final code = _normalizeCode(rawCode);
+
+    switch (code) {
+      case 'EMAIL_ALREADY_EXISTS':
+      case 'EMAIL_ALREADY_IN_USE':
+      case 'EMAIL_EXISTS':
+      case 'EMAIL_IN_USE':
+      case 'DUPLICATE_EMAIL':
+      case 'EMAIL_TAKEN':
+      case 'USER_EMAIL_ALREADY_EXISTS':
+        return 'EMAIL_ALREADY_EXISTS';
+
+      case 'PHONE_ALREADY_EXISTS':
+      case 'PHONE_ALREADY_IN_USE':
+      case 'PHONE_EXISTS':
+      case 'PHONE_IN_USE':
+      case 'PHONE_NUMBER_ALREADY_EXISTS':
+      case 'PHONE_NUMBER_ALREADY_IN_USE':
+      case 'DUPLICATE_PHONE':
+      case 'MOBILE_ALREADY_EXISTS':
+      case 'MOBILE_IN_USE':
+        return 'PHONE_ALREADY_EXISTS';
+
+      case 'USERNAME_TAKEN':
+      case 'USERNAME_ALREADY_EXISTS':
+      case 'USERNAME_EXISTS':
+      case 'DUPLICATE_USERNAME':
+        return 'USERNAME_TAKEN';
+
+      case 'INVALID_CODE':
+      case 'INVALID_OTP':
+      case 'WRONG_CODE':
+      case 'WRONG_OTP':
+      case 'INVALID_VERIFICATION_CODE':
+        return 'INVALID_CODE';
+
+      case 'PENDING_ALREADY_VERIFIED':
+      case 'ALREADY_VERIFIED':
+        return 'PENDING_ALREADY_VERIFIED';
+
+      case 'USER_NOT_FOUND':
+        return 'USER_NOT_FOUND';
+
+      case 'WRONG_PASSWORD':
+        return 'WRONG_PASSWORD';
+
+      case 'INVALID_CREDENTIALS':
+        return 'INVALID_CREDENTIALS';
+
+      case 'INACTIVE':
+      case 'ACCOUNT_INACTIVE':
+        return 'INACTIVE';
+
+      case 'UNAUTHORIZED':
+        return 'UNAUTHORIZED';
+
+      case 'FORBIDDEN':
+        return 'FORBIDDEN';
+
+      case 'NOT_FOUND':
+        return 'NOT_FOUND';
+
+      case 'CONFLICT':
+        return 'CONFLICT';
+
+      case 'SERVER_ERROR':
+      case 'INTERNAL_SERVER_ERROR':
+        return 'SERVER_ERROR';
+
+      case 'VALIDATION_ERROR':
+        return 'VALIDATION_ERROR';
+
+      default:
+        return null;
+    }
+  }
+
+  bool _isGenericCode(String code) {
+    final c = _normalizeCode(code);
+    return {
+      'GENERIC',
+      'ERROR',
+      'UNKNOWN',
+      'UNKNOWN_ERROR',
+      'AUTH_ERROR',
+      'BAD_REQUEST',
+      'VALIDATION_ERROR',
+      'REQUEST_FAILED',
+      'FAILURE',
+    }.contains(c);
   }
 
   // ---------------------------------------------------------------------------
