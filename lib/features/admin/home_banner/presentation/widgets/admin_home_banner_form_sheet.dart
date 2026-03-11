@@ -2,9 +2,6 @@ import 'dart:io';
 
 import 'package:build4front/core/network/globals.dart' as Env;
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
-import 'package:build4front/features/catalog/data/repositories/category_repository_impl.dart';
-import 'package:build4front/features/catalog/data/services/category_api_service.dart';
-import 'package:build4front/features/catalog/domain/usecases/get_categories_by_project.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,16 +10,13 @@ import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 
-import 'package:build4front/common/widgets/app_text_field.dart';
 import 'package:build4front/common/widgets/app_search_field.dart';
-import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
 
 import '../../domain/entities/home_banner.dart';
-
-// ✅ Your domain entities
 import 'package:build4front/features/catalog/domain/entities/category.dart';
 import 'package:build4front/features/items/domain/entities/item_summary.dart';
+import 'package:build4front/features/catalog/data/services/category_api_service.dart';
 
 import '../utils/home_banner_target_type_ui.dart';
 
@@ -46,7 +40,6 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
   final _store = AdminTokenStore();
   final _picker = ImagePicker();
 
-  // ---------- text controllers ----------
   late final TextEditingController _titleCtrl;
   late final TextEditingController _subtitleCtrl;
   late final TextEditingController _sortCtrl;
@@ -54,11 +47,9 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
 
   bool _active = true;
 
-  // ---------- image ----------
-  String? _imagePath; // local file path
-  String? _existingImageUrl; // from backend for edit mode
+  String? _imagePath;
+  String? _existingImageUrl;
 
-  // ---------- target ----------
   HomeBannerTargetTypeUi _targetType = HomeBannerTargetTypeUi.none;
 
   bool _loadingTargets = true;
@@ -70,6 +61,10 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
   Category? _selectedCategory;
   ItemSummary? _selectedProduct;
 
+  bool _submitted = false;
+  String? _imageError;
+  String? _targetPickerError;
+
   bool get _isEdit => widget.initial != null;
 
   @override
@@ -79,21 +74,14 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
 
     _titleCtrl = TextEditingController(text: b?.title ?? '');
     _subtitleCtrl = TextEditingController(text: b?.subtitle ?? '');
-    _sortCtrl = TextEditingController(text: '${b?.sortOrder ?? 0}');
+    _sortCtrl = TextEditingController(
+      text: b?.sortOrder != null ? '${b!.sortOrder}' : '',
+    );
     _targetUrlCtrl = TextEditingController(text: b?.targetUrl ?? '');
 
     _active = true;
     _targetType = HomeBannerTargetTypeUiX.fromApi(b?.targetType);
-
     _existingImageUrl = b?.imageUrl;
-
-    // preselect target
-    if ((b?.targetType ?? '').toUpperCase() == 'CATEGORY') {
-      // will match after loading categories
-    }
-    if ((b?.targetType ?? '').toUpperCase() == 'PRODUCT') {
-      // will match after loading products
-    }
 
     _bootstrapTargets(
       initialCategoryId: ((b?.targetType ?? '').toUpperCase() == 'CATEGORY')
@@ -114,9 +102,6 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     super.dispose();
   }
 
-  // =========================================================
-  // TARGETS LOADING
-  // =========================================================
   Future<void> _bootstrapTargets({
     int? initialCategoryId,
     int? initialProductId,
@@ -133,15 +118,12 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     }
 
     try {
-      // ✅ Hook these to your real implementations
       final categories = await _loadCategories(token);
       final products = await _loadProducts(token);
 
       Category? initCat;
       if (initialCategoryId != null) {
-        initCat = categories
-            .where((c) => c.id == initialCategoryId)
-            .firstOrNull;
+        initCat = categories.where((c) => c.id == initialCategoryId).firstOrNull;
       }
 
       ItemSummary? initProd;
@@ -165,25 +147,11 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     }
   }
 
-  // ----------------------------------------------------------------
-  // IMPORTANT:
-  // Replace these 2 with your actual repo/usecase calls.
-  //
-  // You already have:
-  //   - GetCategoriesByProject
-  //   - Admin products list screen/services
-  //
-  // So wire them here.
-  // ----------------------------------------------------------------
-
   Future<List<Category>> _loadCategories(String token) async {
     final api = CategoryApiService();
-
-    // Same logic you used in AdminCreateProductScreen
     final projectId = int.tryParse(Env.projectId!.trim());
 
     if (projectId == null || projectId <= 0) {
-      // fallback (won't crash)
       return <Category>[];
     }
 
@@ -192,10 +160,6 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
       authToken: token,
     );
 
-    // ✅ If your Category has fromJson, use it:
-    // return rawList.map((j) => Category.fromJson(j)).toList();
-
-    // ✅ Otherwise map manually:
     return rawList.map<Category>((j) {
       final idRaw = j['id'];
       final id = idRaw is int ? idRaw : int.tryParse('$idRaw') ?? 0;
@@ -209,8 +173,8 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     final api = ProductApiService();
 
     final rawList = await api.getProducts(
-     
-      authToken: token, ownerProjectId: widget.ownerProjectId
+      authToken: token,
+      ownerProjectId: widget.ownerProjectId,
     );
 
     return rawList.map<ItemSummary>((j) {
@@ -238,9 +202,6 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     }).toList();
   }
 
-  // =========================================================
-  // IMAGE PICK
-  // =========================================================
   Future<void> _pickFromGallery() async {
     final x = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -249,6 +210,7 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     if (x == null) return;
     setState(() {
       _imagePath = x.path;
+      _imageError = null;
     });
   }
 
@@ -260,6 +222,7 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     if (x == null) return;
     setState(() {
       _imagePath = x.path;
+      _imageError = null;
     });
   }
 
@@ -269,32 +232,24 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     });
   }
 
-  // =========================================================
-  // BODY
-  // =========================================================
-  int _parseInt(String v) => int.tryParse(v.trim()) ?? 0;
-
   Map<String, dynamic> _buildBody() {
     final type = _targetType;
 
     final body = <String, dynamic>{
       'ownerProjectId': widget.ownerProjectId,
-      'title': _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
+      'title': _titleCtrl.text.trim(),
       'subtitle': _subtitleCtrl.text.trim().isEmpty
           ? null
           : _subtitleCtrl.text.trim(),
-      'sortOrder': _parseInt(_sortCtrl.text),
+      'sortOrder': int.parse(_sortCtrl.text.trim()),
       'active': _active,
-
-      // If you later add scheduling UI:
-      // 'startAt': startAtIso,
-      // 'endAt': endAtIso,
+      'targetType': type == HomeBannerTargetTypeUi.none ? null : type.apiName,
     };
 
-    body['targetType'] = type.apiName;
-
     if (type == HomeBannerTargetTypeUi.url) {
-      body['targetUrl'] = _targetUrlCtrl.text.trim();
+      body['targetUrl'] = _targetUrlCtrl.text.trim().isEmpty
+          ? null
+          : _targetUrlCtrl.text.trim();
       body['targetId'] = null;
     } else if (type == HomeBannerTargetTypeUi.category) {
       body['targetId'] = _selectedCategory?.id;
@@ -310,59 +265,46 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
     return body;
   }
 
-  void _submit(AppLocalizations l) {
-    if (!_formKey.currentState!.validate()) return;
+  void _submit() {
+    setState(() {
+      _submitted = true;
+      _imageError = null;
+      _targetPickerError = null;
+    });
 
-    // ✅ extra target validation
+    final ok = _formKey.currentState?.validate() ?? false;
+    if (!ok) return;
+
+    if (!_isEdit && (_imagePath == null || _imagePath!.trim().isEmpty)) {
+      setState(() {
+        _imageError = 'Image is required';
+      });
+      return;
+    }
+
+    // target صار optional
     if (_targetType == HomeBannerTargetTypeUi.category &&
         _selectedCategory == null) {
-      AppToast.error(
-        context,
-        l.adminHomeBannerCategoryRequired ?? 'Category is required',
-        
-      );
+      setState(() {
+        _targetPickerError = 'Please select a category';
+      });
       return;
     }
 
     if (_targetType == HomeBannerTargetTypeUi.product &&
         _selectedProduct == null) {
-      AppToast.error(
-        context,
-        l.adminHomeBannerProductRequired ?? 'Product is required',
-        
-      );
-      return;
-    }
-
-    if (_targetType == HomeBannerTargetTypeUi.url &&
-        _targetUrlCtrl.text.trim().isEmpty) {
-      AppToast.error(
-        context,
-        l.adminHomeBannerUrlRequired ?? 'URL is required',
-        
-      );
-      return;
-    }
-
-    // ✅ Create requires an image
-    if (!_isEdit && (_imagePath == null || _imagePath!.isEmpty)) {
-      AppToast.error(
-        context,
-        l.adminHomeBannerImageRequired ?? 'Image is required',
-        
-      );
+      setState(() {
+        _targetPickerError = 'Please select a product';
+      });
       return;
     }
 
     Navigator.pop(context, {
       'body': _buildBody(),
-      'imagePath': _imagePath, // optional for edit
+      'imagePath': _imagePath,
     });
   }
 
-  // =========================================================
-  // UI
-  // =========================================================
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -387,16 +329,19 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
           physics: const BouncingScrollPhysics(),
           child: Form(
             key: _formKey,
+            autovalidateMode: _submitted
+                ? AutovalidateMode.always
+                : AutovalidateMode.disabled,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: text.titleMedium.copyWith(color: c.label)),
                 SizedBox(height: spacing.md),
 
-                // ------------------ Image Preview ------------------
                 _BannerImagePickerBlock(
                   imagePath: _imagePath,
                   existingUrl: _existingImageUrl,
+                  errorText: _imageError,
                   onPickGallery: _pickFromGallery,
                   onPickCamera: _pickFromCamera,
                   onClear: _clearPickedImage,
@@ -404,27 +349,39 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
 
                 SizedBox(height: spacing.lg),
 
-                // ------------------ Title / Subtitle / Sort ------------------
-                AppTextField(
+                _FormInputField(
                   label: l.adminHomeBannerTitleLabel ?? 'Title',
                   controller: _titleCtrl,
+                  validator: (v) {
+                    if ((v ?? '').trim().isEmpty) {
+                      return 'Title is required';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: spacing.sm),
 
-                AppTextField(
+                _FormInputField(
                   label: l.adminHomeBannerSubtitleLabel ?? 'Subtitle',
                   controller: _subtitleCtrl,
                 ),
                 SizedBox(height: spacing.sm),
 
-                AppTextField(
+                _FormInputField(
                   label: l.adminHomeBannerSortLabel ?? 'Sort order',
                   controller: _sortCtrl,
                   keyboardType: TextInputType.number,
+                  validator: (v) {
+                    final value = (v ?? '').trim();
+                    if (value.isEmpty) return 'Sort order is required';
+                    final parsed = int.tryParse(value);
+                    if (parsed == null) return 'Sort order must be a number';
+                    if (parsed < 0) return 'Sort order must be 0 or more';
+                    return null;
+                  },
                 ),
                 SizedBox(height: spacing.md),
 
-                // ------------------ Active ------------------
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(l.adminActiveLabel ?? 'Active'),
@@ -434,7 +391,6 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
 
                 SizedBox(height: spacing.md),
 
-                // ------------------ Target Dynamic Section ------------------
                 _TargetSection(
                   loading: _loadingTargets,
                   error: _targetsError,
@@ -444,24 +400,32 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
                   selectedCategory: _selectedCategory,
                   selectedProduct: _selectedProduct,
                   targetUrlCtrl: _targetUrlCtrl,
+                  pickerErrorText: _targetPickerError,
                   onTargetTypeChanged: (v) {
                     setState(() {
                       _targetType = v;
-
-                      // reset irrelevant selections
                       _selectedCategory = null;
                       _selectedProduct = null;
                       _targetUrlCtrl.clear();
+                      _targetPickerError = null;
                     });
                   },
-                  onCategoryChanged: (v) =>
-                      setState(() => _selectedCategory = v),
-                  onProductChanged: (v) => setState(() => _selectedProduct = v),
+                  onCategoryChanged: (v) {
+                    setState(() {
+                      _selectedCategory = v;
+                      _targetPickerError = null;
+                    });
+                  },
+                  onProductChanged: (v) {
+                    setState(() {
+                      _selectedProduct = v;
+                      _targetPickerError = null;
+                    });
+                  },
                 ),
 
                 SizedBox(height: spacing.lg),
 
-                // ------------------ Footer Buttons ------------------
                 Row(
                   children: [
                     Expanded(
@@ -476,7 +440,7 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
                         label: _isEdit
                             ? (l.adminUpdate ?? 'Update')
                             : (l.adminCreate ?? 'Create'),
-                        onPressed: () => _submit(l),
+                        onPressed: _submit,
                       ),
                     ),
                   ],
@@ -490,13 +454,42 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
   }
 }
 
-// =========================================================
-// IMAGE PICKER BLOCK
-// =========================================================
+class _FormInputField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+
+  const _FormInputField({
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.watch<ThemeCubit>().state.tokens;
+    final c = tokens.colors;
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: c.surface,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+}
 
 class _BannerImagePickerBlock extends StatelessWidget {
   final String? imagePath;
   final String? existingUrl;
+  final String? errorText;
   final VoidCallback onPickGallery;
   final VoidCallback onPickCamera;
   final VoidCallback onClear;
@@ -504,6 +497,7 @@ class _BannerImagePickerBlock extends StatelessWidget {
   const _BannerImagePickerBlock({
     required this.imagePath,
     required this.existingUrl,
+    required this.errorText,
     required this.onPickGallery,
     required this.onPickCamera,
     required this.onClear,
@@ -530,9 +524,6 @@ class _BannerImagePickerBlock extends StatelessWidget {
         ),
       );
     } else if ((existingUrl ?? '').isNotEmpty) {
-      // We don't resolve base URL here because the card will fix display;
-      // form preview can still show relative only if your Image.network
-      // can reach it. If you want absolute here too, add resolver same as card.
       preview = ClipRRect(
         borderRadius: BorderRadius.circular(tokens.card.radius),
         child: Image.network(
@@ -540,11 +531,11 @@ class _BannerImagePickerBlock extends StatelessWidget {
           height: 160,
           width: double.infinity,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallback(c, text),
+          errorBuilder: (_, __, ___) => _fallback(c),
         ),
       );
     } else {
-      preview = _fallback(c, text);
+      preview = _fallback(c);
     }
 
     return Container(
@@ -567,9 +558,9 @@ class _BannerImagePickerBlock extends StatelessWidget {
           SizedBox(height: spacing.sm),
           preview,
           SizedBox(height: spacing.sm),
-
           Wrap(
             spacing: spacing.sm,
+            runSpacing: spacing.sm,
             children: [
               OutlinedButton.icon(
                 onPressed: onPickGallery,
@@ -592,12 +583,19 @@ class _BannerImagePickerBlock extends StatelessWidget {
                 ),
             ],
           ),
+          if (errorText != null && errorText!.trim().isNotEmpty) ...[
+            SizedBox(height: spacing.xs),
+            Text(
+              errorText!,
+              style: text.bodySmall.copyWith(color: c.danger),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _fallback(dynamic c, dynamic text) {
+  Widget _fallback(dynamic c) {
     return Container(
       height: 160,
       width: double.infinity,
@@ -611,23 +609,16 @@ class _BannerImagePickerBlock extends StatelessWidget {
   }
 }
 
-// =========================================================
-// TARGET SECTION (Dynamic)
-// =========================================================
-
 class _TargetSection extends StatelessWidget {
   final bool loading;
   final String? error;
-
   final HomeBannerTargetTypeUi targetType;
-
   final List<Category> categories;
   final List<ItemSummary> products;
-
   final Category? selectedCategory;
   final ItemSummary? selectedProduct;
-
   final TextEditingController targetUrlCtrl;
+  final String? pickerErrorText;
 
   final ValueChanged<HomeBannerTargetTypeUi> onTargetTypeChanged;
   final ValueChanged<Category?> onCategoryChanged;
@@ -642,6 +633,7 @@ class _TargetSection extends StatelessWidget {
     required this.selectedCategory,
     required this.selectedProduct,
     required this.targetUrlCtrl,
+    required this.pickerErrorText,
     required this.onTargetTypeChanged,
     required this.onCategoryChanged,
     required this.onProductChanged,
@@ -689,6 +681,9 @@ class _TargetSection extends StatelessWidget {
           value: targetType,
           decoration: InputDecoration(
             hintText: l.adminHomeBannerTargetTypeHint ?? 'Select target type',
+            filled: true,
+            fillColor: c.surface,
+            border: const OutlineInputBorder(),
           ),
           items: HomeBannerTargetTypeUi.values
               .map((e) => DropdownMenuItem(value: e, child: Text(e.label(l))))
@@ -700,10 +695,22 @@ class _TargetSection extends StatelessWidget {
         SizedBox(height: spacing.md),
 
         if (targetType == HomeBannerTargetTypeUi.url) ...[
-          AppTextField(
+          _FormInputField(
             label: l.adminHomeBannerTargetUrlLabel ?? 'Target URL',
             controller: targetUrlCtrl,
             keyboardType: TextInputType.url,
+            validator: (v) {
+              if (targetType != HomeBannerTargetTypeUi.url) return null;
+
+              final value = (v ?? '').trim();
+              if (value.isEmpty) return 'URL is required';
+
+              final uri = Uri.tryParse(value);
+              if (uri == null || (!uri.hasScheme && !value.startsWith('/'))) {
+                return 'Enter a valid URL';
+              }
+              return null;
+            },
           ),
         ],
 
@@ -719,6 +726,7 @@ class _TargetSection extends StatelessWidget {
             label: (x) => x.name,
             hintText: l.adminHomeBannerTargetCategoryHint ?? 'Select category',
             onChanged: onCategoryChanged,
+            errorText: pickerErrorText,
           ),
         ],
 
@@ -734,16 +742,13 @@ class _TargetSection extends StatelessWidget {
             label: (x) => x.title,
             hintText: l.adminHomeBannerTargetProductHint ?? 'Select product',
             onChanged: onProductChanged,
+            errorText: pickerErrorText,
           ),
         ],
       ],
     );
   }
 }
-
-// =========================================================
-// GENERIC SEARCHABLE PICKER (same style as your shipping)
-// =========================================================
 
 class _SearchablePicker<T> extends StatelessWidget {
   final List<T> items;
@@ -752,6 +757,7 @@ class _SearchablePicker<T> extends StatelessWidget {
   final String hintText;
   final String Function(T) label;
   final ValueChanged<T?> onChanged;
+  final String? errorText;
 
   const _SearchablePicker({
     required this.items,
@@ -760,6 +766,7 @@ class _SearchablePicker<T> extends StatelessWidget {
     required this.hintText,
     required this.onChanged,
     this.enabled = true,
+    this.errorText,
   });
 
   @override
@@ -771,54 +778,70 @@ class _SearchablePicker<T> extends StatelessWidget {
 
     final disabled = !enabled || items.isEmpty;
 
-    return InkWell(
-      onTap: disabled
-          ? null
-          : () async {
-              final picked = await showModalBottomSheet<T>(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => _PickerSheet<T>(
-                  items: items,
-                  label: label,
-                  title: hintText,
-                ),
-              );
-              if (picked != null) onChanged(picked);
-            },
-      borderRadius: BorderRadius.circular(tokens.card.radius),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: spacing.md,
-          vertical: spacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: enabled ? c.surface : c.surface.withOpacity(0.4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: disabled
+              ? null
+              : () async {
+                  final picked = await showModalBottomSheet<T>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => _PickerSheet<T>(
+                      items: items,
+                      label: label,
+                      title: hintText,
+                    ),
+                  );
+                  if (picked != null) onChanged(picked);
+                },
           borderRadius: BorderRadius.circular(tokens.card.radius),
-          border: Border.all(color: c.border.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                items.isEmpty
-                    ? (AppLocalizations.of(context)?.adminNoOptions ??
-                          'No options')
-                    : (value == null ? hintText : label(value as T)),
-                style: text.bodyMedium.copyWith(
-                  color: items.isEmpty
-                      ? c.muted
-                      : (value == null ? c.muted : c.label),
-                ),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: spacing.md,
+              vertical: spacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: enabled ? c.surface : c.surface.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(tokens.card.radius),
+              border: Border.all(
+                color: errorText != null && errorText!.isNotEmpty
+                    ? c.danger
+                    : c.border.withOpacity(0.2),
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              color: enabled ? c.muted : c.muted.withOpacity(0.5),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    items.isEmpty
+                        ? (AppLocalizations.of(context)?.adminNoOptions ??
+                              'No options')
+                        : (value == null ? hintText : label(value as T)),
+                    style: text.bodyMedium.copyWith(
+                      color: items.isEmpty
+                          ? c.muted
+                          : (value == null ? c.muted : c.label),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: enabled ? c.muted : c.muted.withOpacity(0.5),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (errorText != null && errorText!.trim().isNotEmpty) ...[
+          SizedBox(height: spacing.xs),
+          Text(
+            errorText!,
+            style: text.bodySmall.copyWith(color: c.danger),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -932,9 +955,6 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
   }
 }
 
-// =========================================================
-// tiny ext
-// =========================================================
 extension _FirstOrNullExt<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
 }

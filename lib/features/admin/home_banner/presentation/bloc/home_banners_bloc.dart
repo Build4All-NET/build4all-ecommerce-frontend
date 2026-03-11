@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 
 import '../../domain/usecases/list_home_banners_admin.dart';
 import '../../domain/usecases/create_home_banner.dart';
@@ -32,9 +33,16 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
     emit(state.copyWith(loading: true, error: null));
     try {
       final list = await listAdmin(token: e.token);
-      emit(state.copyWith(loading: false, banners: list));
+      emit(state.copyWith(
+        loading: false,
+        error: null,
+        banners: list,
+      ));
     } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -42,11 +50,14 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
     CreateBannerEvent e,
     Emitter<HomeBannersState> emit,
   ) async {
+    emit(state.copyWith(error: null));
     try {
       await create(body: e.body, token: e.token, imagePath: e.imagePath);
       add(LoadAdminBanners(token: e.token));
     } catch (err) {
-      emit(state.copyWith(error: err.toString()));
+      emit(state.copyWith(
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -54,6 +65,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
     UpdateBannerEvent e,
     Emitter<HomeBannersState> emit,
   ) async {
+    emit(state.copyWith(error: null));
     try {
       await update(
         id: e.id,
@@ -63,7 +75,9 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
       );
       add(LoadAdminBanners(token: e.token));
     } catch (err) {
-      emit(state.copyWith(error: err.toString()));
+      emit(state.copyWith(
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -71,11 +85,14 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
     DeleteBannerEvent e,
     Emitter<HomeBannersState> emit,
   ) async {
+    emit(state.copyWith(error: null));
     try {
       await delete(id: e.id, token: e.token);
       add(LoadAdminBanners(token: e.token));
     } catch (err) {
-      emit(state.copyWith(error: err.toString()));
+      emit(state.copyWith(
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 }

@@ -261,6 +261,8 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     switch (_statusCodeOf(p)) {
       case 'DRAFT':
         return 'Draft';
+      case 'UPCOMING':
+        return 'Upcoming';
       case 'PUBLISHED':
         return 'Published';
       case 'ARCHIVED':
@@ -347,6 +349,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
 
   Map<String, int> _buildStatusCounts(List<Product> products) {
     int draft = 0;
+    int upcoming = 0;
     int published = 0;
     int archived = 0;
 
@@ -354,6 +357,9 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
       switch (_statusCodeOf(p)) {
         case 'DRAFT':
           draft++;
+          break;
+        case 'UPCOMING':
+          upcoming++;
           break;
         case 'PUBLISHED':
           published++;
@@ -366,6 +372,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
 
     return {
       'DRAFT': draft,
+      'UPCOMING': upcoming,
       'PUBLISHED': published,
       'ARCHIVED': archived,
     };
@@ -680,6 +687,12 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                 SizedBox(width: spacing.sm),
                 _SummaryPill(
                   tokens: tokens,
+                  label: 'Upcoming',
+                  count: statusCounts['UPCOMING'] ?? 0,
+                ),
+                SizedBox(width: spacing.sm),
+                _SummaryPill(
+                  tokens: tokens,
                   label: 'Published',
                   count: statusCounts['PUBLISHED'] ?? 0,
                 ),
@@ -749,6 +762,7 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                     items: const [
                       _FilterItem(value: 'ALL', label: 'All'),
                       _FilterItem(value: 'DRAFT', label: 'Draft'),
+                      _FilterItem(value: 'UPCOMING', label: 'Upcoming'),
                       _FilterItem(value: 'PUBLISHED', label: 'Published'),
                       _FilterItem(value: 'ARCHIVED', label: 'Archived'),
                     ],

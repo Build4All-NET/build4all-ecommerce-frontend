@@ -80,7 +80,7 @@ class ItemCard extends StatelessWidget {
         final bool isProductCard = imageFit == BoxFit.contain;
 
         // ✅ Keep activities pinned nicely, but do NOT create huge mid-card gap for products
-        final bool pinBottomActions = boundedH && !isProductCard;
+       final bool pinBottomActions = boundedH;
 
         final double contentPad = isProductCard
             ? (veryCompact

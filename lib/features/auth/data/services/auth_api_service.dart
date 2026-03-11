@@ -739,10 +739,23 @@ if (backendCode != null) {
       throw AuthException(rawMsg, code: 'USER_NOT_FOUND', original: resp);
     }
 
-    // inactive/locked
-    if (status == 423 || hasAny(['inactive', 'disabled', 'locked'])) {
-      throw AuthException(rawMsg, code: 'INACTIVE', original: resp);
-    }
+   // login locked
+// login locked
+if (status == 423 ||
+    hasAny(['too many failed login attempts', 'login locked', 'retry later'])) {
+  throw AuthException(rawMsg, code: 'LOGIN_LOCKED', original: resp);
+}
+
+// inactive account
+if (hasAny(['inactive', 'disabled'])) {
+  throw AuthException(rawMsg, code: 'INACTIVE', original: resp);
+}
+
+// invalid email format
+if ((status == 400 || status == 422) &&
+    hasAny(['invalid email format', 'email format'])) {
+  throw AuthException(rawMsg, code: 'INVALID_EMAIL_FORMAT', original: resp);
+}
 
     // wrong password vs invalid creds
     if (status == 400 || status == 401) {

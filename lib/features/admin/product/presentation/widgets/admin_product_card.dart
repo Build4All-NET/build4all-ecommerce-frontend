@@ -70,6 +70,8 @@ class _AdminProductCardState extends State<AdminProductCard> {
     switch (_statusCode) {
       case 'DRAFT':
         return 'Draft';
+      case 'UPCOMING':
+        return 'Upcoming';
       case 'PUBLISHED':
         return 'Published';
       case 'ARCHIVED':
@@ -103,6 +105,8 @@ class _AdminProductCardState extends State<AdminProductCard> {
     switch (_statusCode) {
       case 'DRAFT':
         return _warningColor.withOpacity(0.12);
+      case 'UPCOMING':
+        return colors.primary.withOpacity(0.12);
       case 'PUBLISHED':
         return colors.success.withOpacity(0.12);
       case 'ARCHIVED':
@@ -116,6 +120,8 @@ class _AdminProductCardState extends State<AdminProductCard> {
     switch (_statusCode) {
       case 'DRAFT':
         return _warningColor;
+      case 'UPCOMING':
+        return colors.primary;
       case 'PUBLISHED':
         return colors.success;
       case 'ARCHIVED':

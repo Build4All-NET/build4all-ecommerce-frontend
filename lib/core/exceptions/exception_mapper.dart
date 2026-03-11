@@ -21,20 +21,30 @@ class ExceptionMapper {
 
         // Keep your code-based mapping (existing behavior)
         switch (error.code) {
-          case 'INVALID_CREDENTIALS':
-            return 'Invalid email or password';
-          case 'USER_NOT_FOUND':
-            return 'User not found';
-          case 'INACTIVE':
-            return 'Your account is inactive. Reactivate to continue.';
-          case 'NETWORK_ERROR':
-            return 'No internet connection';
-          case 'SERVER_ERROR':
-            return 'Server error. Please try later.';
-        }
+  case 'INVALID_CREDENTIALS':
+    return 'Invalid email or password';
 
-        // Fallback to the clean message carried by your AppException
-        return _sanitize(error.message);
+  case 'WRONG_PASSWORD':
+    return 'Invalid email or password';
+
+  case 'USER_NOT_FOUND':
+    return 'User not found';
+
+  case 'INVALID_EMAIL_FORMAT':
+    return 'Invalid email format';
+
+  case 'LOGIN_LOCKED':
+    return _sanitize(error.message);
+
+  case 'INACTIVE':
+    return 'Your account is inactive. Reactivate to continue.';
+
+  case 'NETWORK_ERROR':
+    return 'No internet connection';
+
+  case 'SERVER_ERROR':
+    return 'Server error. Please try later.';
+}
       }
 
       // ✅ Raw Dio exceptions (this is the big missing part in your project)
@@ -67,6 +77,7 @@ class ExceptionMapper {
         return 'Secure connection failed.';
       case DioExceptionType.unknown:
         return 'Network error. Check your connection.';
+
       case DioExceptionType.badResponse:
         break; // handled below
     }

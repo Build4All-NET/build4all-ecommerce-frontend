@@ -125,14 +125,14 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
       if (mounted) Navigator.of(context).pop();
 
-      if (result.none) {
-        AppToast.error(
-          context,
-          result.error ?? l10n.authErrorGeneric,
-          
-        );
-        return;
-      }
+ if (result.none) {
+  final msg = (result.error ?? '').trim();
+  AppToast.error(
+    context,
+    msg.isEmpty ? l10n.authErrorGeneric : msg,
+  );
+  return;
+}
 
       Future<void> _hydrateUserAuth(bool wasInactiveFlag) async {
         final user = result.userEntity;
@@ -568,12 +568,19 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                                 label: l10n.emailLabel,
                                 controller: _emailCtrl,
                                 keyboardType: TextInputType.emailAddress,
-                                validator: (value) {
-                                  final v = value?.trim() ?? '';
-                                  if (v.isEmpty) return l10n.fieldRequired;
-                                  if (!v.contains('@')) return l10n.invalidEmail;
-                                  return null;
-                                },
+                                
+                            validator: (value) {
+  final v = value?.trim() ?? '';
+  if (v.isEmpty) return l10n.fieldRequired;
+
+  final emailRegex = RegExp(
+    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+  );
+
+  if (!emailRegex.hasMatch(v)) return l10n.invalidEmail;
+
+  return null;
+},
                               )
                             else
                               _PhoneFieldIntl(
