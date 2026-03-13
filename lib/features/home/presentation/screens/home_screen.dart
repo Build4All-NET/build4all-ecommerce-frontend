@@ -364,75 +364,88 @@ class _HomeScreenState extends State<HomeScreen>
 
             return BlocBuilder<HomeBloc, HomeState>(
               builder: (context, homeState) {
-                if (!homeState.hasLoaded && !homeState.isLoading) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    _ensureHomeDataLoaded();
-                  });
-                }
+              if (!homeState.hasLoaded && !homeState.isLoading) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    _ensureHomeDataLoaded();
+  });
+}
 
-                if (homeState.isLoading && !homeState.hasLoaded) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+final bool initialLoading = homeState.isLoading && !homeState.hasLoaded;
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _searchQuery = '';
-                      _selectedCategoryId = null;
-                      _resetPaging();
-                    });
+return Stack(
+  children: [
+    RefreshIndicator(
+      onRefresh: () async {
+        setState(() {
+          _searchQuery = '';
+          _selectedCategoryId = null;
+          _resetPaging();
+        });
 
-                    final raw = (authState.token ?? '').trim();
-                    final token = raw.isEmpty ? null : raw;
+        final raw = (authState.token ?? '').trim();
+        final token = raw.isEmpty ? null : raw;
 
-                    context.read<HomeBloc>().add(
-                      HomeRefreshRequested(token: token),
-                    );
+        context.read<HomeBloc>().add(
+          HomeRefreshRequested(token: token),
+        );
 
-                    await AiFeatureBootstrap().refresh(
-                      minInterval: Duration.zero,
-                    );
-                    await _loadSupportInfo(
-                      silent: false,
-                      reason: 'pull-to-refresh',
-                    );
-                  },
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final maxW = constraints.maxWidth;
-                      final contentMaxWidth = maxW > 900 ? 900.0 : maxW;
+        await AiFeatureBootstrap().refresh(
+          minInterval: Duration.zero,
+        );
+        await _loadSupportInfo(
+          silent: false,
+          reason: 'pull-to-refresh',
+        );
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth;
+          final contentMaxWidth = maxW > 900 ? 900.0 : maxW;
 
-                      final hp = maxW < 390 ? spacing.md : spacing.lg;
-                      final top = maxW < 390 ? spacing.md : spacing.lg;
-                      final bottom = spacing.lg;
+          final hp = maxW < 390 ? spacing.md : spacing.lg;
+          final top = maxW < 390 ? spacing.md : spacing.lg;
+          final bottom = spacing.lg;
 
-                      return Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                          child: ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: EdgeInsets.fromLTRB(hp, top, hp, bottom),
-                            itemCount: visibleSections.length,
-                            itemBuilder: (context, index) {
-                              final section = visibleSections[index];
-                              return _buildSection(
-                                context,
-                                theme,
-                                l10n,
-                                section,
-                                homeState: homeState,
-                                fullName: fullName,
-                                avatarUrl: avatarUrl,
-                              );
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: contentMaxWidth),
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(hp, top, hp, bottom),
+                itemCount: visibleSections.length,
+                itemBuilder: (context, index) {
+                  final section = visibleSections[index];
+                  return _buildSection(
+                    context,
+                    theme,
+                    l10n,
+                    section,
+                    homeState: homeState,
+                    fullName: fullName,
+                    avatarUrl: avatarUrl,
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+
+    if (initialLoading)
+      const Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: LinearProgressIndicator(),
+      ),
+  ],
+);
+                
+                 
+                
               },
             );
           },

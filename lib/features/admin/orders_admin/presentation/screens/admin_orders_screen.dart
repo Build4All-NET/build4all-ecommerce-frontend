@@ -37,7 +37,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       context: context,
       firstDate: DateTime(now.year - 2),
       lastDate: now,
-      initialDateRange: _range ??
+      initialDateRange:
+          _range ??
           DateTimeRange(
             start: now.subtract(const Duration(days: 30)),
             end: now,
@@ -63,11 +64,15 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     });
   }
 
-  void _clearRange() {
+  void _clearAllFilters() {
     setState(() {
       _range = null;
       _quickDaysSelected = null;
     });
+
+    context.read<AdminOrdersBloc>().add(
+          AdminOrdersStatusChanged(null),
+        );
   }
 
   @override
@@ -103,10 +108,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // status filter already applied by bloc.
             final statusFiltered = state.orders;
-
-            // range filter is UI-only
             final filteredOrders = _applyRangeFilter(statusFiltered, _range);
 
             return RefreshIndicator(
@@ -126,7 +128,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                     onPickRange: () => _pickRange(context),
                     onQuick7: () => _quickRange(7),
                     onQuick30: () => _quickRange(30),
-                    onClear: _clearRange,
+                    onClear: _clearAllFilters,
                   ),
                   SizedBox(height: spacing.md),
                   _StatusChips(
@@ -152,7 +154,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         onTap: () async {
                           final changed = await Navigator.of(context).push<bool>(
                             MaterialPageRoute(
-                              builder: (_) => AdminOrderDetailsScreen(orderId: o.id),
+                              builder: (_) =>
+                                  AdminOrderDetailsScreen(orderId: o.id),
                             ),
                           );
 
@@ -252,6 +255,23 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
         labelStyle: tokens.typography.bodySmall.copyWith(
           color: selected ? colors.primary : colors.muted,
           fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
+        ),
+      );
+    }
+
+    Widget clearChip() {
+      return ActionChip(
+        label: Text(l10n.adminClear),
+        onPressed: onClear,
+        backgroundColor: colors.surface,
+        labelStyle: tokens.typography.bodySmall.copyWith(
+          color: colors.muted,
+          fontWeight: FontWeight.w900,
+        ),
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: colors.border.withOpacity(0.35),
+          ),
         ),
       );
     }
@@ -375,18 +395,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
                 selected: quickSelected(30),
                 onTap: onQuick30,
               ),
-              ActionChip(
-                label: Text(l10n.adminClear),
-                onPressed: onClear,
-                backgroundColor: colors.surface,
-                labelStyle: tokens.typography.bodySmall.copyWith(
-                  color: colors.muted,
-                  fontWeight: FontWeight.w900,
-                ),
-                shape: StadiumBorder(
-                  side: BorderSide(color: colors.border.withOpacity(0.35)),
-                ),
-              ),
+              clearChip(),
             ],
           ),
           SizedBox(height: spacing.md),
@@ -485,6 +494,7 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
                   ? 6.0
                   : (60.0 * (p.revenue / maxRev)).clamp(6.0, 60.0);
               final label = '${p.day.month}/${p.day.day}';
+
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: spacing.xs),
@@ -536,10 +546,11 @@ class AdminOrdersAnalyticsHeader extends StatelessWidget {
     final revByDay = {for (final d in days) d: 0.0};
 
     for (final o in orders) {
-      final total = (o.payment.orderTotal <= 0) ? o.totalPrice : o.payment.orderTotal;
+      final total =
+          (o.payment.orderTotal <= 0) ? o.totalPrice : o.payment.orderTotal;
       gross += total;
 
-      final st = (o.status).toUpperCase();
+      final st = o.status.toUpperCase();
       statusCounts[st] = (statusCounts[st] ?? 0) + 1;
 
       paid += o.payment.paidAmount;
@@ -613,6 +624,7 @@ class _OrdersStats {
 class _RevenueDay {
   final DateTime day;
   final double revenue;
+
   const _RevenueDay(this.day, this.revenue);
 }
 
@@ -622,7 +634,10 @@ class _StatusChips extends StatelessWidget {
   final String? selected; // null => ALL
   final ValueChanged<String> onChanged;
 
-  const _StatusChips({required this.selected, required this.onChanged});
+  const _StatusChips({
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -659,11 +674,8 @@ class _StatusChips extends StatelessWidget {
       children: [
         chip(l10n.adminFilterAll, 'ALL'),
         chip(l10n.adminOrderStatusPending, 'PENDING'),
-        chip(l10n.adminOrderStatusCancelRequested, 'CANCEL_REQUESTED'),
         chip(l10n.adminOrderStatusCompleted, 'COMPLETED'),
-        chip(l10n.adminOrderStatusCanceled, 'CANCELED'),
         chip(l10n.adminOrderStatusRejected, 'REJECTED'),
-        chip(l10n.adminOrderStatusRefunded, 'REFUNDED'),
       ],
     );
   }
@@ -675,7 +687,10 @@ class _OrderHeaderCard extends StatelessWidget {
   final OrderHeaderRow row;
   final VoidCallback onTap;
 
-  const _OrderHeaderCard({required this.row, required this.onTap});
+  const _OrderHeaderCard({
+    required this.row,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -688,7 +703,9 @@ class _OrderHeaderCard extends StatelessWidget {
     Color statusColor() {
       final s = row.status.toUpperCase();
       if (s == 'COMPLETED') return colors.success;
-      if (s == 'CANCELED' || s == 'REJECTED' || s == 'REFUNDED') return colors.danger;
+      if (s == 'CANCELED' || s == 'REJECTED' || s == 'REFUNDED') {
+        return colors.danger;
+      }
       if (s == 'CANCEL_REQUESTED') return colors.primary;
       return colors.muted;
     }
@@ -701,17 +718,18 @@ class _OrderHeaderCard extends StatelessWidget {
       return colors.muted;
     }
 
-    final total = (row.payment.orderTotal <= 0) ? row.totalPrice : row.payment.orderTotal;
+    final total =
+        (row.payment.orderTotal <= 0) ? row.totalPrice : row.payment.orderTotal;
     final paid = row.payment.paidAmount;
     final progress = total <= 0 ? 0.0 : (paid / total).clamp(0.0, 1.0);
 
     final statusC = statusColor();
     final payC = payColor();
 
-    // ✅ NEW: order code label
     final code = (row.orderCode ?? '').trim();
     final seq = row.orderSeq;
-    final title = code.isNotEmpty ? 'Order $code' : l10n.adminOrderCardTitle(row.id);
+    final title =
+        code.isNotEmpty ? 'Order $code' : l10n.adminOrderCardTitle(row.id);
 
     return InkWell(
       borderRadius: BorderRadius.circular(card.radius),
@@ -897,7 +915,10 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _EmptyState({required this.title, required this.subtitle});
+  const _EmptyState({
+    required this.title,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
