@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,9 +20,38 @@ class BannerImagePickerField extends StatelessWidget {
   });
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: source, imageQuality: 85);
-    if (file != null) onChanged(file.path);
+    try {
+      final picker = ImagePicker();
+      final XFile? file;
+
+      if (!kIsWeb && Platform.isIOS) {
+        file = await picker.pickImage(
+          source: source,
+          requestFullMetadata: true,
+        );
+      } else {
+        file = await picker.pickImage(
+          source: source,
+          imageQuality: 85,
+          requestFullMetadata: true,
+        );
+      }
+
+      if (file != null) {
+        onChanged(file.path);
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+
+      final l = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l.adminUploadFailed ?? 'Failed to pick image',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -47,6 +77,7 @@ class BannerImagePickerField extends StatelessWidget {
           ),
         );
       }
+
       if (hasNetwork) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(tokens.card.radius),
@@ -59,6 +90,7 @@ class BannerImagePickerField extends StatelessWidget {
           ),
         );
       }
+
       return _placeholder(context);
     }
 

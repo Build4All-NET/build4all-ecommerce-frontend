@@ -1404,7 +1404,8 @@
   "adminExternalUrlRequired": "External URL is required for external product",
   "adminExternalCannotBeDownloadable": "External product cannot be downloadable",
   "adminDownloadableRulesHint": "Downloadable products are saved as Simple + Virtual and require a download URL.",
-  "adminAllAttributeTypesAlreadyAdded": "All available attribute types are already added"
+  "adminAllAttributeTypesAlreadyAdded": "All available attribute types are already added",
+  "adminUploadFailed":"failed to pick image" 
 
 
   
