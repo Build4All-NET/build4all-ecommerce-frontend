@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 
 class BannerImagePickerField extends StatelessWidget {
@@ -20,37 +20,17 @@ class BannerImagePickerField extends StatelessWidget {
   });
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
-    try {
-      final picker = ImagePicker();
-      final XFile? file;
-
-      if (!kIsWeb && Platform.isIOS) {
-        file = await picker.pickImage(
-          source: source,
-          requestFullMetadata: true,
-        );
-      } else {
-        file = await picker.pickImage(
-          source: source,
-          imageQuality: 85,
-          requestFullMetadata: true,
-        );
-      }
-
-      if (file != null) {
-        onChanged(file.path);
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-
-      final l = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l.adminUploadFailed ?? 'Failed to pick image',
-          ),
-        ),
-      );
+    final picker = ImagePicker();
+    final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+      picker: picker,
+      source: source,
+      imageQuality: 85,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      preferredName: 'banner',
+    );
+    if (normalizedPath != null && normalizedPath.isNotEmpty) {
+      onChanged(normalizedPath);
     }
   }
 
@@ -77,7 +57,6 @@ class BannerImagePickerField extends StatelessWidget {
           ),
         );
       }
-
       if (hasNetwork) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(tokens.card.radius),
@@ -90,7 +69,6 @@ class BannerImagePickerField extends StatelessWidget {
           ),
         );
       }
-
       return _placeholder(context);
     }
 

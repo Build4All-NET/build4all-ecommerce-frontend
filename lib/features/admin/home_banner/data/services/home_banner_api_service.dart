@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/api_client.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:dio/dio.dart';
 
 class HomeBannerApiService {
@@ -10,7 +11,6 @@ class HomeBannerApiService {
 
   String get _baseUrl => '${Env.apiBaseUrl}/api/home-banners';
 
-  // ✅ tenant comes from token
   Future<List<dynamic>> listActivePublic({
     required String authToken,
   }) async {
@@ -21,7 +21,6 @@ class HomeBannerApiService {
     return (res.data as List);
   }
 
-  // ✅ tenant comes from token
   Future<List<dynamic>> listForAdmin({
     required String authToken,
   }) async {
@@ -37,11 +36,16 @@ class HomeBannerApiService {
     required String authToken,
     required String imagePath,
   }) async {
+    final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+      imagePath,
+      preferredName: 'home_banner_upload',
+    );
+
     final form = FormData.fromMap({
       ...body,
       'image': await MultipartFile.fromFile(
-        imagePath,
-        filename: File(imagePath).path.split('/').last,
+        safeImagePath,
+        filename: File(safeImagePath).path.split('/').last,
       ),
     });
 
@@ -66,9 +70,13 @@ class HomeBannerApiService {
     final map = {...body};
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      map['image'] = await MultipartFile.fromFile(
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
         imagePath,
-        filename: File(imagePath).path.split('/').last,
+        preferredName: 'home_banner_update_upload',
+      );
+      map['image'] = await MultipartFile.fromFile(
+        safeImagePath,
+        filename: File(safeImagePath).path.split('/').last,
       );
     }
 

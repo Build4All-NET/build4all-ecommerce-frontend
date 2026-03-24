@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/api_client.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/core/config/env.dart';
 
 class ProductApiService {
@@ -99,7 +100,11 @@ class ProductApiService {
     final data = <String, dynamic>{...flat};
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      data['image'] = await MultipartFile.fromFile(imagePath);
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        imagePath,
+        preferredName: 'product_upload',
+      );
+      data['image'] = await MultipartFile.fromFile(safeImagePath);
     }
 
     return FormData.fromMap(data);

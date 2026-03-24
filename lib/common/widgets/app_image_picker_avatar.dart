@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -71,24 +72,23 @@ class _AppImagePickerAvatarState extends State<AppImagePickerAvatar> {
     }
   }
 
-  Future<void> _pick(ImageSource source) async {
-    final picked = await _picker.pickImage(
-      source: source,
-      maxWidth: 800,
-      maxHeight: 800,
+ Future<void> _pick(ImageSource source) async {
+  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+    picker: _picker,
+    source: source,
+    imageQuality: 85,
+    maxWidth: 800,
+    maxHeight: 800,
+    preferredName: 'avatar',
+  );
 
-      // ✅ iOS: don't recompress (prevents green tint)
-      // ✅ Android: keep compression
-      imageQuality: Platform.isIOS ? 100 : 85,
-    );
-
-    if (picked != null) {
-      setState(() {
-        _currentPath = picked.path;
-      });
-      widget.onImageChanged(picked.path);
-    }
+  if (normalizedPath != null && normalizedPath.isNotEmpty) {
+    setState(() {
+      _currentPath = normalizedPath;
+    });
+    widget.onImageChanged(normalizedPath);
   }
+}
 
   Future<void> _onTap(BuildContext context) async {
     final canCamera = widget.enableCamera;

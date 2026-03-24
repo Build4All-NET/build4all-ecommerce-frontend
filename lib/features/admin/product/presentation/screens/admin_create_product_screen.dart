@@ -7,6 +7,7 @@ import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/exceptions/app_exception.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/admin/product/presentation/sections/admin_product_status_section.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/features/catalog/data/models/item_type_model.dart';
@@ -382,16 +383,19 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    final img = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
+  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+    picker: _picker,
+    source: ImageSource.gallery,
+    imageQuality: 85,
+    maxWidth: 1800,
+    maxHeight: 1800,
+    preferredName: 'product',
+  );
 
-    if (img != null) {
-      setState(() => _pickedImage = img);
-    }
+  if (normalizedPath != null && normalizedPath.isNotEmpty) {
+    setState(() => _pickedImage = XFile(normalizedPath));
   }
-
+}
   void _removePickedImage() {
     setState(() => _pickedImage = null);
   }

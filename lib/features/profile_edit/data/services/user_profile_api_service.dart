@@ -1,6 +1,7 @@
 // lib/features/profile_edit/data/services/user_profile_api_service.dart
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 
 class UserProfileApiService {
   final Dio dio;
@@ -20,21 +21,26 @@ class UserProfileApiService {
     return b;
   }
 
- Options _authJson(String token) => Options(
-  headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
-  receiveDataWhenStatusError: true,
-);
+  Options _authJson(String token) => Options(
+        headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
+        receiveDataWhenStatusError: true,
+      );
 
- Options _authMultipart(String token) => Options(
-  headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
-  contentType: Headers.multipartFormDataContentType,
-  receiveDataWhenStatusError: true,
-);
+  Options _authMultipart(String token) => Options(
+        headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
+        contentType: Headers.multipartFormDataContentType,
+        receiveDataWhenStatusError: true,
+      );
 
   String _readErrorMessage(dynamic data, {int? statusCode}) {
     if (data is Map) {
       final map = data.cast<dynamic, dynamic>();
-      final candidates = [map['error'], map['message'], map['details'], map['msg']];
+      final candidates = [
+        map['error'],
+        map['message'],
+        map['details'],
+        map['msg']
+      ];
       for (final c in candidates) {
         final text = c?.toString().trim();
         if (text != null && text.isNotEmpty) return text;
@@ -47,17 +53,17 @@ class UserProfileApiService {
     return 'Request failed (${statusCode ?? 'unknown'})';
   }
 
-void _throwIfFailed(Response res) {
-  final code = res.statusCode ?? 0;
-  if (code >= 400) {
-    throw DioException(
-      requestOptions: res.requestOptions,
-      response: res,
-      type: DioExceptionType.badResponse,
-      message: _readErrorMessage(res.data, statusCode: code),
-    );
+  void _throwIfFailed(Response res) {
+    final code = res.statusCode ?? 0;
+    if (code >= 400) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        type: DioExceptionType.badResponse,
+        message: _readErrorMessage(res.data, statusCode: code),
+      );
+    }
   }
-}
 
   Future<Map<String, dynamic>> getUserById({
     required String token,
@@ -87,17 +93,26 @@ void _throwIfFailed(Response res) {
     String? imageFilePath,
     bool imageRemoved = false,
   }) async {
+    final safeImageFilePath =
+        imageFilePath == null || imageFilePath.trim().isEmpty
+            ? null
+            : await UploadSafeImageNormalizer.normalizeImagePath(
+                imageFilePath,
+                preferredName: 'profile_update_upload',
+              );
+
     final form = FormData.fromMap({
       'firstName': firstName,
       'lastName': lastName,
       if (username != null) 'username': username,
       if (email != null) 'email': email,
-      if (isPublicProfile != null) 'isPublicProfile': isPublicProfile.toString(),
+      if (isPublicProfile != null)
+        'isPublicProfile': isPublicProfile.toString(),
       'imageRemoved': imageRemoved.toString(),
-      if (imageFilePath != null)
+      if (safeImageFilePath != null)
         'profileImage': await MultipartFile.fromFile(
-          imageFilePath,
-          filename: File(imageFilePath).uri.pathSegments.last,
+          safeImageFilePath,
+          filename: File(safeImageFilePath).uri.pathSegments.last,
         ),
     });
 
@@ -148,16 +163,18 @@ void _throwIfFailed(Response res) {
     final res = await dio.delete(
       '${_apiRoot()}/users/$userId',
       data: {'password': password},
-    options: Options(
-  headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
-  responseType: ResponseType.plain,
-  receiveDataWhenStatusError: true,
-),
+      options: Options(
+        headers: {'Authorization': 'Bearer ${_cleanToken(token)}'},
+        responseType: ResponseType.plain,
+        receiveDataWhenStatusError: true,
+      ),
     );
 
     final text = (res.data ?? '').toString().trim();
     if (res.statusCode == null || res.statusCode! >= 400) {
-      throw Exception(text.isNotEmpty ? text : 'Delete failed (${res.statusCode})');
+      throw Exception(
+        text.isNotEmpty ? text : 'Delete failed (${res.statusCode})',
+      );
     }
   }
 }
