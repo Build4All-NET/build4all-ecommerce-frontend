@@ -1,4 +1,5 @@
 import '../../domain/entities/product.dart';
+import '../../domain/entities/product_image.dart';
 
 class ProductModel extends Product {
   ProductModel({
@@ -15,6 +16,7 @@ class ProductModel extends Product {
     super.statusCode,
     super.statusName,
     super.imageUrl,
+    super.images,
     super.sku,
     required super.productType,
     required super.virtualProduct,
@@ -92,6 +94,48 @@ class ProductModel extends Product {
     return out;
   }
 
+  static List<ProductImage> _parseImages(dynamic raw, String? fallbackImageUrl) {
+    final out = <ProductImage>[];
+
+    if (raw is List) {
+      for (final e in raw) {
+        if (e is Map) {
+          final url = (e['imageUrl'] ?? '').toString().trim();
+          if (url.isEmpty) continue;
+
+          out.add(
+            ProductImage(
+              id: _toInt(e['id']),
+              imageUrl: url,
+              sortOrder: _toInt(e['sortOrder']) ?? 0,
+              isMain: _toBool(
+                e['mainImage'] ?? e['isMainImage'] ?? e['isMain'],
+                fallback: false,
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    if (out.isEmpty) {
+      final fallback = fallbackImageUrl?.trim();
+      if (fallback != null && fallback.isNotEmpty) {
+        out.add(
+          ProductImage(
+            id: null,
+            imageUrl: fallback,
+            sortOrder: 0,
+            isMain: true,
+          ),
+        );
+      }
+    }
+
+    out.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return out;
+  }
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     final nestedCurrency = json['currency'];
     final nestedCurrencyId =
@@ -108,11 +152,10 @@ class ProductModel extends Product {
         _toDouble(json['effectivePrice']) ?? salePrice ?? price;
 
     final parsedStock = _toInt(json['stock']);
-
-    // ✅ new backend status shape
     final parsedStatusId = _toInt(json['statusId']);
     final parsedStatusCode = json['statusCode']?.toString().trim();
     final parsedStatusName = json['statusName']?.toString().trim();
+    final parsedImageUrl = json['imageUrl']?.toString();
 
     return ProductModel(
       id: _toInt(json['id']) ?? 0,
@@ -130,7 +173,8 @@ class ProductModel extends Product {
       statusId: parsedStatusId,
       statusCode: parsedStatusCode,
       statusName: parsedStatusName,
-      imageUrl: json['imageUrl']?.toString(),
+      imageUrl: parsedImageUrl,
+      images: _parseImages(json['images'], parsedImageUrl),
       sku: json['sku']?.toString(),
       productType: (json['productType'] ?? 'SIMPLE').toString(),
       virtualProduct: _toBool(json['virtualProduct'], fallback: false),

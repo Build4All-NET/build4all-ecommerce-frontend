@@ -21,6 +21,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../domain/entities/product_image.dart';
 
 import '../../data/models/create_product_request.dart';
 import '../../data/services/product_api_service.dart';
@@ -96,8 +97,11 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     'model',
   ];
 
-  final _picker = ImagePicker();
-  XFile? _pickedImage;
+ final _picker = ImagePicker();
+final List<XFile> _pickedImages = [];
+int _mainPickedImageIndex = 0;
+final Set<int> _removedExistingImageIds = <int>{};
+int? _selectedExistingMainImageId;
 
   List<_CategoryOption> _categories = [];
   int? _selectedCategoryId;
@@ -224,9 +228,108 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
       }
     });
 
-    _selectedCategoryId = p.categoryId;
-    _selectedItemTypeId = p.itemTypeId;
+  _removedExistingImageIds.clear();
+_pickedImages.clear();
+_mainPickedImageIndex = 0;
+_selectedExistingMainImageId = p.mainImage?.id;
   }
+
+  List<ProductImage> get _existingGalleryImages {
+  final product = widget.initialProduct;
+  if (product == null) return const [];
+
+  return product.galleryImages.where((image) {
+    final id = image.id;
+    if (id == null) return true;
+    return !_removedExistingImageIds.contains(id);
+  }).toList();
+}
+
+Future<void> _pickImages() async {
+  final picked = await _picker.pickMultiImage(
+    imageQuality: 100,
+    maxWidth: 1800,
+    maxHeight: 1800,
+  );
+
+  if (picked.isEmpty) return;
+
+  final normalized = <XFile>[];
+
+  for (final file in picked) {
+    final normalizedPath = await UploadSafeImageNormalizer.normalizeImagePath(
+      file.path,
+      preferredName: 'product_gallery',
+    );
+    if (normalizedPath.trim().isNotEmpty) {
+      normalized.add(XFile(normalizedPath));
+    }
+  }
+
+  if (normalized.isEmpty) return;
+
+  setState(() {
+    final hadNoPickedImages = _pickedImages.isEmpty;
+    _pickedImages.addAll(normalized);
+
+    if (hadNoPickedImages) {
+      _mainPickedImageIndex = 0;
+    }
+  });
+}
+
+void _removePickedImageAt(int index) {
+  if (index < 0 || index >= _pickedImages.length) return;
+
+  setState(() {
+    _pickedImages.removeAt(index);
+
+    if (_pickedImages.isEmpty) {
+      _mainPickedImageIndex = 0;
+      return;
+    }
+
+    if (_mainPickedImageIndex >= _pickedImages.length) {
+      _mainPickedImageIndex = _pickedImages.length - 1;
+    } else if (index < _mainPickedImageIndex) {
+      _mainPickedImageIndex -= 1;
+    }
+  });
+}
+
+void _setPickedMainImage(int index) {
+  if (index < 0 || index >= _pickedImages.length) return;
+
+  setState(() {
+    _mainPickedImageIndex = index;
+    _selectedExistingMainImageId = null;
+  });
+}
+
+void _toggleExistingImageRemoval(ProductImage image) {
+  final id = image.id;
+  if (id == null) return;
+
+  setState(() {
+    if (_removedExistingImageIds.contains(id)) {
+      _removedExistingImageIds.remove(id);
+    } else {
+      _removedExistingImageIds.add(id);
+      if (_selectedExistingMainImageId == id) {
+        _selectedExistingMainImageId = null;
+      }
+    }
+  });
+}
+
+void _setExistingMainImage(ProductImage image) {
+  final id = image.id;
+  if (id == null) return;
+
+  setState(() {
+    _selectedExistingMainImageId = id;
+  });
+}
 
   ProductTypeDto _productTypeFromString(String s) {
     switch (s.toUpperCase()) {
@@ -382,23 +485,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
-  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
-    picker: _picker,
-    source: ImageSource.gallery,
-    imageQuality: 85,
-    maxWidth: 1800,
-    maxHeight: 1800,
-    preferredName: 'product',
-  );
 
-  if (normalizedPath != null && normalizedPath.isNotEmpty) {
-    setState(() => _pickedImage = XFile(normalizedPath));
-  }
-}
-  void _removePickedImage() {
-    setState(() => _pickedImage = null);
-  }
 
   Future<String> _requireAdminToken() async {
     final token = await AdminTokenStore().getToken();
@@ -1119,57 +1206,62 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
       final saleEndText = clean(_saleEndCtrl.text);
 
       if (!_isEdit) {
-        final req = CreateProductRequest(
-          itemTypeId: itemTypeId,
-          categoryId: categoryId,
-          currencyId: currencyId,
-          name: _nameCtrl.text.trim(),
-          description: description,
-          price: price,
-          stock: stock,
-          statusCode: _selectedStatusCode,
-          sku: sku,
-          productType:
-              _downloadable ? ProductTypeDto.simple : _selectedProductType,
-          virtualProduct: _downloadable ? true : _virtualProduct,
-          downloadable: _downloadable,
-          downloadUrl: _downloadable ? downloadUrl : null,
-          externalUrl: _downloadable ? null : externalUrl,
-          buttonText: _downloadable ? null : buttonText,
-          salePrice: salePrice,
-          saleStart: saleStartText,
-          saleEnd: saleEndText,
-          attributes: attrs,
-        );
+       final req = CreateProductRequest(
+  itemTypeId: itemTypeId,
+  categoryId: categoryId,
+  currencyId: currencyId,
+  name: _nameCtrl.text.trim(),
+  description: description,
+  price: price,
+  stock: stock,
+  statusCode: _selectedStatusCode,
+  sku: sku,
+  productType:
+      _downloadable ? ProductTypeDto.simple : _selectedProductType,
+  virtualProduct: _downloadable ? true : _virtualProduct,
+  downloadable: _downloadable,
+  downloadUrl: _downloadable ? downloadUrl : null,
+  externalUrl: _downloadable ? null : externalUrl,
+  buttonText: _downloadable ? null : buttonText,
+  salePrice: salePrice,
+  saleStart: saleStartText,
+  saleEnd: saleEndText,
+  attributes: attrs,
+  mainImageIndex: _pickedImages.isNotEmpty ? _mainPickedImageIndex : null,
+);
 
         await _createProduct(req);
       } else {
         await _updateProduct(
           productId: widget.initialProduct!.id,
-          reqBody: {
-            'categoryId': categoryId,
-            if (itemTypeId != null) 'itemTypeId': itemTypeId,
-            'currencyId': currencyId,
-            'name': _nameCtrl.text.trim(),
-            'description': description,
-            'price': price,
-            'stock': stock,
-            'statusCode': _selectedStatusCode,
-            'sku': sku,
-            'productType': productTypeDtoToApi(
-              _downloadable ? ProductTypeDto.simple : _selectedProductType,
-            ),
-            'virtualProduct': _downloadable ? true : _virtualProduct,
-            'downloadable': _downloadable,
-            'downloadUrl': _downloadable ? downloadUrl : null,
-            'externalUrl': _downloadable ? null : externalUrl,
-            'buttonText': _downloadable ? null : buttonText,
-            'salePrice': salePrice,
-            'saleStart': saleStartText,
-            'saleEnd': saleEndText,
-            'attributes': attrs.map((e) => e.toJson()).toList(),
-          },
-        );
+         reqBody: {
+  'categoryId': categoryId,
+  if (itemTypeId != null) 'itemTypeId': itemTypeId,
+  'currencyId': currencyId,
+  'name': _nameCtrl.text.trim(),
+  'description': description,
+  'price': price,
+  'stock': stock,
+  'statusCode': _selectedStatusCode,
+  'sku': sku,
+  'productType': productTypeDtoToApi(
+    _downloadable ? ProductTypeDto.simple : _selectedProductType,
+  ),
+  'virtualProduct': _downloadable ? true : _virtualProduct,
+  'downloadable': _downloadable,
+  'downloadUrl': _downloadable ? downloadUrl : null,
+  'externalUrl': _downloadable ? null : externalUrl,
+  'buttonText': _downloadable ? null : buttonText,
+  'salePrice': salePrice,
+  'saleStart': saleStartText,
+  'saleEnd': saleEndText,
+  'attributes': attrs.map((e) => e.toJson()).toList(),
+  if (_pickedImages.isNotEmpty) 'mainImageIndex': _mainPickedImageIndex,
+  if (_selectedExistingMainImageId != null)
+    'mainImageId': _selectedExistingMainImageId,
+  if (_removedExistingImageIds.isNotEmpty)
+    'removeImageIds': _removedExistingImageIds.toList(),
+},);
       }
 
       if (!mounted) return;
@@ -1182,42 +1274,38 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   }
 
   Future<void> _createProduct(CreateProductRequest req) async {
-    final token = await _requireAdminToken();
-    final api = ProductApiService();
+  final token = await _requireAdminToken();
+  final api = ProductApiService();
 
-    // debugPrint('CREATE PRODUCT BODY => ${jsonEncode(req.toJson())}');
-
-    if (_pickedImage != null) {
-      await api.createWithImage(
-        body: req.toJson(),
-        imagePath: _pickedImage!.path,
-        authToken: token,
-      );
-    } else {
-      await api.create(body: req.toJson(), authToken: token);
-    }
+  if (_pickedImages.isNotEmpty) {
+    await api.createWithImages(
+      body: req.toJson(),
+      imagePaths: _pickedImages.map((e) => e.path).toList(),
+      authToken: token,
+    );
+  } else {
+    await api.create(body: req.toJson(), authToken: token);
   }
+}
 
-  Future<void> _updateProduct({
-    required int productId,
-    required Map<String, dynamic> reqBody,
-  }) async {
-    final token = await _requireAdminToken();
-    final api = ProductApiService();
+ Future<void> _updateProduct({
+  required int productId,
+  required Map<String, dynamic> reqBody,
+}) async {
+  final token = await _requireAdminToken();
+  final api = ProductApiService();
 
-    // debugPrint('UPDATE PRODUCT BODY => ${jsonEncode(reqBody)}');
-
-    if (_pickedImage != null) {
-      await api.updateWithImage(
-        id: productId,
-        body: reqBody,
-        imagePath: _pickedImage!.path,
-        authToken: token,
-      );
-    } else {
-      await api.update(id: productId, body: reqBody, authToken: token);
-    }
+  if (_pickedImages.isNotEmpty) {
+    await api.updateWithImages(
+      id: productId,
+      body: reqBody,
+      imagePaths: _pickedImages.map((e) => e.path).toList(),
+      authToken: token,
+    );
+  } else {
+    await api.update(id: productId, body: reqBody, authToken: token);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1301,14 +1389,19 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
                 ),
                 SizedBox(height: spacing.md),
                 AdminProductImageSection(
-                  tokens: tokens,
-                  l: l,
-                  pickedImage: _pickedImage,
-                  existingImageUrl:
-                      _resolveImageUrl(widget.initialProduct?.imageUrl),
-                  onPickImage: _pickImage,
-                  onRemoveImage: _removePickedImage,
-                ),
+  tokens: tokens,
+  l: l,
+  pickedImages: _pickedImages,
+  mainPickedImageIndex: _mainPickedImageIndex,
+  existingImages: _existingGalleryImages,
+  selectedExistingMainImageId: _selectedExistingMainImageId,
+  onPickImages: _pickImages,
+  onRemovePickedImage: _removePickedImageAt,
+  onSetPickedMainImage: _setPickedMainImage,
+  onToggleExistingImageRemoval: _toggleExistingImageRemoval,
+  onSetExistingMainImage: _setExistingMainImage,
+  resolveImageUrl: _resolveImageUrl,
+),
                 SizedBox(height: spacing.md),
                 AdminProductConfigSection(
                   tokens: tokens,
@@ -1833,25 +1926,41 @@ class AdminProductPricingSection extends StatelessWidget {
 class AdminProductImageSection extends StatelessWidget {
   final dynamic tokens;
   final AppLocalizations l;
-  final XFile? pickedImage;
-  final String? existingImageUrl;
-  final VoidCallback onPickImage;
-  final VoidCallback onRemoveImage;
+
+  final List<XFile> pickedImages;
+  final int mainPickedImageIndex;
+
+  final List<ProductImage> existingImages;
+  final int? selectedExistingMainImageId;
+
+  final VoidCallback onPickImages;
+  final ValueChanged<int> onRemovePickedImage;
+  final ValueChanged<int> onSetPickedMainImage;
+  final ValueChanged<ProductImage> onToggleExistingImageRemoval;
+  final ValueChanged<ProductImage> onSetExistingMainImage;
+  final String? Function(String?) resolveImageUrl;
 
   const AdminProductImageSection({
     super.key,
     required this.tokens,
     required this.l,
-    required this.pickedImage,
-    required this.existingImageUrl,
-    required this.onPickImage,
-    required this.onRemoveImage,
+    required this.pickedImages,
+    required this.mainPickedImageIndex,
+    required this.existingImages,
+    required this.selectedExistingMainImageId,
+    required this.onPickImages,
+    required this.onRemovePickedImage,
+    required this.onSetPickedMainImage,
+    required this.onToggleExistingImageRemoval,
+    required this.onSetExistingMainImage,
+    required this.resolveImageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = tokens.colors;
     final spacing = tokens.spacing;
+    final text = tokens.typography;
 
     Widget placeholderImage() => Padding(
           padding: const EdgeInsets.all(16),
@@ -1861,6 +1970,95 @@ class AdminProductImageSection extends StatelessWidget {
           ),
         );
 
+    Widget buildCard({
+      required Widget imageWidget,
+      required bool isMain,
+      required String footerLabel,
+      required VoidCallback? onSetMain,
+      required VoidCallback? onRemove,
+      String removeLabel = 'Remove',
+    }) {
+      return Container(
+        width: 180,
+        padding: EdgeInsets.all(spacing.sm),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.circular(tokens.card.radius),
+          border: Border.all(
+            color: isMain ? c.primary : c.border.withOpacity(0.4),
+            width: isMain ? 1.4 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(tokens.card.radius),
+                child: Container(
+                  width: double.infinity,
+                  color: c.background,
+                  child: imageWidget,
+                ),
+              ),
+            ),
+            SizedBox(height: spacing.sm),
+            Wrap(
+              spacing: spacing.xs,
+              runSpacing: spacing.xs,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: spacing.sm,
+                    vertical: spacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isMain
+                        ? c.primary.withOpacity(0.12)
+                        : c.background,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: isMain
+                          ? c.primary.withOpacity(0.35)
+                          : c.border.withOpacity(0.4),
+                    ),
+                  ),
+                  child: Text(
+                    isMain ? 'Main' : footerLabel,
+                    style: text.bodySmall.copyWith(
+                      color: isMain ? c.primary : c.muted,
+                      fontWeight:
+                          isMain ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: spacing.sm),
+            Wrap(
+              spacing: spacing.xs,
+              runSpacing: spacing.xs,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onSetMain,
+                  icon: const Icon(Icons.star_border),
+                  label: const Text('Set main'),
+                ),
+                TextButton.icon(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(removeLabel),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final bool hasExistingImages = existingImages.isNotEmpty;
+    final bool hasPickedImages = pickedImages.isNotEmpty;
+
     return AdminFormSectionCard(
       tokens: tokens,
       title: l.adminProductImageSectionTitle,
@@ -1869,51 +2067,105 @@ class AdminProductImageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 170,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: c.surface,
-              borderRadius: BorderRadius.circular(tokens.card.radius),
-              border: Border.all(color: c.border.withOpacity(0.4)),
-            ),
-            child: pickedImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(tokens.card.radius),
-                    child: Image.file(
-                      File(pickedImage!.path),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : existingImageUrl != null && existingImageUrl!.trim().isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(tokens.card.radius),
-                        child: Image.network(
-                          existingImageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Center(child: placeholderImage()),
-                        ),
-                      )
-                    : Center(child: placeholderImage()),
+          OutlinedButton.icon(
+            onPressed: onPickImages,
+            icon: const Icon(Icons.collections_outlined),
+            label: Text(l.adminProductPickImage),
           ),
           SizedBox(height: spacing.sm),
-          Row(
-            children: [
-              OutlinedButton.icon(
-                onPressed: onPickImage,
-                icon: const Icon(Icons.upload),
-                label: Text(l.adminProductPickImage),
-              ),
-              SizedBox(width: spacing.sm),
-              if (pickedImage != null)
-                TextButton.icon(
-                  onPressed: onRemoveImage,
-                  icon: const Icon(Icons.close),
-                  label: Text(l.adminRemove),
-                ),
-            ],
+          Text(
+            '${existingImages.length + pickedImages.length} image(s)',
+            style: text.bodySmall.copyWith(color: c.muted),
           ),
+          if (hasExistingImages) ...[
+            SizedBox(height: spacing.md),
+            Text(
+              'Current gallery',
+              style: text.titleMedium,
+            ),
+            SizedBox(height: spacing.sm),
+            SizedBox(
+              height: 280,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: existingImages.length,
+                separatorBuilder: (_, __) => SizedBox(width: spacing.sm),
+                itemBuilder: (context, index) {
+                  final image = existingImages[index];
+                  final url = resolveImageUrl(image.imageUrl);
+
+                  final isMain = selectedExistingMainImageId != null
+                      ? image.id == selectedExistingMainImageId
+                      : (!hasPickedImages && image.isMain);
+
+                  return buildCard(
+                    imageWidget: (url != null && url.trim().isNotEmpty)
+                        ? Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                Center(child: placeholderImage()),
+                          )
+                        : Center(child: placeholderImage()),
+                    isMain: isMain,
+                    footerLabel: 'Existing',
+                    onSetMain: image.id == null
+                        ? null
+                        : () => onSetExistingMainImage(image),
+                    onRemove: image.id == null
+                        ? null
+                        : () => onToggleExistingImageRemoval(image),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (hasPickedImages) ...[
+            SizedBox(height: spacing.md),
+            Text(
+              'New uploads',
+              style: text.titleMedium,
+            ),
+            SizedBox(height: spacing.sm),
+            SizedBox(
+              height: 280,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: pickedImages.length,
+                separatorBuilder: (_, __) => SizedBox(width: spacing.sm),
+                itemBuilder: (context, index) {
+                  final image = pickedImages[index];
+
+                  final isMain = selectedExistingMainImageId == null &&
+                      index == mainPickedImageIndex;
+
+                  return buildCard(
+                    imageWidget: Image.file(
+                      File(image.path),
+                      fit: BoxFit.cover,
+                    ),
+                    isMain: isMain,
+                    footerLabel: 'New',
+                    onSetMain: () => onSetPickedMainImage(index),
+                    onRemove: () => onRemovePickedImage(index),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (!hasExistingImages && !hasPickedImages) ...[
+            SizedBox(height: spacing.md),
+            Container(
+              height: 170,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(tokens.card.radius),
+                border: Border.all(color: c.border.withOpacity(0.4)),
+              ),
+              child: Center(child: placeholderImage()),
+            ),
+          ],
         ],
       ),
     );

@@ -46,6 +46,11 @@ abstract class ProductRepository {
     required String imagePath,
   });
 
+  Future<Product> createProductWithImages({
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
+  });
+
   Future<Product> updateProduct(
     int id, {
     String? name,
@@ -70,6 +75,12 @@ abstract class ProductRepository {
     required int id,
     required Map<String, dynamic> body,
     required String imagePath,
+  });
+
+  Future<Product> updateProductWithImages({
+    required int id,
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
   });
 
   Future<void> deleteProduct(int id);

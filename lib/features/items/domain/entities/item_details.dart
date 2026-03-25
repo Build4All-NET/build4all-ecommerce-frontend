@@ -14,6 +14,9 @@ class ItemDetails {
   final String? description;
   final String? imageUrl;
 
+  /// New gallery field for product details
+  final List<String> imageUrls;
+
   final num? price;
   final num? salePrice;
   final DateTime? saleStart;
@@ -52,6 +55,7 @@ class ItemDetails {
     required this.name,
     this.description,
     this.imageUrl,
+    this.imageUrls = const [],
     this.price,
     this.salePrice,
     this.saleStart,
@@ -129,4 +133,21 @@ class ItemDetails {
     if (isDownloadReady) return 'Download';
     return 'Add to cart';
   }
+
+  List<String> get galleryImageUrls {
+    final cleaned = imageUrls
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (cleaned.isNotEmpty) return cleaned;
+
+    final fallback = (imageUrl ?? '').trim();
+    if (fallback.isNotEmpty) return [fallback];
+
+    return const [];
+  }
+
+  String? get displayImageUrl =>
+      galleryImageUrls.isNotEmpty ? galleryImageUrls.first : null;
 }
