@@ -22,6 +22,29 @@ class NotificationsApiService {
     return [];
   }
 
+
+Future<void> registerFrontFcmToken({
+  required int ownerProjectLinkId,
+  required String fcmToken,
+  required String platform,
+  String? packageName,
+  String? bundleId,
+  String? deviceId,
+}) async {
+  await _dio.put(
+    '/api/front/device-token',
+    data: {
+      'ownerProjectLinkId': ownerProjectLinkId,
+      'fcmToken': fcmToken,
+      'platform': platform,
+      'packageName': packageName,
+      'bundleId': bundleId,
+      'deviceId': deviceId,
+    },
+  );
+}
+
+
   Future<int> getUnreadCount() async {
     final resp = await _dio.get('/api/notifications/unread-count');
     final data = resp.data;

@@ -212,6 +212,7 @@ class _HomeScreenState extends State<HomeScreen>
     return 0;
   }
 
+
   Future<void> _loadSupportInfo({
     bool silent = true,
     String reason = '',

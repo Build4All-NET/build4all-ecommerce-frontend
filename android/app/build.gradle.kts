@@ -8,6 +8,7 @@ plugins {
     // END: FlutterFire Configuration
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 val keystoreProperties = Properties()
@@ -31,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.build4front" // later you’ll change per app
+        applicationId = "com.build4all.opl1.test" // later you’ll change per app
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -63,6 +64,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
+    
 }
 
 flutter {

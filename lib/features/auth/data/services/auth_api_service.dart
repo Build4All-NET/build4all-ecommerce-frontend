@@ -284,6 +284,7 @@ Future<void> logoutRemote() async {
 }) async {
   final uri = _uri('/api/auth/user/login');
 
+
   debugPrint('🔐 LOGIN REQUEST (EMAIL) → $uri');
   debugPrint('BODY: email=$email, ownerProjectLinkId=$ownerProjectLinkId');
 

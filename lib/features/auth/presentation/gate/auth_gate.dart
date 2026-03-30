@@ -2,6 +2,7 @@
 
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/auth_refresh_coordinator.dart';
+import 'package:build4front/core/notifications/front_firebase_push_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -310,17 +311,27 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
   }
 
   void _hydrateUserAndGo(String rawJwt) {
-    g.setAuthToken(rawJwt);
+  g.setAuthToken(rawJwt);
 
-    // ❌ don't start realtime here (MainShell will do it once, with guards)
-    context.read<AuthBloc>().add(
-          AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
-        );
+  final ownerProjectLinkId =
+      widget.appConfig.ownerProjectId ??
+      int.tryParse(Env.ownerProjectLinkId) ??
+      0;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
+  if (ownerProjectLinkId > 0) {
+    FrontFirebasePushService().initAndSyncToken(
+      ownerProjectLinkId: ownerProjectLinkId,
     );
   }
+
+  context.read<AuthBloc>().add(
+        AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
+      );
+
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
+  );
+}
 
   void _goAdminWithToken(String rawJwt) {
     g.setAuthToken(rawJwt);
