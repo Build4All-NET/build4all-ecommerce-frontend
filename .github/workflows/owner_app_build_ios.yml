@@ -423,6 +423,58 @@ jobs:
           echo "----- ci_env.json -----"
           cat lib/env/ci_env.json
 
+      - name: Download iOS Firebase config
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_BASE="$(cat ci_api_base.txt | tr -d '\r\n')"
+          LINK_ID="$(cat ci_link_id.txt | tr -d '\r\n')"
+
+          if [ -z "${API_BASE:-}" ]; then
+            echo "❌ API_BASE is missing"
+            exit 1
+          fi
+
+          if [ -z "${LINK_ID:-}" ]; then
+            echo "❌ LINK_ID is missing"
+            exit 1
+          fi
+
+          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
+            echo "❌ CI_RUNTIME_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "Downloading iOS Firebase config for LINK_ID=$LINK_ID"
+
+          RESPONSE=$(curl -sS \
+            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+            "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
+
+          echo "$RESPONSE" > ios_firebase_response.json
+
+          python3 - <<'PY'
+          import json
+          import base64
+          from pathlib import Path
+
+          with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if "error" in data:
+              raise SystemExit(f"Backend returned error: {data['error']}")
+
+          content = base64.b64decode(data["contentBase64"])
+          target = Path("ios/Runner/GoogleService-Info.plist")
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_bytes(content)
+
+          print(f"✅ Wrote {target}")
+          PY
+
+          echo "----- GoogleService-Info.plist exists? -----"
+          ls -la ios/Runner/GoogleService-Info.plist
       # ════════════════════════════════════════════════════════════════════
       # 🔐 DEMO ACCOUNT – calls BOTH endpoints, parses real credentials
       # ════════════════════════════════════════════════════════════════════
