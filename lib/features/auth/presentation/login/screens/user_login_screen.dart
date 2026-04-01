@@ -80,14 +80,24 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     );
   }
 
-  Future<void> _goToAdmin(BuildContext context,
-      {required String role, required Map<String, dynamic> admin}) async {
-    // ✅ ALWAYS apply admin token before entering admin
-    await _enterAdminFlow();
+ Future<void> _goToAdmin(BuildContext context,
+    {required String role, required Map<String, dynamic> admin}) async {
+  await _enterAdminFlow();
 
-    if (!context.mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+  final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+  if (role.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
+    try {
+      await FrontFirebasePushService().initAndSyncToken(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+    } catch (e) {
+      debugPrint('Owner front push sync failed => $e');
+    }
   }
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+}
 
   Future<void> _onLoginPressed(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;

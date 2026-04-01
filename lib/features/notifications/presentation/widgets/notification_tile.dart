@@ -34,6 +34,26 @@ class NotificationTile extends StatelessWidget {
     return '$d/$m/$y';
   }
 
+  IconData _iconForType(String type) {
+    switch (type.toUpperCase()) {
+      case 'ORDER_CREATED':
+        return Icons.shopping_bag_outlined;
+      case 'ORDER_ACCEPTED':
+        return Icons.task_alt_rounded;
+      case 'ORDER_REJECTED':
+      case 'ORDER_CANCELED_BY_OWNER':
+      case 'ORDER_CANCELED_BY_USER':
+        return Icons.cancel_outlined;
+      case 'ORDER_STATUS_UPDATED':
+        return Icons.local_shipping_outlined;
+      case 'LOW_STOCK':
+      case 'OUT_OF_STOCK':
+        return Icons.inventory_2_outlined;
+      default:
+        return Icons.notifications_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme;
@@ -41,6 +61,8 @@ class NotificationTile extends StatelessWidget {
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
 
     final unread = !notif.isRead;
+    final title = notif.title.trim().isEmpty ? 'Notification' : notif.title.trim();
+    final body = notif.body.trim();
 
     return Container(
       margin: EdgeInsets.only(bottom: spacing.sm),
@@ -65,8 +87,8 @@ class NotificationTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  Icons.notifications_rounded,
-                  color: c.onPrimary,
+                  _iconForType(notif.notificationType),
+                  color: unread ? c.onPrimary : c.onSurface,
                   size: 20,
                 ),
               ),
@@ -76,11 +98,20 @@ class NotificationTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      notif.message,
+                      title,
                       style: t.bodyMedium?.copyWith(
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
+                    if (body.isNotEmpty) ...[
+                      SizedBox(height: spacing.xs),
+                      Text(
+                        body,
+                        style: t.bodySmall?.copyWith(
+                          color: c.onSurface.withOpacity(0.78),
+                        ),
+                      ),
+                    ],
                     SizedBox(height: spacing.xs),
                     Text(
                       _prettyTime(notif.createdAt),

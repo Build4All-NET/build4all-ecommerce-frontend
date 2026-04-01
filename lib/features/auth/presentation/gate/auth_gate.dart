@@ -241,9 +241,12 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
 
       // fallback priority
       if (adminValid) {
-        _goAdminWithToken(adminToken!);
-        return;
-      }
+  _goAdminWithToken(
+    adminToken!,
+    adminRole: (await const AdminTokenStore().getRole()) ?? '',
+  );
+  return;
+}
       if (userAutoValid) {
         _hydrateUserAndGo(userToken!);
         return;
@@ -297,10 +300,13 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
     if (!mounted) return;
 
     if (choice == 'admin') {
-      await _roleStore.saveRole('admin');
-      _goAdminWithToken(adminToken);
-      return;
-    }
+  await _roleStore.saveRole('admin');
+  _goAdminWithToken(
+    adminToken,
+    adminRole: (await const AdminTokenStore().getRole()) ?? '',
+  );
+  return;
+}
     if (choice == 'user') {
       await _roleStore.saveRole('user');
       _hydrateUserAndGo(userToken);
@@ -333,14 +339,24 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
   );
 }
 
-  void _goAdminWithToken(String rawJwt) {
-    g.setAuthToken(rawJwt);
+  void _goAdminWithToken(String rawJwt, {String adminRole = ''}) {
+  g.setAuthToken(rawJwt);
 
-    // ✅ admin route might not have MainShell, so start realtime here
-    _startRealtimeForAdmin(rawJwt);
+  final ownerProjectLinkId =
+      widget.appConfig.ownerProjectId ??
+      int.tryParse(Env.ownerProjectLinkId) ??
+      0;
 
-    Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+  if (adminRole.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
+    FrontFirebasePushService().initAndSyncToken(
+      ownerProjectLinkId: ownerProjectLinkId,
+    );
   }
+
+  _startRealtimeForAdmin(rawJwt);
+
+  Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+}
 
   void _goLogin() {
     g.setAuthToken('');
