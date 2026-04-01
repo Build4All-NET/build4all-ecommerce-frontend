@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:build4front/features/notifications/data/services/notifications_api_service.dart';
 
@@ -12,7 +13,6 @@ class FrontFirebasePushService {
   Future<void> initAndSyncToken({
     required int ownerProjectLinkId,
   }) async {
-    // 1) permission
     await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -20,7 +20,11 @@ class FrontFirebasePushService {
       provisional: false,
     );
 
-    // 2) current token
+    final packageInfo = await PackageInfo.fromPlatform();
+    final appId = packageInfo.packageName;
+
+    debugPrint('FRONT APP ID => $appId');
+
     final token = await _messaging.getToken();
     debugPrint('FRONT FCM TOKEN => $token');
 
@@ -29,13 +33,12 @@ class FrontFirebasePushService {
         ownerProjectLinkId: ownerProjectLinkId,
         fcmToken: token,
         platform: Platform.isIOS ? 'IOS' : 'ANDROID',
-        packageName: Platform.isAndroid ? 'com.build4all.opl1.test' : null,
-        bundleId: Platform.isIOS ? 'com.build4all.opl1.test' : null,
+        packageName: Platform.isAndroid ? appId : null,
+        bundleId: Platform.isIOS ? appId : null,
         deviceId: null,
       );
     }
 
-    // 3) token refresh
     _messaging.onTokenRefresh.listen((newToken) async {
       debugPrint('FRONT FCM TOKEN REFRESH => $newToken');
 
@@ -43,8 +46,8 @@ class FrontFirebasePushService {
         ownerProjectLinkId: ownerProjectLinkId,
         fcmToken: newToken,
         platform: Platform.isIOS ? 'IOS' : 'ANDROID',
-        packageName: Platform.isAndroid ? 'com.build4all.opl1.test' : null,
-        bundleId: Platform.isIOS ? 'com.build4all.opl1.test' : null,
+        packageName: Platform.isAndroid ? appId : null,
+        bundleId: Platform.isIOS ? appId : null,
         deviceId: null,
       );
     });
