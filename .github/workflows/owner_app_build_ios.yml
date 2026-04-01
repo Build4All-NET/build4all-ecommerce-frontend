@@ -120,7 +120,7 @@ jobs:
               or ""
           ).strip()
           
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           
           open("ci_build_id.txt","w",encoding="utf-8").write(build_id)
           
@@ -145,7 +145,8 @@ jobs:
           payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
           cfg = payload.get("CONFIG") or {}
 
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
+          
           link_id = str(
               cfg.get("OWNER_PROJECT_LINK_ID")
               or payload.get("OWNER_PROJECT_LINK_ID")
@@ -719,7 +720,7 @@ jobs:
           cfg = json.load(open("lib/env/ci_env.json","r",encoding="utf-8"))
 
           app_name_raw = cfg.get("APP_NAME","My App")
-          api_base = (cfg.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           logo_url = (cfg.get("LOGO_URL") or "").strip()
 
           print("APP_NAME:", app_name_raw)
