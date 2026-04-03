@@ -517,12 +517,38 @@ jobs:
           fi
 
           echo "Downloading Android Firebase config for LINK_ID=$LINK_ID"
+          echo "API_BASE: $API_BASE"
+          echo "CI_RUNTIME_TOKEN: ${CI_RUNTIME_TOKEN:0:20}... (masked)"
+          echo ""
 
-          RESPONSE=$(curl -sS \
+         
+          RESPONSE=$(curl -v \
             -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
             "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
 
+          echo ""
+          echo "========== curl response =========="
+          echo "$RESPONSE"
+          echo "===================================="
+          echo ""
+
+      
+          if [ -z "$RESPONSE" ]; then
+            echo "❌ curl returned EMPTY response!"
+            echo "Possible causes:"
+            echo "  1. API_BASE is wrong"
+            echo "  2. Network error"
+            echo "  3. API returned empty response"
+            exit 1
+          fi
+
           echo "$RESPONSE" > android_firebase_response.json
+
+        
+          echo "File size: $(wc -c < android_firebase_response.json) bytes"
+          echo "File content:"
+          cat android_firebase_response.json
+          echo ""
 
           python3 - <<'PY'
           import json
