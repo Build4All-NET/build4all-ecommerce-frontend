@@ -1,3 +1,5 @@
+import 'product_image.dart';
+
 class Product {
   final int id;
   final int ownerProjectId;
@@ -10,12 +12,15 @@ class Product {
   final double price;
   final int? stock;
 
-  // ✅ new backend status shape
   final int? statusId;
   final String? statusCode;
   final String? statusName;
 
+  /// old main image field from backend
   final String? imageUrl;
+
+  /// new gallery field from backend
+  final List<ProductImage> images;
 
   final String? sku;
   final String productType; // SIMPLE / VARIABLE / GROUPED / EXTERNAL
@@ -33,7 +38,7 @@ class Product {
   final double effectivePrice;
   final bool onSale;
 
-  final Map<String, String> attributes; // code -> value
+  final Map<String, String> attributes;
 
   const Product({
     required this.id,
@@ -49,6 +54,7 @@ class Product {
     this.statusCode,
     this.statusName,
     this.imageUrl,
+    this.images = const [],
     this.sku,
     required this.productType,
     required this.virtualProduct,
@@ -68,22 +74,45 @@ class Product {
 
   bool get isOutOfStock => safeStock <= 0;
 
-  /// real purchasable backend lifecycle status
   bool get isPublished => statusCode == 'PUBLISHED';
-
   bool get isDraft => statusCode == 'DRAFT';
-
   bool get isUpcoming => statusCode == 'UPCOMING';
-
   bool get isArchived => statusCode == 'ARCHIVED';
 
-  /// product can be bought only if published and has stock
   bool get isAvailableForPurchase => isPublished && !isOutOfStock;
 
-  /// UI-only availability label, NOT backend status
   String get computedAvailabilityStatus =>
       isOutOfStock ? 'OUT_OF_STOCK' : 'IN_STOCK';
 
-  /// display label for lifecycle status
   String get displayStatus => statusName ?? statusCode ?? 'UNKNOWN';
+
+  List<ProductImage> get galleryImages {
+    if (images.isNotEmpty) return images;
+
+    final fallback = imageUrl?.trim();
+    if (fallback == null || fallback.isEmpty) return const [];
+
+    return const [];
+  }
+
+  ProductImage? get mainImage {
+    if (images.isNotEmpty) {
+      for (final image in images) {
+        if (image.isMain) return image;
+      }
+      return images.first;
+    }
+
+    final fallback = imageUrl?.trim();
+    if (fallback == null || fallback.isEmpty) return null;
+
+    return ProductImage(
+      id: null,
+      imageUrl: fallback,
+      sortOrder: 0,
+      isMain: true,
+    );
+  }
+
+  String? get displayImageUrl => mainImage?.imageUrl ?? imageUrl;
 }

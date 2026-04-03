@@ -9,6 +9,7 @@ import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/exceptions/app_exception.dart';
 import 'package:build4front/core/exceptions/network_exception.dart';
 import 'package:build4front/core/exceptions/auth_exception.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/auth/data/models/AdminLoginResponse.dart';
 
 import 'package:flutter/foundation.dart';
@@ -241,10 +242,15 @@ Future<void> logoutRemote() async {
       ..fields['ownerProjectLinkId'] = ownerProjectLinkId.toString();
 
     if (profileImagePath != null && profileImagePath.isNotEmpty) {
-      request.files.add(
-        await http.MultipartFile.fromPath('profileImage', profileImagePath),
-      );
-    }
+  final safeProfileImagePath =
+      await UploadSafeImageNormalizer.normalizeImagePath(
+    profileImagePath,
+    preferredName: 'profile_complete_upload',
+  );
+  request.files.add(
+    await http.MultipartFile.fromPath('profileImage', safeProfileImagePath),
+  );
+}
 
     try {
       final resp = await _safeSend(request);
@@ -277,6 +283,7 @@ Future<void> logoutRemote() async {
   required int ownerProjectLinkId,
 }) async {
   final uri = _uri('/api/auth/user/login');
+
 
   debugPrint('🔐 LOGIN REQUEST (EMAIL) → $uri');
   debugPrint('BODY: email=$email, ownerProjectLinkId=$ownerProjectLinkId');

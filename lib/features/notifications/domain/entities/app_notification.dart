@@ -2,31 +2,49 @@
 
 class AppNotification {
   final int id;
-  final String message;
+  final String title;
+  final String body;
+  final String notificationType;
+  final String? payloadJson;
   final bool isRead;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? readAt;
 
   const AppNotification({
     required this.id,
-    required this.message,
+    required this.title,
+    required this.body,
+    required this.notificationType,
     required this.isRead,
     required this.createdAt,
-    required this.updatedAt,
+    this.payloadJson,
+    this.readAt,
   });
 
+  String get message {
+    if (title.trim().isEmpty) return body;
+    if (body.trim().isEmpty) return title;
+    return '$title\n$body';
+  }
+
   AppNotification copyWith({
-    String? message,
+    String? title,
+    String? body,
+    String? notificationType,
+    String? payloadJson,
     bool? isRead,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    DateTime? readAt,
   }) {
     return AppNotification(
       id: id,
-      message: message ?? this.message,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      notificationType: notificationType ?? this.notificationType,
+      payloadJson: payloadJson ?? this.payloadJson,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      readAt: readAt ?? this.readAt,
     );
   }
 }

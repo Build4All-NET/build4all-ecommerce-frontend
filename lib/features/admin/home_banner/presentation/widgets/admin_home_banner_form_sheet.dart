@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:build4front/core/network/globals.dart' as Env;
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -210,28 +211,35 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
   }
 
   Future<void> _pickFromGallery() async {
-    final x = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-    if (x == null) return;
-    setState(() {
-      _imagePath = x.path;
-      _imageError = null;
-    });
-  }
-
-  Future<void> _pickFromCamera() async {
-    final x = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-    );
-    if (x == null) return;
-    setState(() {
-      _imagePath = x.path;
-      _imageError = null;
-    });
-  }
+  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+    picker: _picker,
+    source: ImageSource.gallery,
+    imageQuality: 85,
+    maxWidth: 1800,
+    maxHeight: 1800,
+    preferredName: 'home_banner',
+  );
+  if (normalizedPath == null || normalizedPath.isEmpty) return;
+  setState(() {
+    _imagePath = normalizedPath;
+    _imageError = null;
+  });
+}
+Future<void> _pickFromCamera() async {
+  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+    picker: _picker,
+    source: ImageSource.camera,
+    imageQuality: 85,
+    maxWidth: 1800,
+    maxHeight: 1800,
+    preferredName: 'home_banner_camera',
+  );
+  if (normalizedPath == null || normalizedPath.isEmpty) return;
+  setState(() {
+    _imagePath = normalizedPath;
+    _imageError = null;
+  });
+}
 
   void _clearPickedImage() {
     setState(() {

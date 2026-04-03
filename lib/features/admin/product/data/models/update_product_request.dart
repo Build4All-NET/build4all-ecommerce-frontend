@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
+
 import 'create_product_request.dart';
 
 class UpdateProductRequest {
@@ -9,7 +13,6 @@ class UpdateProductRequest {
   final double? price;
   final int? stock;
 
-  // ✅ new backend field
   final String? statusCode;
   final String? sku;
 
@@ -31,7 +34,20 @@ class UpdateProductRequest {
   final int? categoryId;
   final int? currencyId;
 
+  /// old single-image fallback
   final XFile? image;
+
+  /// new gallery uploads
+  final List<XFile> images;
+
+  /// choose which NEW uploaded image becomes main
+  final int? mainImageIndex;
+
+  /// choose an EXISTING gallery image as main
+  final int? mainImageId;
+
+  /// remove existing gallery images
+  final List<int>? removeImageIds;
 
   UpdateProductRequest({
     this.name,
@@ -54,49 +70,76 @@ class UpdateProductRequest {
     this.categoryId,
     this.currencyId,
     this.image,
+    this.images = const [],
+    this.mainImageIndex,
+    this.mainImageId,
+    this.removeImageIds,
   });
 
   String? get attributesJson => (attributes == null || attributes!.isEmpty)
       ? null
       : jsonEncode(attributes!.map((e) => e.toJson()).toList());
 
+  String? get removeImageIdsJson =>
+      (removeImageIds == null || removeImageIds!.isEmpty)
+          ? null
+          : jsonEncode(removeImageIds);
+
   Future<FormData> toFormData() async {
     final map = <String, dynamic>{
       if (itemTypeId != null) 'itemTypeId': itemTypeId,
       if (categoryId != null) 'categoryId': categoryId,
       if (currencyId != null) 'currencyId': currencyId,
-
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (price != null) 'price': price,
       if (stock != null) 'stock': stock,
       if (statusCode != null) 'statusCode': statusCode,
-
       if (sku != null) 'sku': sku,
       if (productType != null) 'productType': productTypeDtoToApi(productType!),
-
       if (virtualProduct != null) 'virtualProduct': virtualProduct,
       if (downloadable != null) 'downloadable': downloadable,
       if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (externalUrl != null) 'externalUrl': externalUrl,
       if (buttonText != null) 'buttonText': buttonText,
-
       if (salePrice != null) 'salePrice': salePrice,
       if (saleStart != null) 'saleStart': saleStart,
       if (saleEnd != null) 'saleEnd': saleEnd,
-
       if (attributesJson != null) 'attributesJson': attributesJson,
+      if (mainImageIndex != null) 'mainImageIndex': mainImageIndex,
+      if (mainImageId != null) 'mainImageId': mainImageId,
+      if (removeImageIdsJson != null) 'removeImageIdsJson': removeImageIdsJson,
     };
 
     final form = FormData.fromMap(map);
 
     if (image != null) {
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        image!.path,
+        preferredName: 'product_update_upload',
+      );
       form.files.add(
         MapEntry(
           'image',
           await MultipartFile.fromFile(
-            image!.path,
-            filename: image!.name,
+            safeImagePath,
+            filename: File(safeImagePath).uri.pathSegments.last,
+          ),
+        ),
+      );
+    }
+
+    for (final picked in images) {
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        picked.path,
+        preferredName: 'product_gallery_upload',
+      );
+      form.files.add(
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(
+            safeImagePath,
+            filename: File(safeImagePath).uri.pathSegments.last,
           ),
         ),
       );

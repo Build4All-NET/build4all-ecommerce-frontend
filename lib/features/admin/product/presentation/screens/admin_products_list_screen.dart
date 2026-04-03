@@ -405,10 +405,28 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
   }
 
   int _crossAxisCount(double width) {
-    if (width < 700) return 2;
-    if (width < 1000) return 3;
-    if (width < 1400) return 4;
+    if (width < 760) return 2;
+    if (width < 1080) return 3;
+    if (width < 1440) return 4;
     return 5;
+  }
+
+  double _gridSpacing(double width) {
+    if (width < 380) return 8;
+    if (width < 760) return 10;
+    return 12;
+  }
+
+  double _cardExtent(double width) {
+    final columns = _crossAxisCount(width);
+    final gap = _gridSpacing(width);
+    final cardWidth = (width - (gap * (columns - 1))) / columns;
+
+    if (cardWidth < 145) return 336;
+    if (cardWidth < 165) return 348;
+    if (cardWidth < 185) return 360;
+    if (cardWidth < 220) return 372;
+    return 388;
   }
 
   @override
@@ -452,132 +470,152 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
       ),
       body: Padding(
         padding: EdgeInsets.all(spacing.md),
-        child: BlocBuilder<ProductListBloc, ProductListState>(
-          builder: (context, state) {
-            if (state.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        child: LayoutBuilder(
+          builder: (context, viewport) {
+            final availableWidth = viewport.maxWidth;
 
-            if (state.error != null) {
-              return Center(
-                child: Text(
-                  l10n.adminProductsLoadFailed(state.error!),
-                  style: text.bodyMedium.copyWith(color: colors.danger),
-                  textAlign: TextAlign.center,
-                ),
-              );
-            }
+            return BlocBuilder<ProductListBloc, ProductListState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            if (state.products.isEmpty) {
-              return Center(
-                child: Text(
-                  l10n.adminProductsEmpty,
-                  style: text.bodyMedium.copyWith(color: colors.body),
-                ),
-              );
-            }
+                if (state.error != null) {
+                  return Center(
+                    child: Text(
+                      l10n.adminProductsLoadFailed(state.error!),
+                      style: text.bodyMedium.copyWith(color: colors.danger),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
 
-            _maybeWarmUp(state.products);
+                if (state.products.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l10n.adminProductsEmpty,
+                      style: text.bodyMedium.copyWith(color: colors.body),
+                    ),
+                  );
+                }
 
-            final filtered = _applyFilters(state);
-            final width = MediaQuery.of(context).size.width;
-            final crossAxisCount = _crossAxisCount(width);
-            final statusCounts = _buildStatusCounts(state.products);
-            final stockCounts = _buildStockCounts(state.products);
+                _maybeWarmUp(state.products);
 
-            final cardExtent = width < 380
-                ? 208.0
-                : width < 700
-                    ? 216.0
-                    : 240.0;
+                final filtered = _applyFilters(state);
+                final crossAxisCount = _crossAxisCount(availableWidth);
+                final gridSpacing = _gridSpacing(availableWidth);
+                final cardExtent = _cardExtent(availableWidth);
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _AdminProductsHeaderBar(
-                  tokens: tokens,
-                  l10n: l10n,
-                  totalCount: state.products.length,
-                  filteredCount: filtered.length,
-                  searchQuery: _searchQuery,
-                  onSearchChanged: (val) => setState(() => _searchQuery = val),
-                  typeFilter: _typeFilter,
-                  onTypeFilterChanged: (val) =>
-                      setState(() => _typeFilter = val),
-                  statusFilter: _statusFilter,
-                  onStatusFilterChanged: (val) =>
-                      setState(() => _statusFilter = val),
-                  stockFilter: _stockFilter,
-                  onStockFilterChanged: (val) =>
-                      setState(() => _stockFilter = val),
-                  statusCounts: statusCounts,
-                  stockCounts: stockCounts,
-                ),
-                SizedBox(height: spacing.md),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No products match the current filters.',
-                            style: text.bodyMedium.copyWith(
-                              color: colors.body,
+                final statusCounts = _buildStatusCounts(state.products);
+                final stockCounts = _buildStockCounts(state.products);
+
+                return RefreshIndicator(
+                  onRefresh: _reload,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: _AdminProductsHeaderBar(
+                          tokens: tokens,
+                          l10n: l10n,
+                          totalCount: state.products.length,
+                          filteredCount: filtered.length,
+                          availableWidth: availableWidth,
+                          searchQuery: _searchQuery,
+                          onSearchChanged: (val) =>
+                              setState(() => _searchQuery = val),
+                          typeFilter: _typeFilter,
+                          onTypeFilterChanged: (val) =>
+                              setState(() => _typeFilter = val),
+                          statusFilter: _statusFilter,
+                          onStatusFilterChanged: (val) =>
+                              setState(() => _statusFilter = val),
+                          stockFilter: _stockFilter,
+                          onStockFilterChanged: (val) =>
+                              setState(() => _stockFilter = val),
+                          statusCounts: statusCounts,
+                          stockCounts: stockCounts,
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: spacing.md),
+                      ),
+                      if (filtered.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Text(
+                                'No products match the current filters.',
+                                textAlign: TextAlign.center,
+                                style: text.bodyMedium.copyWith(
+                                  color: colors.body,
+                                ),
+                              ),
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         )
-                      : RefreshIndicator(
-                          onRefresh: _reload,
-                          child: GridView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
+                      else
+                        SliverPadding(
+                          padding: EdgeInsets.only(bottom: spacing.xl + 92),
+                          sliver: SliverGrid(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final product = filtered[index];
+
+                                final sym = product.currencyId != null
+                                    ? _symbolByCurrencyId[product.currencyId!]
+                                    : null;
+
+                                final bool showCurrencyLoading =
+                                    _warmingCurrency &&
+                                        product.currencyId != null &&
+                                        ((sym ?? '').trim().isEmpty);
+
+                                return AdminProductCard(
+                                  product: product,
+                                  currencySymbol: sym,
+                                  currencyLoading: showCurrencyLoading,
+                                  onEdit: () async {
+                                    final changed =
+                                        await Navigator.of(context).push<bool>(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            AdminCreateProductScreen(
+                                          ownerProjectId: widget.ownerProjectId,
+                                          categoryId: product.categoryId,
+                                          itemTypeId: product.itemTypeId,
+                                          currencyId: product.currencyId,
+                                          initialProduct: product,
+                                        ),
+                                      ),
+                                    );
+
+                                    if (changed == true && context.mounted) {
+                                      await _reload();
+                                    }
+                                  },
+                                  onDelete: () =>
+                                      _confirmDelete(context, product),
+                                );
+                              },
+                              childCount: filtered.length,
+                            ),
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: spacing.md,
-                              mainAxisSpacing: spacing.md,
+                              crossAxisSpacing: gridSpacing,
+                              mainAxisSpacing: gridSpacing,
                               mainAxisExtent: cardExtent,
                             ),
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final product = filtered[index];
-
-                              final sym = product.currencyId != null
-                                  ? _symbolByCurrencyId[product.currencyId!]
-                                  : null;
-
-                              final bool showCurrencyLoading =
-                                  _warmingCurrency &&
-                                      product.currencyId != null &&
-                                      ((sym ?? '').trim().isEmpty);
-
-                              return AdminProductCard(
-                                product: product,
-                                currencySymbol: sym,
-                                currencyLoading: showCurrencyLoading,
-                                onEdit: () async {
-                                  final changed =
-                                      await Navigator.of(context).push<bool>(
-                                    MaterialPageRoute(
-                                      builder: (_) => AdminCreateProductScreen(
-                                        ownerProjectId: widget.ownerProjectId,
-                                        categoryId: product.categoryId,
-                                        itemTypeId: product.itemTypeId,
-                                        currencyId: product.currencyId,
-                                        initialProduct: product,
-                                      ),
-                                    ),
-                                  );
-
-                                  if (changed == true && context.mounted) {
-                                    await _reload();
-                                  }
-                                },
-                                onDelete: () => _confirmDelete(context, product),
-                              );
-                            },
                           ),
                         ),
-                ),
-              ],
+                    ],
+                  ),
+                );
+              },
             );
           },
         ),
@@ -591,6 +629,7 @@ class _AdminProductsHeaderBar extends StatelessWidget {
   final AppLocalizations l10n;
   final int totalCount;
   final int filteredCount;
+  final double availableWidth;
   final String searchQuery;
   final ValueChanged<String> onSearchChanged;
   final String typeFilter;
@@ -607,6 +646,7 @@ class _AdminProductsHeaderBar extends StatelessWidget {
     required this.l10n,
     required this.totalCount,
     required this.filteredCount,
+    required this.availableWidth,
     required this.searchQuery,
     required this.onSearchChanged,
     required this.onTypeFilterChanged,
@@ -625,15 +665,21 @@ class _AdminProductsHeaderBar extends StatelessWidget {
     final spacing = tokens.spacing;
     final text = tokens.typography;
 
+    final isCompact = availableWidth < 700;
+    final filterWidth = isCompact
+        ? availableWidth
+        : ((availableWidth - (spacing.sm * 2)) / 3);
+
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.all(spacing.md),
       decoration: BoxDecoration(
         color: c.surface,
         borderRadius: BorderRadius.circular(tokens.card.radius),
-        border: Border.all(color: c.border.withOpacity(0.3)),
+        border: Border.all(color: c.border.withOpacity(0.28)),
         boxShadow: [
           BoxShadow(
-            color: c.label.withOpacity(0.05),
+            color: c.label.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -644,30 +690,33 @@ class _AdminProductsHeaderBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.inventory_2_outlined, color: c.primary),
+              Icon(Icons.inventory_2_outlined, color: c.primary, size: 20),
               SizedBox(width: spacing.sm),
-              Text(
-                l10n.adminProductsTitle,
-                style: text.titleMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: c.label,
+              Expanded(
+                child: Text(
+                  l10n.adminProductsTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: c.label,
+                  ),
                 ),
               ),
-              const Spacer(),
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: spacing.sm,
-                  vertical: spacing.xs,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
                   color: c.primary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
-                  l10n.adminProductsCountPill(filteredCount, totalCount),
+                  '$filteredCount / $totalCount',
                   style: text.bodySmall.copyWith(
                     color: c.primary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -684,60 +733,108 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                   label: 'Draft',
                   count: statusCounts['DRAFT'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
                   label: 'Upcoming',
                   count: statusCounts['UPCOMING'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
                   label: 'Published',
                   count: statusCounts['PUBLISHED'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
                   label: 'Archived',
                   count: statusCounts['ARCHIVED'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Out',
-                  count: stockCounts['OUT_OF_STOCK'] ?? 0,
+                  label: 'In stock',
+                  count: stockCounts['IN_STOCK'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
                   label: 'Low',
                   count: stockCounts['LOW_STOCK'] ?? 0,
                 ),
-                SizedBox(width: spacing.sm),
+                SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'In',
-                  count: stockCounts['IN_STOCK'] ?? 0,
+                  label: 'Out',
+                  count: stockCounts['OUT_OF_STOCK'] ?? 0,
                 ),
               ],
             ),
           ),
-          SizedBox(height: spacing.md),
+          SizedBox(height: spacing.sm),
           TextField(
+            onChanged: onSearchChanged,
+            textInputAction: TextInputAction.search,
             decoration: InputDecoration(
+              isDense: true,
               prefixIcon: const Icon(Icons.search),
               hintText: l10n.adminProductsSearchHint,
             ),
-            onChanged: onSearchChanged,
           ),
           SizedBox(height: spacing.sm),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          if (isCompact)
+            Column(
+              children: [
+                _CompactFilterDropdown(
+                  tokens: tokens,
+                  label: 'Type',
+                  value: typeFilter,
+                  items: const [
+                    _FilterItem(value: 'ALL', label: 'All'),
+                    _FilterItem(value: 'SIMPLE', label: 'Simple'),
+                    _FilterItem(value: 'VARIABLE', label: 'Variable'),
+                    _FilterItem(value: 'GROUPED', label: 'Grouped'),
+                    _FilterItem(value: 'EXTERNAL', label: 'External'),
+                  ],
+                  onChanged: onTypeFilterChanged,
+                ),
+                SizedBox(height: spacing.sm),
+                _CompactFilterDropdown(
+                  tokens: tokens,
+                  label: 'Status',
+                  value: statusFilter,
+                  items: const [
+                    _FilterItem(value: 'ALL', label: 'All'),
+                    _FilterItem(value: 'DRAFT', label: 'Draft'),
+                    _FilterItem(value: 'UPCOMING', label: 'Upcoming'),
+                    _FilterItem(value: 'PUBLISHED', label: 'Published'),
+                    _FilterItem(value: 'ARCHIVED', label: 'Archived'),
+                  ],
+                  onChanged: onStatusFilterChanged,
+                ),
+                SizedBox(height: spacing.sm),
+                _CompactFilterDropdown(
+                  tokens: tokens,
+                  label: 'Stock',
+                  value: stockFilter,
+                  items: const [
+                    _FilterItem(value: 'ALL', label: 'All'),
+                    _FilterItem(value: 'IN_STOCK', label: 'In stock'),
+                    _FilterItem(value: 'LOW_STOCK', label: 'Low stock'),
+                    _FilterItem(value: 'OUT_OF_STOCK', label: 'Out of stock'),
+                  ],
+                  onChanged: onStockFilterChanged,
+                ),
+              ],
+            )
+          else
+            Wrap(
+              spacing: spacing.sm,
+              runSpacing: spacing.sm,
               children: [
                 SizedBox(
-                  width: 150,
+                  width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
                     label: 'Type',
@@ -752,9 +849,8 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                     onChanged: onTypeFilterChanged,
                   ),
                 ),
-                SizedBox(width: spacing.sm),
                 SizedBox(
-                  width: 150,
+                  width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
                     label: 'Status',
@@ -769,9 +865,8 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                     onChanged: onStatusFilterChanged,
                   ),
                 ),
-                SizedBox(width: spacing.sm),
                 SizedBox(
-                  width: 150,
+                  width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
                     label: 'Stock',
@@ -787,7 +882,6 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                 ),
               ],
             ),
-          ),
         ],
       ),
     );
@@ -867,7 +961,8 @@ class _CompactFilterDropdown extends StatelessWidget {
           ),
         ),
         Container(
-          height: 44,
+          height: 48,
+          width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: spacing.sm),
           decoration: BoxDecoration(
             color: c.background,

@@ -37,7 +37,6 @@ class CreateProductRequest {
   final double price;
   final int? stock;
 
-  // ✅ new backend field
   final String? statusCode;
   final String? sku;
 
@@ -54,6 +53,9 @@ class CreateProductRequest {
   final String? saleEnd;
 
   final List<AttributeValueDto> attributes;
+
+  /// new: which uploaded image index should become main
+  final int? mainImageIndex;
 
   CreateProductRequest({
     this.itemTypeId,
@@ -75,6 +77,7 @@ class CreateProductRequest {
     this.saleStart,
     this.saleEnd,
     this.attributes = const [],
+    this.mainImageIndex,
   }) : assert(
           itemTypeId != null || categoryId != null,
           'Either itemTypeId or categoryId must be provided',
@@ -100,6 +103,7 @@ class CreateProductRequest {
       if (salePrice != null) 'salePrice': salePrice,
       if (saleStart != null) 'saleStart': saleStart,
       if (saleEnd != null) 'saleEnd': saleEnd,
+      if (mainImageIndex != null) 'mainImageIndex': mainImageIndex,
       if (attributes.isNotEmpty)
         'attributes': attributes.map((e) => e.toJson()).toList(),
     };

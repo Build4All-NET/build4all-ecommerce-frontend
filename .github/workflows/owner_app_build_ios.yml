@@ -120,7 +120,7 @@ jobs:
               or ""
           ).strip()
           
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           
           open("ci_build_id.txt","w",encoding="utf-8").write(build_id)
           
@@ -145,7 +145,8 @@ jobs:
           payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
           cfg = payload.get("CONFIG") or {}
 
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
+          
           link_id = str(
               cfg.get("OWNER_PROJECT_LINK_ID")
               or payload.get("OWNER_PROJECT_LINK_ID")
@@ -423,6 +424,58 @@ jobs:
           echo "----- ci_env.json -----"
           cat lib/env/ci_env.json
 
+      - name: Download iOS Firebase config
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_BASE="$(cat ci_api_base.txt | tr -d '\r\n')"
+          LINK_ID="$(cat ci_link_id.txt | tr -d '\r\n')"
+
+          if [ -z "${API_BASE:-}" ]; then
+            echo "❌ API_BASE is missing"
+            exit 1
+          fi
+
+          if [ -z "${LINK_ID:-}" ]; then
+            echo "❌ LINK_ID is missing"
+            exit 1
+          fi
+
+          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
+            echo "❌ CI_RUNTIME_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "Downloading iOS Firebase config for LINK_ID=$LINK_ID"
+
+          RESPONSE=$(curl -sS \
+            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+            "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
+
+          echo "$RESPONSE" > ios_firebase_response.json
+
+          python3 - <<'PY'
+          import json
+          import base64
+          from pathlib import Path
+
+          with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if "error" in data:
+              raise SystemExit(f"Backend returned error: {data['error']}")
+
+          content = base64.b64decode(data["contentBase64"])
+          target = Path("ios/Runner/GoogleService-Info.plist")
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_bytes(content)
+
+          print(f"✅ Wrote {target}")
+          PY
+
+          echo "----- GoogleService-Info.plist exists? -----"
+          ls -la ios/Runner/GoogleService-Info.plist
       # ════════════════════════════════════════════════════════════════════
       # 🔐 DEMO ACCOUNT – calls BOTH endpoints, parses real credentials
       # ════════════════════════════════════════════════════════════════════
@@ -667,7 +720,7 @@ jobs:
           cfg = json.load(open("lib/env/ci_env.json","r",encoding="utf-8"))
 
           app_name_raw = cfg.get("APP_NAME","My App")
-          api_base = (cfg.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           logo_url = (cfg.get("LOGO_URL") or "").strip()
 
           print("APP_NAME:", app_name_raw)

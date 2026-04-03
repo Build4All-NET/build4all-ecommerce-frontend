@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/api_client.dart';
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/core/config/env.dart';
 
 class ProductApiService {
@@ -86,6 +87,12 @@ class ProductApiService {
       map.remove('attributes');
     }
 
+    final removeImageIds = map['removeImageIds'];
+    if (removeImageIds is List) {
+      map['removeImageIdsJson'] = jsonEncode(removeImageIds);
+      map.remove('removeImageIds');
+    }
+
     map.removeWhere((key, value) => value == null);
     return map;
   }
@@ -93,16 +100,40 @@ class ProductApiService {
   Future<FormData> _buildFormData({
     required Map<String, dynamic> body,
     String? imagePath,
+    List<String> imagePaths = const [],
   }) async {
     final flat = _normalizeBodyForMultipart(body);
-
-    final data = <String, dynamic>{...flat};
+    final form = FormData.fromMap(flat);
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      data['image'] = await MultipartFile.fromFile(imagePath);
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        imagePath,
+        preferredName: 'product_upload',
+      );
+      form.files.add(
+        MapEntry(
+          'image',
+          await MultipartFile.fromFile(safeImagePath),
+        ),
+      );
     }
 
-    return FormData.fromMap(data);
+    for (final path in imagePaths) {
+      if (path.trim().isEmpty) continue;
+
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        path,
+        preferredName: 'product_gallery_upload',
+      );
+      form.files.add(
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(safeImagePath),
+        ),
+      );
+    }
+
+    return form;
   }
 
   Options _multipartOptions(String token) =>
@@ -128,7 +159,29 @@ class ProductApiService {
     required String imagePath,
     required String authToken,
   }) async {
-    final form = await _buildFormData(body: body, imagePath: imagePath);
+    final form = await _buildFormData(
+      body: body,
+      imagePath: imagePath,
+    );
+
+    final resp = await _dio.post(
+      '$_baseUrl/with-image',
+      data: form,
+      options: _multipartOptions(authToken),
+    );
+
+    return (resp.data as Map).cast<String, dynamic>();
+  }
+
+  Future<Map<String, dynamic>> createWithImages({
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
+    required String authToken,
+  }) async {
+    final form = await _buildFormData(
+      body: body,
+      imagePaths: imagePaths,
+    );
 
     final resp = await _dio.post(
       '$_baseUrl/with-image',
@@ -161,7 +214,30 @@ class ProductApiService {
     required String imagePath,
     required String authToken,
   }) async {
-    final form = await _buildFormData(body: body, imagePath: imagePath);
+    final form = await _buildFormData(
+      body: body,
+      imagePath: imagePath,
+    );
+
+    final resp = await _dio.put(
+      '$_baseUrl/$id',
+      data: form,
+      options: _multipartOptions(authToken),
+    );
+
+    return (resp.data as Map).cast<String, dynamic>();
+  }
+
+  Future<Map<String, dynamic>> updateWithImages({
+    required int id,
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
+    required String authToken,
+  }) async {
+    final form = await _buildFormData(
+      body: body,
+      imagePaths: imagePaths,
+    );
 
     final resp = await _dio.put(
       '$_baseUrl/$id',

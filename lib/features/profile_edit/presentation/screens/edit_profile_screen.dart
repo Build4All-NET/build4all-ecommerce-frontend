@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -320,20 +321,23 @@ final dio = g.appDio!;
     }
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final x = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1400,
-      maxHeight: 1400,
-    );
-    if (x == null) return;
+Future<void> _pickImage() async {
+  final picker = ImagePicker();
+  final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
+    picker: picker,
+    source: ImageSource.gallery,
+    imageQuality: 85,
+    maxWidth: 1400,
+    maxHeight: 1400,
+    preferredName: 'profile_edit',
+  );
+  if (normalizedPath == null || normalizedPath.isEmpty) return;
 
-    setState(() {
-      _pickedImagePath = x.path;
-      _removeImage = false;
-    });
-  }
+  setState(() {
+    _pickedImagePath = normalizedPath;
+    _removeImage = false;
+  });
+}
 
   Future<bool> _showEmailOtpDialog({
     required AppLocalizations loc,

@@ -4,7 +4,6 @@ import 'package:build4front/features/notifications/data/services/notifications_a
 import 'package:build4front/features/notifications/domain/entities/app_notification.dart';
 import 'package:build4front/features/notifications/domain/repositories/notifications_repository.dart';
 
-
 class NotificationsRepositoryImpl implements NotificationsRepository {
   final NotificationsApiService api;
 
@@ -17,10 +16,13 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
         .map(
           (m) => AppNotification(
             id: m.id,
-            message: m.message,
+            title: m.title,
+            body: m.body,
+            notificationType: m.notificationType,
+            payloadJson: m.payloadJson,
             isRead: m.isRead,
             createdAt: m.createdAt,
-            updatedAt: m.updatedAt,
+            readAt: m.readAt,
           ),
         )
         .toList();

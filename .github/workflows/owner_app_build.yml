@@ -44,7 +44,7 @@ jobs:
               or ""
           ).strip()
           
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = ((cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")).strip()
           
           open("ci_build_id.txt","w",encoding="utf-8").write(build_id)
           open("ci_link_id.txt","w",encoding="utf-8").write(link_id)
@@ -159,7 +159,7 @@ jobs:
           payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
           cfg = payload.get("CONFIG") or {}
 
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           link_id  = str(
               cfg.get("OWNER_PROJECT_LINK_ID")
               or payload.get("OWNER_PROJECT_LINK_ID")
@@ -496,6 +496,56 @@ jobs:
             fi
           fi
 
+      - name: Download Android Firebase config
+        shell: bash
+        run: |
+          set -e
+
+          if [ -z "${API_BASE:-}" ]; then
+            echo "❌ API_BASE is missing"
+            exit 1
+          fi
+
+          if [ -z "${LINK_ID:-}" ]; then
+            echo "❌ LINK_ID is missing"
+            exit 1
+          fi
+
+          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
+            echo "❌ CI_RUNTIME_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "Downloading Android Firebase config for LINK_ID=$LINK_ID"
+
+          RESPONSE=$(curl -sS \
+            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+            "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
+
+          echo "$RESPONSE" > android_firebase_response.json
+
+          python3 - <<'PY'
+          import json
+          import base64
+          from pathlib import Path
+
+          with open("android_firebase_response.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if "error" in data:
+              raise SystemExit(f"Backend returned error: {data['error']}")
+
+          content = base64.b64decode(data["contentBase64"])
+          target = Path("android/app/google-services.json")
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_bytes(content)
+
+          print(f"✅ Wrote {target}")
+          PY
+
+          echo "----- google-services.json exists? -----"
+          ls -la android/app/google-services.json
+          
       - name: Apply branding
         run: |
           set -e
@@ -546,7 +596,7 @@ jobs:
           
           app_name_xml = escape(app_name_clean)
 
-          api_base = (cfg.get("API_BASE_URL") or "").rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           logo_url = (cfg.get("LOGO_URL") or "").strip()
 
           print("APP_NAME (raw):", app_name_raw)

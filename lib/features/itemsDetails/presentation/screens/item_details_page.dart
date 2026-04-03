@@ -39,6 +39,21 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   String? _downloadAccessMessage;
   int? _downloadCheckedItemId;
 
+  int _galleryIndex = 0;
+  late final PageController _galleryController;
+
+  @override
+  void initState() {
+    super.initState();
+    _galleryController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _galleryController.dispose();
+    super.dispose();
+  }
+
   String? _stockStatusLabel(AppLocalizations l10n, int? stock) {
     if (stock == null) return null;
     if (stock <= 0) return l10n.outOfStock;
@@ -141,6 +156,23 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     }
   }
 
+  Future<void> _openFullscreenGallery({
+    required BuildContext context,
+    required List<String> images,
+    required int initialIndex,
+  }) async {
+    if (images.isEmpty) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _FullscreenGalleryViewer(
+          imageUrls: images,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -199,9 +231,21 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           final c = Theme.of(context).colorScheme;
           final t = Theme.of(context).textTheme;
 
-          final image = (d.imageUrl ?? '').trim().isNotEmpty
-              ? net.resolveUrl(d.imageUrl!)
-              : null;
+          final galleryImages = d.galleryImageUrls
+              .map((e) => net.resolveUrl(e))
+              .whereType<String>()
+              .where((e) => e.trim().isNotEmpty)
+              .toList();
+
+          final primaryImage =
+              galleryImages.isNotEmpty ? galleryImages.first : null;
+
+          if (_galleryIndex >= galleryImages.length && galleryImages.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              setState(() => _galleryIndex = 0);
+            });
+          }
 
           final curPrice = d.displayPrice;
           final oldPrice = d.oldPriceIfDiscounted;
@@ -214,9 +258,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
           final int? stock = d.stock;
           final bool isStockTracked = stock != null;
-          final bool outOfStock = !isUpcoming && isStockTracked && stock! <= 0;
+          final bool outOfStock = !isUpcoming && isStockTracked && stock <= 0;
           final bool lowStock =
-              !isUpcoming && isStockTracked && stock! > 0 && stock! <= 10;
+              !isUpcoming && isStockTracked && stock > 0 && stock <= 10;
 
           final String? stockStatus = _stockStatusLabel(l10n, stock);
 
@@ -264,7 +308,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                   borderRadius: BorderRadius.circular(card.radius),
                   child: AspectRatio(
                     aspectRatio: 16 / 10,
-                    child: image == null
+                    child: galleryImages.isEmpty
                         ? Container(
                             color: c.primary.withOpacity(0.08),
                             child: Icon(
@@ -273,17 +317,103 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                               color: c.primary,
                             ),
                           )
-                        : Image.network(
-                            image,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: c.errorContainer.withOpacity(0.2),
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                color: c.error,
-                                size: 44,
+                        : Stack(
+                            children: [
+                              PageView.builder(
+                                controller: _galleryController,
+                                itemCount: galleryImages.length,
+                                onPageChanged: (index) {
+                                  if (!mounted) return;
+                                  setState(() => _galleryIndex = index);
+                                },
+                                itemBuilder: (context, index) {
+                                  return GestureDetector(
+                                    onTap: () => _openFullscreenGallery(
+                                      context: context,
+                                      images: galleryImages,
+                                      initialIndex: index,
+                                    ),
+                                    child: Image.network(
+                                      galleryImages[index],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: c.errorContainer.withOpacity(0.2),
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: c.error,
+                                          size: 44,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
+                              if (galleryImages.length > 1)
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: spacing.md,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      galleryImages.length,
+                                      (index) {
+                                        final selected =
+                                            index == _galleryIndex;
+                                        return AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 180,
+                                          ),
+                                          margin: EdgeInsets.symmetric(
+                                            horizontal: spacing.xs / 2,
+                                          ),
+                                          width: selected ? 18 : 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: selected
+                                                ? c.primary
+                                                : Colors.white.withOpacity(0.75),
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              Positioned(
+                                top: spacing.md,
+                                right: spacing.md,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: spacing.sm,
+                                    vertical: spacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.45),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.zoom_out_map,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: spacing.xs),
+                                      Text(
+                                        'Tap to zoom',
+                                        style: t.labelSmall?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                   ),
                 ),
@@ -557,7 +687,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                   child: AiItemChatSheet(
                                     itemId: d.id,
                                     title: d.name,
-                                    imageUrl: image,
+                                    imageUrl: primaryImage,
                                   ),
                                 );
                               },
@@ -764,6 +894,112 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FullscreenGalleryViewer extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const _FullscreenGalleryViewer({
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullscreenGalleryViewer> createState() =>
+      _FullscreenGalleryViewerState();
+}
+
+class _FullscreenGalleryViewerState extends State<_FullscreenGalleryViewer> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          '${_currentIndex + 1} / ${widget.imageUrls.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (index) {
+              if (!mounted) return;
+              setState(() => _currentIndex = index);
+            },
+            itemBuilder: (context, index) {
+              return InteractiveViewer(
+                minScale: 1,
+                maxScale: 4.5,
+                panEnabled: true,
+                child: Center(
+                  child: Image.network(
+                    widget.imageUrls[index],
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.white70,
+                        size: 48,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (widget.imageUrls.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: spacing.xl,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.imageUrls.length, (index) {
+                  final selected = index == _currentIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    margin: EdgeInsets.symmetric(horizontal: spacing.xs / 2),
+                    width: selected ? 18 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  );
+                }),
+              ),
+            ),
         ],
       ),
     );

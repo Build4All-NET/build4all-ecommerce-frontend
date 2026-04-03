@@ -2,6 +2,7 @@
 
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/auth_refresh_coordinator.dart';
+import 'package:build4front/core/notifications/front_firebase_push_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -240,9 +241,12 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
 
       // fallback priority
       if (adminValid) {
-        _goAdminWithToken(adminToken!);
-        return;
-      }
+  _goAdminWithToken(
+    adminToken!,
+    adminRole: (await const AdminTokenStore().getRole()) ?? '',
+  );
+  return;
+}
       if (userAutoValid) {
         _hydrateUserAndGo(userToken!);
         return;
@@ -296,10 +300,13 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
     if (!mounted) return;
 
     if (choice == 'admin') {
-      await _roleStore.saveRole('admin');
-      _goAdminWithToken(adminToken);
-      return;
-    }
+  await _roleStore.saveRole('admin');
+  _goAdminWithToken(
+    adminToken,
+    adminRole: (await const AdminTokenStore().getRole()) ?? '',
+  );
+  return;
+}
     if (choice == 'user') {
       await _roleStore.saveRole('user');
       _hydrateUserAndGo(userToken);
@@ -310,26 +317,46 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
   }
 
   void _hydrateUserAndGo(String rawJwt) {
-    g.setAuthToken(rawJwt);
+  g.setAuthToken(rawJwt);
 
-    // ❌ don't start realtime here (MainShell will do it once, with guards)
-    context.read<AuthBloc>().add(
-          AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
-        );
+  final ownerProjectLinkId =
+      widget.appConfig.ownerProjectId ??
+      int.tryParse(Env.ownerProjectLinkId) ??
+      0;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
+  if (ownerProjectLinkId > 0) {
+    FrontFirebasePushService().initAndSyncToken(
+      ownerProjectLinkId: ownerProjectLinkId,
     );
   }
 
-  void _goAdminWithToken(String rawJwt) {
-    g.setAuthToken(rawJwt);
+  context.read<AuthBloc>().add(
+        AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
+      );
 
-    // ✅ admin route might not have MainShell, so start realtime here
-    _startRealtimeForAdmin(rawJwt);
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
+  );
+}
 
-    Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+  void _goAdminWithToken(String rawJwt, {String adminRole = ''}) {
+  g.setAuthToken(rawJwt);
+
+  final ownerProjectLinkId =
+      widget.appConfig.ownerProjectId ??
+      int.tryParse(Env.ownerProjectLinkId) ??
+      0;
+
+  if (adminRole.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
+    FrontFirebasePushService().initAndSyncToken(
+      ownerProjectLinkId: ownerProjectLinkId,
+    );
   }
+
+  _startRealtimeForAdmin(rawJwt);
+
+  Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+}
 
   void _goLogin() {
     g.setAuthToken('');

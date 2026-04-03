@@ -6,6 +6,9 @@ class ItemDetailsModel {
   final String? description;
   final String? imageUrl;
 
+  /// New gallery field
+  final List<String> imageUrls;
+
   final num? price;
   final num? salePrice;
   final DateTime? saleStart;
@@ -44,6 +47,7 @@ class ItemDetailsModel {
     required this.name,
     this.description,
     this.imageUrl,
+    this.imageUrls = const [],
     this.price,
     this.salePrice,
     this.saleStart,
@@ -103,6 +107,35 @@ class ItemDetailsModel {
       return int.tryParse('$v');
     }
 
+    List<String> parseImageUrls(dynamic raw, String? fallbackImageUrl) {
+      final out = <String>[];
+
+      if (raw is List) {
+        for (final e in raw) {
+          if (e is Map) {
+            final url = (e['imageUrl'] ?? '').toString().trim();
+            if (url.isNotEmpty) {
+              out.add(url);
+            }
+          } else {
+            final url = e.toString().trim();
+            if (url.isNotEmpty) {
+              out.add(url);
+            }
+          }
+        }
+      }
+
+      if (out.isEmpty) {
+        final fallback = (fallbackImageUrl ?? '').trim();
+        if (fallback.isNotEmpty) {
+          out.add(fallback);
+        }
+      }
+
+      return out;
+    }
+
     final attrsRaw = (j['attributes'] as List?) ?? const [];
     final attrs = attrsRaw.map((e) {
       final m = Map<String, dynamic>.from(e as Map);
@@ -112,11 +145,14 @@ class ItemDetailsModel {
       );
     }).toList();
 
+    final parsedImageUrl = j['imageUrl']?.toString();
+
     return ItemDetailsModel(
       id: j['id'] is int ? j['id'] as int : int.parse('${j['id']}'),
       name: (j['name'] ?? j['itemName'] ?? '').toString(),
       description: j['description']?.toString(),
-      imageUrl: j['imageUrl']?.toString(),
+      imageUrl: parsedImageUrl,
+      imageUrls: parseImageUrls(j['images'], parsedImageUrl),
       price: parseNum(j['price']),
       salePrice: parseNum(j['salePrice']),
       saleStart: dt(j['saleStart']),
@@ -151,6 +187,7 @@ class ItemDetailsModel {
       name: name,
       description: description,
       imageUrl: imageUrl,
+      imageUrls: imageUrls,
       price: price,
       salePrice: salePrice,
       saleStart: saleStart,

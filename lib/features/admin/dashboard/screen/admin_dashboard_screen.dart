@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:build4front/app/app_router.dart';
 import 'package:build4front/core/network/globals.dart' as g;
+import 'package:build4front/core/notifications/front_firebase_push_service.dart';
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 
@@ -152,13 +154,29 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     super.dispose();
   }
 
-  Future<void> _init() async {
-    await Future.wait([
-      _loadRole(),
-      _loadLicense(),
-      _profileCubit.load(),
-    ]);
+Future<void> _init() async {
+  await Future.wait([
+    _loadRole(),
+    _loadLicense(),
+    _profileCubit.load(),
+    _syncOwnerFrontPushIfNeeded(),
+  ]);
+}
+
+  Future<void> _syncOwnerFrontPushIfNeeded() async {
+  try {
+    final role = (await _store.getRole())?.toUpperCase() ?? '';
+    final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+
+    if (role != 'OWNER' || ownerProjectLinkId <= 0) return;
+
+    await FrontFirebasePushService().initAndSyncToken(
+      ownerProjectLinkId: ownerProjectLinkId,
+    );
+  } catch (e) {
+    debugPrint('Admin dashboard front push sync failed => $e');
   }
+}
 
   Future<void> _loadRole() async {
     final role = await _store.getRole();
@@ -665,6 +683,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   icon: Icon(Icons.person_outline, color: colors.body),
                   tooltip: l10n.profileLabel,
                 ),
+                IconButton(
+  onPressed: () {
+    Navigator.of(context).pushNamed(AppRouter.notifications);
+  },
+  icon: Icon(Icons.notifications_none_rounded, color: colors.body),
+  tooltip: 'Notifications',
+),
                 IconButton(
                   onPressed: () async {
                     await Future.wait([_loadLicense(), _profileCubit.load()]);

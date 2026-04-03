@@ -159,6 +159,20 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Product> createProductWithImages({
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
+  }) async {
+    final token = await _requireToken();
+    final json = await api.createWithImages(
+      body: body,
+      imagePaths: imagePaths,
+      authToken: token,
+    );
+    return ProductModel.fromJson(json);
+  }
+
+  @override
   Future<Product> updateProduct(
     int id, {
     String? name,
@@ -217,6 +231,22 @@ class ProductRepositoryImpl implements ProductRepository {
       id: id,
       body: body,
       imagePath: imagePath,
+      authToken: token,
+    );
+    return ProductModel.fromJson(json);
+  }
+
+  @override
+  Future<Product> updateProductWithImages({
+    required int id,
+    required Map<String, dynamic> body,
+    required List<String> imagePaths,
+  }) async {
+    final token = await _requireToken();
+    final json = await api.updateWithImages(
+      id: id,
+      body: body,
+      imagePaths: imagePaths,
       authToken: token,
     );
     return ProductModel.fromJson(json);
