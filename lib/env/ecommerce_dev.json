@@ -1,8 +1,7 @@
-<<<<<<< HEAD
+
 {  "API_BASE_URL": "https://attemptable-venial-chace.ngrok-free.dev",
-=======
-{  "API_BASE_URL": "http://1192.168.1.6:8080",
->>>>>>> d573e7aca9191113288586cd8bec97c6ed45eff5
+
+
   "APP_NAME": "FATIMA",
   "APP_TYPE": "ECOMMERCE",
   "OWNER_PROJECT_LINK_ID": "12",
