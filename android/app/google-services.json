@@ -1,37 +1,21 @@
 {
   "project_info": {
-<<<<<<< HEAD
     "project_number": "11744200110",
     "project_id": "build4all-front-e5091",
     "storage_bucket": "build4all-front-e5091.firebasestorage.app"
-=======
-    "project_number": "556471680125",
-    "project_id": "build4all-front",
-    "storage_bucket": "build4all-front.firebasestorage.app"
->>>>>>> d573e7aca9191113288586cd8bec97c6ed45eff5
   },
   "client": [
     {
       "client_info": {
-<<<<<<< HEAD
         "mobilesdk_app_id": "1:11744200110:android:ecb033ade77aea6edd343f",
         "android_client_info": {
           "package_name": "com.build4all.opl1.test2"
-=======
-        "mobilesdk_app_id": "1:556471680125:android:7fa487855191d9c0488514",
-        "android_client_info": {
-          "package_name": "com.build4all.opl1.test"
->>>>>>> d573e7aca9191113288586cd8bec97c6ed45eff5
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-<<<<<<< HEAD
           "current_key": "AIzaSyA9dzIgxWdqtS-rAlWE8qlDqvFaPMC3Djo"
-=======
-          "current_key": "AIzaSyCn1abqYqd66geoNgKdC3AH8zS8SLGEQTA"
->>>>>>> d573e7aca9191113288586cd8bec97c6ed45eff5
         }
       ],
       "services": {
