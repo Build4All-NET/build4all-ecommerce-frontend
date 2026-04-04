@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/config/env.dart';
 
@@ -855,8 +855,7 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
   final _codeCtrl = TextEditingController();
   bool _loading = false;
 
-  String _cleanErr(Object e) =>
-      e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+  String _cleanErr(Object e) => ExceptionMapper.toMessage(e);
 
   @override
   void dispose() {

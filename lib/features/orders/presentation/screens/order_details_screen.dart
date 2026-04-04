@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/l10n/app_localizations.dart';
@@ -66,6 +67,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   String _money(double v) => '\$${v.toStringAsFixed(2)}';
 
+  String _msg(Object e, {String? fallback}) {
+    final mapped = ExceptionMapper.toMessage(e).trim();
+    if (mapped.isNotEmpty && mapped != 'Something went wrong.') {
+      return mapped;
+    }
+    return fallback ?? 'Something went wrong. Please try again.';
+  }
+
   Future<void> _load() async {
     setState(() {
       loading = true;
@@ -85,10 +94,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             ? list.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
             : [];
         loading = false;
+        error = null;
       });
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = ExceptionMapper.toMessage(e);
         loading = false;
       });
     }
@@ -114,7 +124,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${l10n.orderDetailsDownloadInvoice} failed: $e',
+            _msg(
+              e,
+              fallback: '${l10n.orderDetailsDownloadInvoice} failed.',
+            ),
           ),
         ),
       );
@@ -162,7 +175,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       if (order != null) ...[
                         _HeaderCard(order: order!, money: _money),
                         SizedBox(height: spacing.md),
-
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -181,7 +193,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                         SizedBox(height: spacing.md),
                       ],
-
                       Text(
                         l10n.ordersDetailsItemsTitle,
                         style: tokens.typography.titleMedium.copyWith(
@@ -190,7 +201,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                       ),
                       SizedBox(height: spacing.sm),
-
                       ...items.map((row) {
                         final item = (row['item'] is Map)
                             ? (row['item'] as Map).cast<String, dynamic>()

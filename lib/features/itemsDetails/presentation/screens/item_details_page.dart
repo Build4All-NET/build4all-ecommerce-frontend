@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as net;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -61,6 +62,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     return null;
   }
 
+  String _msg(AppLocalizations l10n, Object error, {String? fallback}) {
+    final mapped = ExceptionMapper.toMessage(error).trim();
+    if (mapped.isNotEmpty && mapped != 'Something went wrong.') {
+      return mapped;
+    }
+    return fallback ?? 'Something went wrong. Please try again.';
+  }
+
   Future<void> _loadDownloadAccess(int productId) async {
     if (_downloadCheckedItemId == productId &&
         (_downloadAccessLoaded || _downloadAccessLoading)) {
@@ -97,7 +106,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   }
 
   Future<void> _openExternalLink(BuildContext context, String rawUrl) async {
+    final l10n = AppLocalizations.of(context)!;
     final url = rawUrl.trim();
+
     if (url.isEmpty) {
       AppToast.error(context, 'Missing external URL');
       return;
@@ -121,9 +132,10 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     BuildContext context,
     int productId,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final token = net.readAuthToken().trim();
+
     if (token.isEmpty) {
-      final l10n = AppLocalizations.of(context)!;
       AppToast.error(context, l10n.cart_login_required_message);
       return;
     }
@@ -152,7 +164,10 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.error(context, e.toString());
+      AppToast.error(
+        context,
+        _msg(l10n, e, fallback: 'Failed to start download. Please try again.'),
+      );
     }
   }
 

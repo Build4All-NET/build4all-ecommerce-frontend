@@ -1,4 +1,3 @@
-import 'package:build4front/features/admin/orders_admin/data/models/cash_mark_paid_result_model.dart';
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
@@ -19,20 +18,35 @@ class AdminOrdersApiService {
   Options _auth(String token) =>
       Options(headers: {'Authorization': 'Bearer ${_cleanToken(token)}'});
 
+  RequestOptions _req(String path) => RequestOptions(path: path);
+
   Future<String> _requireToken() async {
     final token = await getToken();
     if (token == null || token.trim().isEmpty) {
       throw DioException(
-        requestOptions: RequestOptions(path: '/api/orders/owner/*'),
+        requestOptions: _req('/api/orders/owner/orders'),
         response: Response(
-          requestOptions: RequestOptions(path: '/api/orders/owner/*'),
+          requestOptions: _req('/api/orders/owner/orders'),
           statusCode: 401,
-          data: {'error': 'No token found. Please login again.'},
+          data: {
+            'code': 'AUTH',
+            'error': 'Session expired. Please login again.',
+          },
         ),
         type: DioExceptionType.badResponse,
       );
     }
     return token;
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map) return data.cast<String, dynamic>();
+    return const <String, dynamic>{};
+  }
+
+  List<dynamic> _asList(dynamic data) {
+    if (data is List) return data;
+    return const <dynamic>[];
   }
 
   Future<List<dynamic>> getOrdersRaw({String? status}) async {
@@ -41,19 +55,22 @@ class AdminOrdersApiService {
 
     if (status == null || status.trim().isEmpty) {
       final res = await _dio.get(base, options: _auth(token));
-      return res.data is List ? res.data : const [];
+      return _asList(res.data);
     }
 
     final s = status.trim().toUpperCase();
     final res = await _dio.get('$base/status/$s', options: _auth(token));
-    return res.data is List ? res.data : const [];
+    return _asList(res.data);
   }
 
-  Future<Map<String, dynamic>> getOrderDetailsRaw({required int orderId}) async {
+  Future<Map<String, dynamic>> getOrderDetailsRaw({
+    required int orderId,
+  }) async {
     final token = await _requireToken();
     final path = '/api/orders/owner/orders/$orderId';
+
     final res = await _dio.get(path, options: _auth(token));
-    return res.data is Map ? (res.data as Map).cast<String, dynamic>() : const {};
+    return _asMap(res.data);
   }
 
   Future<void> updateOrderStatusRaw({
@@ -71,48 +88,48 @@ class AdminOrdersApiService {
   }
 
   Future<Map<String, dynamic>> editOrderRaw({
-  required int orderId,
-  required Map<String, dynamic> body,
-}) async {
-  final token = await _requireToken();
-  final path = '/api/orders/owner/orders/$orderId/edit';
+    required int orderId,
+    required Map<String, dynamic> body,
+  }) async {
+    final token = await _requireToken();
+    final path = '/api/orders/owner/orders/$orderId/edit';
 
-  final res = await _dio.put(
-    path,
-    options: _auth(token),
-    data: body,
-  );
+    final res = await _dio.put(
+      path,
+      options: _auth(token),
+      data: body,
+    );
 
-  return res.data is Map ? (res.data as Map).cast<String, dynamic>() : {};
-}
+    return _asMap(res.data);
+  }
 
-  // ✅ NEW: CASH mark paid
-  Future<Map<String, dynamic>> markCashPaidRaw({required int orderId}) async {
+  Future<Map<String, dynamic>> markCashPaidRaw({
+    required int orderId,
+  }) async {
     final token = await _requireToken();
     final path = '/api/orders/owner/orders/$orderId/cash/mark-paid';
 
     final res = await _dio.put(path, options: _auth(token));
-    return res.data is Map ? (res.data as Map).cast<String, dynamic>() : const {};
+    return _asMap(res.data);
   }
 
-  // ✅ NEW: CASH reset to unpaid
-  Future<Map<String, dynamic>> resetCashToUnpaidRaw({required int orderId}) async {
+  Future<Map<String, dynamic>> resetCashToUnpaidRaw({
+    required int orderId,
+  }) async {
     final token = await _requireToken();
     final path = '/api/orders/owner/orders/$orderId/cash/reset-to-unpaid';
 
     final res = await _dio.put(path, options: _auth(token));
-    return res.data is Map ? (res.data as Map).cast<String, dynamic>() : const {};
+    return _asMap(res.data);
   }
 
-  // ✅ NEW: reopen order properly (backend decides status + cash behavior)
-  Future<Map<String, dynamic>> reopenOrderRaw({required int orderId}) async {
+  Future<Map<String, dynamic>> reopenOrderRaw({
+    required int orderId,
+  }) async {
     final token = await _requireToken();
     final path = '/api/orders/owner/orders/$orderId/reopen';
 
     final res = await _dio.put(path, options: _auth(token));
-    return res.data is Map ? (res.data as Map).cast<String, dynamic>() : const {};
+    return _asMap(res.data);
   }
-
-
-  
 }

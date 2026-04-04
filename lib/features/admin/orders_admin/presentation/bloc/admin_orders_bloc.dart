@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 
 import '../../domain/repositories/admin_orders_repository.dart';
 import '../../domain/entities/admin_order_entities.dart';
@@ -18,7 +19,7 @@ class AdminOrdersBloc extends Bloc<AdminOrdersEvent, AdminOrdersState> {
 
   Future<void> _fetchAll(Emitter<AdminOrdersState> emit) async {
     try {
-      final list = await repo.getOrders(status: null); // ✅ always ALL
+      final list = await repo.getOrders(status: null);
       _all = list;
 
       emit(
@@ -32,7 +33,7 @@ class AdminOrdersBloc extends Bloc<AdminOrdersEvent, AdminOrdersState> {
       emit(
         state.copyWith(
           loading: false,
-          error: e.toString().replaceFirst('Exception: ', ''),
+          error: ExceptionMapper.toMessage(e),
         ),
       );
     }
@@ -60,7 +61,7 @@ class AdminOrdersBloc extends Bloc<AdminOrdersEvent, AdminOrdersState> {
   ) async {
     emit(
       state.copyWith(
-        statusFilter: event.status, // can be null ✅
+        statusFilter: event.status,
         orders: _applyStatus(_all, event.status),
         loading: false,
         clearError: true,

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 
 import '../../domain/usecases/get_user_profile.dart';
 import '../../domain/usecases/toggle_user_visibility.dart';
@@ -41,11 +42,12 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     Emitter<UserProfileState> emit,
   ) async {
     emit(const UserProfileLoading());
+
     try {
       final user = await getUser(token: e.token, userId: e.userId);
       emit(UserProfileLoaded(user));
     } catch (err) {
-      emit(UserProfileError(err.toString()));
+      emit(UserProfileError(ExceptionMapper.toMessage(err)));
     }
   }
 
@@ -58,10 +60,9 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
 
     try {
       await toggleVisibility(token: e.token, isPublic: e.newValue);
-
       add(LoadUserProfile(e.token, prev.user.id));
     } catch (err) {
-      emit(UserProfileError(err.toString()));
+      emit(UserProfileError(ExceptionMapper.toMessage(err)));
     }
   }
 
@@ -81,7 +82,7 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
 
       add(LoadUserProfile(e.token, e.userId));
     } catch (err) {
-      emit(UserProfileError(err.toString()));
+      emit(UserProfileError(ExceptionMapper.toMessage(err)));
     }
   }
 }

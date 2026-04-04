@@ -1,5 +1,6 @@
-// lib/core/exceptions/exception_mapper.dart
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import 'app_exception.dart';
@@ -7,55 +8,30 @@ import 'app_exception.dart';
 class ExceptionMapper {
   static String toMessage(Object error) {
     try {
-      // ✅ If someone passes a String directly
       if (error is String) return _sanitize(error);
 
-      // ✅ Your app-level exceptions
       if (error is AppException) {
-        // If it wraps a DioException or any original error -> map it first
         final orig = error.original;
         if (orig != null && orig is! AppException) {
-          final msgFromOrig = toMessage(orig);
-          if (msgFromOrig.trim().isNotEmpty) return msgFromOrig;
+          final fromOrig = toMessage(orig);
+          if (fromOrig.trim().isNotEmpty) return fromOrig;
         }
 
-        // Keep your code-based mapping (existing behavior)
-        switch (error.code) {
-  case 'INVALID_CREDENTIALS':
-    return 'Invalid email or password';
+        final fromCode = _mapBackendCode(error.code);
+        if (fromCode != null) return fromCode;
 
-  case 'WRONG_PASSWORD':
-    return 'Invalid email or password';
-
-  case 'USER_NOT_FOUND':
-    return 'User not found';
-
-  case 'INVALID_EMAIL_FORMAT':
-    return 'Invalid email format';
-
-  case 'LOGIN_LOCKED':
-    return _sanitize(error.message);
-
-  case 'INACTIVE':
-    return 'Your account is inactive. Reactivate to continue.';
-
-  case 'NETWORK_ERROR':
-    return 'No internet connection';
-
-  case 'SERVER_ERROR':
-    return 'Server error. Please try later.';
-}
+        if (error.message.trim().isNotEmpty) {
+          return _sanitize(error.message);
+        }
       }
 
-      // ✅ Raw Dio exceptions (this is the big missing part in your project)
       if (error is DioException) return _dioToMessage(error);
 
-      // ✅ Other common stuff
+      if (error is SocketException) return 'No internet connection.';
       if (error is FormatException) return 'Invalid server response.';
       if (error is ArgumentError) return 'Invalid input.';
       if (error is TypeError) return 'Something went wrong. Please try again.';
 
-      // ✅ Fallback
       return _sanitize(error.toString());
     } catch (_) {
       return 'Something went wrong. Please try again.';
@@ -63,41 +39,48 @@ class ExceptionMapper {
   }
 
   static String _dioToMessage(DioException e) {
-    // 1) Network & timeouts
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return 'Connection timed out. Try again.';
+
       case DioExceptionType.connectionError:
         return 'No internet connection.';
+
       case DioExceptionType.cancel:
         return 'Request cancelled.';
+
       case DioExceptionType.badCertificate:
         return 'Secure connection failed.';
+
       case DioExceptionType.unknown:
+        final err = e.error;
+        if (err is SocketException) return 'No internet connection.';
         return 'Network error. Check your connection.';
 
       case DioExceptionType.badResponse:
-        break; // handled below
+        break;
     }
 
-    // 2) HTTP response errors (400/401/403/500…)
     final status = e.response?.statusCode;
     final data = e.response?.data;
 
-    // Try extract backend message (error/message/detail…)
+    final backendCode = _extractBackendCode(data);
+    final mappedCode = _mapBackendCode(backendCode);
+    if (mappedCode != null) return mappedCode;
+
     final extracted = _extractBackendMessage(data);
     if (extracted != null && extracted.trim().isNotEmpty) {
       return _sanitize(extracted);
     }
 
-    // Fallback by status code
     return _statusFallback(status);
   }
 
   static String _statusFallback(int? status) {
     if (status == null) return 'Request failed.';
+
     switch (status) {
       case 400:
       case 422:
@@ -116,12 +99,40 @@ class ExceptionMapper {
     }
   }
 
+  static String? _extractBackendCode(dynamic data) {
+    if (data == null) return null;
+
+    if (data is String) {
+      final s = data.trim();
+      if ((s.startsWith('{') && s.endsWith('}')) ||
+          (s.startsWith('[') && s.endsWith(']'))) {
+        try {
+          final decoded = json.decode(s);
+          return _extractBackendCode(decoded);
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      final code = map['code'];
+      if (code is String && code.trim().isNotEmpty) {
+        return code.trim();
+      }
+    }
+
+    return null;
+  }
+
   static String? _extractBackendMessage(dynamic data) {
     if (data == null) return null;
 
-    // Sometimes backend returns plain string (or JSON string)
     if (data is String) {
       final s = data.trim();
+
       if ((s.startsWith('{') && s.endsWith('}')) ||
           (s.startsWith('[') && s.endsWith(']'))) {
         try {
@@ -131,19 +142,31 @@ class ExceptionMapper {
           return s;
         }
       }
+
+      final mapped = _mapBackendCode(s);
+      if (mapped != null) return mapped;
+
       return s;
     }
 
-    // JSON object
     if (data is Map) {
       final map = Map<String, dynamic>.from(data);
 
-      for (final k in ['error', 'message', 'detail', 'msg', 'title']) {
-        final v = map[k];
-        if (v is String && v.trim().isNotEmpty) return v;
+      final code = map['code'];
+      if (code is String && code.trim().isNotEmpty) {
+        final mapped = _mapBackendCode(code);
+        if (mapped != null) return mapped;
       }
 
-      // Validation errors format: errors: { field: ["msg1"] }
+      for (final k in ['error', 'message', 'detail', 'msg', 'title']) {
+        final v = map[k];
+        if (v is String && v.trim().isNotEmpty) {
+          final mapped = _mapBackendCode(v);
+          if (mapped != null) return mapped;
+          return v;
+        }
+      }
+
       final errs = map['errors'];
       if (errs is Map) {
         final parts = <String>[];
@@ -163,23 +186,117 @@ class ExceptionMapper {
     return null;
   }
 
+  static String? _mapBackendCode(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    final code = raw.trim().toUpperCase();
+
+    switch (code) {
+      case 'INVALID_CREDENTIALS':
+      case 'WRONG_PASSWORD':
+      case 'BUSINESS_LOGIN_FAILED':
+        return 'Invalid email, phone number, or password.';
+
+      case 'USER_NOT_FOUND':
+      case 'BUSINESS_NOT_FOUND':
+        return 'Account not found.';
+
+      case 'INVALID_EMAIL_FORMAT':
+        return 'Invalid email format.';
+
+      case 'LOGIN_LOCKED':
+        return 'Too many attempts. Please try again later.';
+
+      case 'INACTIVE':
+      case 'INVALID_USER_STATUS':
+        return 'Your account is inactive. Reactivate to continue.';
+
+      case 'NETWORK_ERROR':
+        return 'No internet connection.';
+
+      case 'SERVER_ERROR':
+      case 'INTERNAL_ERROR':
+        return 'Server error. Please try later.';
+
+      case 'VALIDATION_ERROR':
+        return 'Please check your input and try again.';
+
+      case 'ACCESS_DENIED':
+        return 'You don’t have permission to do this.';
+
+      case 'TENANT_MISMATCH':
+      case 'INVALID_TENANCY':
+        return 'This action is not allowed for this app.';
+
+      case 'MISSING_AUTH_TOKEN':
+      case 'INVALID_TOKEN':
+      case 'AUTH':
+      case 'INVALID_AUTH_HEADER':
+      case 'USER_TOKEN_REQUIRED':
+      case 'ADMIN_TOKEN_REQUIRED':
+        return 'Session expired. Please log in again.';
+
+      case 'USERNAME_ALREADY_EXISTS':
+        return 'This username is already in use.';
+
+      case 'USER_DELETED':
+      case 'BUSINESS_DELETED':
+        return 'This account is no longer available.';
+
+      case 'PROFILE_UPDATE_FAILED':
+        return 'Failed to update profile. Please try again.';
+
+      case 'PASSWORD_UPDATE_FAILED':
+        return 'Failed to update password. Please try again.';
+
+      case 'INVALID_CODE':
+        return 'Invalid verification code.';
+
+      case 'UPLOAD_FAILED':
+        return 'Upload failed. Please try again.';
+
+      case 'INVALID_FILE_TYPE':
+        return 'Invalid file type.';
+
+      case 'TAX_RULE_NOT_FOUND':
+      case 'SHIPPING_METHOD_NOT_FOUND':
+      case 'PROJECT_NOT_FOUND':
+      case 'PROFILE_IMAGE_NOT_FOUND':
+      case 'CATEGORY_NOT_FOUND':
+        return 'Requested item was not found.';
+
+      case 'SUBSCRIPTION_LIMIT_EXCEEDED':
+        return 'Your subscription limit has been reached.';
+
+      case 'FIREBASE_CONFIG_NOT_READY':
+        return 'Configuration is not ready yet. Please try again shortly.';
+
+      case 'FIREBASE_CONFIG_NOT_FOUND':
+        return 'Configuration was not found.';
+
+      default:
+        return null;
+    }
+  }
+
   static String _sanitize(String raw) {
     var msg = raw.trim();
 
-    // Remove common junk prefixes
     msg = msg.replaceAll(RegExp(r'^(Exception:)\s*'), '');
     msg = msg.replaceAll(RegExp(r'^(DioException:)\s*'), '');
     msg = msg.replaceAll(RegExp(r'^(Bad state:)\s*'), '');
 
-    // If someone passed the full Dio dump as string, cut it hard
+    final mapped = _mapBackendCode(msg);
+    if (mapped != null) return mapped;
+
     if (msg.contains('requestOptions') || msg.contains('Response:')) {
-      // keep first line only
       msg = msg.split('\n').first.trim();
     }
 
-    // Cut mega walls
     const maxLen = 160;
-    if (msg.length > maxLen) msg = '${msg.substring(0, maxLen)}…';
+    if (msg.length > maxLen) {
+      msg = '${msg.substring(0, maxLen)}…';
+    }
 
     return msg.isEmpty ? 'Something went wrong.' : msg;
   }

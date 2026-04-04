@@ -1,4 +1,8 @@
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/features/admin/orders_admin/data/models/cash_mark_paid_result_model.dart';
+import 'package:dio/dio.dart';
+
+import  'package:build4front/features/admin/orders_admin/data/models/cash_mark_paid_result_model.dart';
 import 'package:dio/dio.dart';
 
 import '../../domain/entities/admin_order_entities.dart';
@@ -8,14 +12,17 @@ import '../services/admin_orders_api_service.dart';
 
 class AdminOrdersRepositoryImpl implements AdminOrdersRepository {
   final AdminOrdersApiService api;
+
   AdminOrdersRepositoryImpl({required this.api});
 
   Never _throwNice(DioException e, {String fallback = 'Request failed'}) {
-    final data = e.response?.data;
-    if (data is Map && data['error'] != null) {
-      throw Exception(data['error'].toString());
-    }
-    throw Exception(e.message ?? fallback);
+    final msg = ExceptionMapper.toMessage(e).trim();
+    throw Exception(msg.isEmpty ? fallback : msg);
+  }
+
+  String _cleanUnknown(Object e, {String fallback = 'Request failed'}) {
+    final msg = ExceptionMapper.toMessage(e).trim();
+    return msg.isEmpty ? fallback : msg;
   }
 
   @override
@@ -30,7 +37,7 @@ class AdminOrdersRepositoryImpl implements AdminOrdersRepository {
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to load orders');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(_cleanUnknown(e, fallback: 'Failed to load orders'));
     }
   }
 
@@ -42,7 +49,9 @@ class AdminOrdersRepositoryImpl implements AdminOrdersRepository {
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to load order details');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(
+        _cleanUnknown(e, fallback: 'Failed to load order details'),
+      );
     }
   }
 
@@ -56,18 +65,22 @@ class AdminOrdersRepositoryImpl implements AdminOrdersRepository {
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to update order status');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(
+        _cleanUnknown(e, fallback: 'Failed to update order status'),
+      );
     }
   }
 
-    @override
+  @override
   Future<void> markCashPaid({required int orderId}) async {
     try {
       await api.markCashPaidRaw(orderId: orderId);
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to mark cash as paid');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(
+        _cleanUnknown(e, fallback: 'Failed to mark cash as paid'),
+      );
     }
   }
 
@@ -78,23 +91,26 @@ class AdminOrdersRepositoryImpl implements AdminOrdersRepository {
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to reset cash to unpaid');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(
+        _cleanUnknown(e, fallback: 'Failed to reset cash to unpaid'),
+      );
     }
   }
 
-@override
-Future<void> editOrder({
-  required int orderId,
-  required Map<String, dynamic> body,
-}) async {
-  try {
-    await api.editOrderRaw(orderId: orderId, body: body);
-  } on DioException catch (e) {
-    _throwNice(e, fallback: 'Failed to edit order');
-  } catch (e) {
-    throw Exception(e.toString());
+  @override
+  Future<void> editOrder({
+    required int orderId,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      await api.editOrderRaw(orderId: orderId, body: body);
+    } on DioException catch (e) {
+      _throwNice(e, fallback: 'Failed to edit order');
+    } catch (e) {
+      throw Exception(_cleanUnknown(e, fallback: 'Failed to edit order'));
+    }
   }
-}
+
   @override
   Future<void> reopenOrder({required int orderId}) async {
     try {
@@ -102,7 +118,7 @@ Future<void> editOrder({
     } on DioException catch (e) {
       _throwNice(e, fallback: 'Failed to reopen order');
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(_cleanUnknown(e, fallback: 'Failed to reopen order'));
     }
   }
 }

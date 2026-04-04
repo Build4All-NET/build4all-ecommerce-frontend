@@ -1,3 +1,4 @@
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/get_my_orders.dart';
@@ -15,11 +16,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   Future<void> _onLoad(OrdersEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(loading: true, error: null));
+
     try {
       final list = await getMyOrders();
-      emit(state.copyWith(loading: false, orders: list, error: null));
+      emit(state.copyWith(
+        loading: false,
+        orders: list,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(loading: false, error: e.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 

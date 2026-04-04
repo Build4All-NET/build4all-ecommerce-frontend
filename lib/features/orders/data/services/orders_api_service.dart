@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:build4front/features/auth/data/services/auth_token_store.dart';
 import 'package:build4front/core/network/globals.dart' as g;
@@ -13,8 +15,6 @@ class OrdersApiService {
     final token = await tokenStore.getToken();
 
     if (token == null || token.trim().isEmpty) {
-      // ✅ do NOT throw here
-      // let the request go through so 401 can trigger refresh interceptor
       return {};
     }
 
@@ -24,15 +24,108 @@ class OrdersApiService {
   }
 
   String _extractError(dynamic data, {int? statusCode}) {
+    if (data == null) {
+      return 'Request failed${statusCode != null ? " (HTTP $statusCode)" : ""}.';
+    }
+
+    if (data is String) {
+      final s = data.trim();
+
+      if (s.isEmpty) {
+        return 'Request failed${statusCode != null ? " (HTTP $statusCode)" : ""}.';
+      }
+
+      if ((s.startsWith('{') && s.endsWith('}')) ||
+          (s.startsWith('[') && s.endsWith(']'))) {
+        try {
+          final decoded = json.decode(s);
+          return _extractError(decoded, statusCode: statusCode);
+        } catch (_) {
+          return s;
+        }
+      }
+
+      return s;
+    }
+
     if (data is Map) {
-      final err = data['error'] ?? data['message'];
+      final err = data['error'] ?? data['message'] ?? data['detail'];
       final reqId = data['requestId'];
+
       if (err != null && reqId != null) {
         return '${err.toString()} (requestId: ${reqId.toString()})';
       }
       if (err != null) return err.toString();
+
+      final code = data['code'];
+      if (code != null) return code.toString();
     }
+
     return 'Request failed${statusCode != null ? " (HTTP $statusCode)" : ""}.';
+  }
+
+  String _fallbackByStatus(int? statusCode) {
+    switch (statusCode) {
+      case 400:
+      case 422:
+        return 'Invalid request.';
+      case 401:
+        return 'Session expired. Please log in again.';
+      case 403:
+        return 'You do not have permission to do this.';
+      case 404:
+        return 'Order not found.';
+      default:
+        if ((statusCode ?? 0) >= 500) {
+          return 'Server error. Please try again later.';
+        }
+        return 'Request failed.';
+    }
+  }
+
+  String _extractDioMessage(DioException e, {String? fallback}) {
+    final sc = e.response?.statusCode;
+    final extracted = _extractError(
+      e.response?.data,
+      statusCode: sc,
+    ).trim();
+
+    if (extracted.isNotEmpty &&
+        !extracted.toLowerCase().startsWith('request failed')) {
+      return extracted;
+    }
+
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return 'Connection timed out. Try again.';
+    }
+
+    if (e.type == DioExceptionType.connectionError) {
+      return 'No internet connection.';
+    }
+
+    return fallback ?? _fallbackByStatus(sc);
+  }
+
+  String _extractUnknownMessage(Object e, {String? fallback}) {
+    final raw = e.toString().trim();
+
+    if (raw.isEmpty) {
+      return fallback ?? 'Something went wrong. Please try again.';
+    }
+
+    final cleaned = raw
+        .replaceFirst(RegExp(r'^Exception:\s*'), '')
+        .replaceFirst(RegExp(r'^DioException:\s*'), '')
+        .replaceFirst(RegExp(r'^Bad state:\s*'), '')
+        .trim();
+
+    if (cleaned.isEmpty) {
+      return fallback ?? 'Something went wrong. Please try again.';
+    }
+
+    return cleaned;
   }
 
   Future<List<dynamic>> getMyOrdersRaw() async {
@@ -64,7 +157,6 @@ class OrdersApiService {
     final headers = await _authHeaders();
 
     final candidates = <String>[
-   
       '/api/orders/myorders/$orderId',
     ];
 
@@ -83,39 +175,42 @@ class OrdersApiService {
       } on DioException catch (e) {
         final sc = e.response?.statusCode ?? 0;
 
-        // ✅ route not found? try next one
         if (sc == 404) continue;
 
-        // ✅ auth issue? DO NOT swallow it
-        // if refresh failed, let it bubble up
         if (sc == 401 || sc == 403) {
           rethrow;
         }
 
-        // ✅ backend/server issue -> save and try next candidate
         if (sc >= 500) {
           lastDioError = e;
           continue;
         }
 
-        // network/no-response or other 4xx
         throw Exception(
-          _extractError(e.response?.data, statusCode: sc == 0 ? null : sc),
+          _extractDioMessage(
+            e,
+            fallback: 'Failed to load order details.',
+          ),
         );
       } catch (e) {
-        throw Exception(e.toString());
+        throw Exception(
+          _extractUnknownMessage(
+            e,
+            fallback: 'Failed to load order details.',
+          ),
+        );
       }
     }
 
     if (lastDioError != null) {
       throw Exception(
-        _extractError(
-          lastDioError!.response?.data,
-          statusCode: lastDioError!.response?.statusCode,
+        _extractDioMessage(
+          lastDioError!,
+          fallback: 'Server error. Please try again later.',
         ),
       );
     }
 
-    throw Exception('Order details endpoint not found (no matching route).');
+    throw Exception('Order details were not found.');
   }
 }

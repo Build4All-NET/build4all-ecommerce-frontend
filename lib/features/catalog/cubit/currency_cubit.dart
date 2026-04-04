@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/features/catalog/domain/entities/currency.dart';
 import 'package:build4front/features/catalog/domain/usecases/get_currency_by_id.dart';
 
@@ -28,11 +29,23 @@ class CurrencyCubit extends Cubit<CurrencyState> {
     if (state.currency?.id == currencyId) return;
 
     emit(state.copyWith(loading: true, error: null));
+
     try {
       final c = await getCurrencyById(currencyId);
-      emit(state.copyWith(loading: false, currency: c, error: null));
+      emit(
+        state.copyWith(
+          loading: false,
+          currency: c,
+          error: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(loading: false, error: e.toString()));
+      emit(
+        state.copyWith(
+          loading: false,
+          error: ExceptionMapper.toMessage(e),
+        ),
+      );
     }
   }
 

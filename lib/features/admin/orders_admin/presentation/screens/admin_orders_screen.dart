@@ -23,13 +23,20 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   DateTimeRange? _range;
   int? _quickDaysSelected; // 7 / 30 / null
 
+
   void _toast(String msg, {bool error = false}) {
-    if (msg.trim().isEmpty) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      AppToast.error(context, msg);
-    });
-  }
+  final safe = msg.trim();
+  if (safe.isEmpty) return;
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    if (error) {
+      AppToast.error(context, safe);
+    } else {
+      AppToast.success(context, safe);
+    }
+  });
+}
 
   Future<void> _pickRange(BuildContext context) async {
     final now = DateTime.now();
