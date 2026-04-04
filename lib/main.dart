@@ -11,11 +11,15 @@ import 'package:build4front/core/network/globals.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase initialized');
+  } catch (e, st) {
+    debugPrint('Firebase init failed: $e');
+    debugPrint('$st');
+  }
 
   makeDefaultDio(Env.apiBaseUrl);
-
-  await AiFeatureBootstrap().init();
 
   try {
     if (Env.stripePublishableKey.isNotEmpty) {
@@ -24,9 +28,20 @@ void main() async {
     } else {
       debugPrint("Stripe publishable key is missing (STRIPE_PUBLISHABLE_KEY).");
     }
-  } catch (e) {
+  } catch (e, st) {
     debugPrint("Stripe init failed: $e");
+    debugPrint('$st');
   }
 
   runApp(const Build4AllFrontApp());
+
+  // Don't block first frame
+  Future.microtask(() async {
+    try {
+      await AiFeatureBootstrap().init();
+    } catch (e, st) {
+      debugPrint('AI bootstrap failed: $e');
+      debugPrint('$st');
+    }
+  });
 }
