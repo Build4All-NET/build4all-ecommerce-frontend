@@ -28,29 +28,12 @@ class LicensingApiService {
 
   Future<String> _requireBearer() async {
     final token = (await getToken())?.trim() ?? '';
-    if (token.isEmpty) throw Exception('Missing token');
-
-    // accept if already "Bearer ..."
-    if (token.toLowerCase().startsWith('bearer ')) return token;
-    return 'Bearer $token';
-  }
-
-  Never _throwDio(String prefix, DioException e) {
-    final code = e.response?.statusCode;
-    final data = e.response?.data;
-
-    String msg = 'HTTP $code';
-    if (data is Map && data['message'] != null) {
-      msg += ' | ${data['message']}';
-    } else if (data is Map && data['error'] != null) {
-      msg += ' | ${data['error']}';
-    } else if (data != null) {
-      msg += ' | $data';
-    } else if (e.message != null) {
-      msg += ' | ${e.message}';
+    if (token.isEmpty) {
+      throw Exception('Missing token');
     }
 
-    throw Exception('$prefix failed: $msg');
+    if (token.toLowerCase().startsWith('bearer ')) return token;
+    return 'Bearer $token';
   }
 
   // ================= OWNER (tenant from token ONLY) =================
@@ -58,18 +41,14 @@ class LicensingApiService {
   Future<OwnerAppAccessResponse> getAccessMe() async {
     final auth = await _requireBearer();
 
-    try {
-      final res = await _dio.get(
-        '/licensing/apps/me/access',
-        options: Options(headers: {'Authorization': auth}),
-      );
+    final res = await _dio.get(
+      '/licensing/apps/me/access',
+      options: Options(headers: {'Authorization': auth}),
+    );
 
-      return OwnerAppAccessResponse.fromJson(
-        Map<String, dynamic>.from(res.data),
-      );
-    } on DioException catch (e) {
-      _throwDio('Licensing getAccessMe', e);
-    }
+    return OwnerAppAccessResponse.fromJson(
+      Map<String, dynamic>.from(res.data),
+    );
   }
 
   Future<void> requestUpgradeMe({
@@ -78,32 +57,25 @@ class LicensingApiService {
   }) async {
     final auth = await _requireBearer();
 
-    try {
-      await _dio.post(
-        '/licensing/apps/me/upgrade-request',
-        data: {
-          'planCode': planCode,
-          'usersAllowedOverride': usersAllowedOverride,
-        },
-        options: Options(headers: {'Authorization': auth}),
-      );
-    } on DioException catch (e) {
-      _throwDio('Licensing requestUpgradeMe', e);
-    }
+    await _dio.post(
+      '/licensing/apps/me/upgrade-request',
+      data: {
+        'planCode': planCode,
+        'usersAllowedOverride': usersAllowedOverride,
+      },
+      options: Options(headers: {'Authorization': auth}),
+    );
   }
 
   Future<List<dynamic>> listMyUpgradeRequests() async {
     final auth = await _requireBearer();
 
-    try {
-      final res = await _dio.get(
-        '/licensing/apps/me/upgrade-requests',
-        options: Options(headers: {'Authorization': auth}),
-      );
-      return (res.data as List);
-    } on DioException catch (e) {
-      _throwDio('Licensing listMyUpgradeRequests', e);
-    }
+    final res = await _dio.get(
+      '/licensing/apps/me/upgrade-requests',
+      options: Options(headers: {'Authorization': auth}),
+    );
+
+    return (res.data as List);
   }
 
   // ================= SUPER_ADMIN (act-as via aupId) =================
@@ -111,18 +83,14 @@ class LicensingApiService {
   Future<OwnerAppAccessResponse> getAccessAsSuperAdmin(int aupId) async {
     final auth = await _requireBearer();
 
-    try {
-      final res = await _dio.get(
-        '/licensing/apps/$aupId/access',
-        options: Options(headers: {'Authorization': auth}),
-      );
+    final res = await _dio.get(
+      '/licensing/apps/$aupId/access',
+      options: Options(headers: {'Authorization': auth}),
+    );
 
-      return OwnerAppAccessResponse.fromJson(
-        Map<String, dynamic>.from(res.data),
-      );
-    } on DioException catch (e) {
-      _throwDio('Licensing getAccessAsSuperAdmin', e);
-    }
+    return OwnerAppAccessResponse.fromJson(
+      Map<String, dynamic>.from(res.data),
+    );
   }
 
   Future<void> requestUpgradeAsSuperAdmin({
@@ -132,17 +100,13 @@ class LicensingApiService {
   }) async {
     final auth = await _requireBearer();
 
-    try {
-      await _dio.post(
-        '/licensing/apps/$aupId/upgrade-request',
-        data: {
-          'planCode': planCode,
-          'usersAllowedOverride': usersAllowedOverride,
-        },
-        options: Options(headers: {'Authorization': auth}),
-      );
-    } on DioException catch (e) {
-      _throwDio('Licensing requestUpgradeAsSuperAdmin', e);
-    }
+    await _dio.post(
+      '/licensing/apps/$aupId/upgrade-request',
+      data: {
+        'planCode': planCode,
+        'usersAllowedOverride': usersAllowedOverride,
+      },
+      options: Options(headers: {'Authorization': auth}),
+    );
   }
 }

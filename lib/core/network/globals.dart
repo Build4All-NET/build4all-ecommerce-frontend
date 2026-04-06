@@ -1,14 +1,15 @@
-// lib/core/network/globals.dart
 library globals;
 
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/connecting(wifiORserver)/connection_cubit.dart';
 import 'package:build4front/core/network/interceptors/auth_body_injector.dart';
 import 'package:build4front/core/network/interceptors/refresh_token_interceptor.dart';
-import 'package:build4front/core/network/connecting(wifiORserver)/connection_cubit.dart';
 
 Dio? appDio;
 
@@ -60,24 +61,19 @@ void setAuthToken(String? raw) {
     userToken = null;
     Token = null;
 
-    if (appDio != null) {
-      appDio!.options.headers.remove('Authorization');
-    }
+    appDio?.options.headers.remove('Authorization');
     return;
   }
 
-  final normalized = t.toLowerCase().startsWith('bearer ')
-      ? t
-      : 'Bearer $t';
+  final normalized =
+      t.toLowerCase().startsWith('bearer ') ? t : 'Bearer $t';
 
   authToken = normalized;
   token = normalized;
   userToken = normalized;
   Token = normalized;
 
-  if (appDio != null) {
-    appDio!.options.headers['Authorization'] = normalized;
-  }
+  appDio?.options.headers['Authorization'] = normalized;
 }
 
 /// Base URL without "/api" suffix, used to resolve relative URLs.
@@ -101,13 +97,18 @@ String resolveUrl(String maybeRelative) {
 String get appLogoUrlResolved => resolveUrl(appLogoUrl);
 
 Dio dio() {
-  return appDio ??= Dio(
-    BaseOptions(
-      baseUrl: appServerRoot,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(minutes: 1),
-    ),
-  );
+  final existing = appDio;
+  if (existing != null) return existing;
+
+  if (appServerRoot.trim().isEmpty) {
+    throw StateError(
+      'ERROR: appDio is NULL and appServerRoot is not initialized. '
+      'Call makeDefaultDio() first.',
+    );
+  }
+
+  makeDefaultDio(appServerRoot);
+  return appDio!;
 }
 
 /// Initialize Dio + interceptors.
@@ -139,28 +140,32 @@ void makeDefaultDio(String baseUrl) {
 
   d.interceptors.clear();
 
-  // ✅ First: refresh interceptor (it retries with new tokens)
+  // Keep connection status sane even for code paths that use g.dio() directly.
+  d.interceptors.add(_ConnectionStateInterceptor());
+
+  // Refresh first for auth failures.
   d.interceptors.add(RefreshTokenInterceptor());
 
-  // ✅ Then: inject ownerProjectLinkId / attach mode etc.
+  // Then inject ownerProjectLinkId / auth header.
   d.interceptors.add(OwnerInjector());
 
-  // ✅ Logging last
-  d.interceptors.add(
-    LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      requestHeader: false,
-      responseHeader: false,
-    ),
-  );
+  if (kDebugMode) {
+    d.interceptors.add(
+      LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        requestHeader: false,
+        responseHeader: false,
+      ),
+    );
+  }
 
   appDio = d;
 
   // If token already set before init, copy it into dio headers
-  final existing = readAuthToken().trim();
-  if (existing.isNotEmpty) {
-    d.options.headers['Authorization'] = existing;
+  final existingToken = readAuthToken().trim();
+  if (existingToken.isNotEmpty) {
+    d.options.headers['Authorization'] = existingToken;
   }
 }
 
@@ -169,7 +174,9 @@ void makeDefaultDio(String baseUrl) {
 String? _rawJwt() {
   final full = readAuthToken().trim();
   if (full.isEmpty) return null;
-  if (full.toLowerCase().startsWith('bearer ')) return full.substring(7).trim();
+  if (full.toLowerCase().startsWith('bearer ')) {
+    return full.substring(7).trim();
+  }
   return full;
 }
 
@@ -205,4 +212,73 @@ String? getOwnerNameFromJwt() {
     if (uname is String && uname.trim().isNotEmpty) return uname.trim();
   }
   return null;
+}
+
+class _ConnectionStateInterceptor extends Interceptor {
+  bool _isNetworkFailure(DioException e) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      return true;
+    }
+
+    if (e.type == DioExceptionType.unknown && e.error is SocketException) {
+      return true;
+    }
+
+    return false;
+  }
+
+  String? _extractBackendMessage(dynamic data) {
+    if (data == null) return null;
+
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      for (final key in const ['error', 'message', 'detail', 'msg', 'title']) {
+        final value = map[key];
+        final text = value?.toString().trim() ?? '';
+        if (text.isNotEmpty) return text;
+      }
+    }
+
+    if (data is String) {
+      final text = data.trim();
+      if (text.isNotEmpty) return text;
+    }
+
+    return null;
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    connectionCubit?.setOnline();
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final isSocket = err.error is SocketException;
+    final status = err.response?.statusCode;
+
+    if (_isNetworkFailure(err)) {
+      if (!isSocket) {
+        connectionCubit?.setServerDown(
+          _extractBackendMessage(err.response?.data) ??
+              'Server is not responding',
+        );
+      }
+      return handler.next(err);
+    }
+
+    if (status != null && status >= 500) {
+      connectionCubit?.setServerDown(
+        _extractBackendMessage(err.response?.data) ??
+            'Server is not responding',
+      );
+      return handler.next(err);
+    }
+
+    handler.next(err);
+  }
 }

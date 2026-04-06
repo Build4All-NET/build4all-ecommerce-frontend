@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
@@ -74,62 +74,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
   }
 
   String _friendlyError(Object err) {
-    final l = AppLocalizations.of(context)!;
-    final msg = err.toString();
-
-    if (err is DioException) {
-      if (err.type == DioExceptionType.connectionTimeout ||
-          err.type == DioExceptionType.sendTimeout ||
-          err.type == DioExceptionType.receiveTimeout) {
-        return l.networkTimeout ?? 'Connection timeout. Try again.';
-      }
-
-      if (err.type == DioExceptionType.connectionError) {
-        return l.networkNoInternet ??
-            'No internet / server unreachable. Check connection.';
-      }
-
-      final res = err.response;
-      if (res != null) {
-        final status = res.statusCode;
-
-        final data = res.data;
-        if (data is Map) {
-          final m = data.cast<String, dynamic>();
-          final serverErr = (m['error'] ?? m['message'])?.toString();
-          if (serverErr != null && serverErr.trim().isNotEmpty) {
-            return serverErr;
-          }
-        }
-
-        if (status == 401) {
-          return l.adminSessionExpired ??
-              'Session expired. Please login again.';
-        }
-        if (status == 403) {
-          return l.forbiddenLabel ??
-              'You don’t have permission to do this.';
-        }
-        if (status == 404) {
-          return l.notFoundLabel ?? 'Not found.';
-        }
-        if (status != null && status >= 500) {
-          return l.serverErrorLabel ??
-              'Server error. Please try again later.';
-        }
-
-        return 'Request failed (${status ?? 'unknown'}).';
-      }
-
-      return l.networkErrorLabel ??
-          'Network error. Please try again.';
-    }
-
-    if (msg.contains('DioException')) {
-      return l.networkErrorLabel ?? 'Network error. Please try again.';
-    }
-
-    return msg;
+    return ExceptionMapper.toMessage(err);
   }
 
   void _showNoTokenMessage() {
@@ -376,15 +321,15 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
 
                     _lastShownError = null;
 
-                   final all = state.methods;
+                    final all = state.methods;
 
-final filtered = switch (_filter) {
-  ShippingMethodsFilter.enabledOnly =>
-    all.where((m) => m.enabled).toList(),
-  ShippingMethodsFilter.disabledOnly =>
-    all.where((m) => !m.enabled).toList(),
-  ShippingMethodsFilter.all => all,
-};
+                    final filtered = switch (_filter) {
+                      ShippingMethodsFilter.enabledOnly =>
+                        all.where((m) => m.enabled).toList(),
+                      ShippingMethodsFilter.disabledOnly =>
+                        all.where((m) => !m.enabled).toList(),
+                      ShippingMethodsFilter.all => all,
+                    };
 
                     return RefreshIndicator(
                       onRefresh: _refresh,
@@ -392,10 +337,10 @@ final filtered = switch (_filter) {
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: EdgeInsets.all(spacing.lg),
                         children: [
-                         AdminShippingFiltersBar(
-  filter: _filter,
-  onChanged: (value) => setState(() => _filter = value),
-),
+                          AdminShippingFiltersBar(
+                            filter: _filter,
+                            onChanged: (value) => setState(() => _filter = value),
+                          ),
                           SizedBox(height: spacing.md),
                           if (filtered.isEmpty)
                             AdminShippingEmptyState(onAdd: _openCreateSheet)

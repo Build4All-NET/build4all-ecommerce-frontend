@@ -4,11 +4,18 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 import 'app_exception.dart';
+import 'network_exception.dart';
 
 class ExceptionMapper {
   static String toMessage(Object error) {
     try {
       if (error is String) return _sanitize(error);
+
+      if (error is NetworkException) {
+        final orig = error.original;
+        if (orig is SocketException) return 'No internet connection.';
+        return "Can't reach the server. Check your internet and try again.";
+      }
 
       if (error is AppException) {
         final orig = error.original;
@@ -46,7 +53,7 @@ class ExceptionMapper {
         return 'Connection timed out. Try again.';
 
       case DioExceptionType.connectionError:
-        return 'No internet connection.';
+        return "Can't reach the server. Check your internet and try again.";
 
       case DioExceptionType.cancel:
         return 'Request cancelled.';
@@ -57,7 +64,7 @@ class ExceptionMapper {
       case DioExceptionType.unknown:
         final err = e.error;
         if (err is SocketException) return 'No internet connection.';
-        return 'Network error. Check your connection.';
+        return "Can't reach the server. Check your internet and try again.";
 
       case DioExceptionType.badResponse:
         break;
@@ -212,7 +219,7 @@ class ExceptionMapper {
         return 'Your account is inactive. Reactivate to continue.';
 
       case 'NETWORK_ERROR':
-        return 'No internet connection.';
+        return "Can't reach the server. Check your internet and try again.";
 
       case 'SERVER_ERROR':
       case 'INTERNAL_ERROR':

@@ -1,8 +1,8 @@
 // lib/features/notifications/presentation/bloc/notifications_bloc.dart
 
 import 'package:bloc/bloc.dart';
-import 'package:dio/dio.dart';
 
+import '../../../../core/exceptions/exception_mapper.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/usecases/delete_notification.dart';
 import '../../domain/usecases/get_unread_count.dart';
@@ -48,7 +48,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     required bool showLoader,
   }) async {
     try {
-      if (showLoader)
+      if (showLoader) {
         emit(
           state.copyWith(
             isLoading: true,
@@ -56,8 +56,9 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
             clearLastAction: true,
           ),
         );
-      else
+      } else {
         emit(state.copyWith(clearError: true, clearLastAction: true));
+      }
 
       final items = await getNotifications();
       final unread = await getUnreadCount();
@@ -75,7 +76,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
         state.copyWith(
           isLoading: false,
           hasLoaded: true,
-          error: _friendlyError(e),
+          error: ExceptionMapper.toMessage(e),
         ),
       );
     }
@@ -85,8 +86,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     NotificationReadRequested event,
     Emitter<NotificationsState> emit,
   ) async {
-    // optimistic UI
-    final before = state.items;
+    final List<AppNotification> before = state.items;
     final idx = before.indexWhere((n) => n.id == event.id);
     if (idx == -1) return;
 
@@ -96,23 +96,23 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     final updated = [...before];
     updated[idx] = target.copyWith(isRead: true);
 
+    final nextUnread = (state.unreadCount - 1).clamp(0, 999999);
+
     emit(
       state.copyWith(
         items: updated,
-        unreadCount: (state.unreadCount - 1).clamp(0, 999999),
+        unreadCount: nextUnread,
       ),
     );
 
     try {
       await markRead(event.id);
-      // keep optimistic result
     } catch (e) {
-      // rollback if backend fails
       emit(
         state.copyWith(
           items: before,
           unreadCount: state.unreadCount,
-          lastActionMessage: _friendlyError(e),
+          lastActionMessage: ExceptionMapper.toMessage(e),
         ),
       );
     }
@@ -122,14 +122,13 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     NotificationDeleteRequested event,
     Emitter<NotificationsState> emit,
   ) async {
-    final before = state.items;
+    final List<AppNotification> before = state.items;
     final idx = before.indexWhere((n) => n.id == event.id);
     if (idx == -1) return;
 
     final wasUnread = !before[idx].isRead;
-
-    // optimistic remove
     final updated = before.where((n) => n.id != event.id).toList();
+
     emit(
       state.copyWith(
         items: updated,
@@ -142,25 +141,13 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     try {
       await deleteNotif(event.id);
     } catch (e) {
-      // rollback
       emit(
         state.copyWith(
           items: before,
           unreadCount: state.unreadCount,
-          lastActionMessage: _friendlyError(e),
+          lastActionMessage: ExceptionMapper.toMessage(e),
         ),
       );
     }
-  }
-
-  String _friendlyError(Object e) {
-    if (e is DioException) {
-      final code = e.response?.statusCode;
-      if (code == 401) return 'Unauthorized. Please login again.';
-      if (code == 403) return 'Forbidden (403). Token/role mismatch.';
-      if (code != null) return 'Request failed ($code).';
-      return 'Network error. Check your connection.';
-    }
-    return 'Something went wrong.';
   }
 }

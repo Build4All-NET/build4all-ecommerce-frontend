@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/features/admin/product/domain/entities/product.dart';
 import 'package:build4front/features/admin/product/domain/usecases/create_product.dart';
 import 'product_form_state.dart';
@@ -74,7 +75,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
         state.copyWith(
           isSubmitting: false,
           clearCreatedProduct: true,
-          error: e.toString(),
+          error: ExceptionMapper.toMessage(e),
         ),
       );
     }

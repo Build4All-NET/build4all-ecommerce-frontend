@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 
 import '../../domain/usecases/list_shipping_methods.dart';
 import '../../domain/usecases/create_shipping_method.dart';
@@ -33,9 +34,16 @@ class ShippingMethodsBloc
     emit(state.copyWith(loading: true, error: null));
     try {
       final methods = await listMethods(authToken: e.token);
-      emit(state.copyWith(loading: false, methods: methods));
+      emit(state.copyWith(
+        loading: false,
+        methods: methods,
+        error: null,
+      ));
     } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -48,9 +56,16 @@ class ShippingMethodsBloc
       await createMethod(body: e.body, authToken: e.token);
 
       final methods = await listMethods(authToken: e.token);
-      emit(state.copyWith(loading: false, methods: methods));
+      emit(state.copyWith(
+        loading: false,
+        methods: methods,
+        error: null,
+      ));
     } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -63,9 +78,16 @@ class ShippingMethodsBloc
       await updateMethod(id: e.id, body: e.body, authToken: e.token);
 
       final methods = await listMethods(authToken: e.token);
-      emit(state.copyWith(loading: false, methods: methods));
+      emit(state.copyWith(
+        loading: false,
+        methods: methods,
+        error: null,
+      ));
     } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 
@@ -78,9 +100,16 @@ class ShippingMethodsBloc
       await deleteMethod(id: e.id, authToken: e.token);
 
       final methods = await listMethods(authToken: e.token);
-      emit(state.copyWith(loading: false, methods: methods));
+      emit(state.copyWith(
+        loading: false,
+        methods: methods,
+        error: null,
+      ));
     } catch (err) {
-      emit(state.copyWith(loading: false, error: err.toString()));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(err),
+      ));
     }
   }
 }

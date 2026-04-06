@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_search_field.dart';
 
@@ -368,7 +369,7 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
       if (!mounted) return;
       setState(() {
         _loadingCatalog = false;
-        _catalogError = e.toString();
+        _catalogError = ExceptionMapper.toMessage(e);
       });
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as net;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/home/homebanner/domain/data/services/home_banners_api_service.dart';
@@ -68,9 +69,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
     });
 
     try {
-      final list = await _service
-          .fetchActiveBanners(token: widget.token)
-          .timeout(
+      final list = await _service.fetchActiveBanners(token: widget.token).timeout(
             const Duration(seconds: 15),
             onTimeout: () => const <Map<String, dynamic>>[],
           );
@@ -90,7 +89,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
       setState(() {
         _banners = const [];
         _isLoading = false;
-        _error = e.toString();
+        _error = ExceptionMapper.toMessage(e);
         _currentIndex = 0;
       });
     }

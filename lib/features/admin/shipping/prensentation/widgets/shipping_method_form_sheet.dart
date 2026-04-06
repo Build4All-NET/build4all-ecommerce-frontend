@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -161,10 +162,10 @@ class _ShippingMethodFormSheetState extends State<ShippingMethodFormSheet> {
         _loadingCatalog = false;
         _catalogError = null;
       });
-    } catch (e) {
+        } catch (e) {
       setState(() {
         _loadingCatalog = false;
-        _catalogError = e.toString();
+        _catalogError = ExceptionMapper.toMessage(e);
       });
     }
   }

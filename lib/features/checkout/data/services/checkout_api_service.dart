@@ -1,4 +1,6 @@
 import 'package:build4front/core/exceptions/app_exception.dart';
+import 'package:build4front/core/exceptions/auth_exception.dart';
+import 'package:build4front/core/exceptions/network_exception.dart';
 import 'package:build4front/core/network/api_fetch.dart';
 import 'package:build4front/core/network/api_methods.dart';
 import 'package:build4front/features/checkout/domain/errors/checkout_blocked_failure.dart';
@@ -20,6 +22,8 @@ class CheckoutApiService {
         data: body,
       );
       return (res.data as List? ?? []);
+    } on CheckoutBlockedFailure {
+      rethrow;
     } on AppException catch (e) {
       _rethrowFromAppException(e);
     } on DioException catch (e) {
@@ -38,6 +42,8 @@ class CheckoutApiService {
         data: body,
       );
       return Map<String, dynamic>.from(res.data as Map);
+    } on CheckoutBlockedFailure {
+      rethrow;
     } on AppException catch (e) {
       _rethrowFromAppException(e);
     } on DioException catch (e) {
@@ -84,10 +90,21 @@ class CheckoutApiService {
     return (msg == null || msg.isEmpty) ? null : msg;
   }
 
+  String? _extractCode(dynamic raw) {
+    final data = _asMap(raw);
+    if (data == null) return null;
+
+    final code = data['code']?.toString().trim();
+    if (code == null || code.isEmpty) return null;
+    return code;
+  }
+
   Never _throwCheckoutError({
     required int? status,
     required dynamic raw,
     String? fallbackMessage,
+    String? fallbackCode,
+    Object? original,
   }) {
     final data = _asMap(raw);
 
@@ -106,20 +123,42 @@ class CheckoutApiService {
     }
 
     final backendMsg = _extractMessage(raw) ?? fallbackMessage;
-    if (backendMsg != null && backendMsg.trim().isNotEmpty) {
-      throw Exception(backendMsg.trim());
+    final backendCode = _extractCode(raw) ?? fallbackCode;
+
+    if (status == 401 || status == 403) {
+      throw AuthException(
+        backendMsg ?? 'Session expired. Please log in again.',
+        code: backendCode,
+        original: original,
+      );
     }
 
-    throw Exception('Something went wrong. Please try again.');
+    if (status != null) {
+      throw ServerException(
+        backendMsg ?? _statusFallback(status),
+        statusCode: status,
+        code: backendCode,
+        original: original,
+      );
+    }
+
+    throw AppException(
+      backendMsg ?? 'Something went wrong. Please try again.',
+      code: backendCode,
+      original: original,
+    );
   }
 
   Never _rethrowFromAppException(AppException e) {
     final orig = e.original;
+
     if (orig is DioException) {
       _throwCheckoutError(
         status: orig.response?.statusCode,
         raw: orig.response?.data,
         fallbackMessage: e.message,
+        fallbackCode: e.code,
+        original: orig,
       );
     }
 
@@ -127,7 +166,28 @@ class CheckoutApiService {
       status: null,
       raw: null,
       fallbackMessage: e.message,
+      fallbackCode: e.code,
+      original: orig ?? e,
     );
+  }
+
+  String _statusFallback(int status) {
+    switch (status) {
+      case 400:
+      case 422:
+        return 'Invalid request. Please check your input.';
+      case 401:
+        return 'Session expired. Please log in again.';
+      case 403:
+        return 'You don’t have permission to do this.';
+      case 404:
+        return 'Not found.';
+      case 409:
+        return 'Conflict. This already exists or can’t be done now.';
+      default:
+        if (status >= 500) return 'Server error. Please try later.';
+        return 'Request failed.';
+    }
   }
 
   /// POST /api/orders/checkout
@@ -148,6 +208,7 @@ class CheckoutApiService {
       _throwCheckoutError(
         status: e.response?.statusCode,
         raw: e.response?.data,
+        original: e,
       );
     }
   }
@@ -161,12 +222,15 @@ class CheckoutApiService {
         data: body,
       );
       return Map<String, dynamic>.from(res.data as Map);
+    } on CheckoutBlockedFailure {
+      rethrow;
     } on AppException catch (e) {
       _rethrowFromAppException(e);
     } on DioException catch (e) {
       _throwCheckoutError(
         status: e.response?.statusCode,
         raw: e.response?.data,
+        original: e,
       );
     }
   }

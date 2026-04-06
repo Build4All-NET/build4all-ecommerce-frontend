@@ -2,8 +2,8 @@
 
 import 'dart:async';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:build4front/core/config/env.dart';
@@ -14,7 +14,10 @@ class ConnectionStateModel {
   final ConnectionStatus status;
   final String? message;
 
-  const ConnectionStateModel({required this.status, this.message});
+  const ConnectionStateModel({
+    required this.status,
+    this.message,
+  });
 
   ConnectionStateModel copyWith({
     ConnectionStatus? status,
@@ -22,7 +25,7 @@ class ConnectionStateModel {
   }) {
     return ConnectionStateModel(
       status: status ?? this.status,
-      message: message ?? this.message,
+      message: message,
     );
   }
 }
@@ -32,6 +35,14 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   Timer? _heartbeatTimer;
+  Timer? _serverDownDebounce;
+
+  bool _hasInternet = true;
+  DateTime? _lastServerFailureAt;
+
+  static const Duration _heartbeatEvery = Duration(seconds: 10);
+  static const Duration _pingTimeout = Duration(seconds: 5);
+  static const Duration _serverDownDelay = Duration(seconds: 2);
 
   ConnectionCubit({Connectivity? connectivity})
       : _connectivity = connectivity ?? Connectivity(),
@@ -49,38 +60,43 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
   }
 
   void _updateFromResults(List<ConnectivityResult> results) {
-    final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
-    _updateFromConnectivity(result);
-  }
+    final hasInternet = results.any((r) => r != ConnectivityResult.none);
+    _hasInternet = hasInternet;
 
-  void _updateFromConnectivity(ConnectivityResult result) {
-    if (result == ConnectivityResult.none) {
-      emit(
-        const ConnectionStateModel(
-          status: ConnectionStatus.offline,
-          message: null,
-        ),
-      );
-      _stopHeartbeat();
+    if (!hasInternet) {
+      _emitOffline();
       return;
     }
 
+    _clearServerDownDebounce();
+
     if (state.status == ConnectionStatus.offline) {
-      emit(
-        const ConnectionStateModel(
-          status: ConnectionStatus.online,
-          message: null,
-        ),
-      );
+      emit(const ConnectionStateModel(
+        status: ConnectionStatus.online,
+        message: null,
+      ));
     }
 
     _startHeartbeat();
     _pingServer();
   }
 
+  void _emitOffline() {
+    _clearServerDownDebounce();
+    _stopHeartbeat();
+    _lastServerFailureAt = null;
+
+    if (state.status != ConnectionStatus.offline) {
+      emit(const ConnectionStateModel(
+        status: ConnectionStatus.offline,
+        message: null,
+      ));
+    }
+  }
+
   void _startHeartbeat() {
     _heartbeatTimer ??= Timer.periodic(
-      const Duration(seconds: 10),
+      _heartbeatEvery,
       (_) => _pingServer(),
     );
   }
@@ -90,54 +106,77 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
     _heartbeatTimer = null;
   }
 
+  void _clearServerDownDebounce() {
+    _serverDownDebounce?.cancel();
+    _serverDownDebounce = null;
+  }
+
   Future<void> _pingServer() async {
-    if (state.status == ConnectionStatus.offline) return;
+    if (!_hasInternet || state.status == ConnectionStatus.offline) return;
 
     try {
       final uri = Uri.parse(Env.apiBaseUrl);
-      await http.get(uri).timeout(const Duration(seconds: 5));
+      await http.get(uri).timeout(_pingTimeout);
+
+      _lastServerFailureAt = null;
+      _clearServerDownDebounce();
 
       if (state.status != ConnectionStatus.online) {
-        emit(
-          const ConnectionStateModel(
-            status: ConnectionStatus.online,
-            message: null,
-          ),
-        );
+        emit(const ConnectionStateModel(
+          status: ConnectionStatus.online,
+          message: null,
+        ));
       }
     } catch (_) {
-      if (state.status != ConnectionStatus.offline) {
-        emit(
-          const ConnectionStateModel(
-            status: ConnectionStatus.serverDown,
-            message: 'Server is not responding',
-          ),
-        );
-      }
+      _markServerDown('Server is not responding');
     }
   }
 
-  void setServerDown([String? message]) {
-    emit(
-      ConnectionStateModel(
+  void _markServerDown(String message) {
+    if (!_hasInternet) {
+      _emitOffline();
+      return;
+    }
+
+    _lastServerFailureAt ??= DateTime.now();
+
+    _serverDownDebounce ??= Timer(_serverDownDelay, () {
+      _serverDownDebounce = null;
+
+      if (!_hasInternet) {
+        _emitOffline();
+        return;
+      }
+
+      emit(ConnectionStateModel(
         status: ConnectionStatus.serverDown,
-        message: message ?? 'Server is not responding',
-      ),
-    );
+        message: message,
+      ));
+    });
+  }
+
+  void setServerDown([String? message]) {
+    _markServerDown(message ?? 'Server is not responding');
   }
 
   void setOnline() {
-    emit(
-      const ConnectionStateModel(
+    _hasInternet = true;
+    _lastServerFailureAt = null;
+    _clearServerDownDebounce();
+    _startHeartbeat();
+
+    if (state.status != ConnectionStatus.online || state.message != null) {
+      emit(const ConnectionStateModel(
         status: ConnectionStatus.online,
         message: null,
-      ),
-    );
+      ));
+    }
   }
 
   @override
   Future<void> close() async {
     await _subscription?.cancel();
+    _clearServerDownDebounce();
     _stopHeartbeat();
     return super.close();
   }

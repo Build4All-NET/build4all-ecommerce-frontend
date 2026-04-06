@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as Env;
 import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
@@ -146,10 +147,10 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
         _loadingTargets = false;
         _targetsError = null;
       });
-    } catch (e) {
+       } catch (e) {
       setState(() {
         _loadingTargets = false;
-        _targetsError = e.toString();
+        _targetsError = ExceptionMapper.toMessage(e);
       });
     }
   }

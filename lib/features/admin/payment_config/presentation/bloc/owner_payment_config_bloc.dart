@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../domain/usecases/get_owner_payment_methods.dart';
 import '../../domain/usecases/save_owner_payment_method_config.dart';
 import 'owner_payment_config_event.dart';
@@ -24,11 +24,19 @@ class OwnerPaymentConfigBloc
     Emitter<OwnerPaymentConfigState> emit,
   ) async {
     emit(state.copyWith(loading: true, error: null));
+
     try {
       final items = await getMethods();
-      emit(state.copyWith(loading: false, items: items, error: null));
+      emit(state.copyWith(
+        loading: false,
+        items: items,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(loading: false, error: _prettyError(e)));
+      emit(state.copyWith(
+        loading: false,
+        error: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 
@@ -38,7 +46,11 @@ class OwnerPaymentConfigBloc
   ) async {
     final code = event.methodName.toUpperCase();
     final nextSaving = {...state.savingCodes, code};
-    emit(state.copyWith(savingCodes: nextSaving, error: null));
+
+    emit(state.copyWith(
+      savingCodes: nextSaving,
+      error: null,
+    ));
 
     try {
       await saveConfig(
@@ -47,7 +59,6 @@ class OwnerPaymentConfigBloc
         configValues: event.configValues,
       );
 
-      // optimistic UI update
       final updated = state.items.map((it) {
         if (it.name.toUpperCase() != code) return it;
 
@@ -55,27 +66,23 @@ class OwnerPaymentConfigBloc
           projectEnabled: event.enabled,
           configValues: event.enabled
               ? Map<String, dynamic>.from(event.configValues)
-              : it.configValues, // keep old values when disabling
+              : it.configValues,
         );
       }).toList();
 
       final afterSaving = {...state.savingCodes}..remove(code);
-      emit(state.copyWith(items: updated, savingCodes: afterSaving));
+
+      emit(state.copyWith(
+        items: updated,
+        savingCodes: afterSaving,
+      ));
     } catch (e) {
       final afterSaving = {...state.savingCodes}..remove(code);
-      emit(state.copyWith(savingCodes: afterSaving, error: _prettyError(e)));
-    }
-  }
 
-  String _prettyError(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map) {
-        final msg = data['error'] ?? data['message'];
-        if (msg != null) return msg.toString();
-      }
-      return e.message ?? 'Request failed';
+      emit(state.copyWith(
+        savingCodes: afterSaving,
+        error: ExceptionMapper.toMessage(e),
+      ));
     }
-    return e.toString();
   }
 }

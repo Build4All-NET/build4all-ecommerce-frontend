@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/config/env.dart';
+import '../../../../core/exceptions/exception_mapper.dart';
 
 // items
 import '../../../items/domain/entities/item_summary.dart';
@@ -119,10 +120,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       final projectId = int.tryParse(Env.projectId) ?? 0;
 
-      // ------------------------------------------------
-      // Run all requests safely in parallel
-      // One bad endpoint must NOT kill the whole home
-      // ------------------------------------------------
       final popularFuture = _safeItems(
         getGuestUpcomingItems(token: token),
       );
@@ -152,25 +149,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final newArrivalsItems = await newArrivalsFuture;
       final bestSellersItems = await bestSellersFuture;
 
-      // kept only so constructor stays compatible with your existing DI
       final itemTypes = await itemTypesFuture;
       // ignore: unused_local_variable
       final _ = itemTypes;
 
       final allCategories = await categoriesFuture;
 
-      // ------------------------------------------------
-      // IMPORTANT:
-      // do NOT dedupe across sections
-      // one product can appear in New Arrivals + Popular
-      // that's normal in ecommerce
-      // ------------------------------------------------
-
-      // keep these empty for now unless you later add real endpoints
       final recommendedItems = <ItemSummary>[];
       final topRatedItems = <ItemSummary>[];
 
-      // categories only for categories that actually have visible items
       List<String> categoryLabels = <String>[];
       List<Category> categoryEntities = <Category>[];
 
@@ -212,7 +199,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         state.copyWith(
           isLoading: false,
           hasLoaded: true,
-          errorMessage: e.toString(),
+          errorMessage: ExceptionMapper.toMessage(e),
         ),
       );
     }

@@ -1,4 +1,6 @@
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../domain/usecases/get_products.dart';
 import 'product_list_event.dart';
 import 'product_list_state.dart';
@@ -24,9 +26,16 @@ class ProductListBloc extends Bloc<ProductListEvent, ProductListState> {
         categoryId: event.categoryId,
       );
 
-      emit(state.copyWith(isLoading: false, products: products));
+      emit(state.copyWith(
+        isLoading: false,
+        products: products,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
+      emit(state.copyWith(
+        isLoading: false,
+        error: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 }

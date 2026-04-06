@@ -1,5 +1,8 @@
 import 'package:build4front/core/config/env.dart';
-import 'package:build4front/features/auth/domain/repository/auth_repository.dart';
+import 'package:build4front/core/exceptions/app_exception.dart';
+import 'package:build4front/core/exceptions/auth_exception.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
+import 'package:build4front/core/exceptions/network_exception.dart';
 import 'package:build4front/features/auth/domain/usecases/send_verification_code.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
@@ -7,11 +10,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'register_event.dart';
 import 'register_state.dart';
-
-// Exceptions
-import 'package:build4front/core/exceptions/auth_exception.dart';
-import 'package:build4front/core/exceptions/network_exception.dart';
-import 'package:build4front/core/exceptions/app_exception.dart';
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   final SendVerificationCode sendVerificationCode;
@@ -130,19 +128,14 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Failure mapping (Either Left)
-  // ---------------------------------------------------------------------------
-
   String _mapFailureToCode(dynamic failure) {
     final rawCode = _tryReadDynamicCode(failure);
-    final rawMsg = _tryReadDynamicMessage(failure) ?? failure.toString();
+    final rawMsg =
+        _tryReadDynamicMessage(failure) ?? ExceptionMapper.toMessage(failure);
 
-    // 1) message has highest priority if it contains something useful
     final byMessage = _mapMessageToAuthCode(rawMsg);
     if (byMessage != null) return byMessage;
 
-    // 2) explicit backend code mapping
     final byBackendCode = _mapBackendCodeToUiCode(rawCode);
     if (byBackendCode != null) return byBackendCode;
 
@@ -179,10 +172,6 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     return 'NETWORK_ERROR';
   }
 
-  // ---------------------------------------------------------------------------
-  // Exception mapping (catch)
-  // ---------------------------------------------------------------------------
-
   String _mapErrorToCode(Object e) {
     if (e is AuthException) {
       final byMessage = _mapMessageToAuthCode(e.message ?? '');
@@ -202,7 +191,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
     if (e is AppException) {
       final code = _tryReadDynamicCode(e);
-      final msg = _tryReadDynamicMessage(e) ?? e.toString();
+      final msg = _tryReadDynamicMessage(e) ?? ExceptionMapper.toMessage(e);
 
       final byMessage = _mapMessageToAuthCode(msg);
       if (byMessage != null) return byMessage;
@@ -243,12 +232,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       return 'NETWORK_ERROR';
     }
 
-    return _mapMessageToAuthCode(e.toString()) ?? 'GENERIC';
+    return _mapMessageToAuthCode(ExceptionMapper.toMessage(e)) ?? 'GENERIC';
   }
-
-  // ---------------------------------------------------------------------------
-  // Backend parsing helpers
-  // ---------------------------------------------------------------------------
 
   _BackendErr _parseBackendErrorFromDio(DioException e) {
     String? code;
@@ -277,7 +262,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
       message ??= e.message;
     } catch (_) {
-      message = e.message ?? e.toString();
+      message = ExceptionMapper.toMessage(e);
     }
 
     return _BackendErr(code: code, message: message, status: status);
@@ -324,14 +309,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     return null;
   }
 
-  // ---------------------------------------------------------------------------
-  // Message -> Stable code mapping
-  // ---------------------------------------------------------------------------
-
   String? _mapMessageToAuthCode(String msg) {
     final m = msg.toLowerCase().trim();
 
-    // email
     if (m.contains('email') &&
         (m.contains('already') ||
             m.contains('exists') ||
@@ -343,8 +323,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       return 'EMAIL_ALREADY_EXISTS';
     }
 
-    // phone
-    if ((m.contains('phone') || m.contains('phone number') || m.contains('mobile')) &&
+    if ((m.contains('phone') ||
+            m.contains('phone number') ||
+            m.contains('mobile')) &&
         (m.contains('already') ||
             m.contains('exists') ||
             m.contains('used') ||
@@ -355,7 +336,6 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       return 'PHONE_ALREADY_EXISTS';
     }
 
-    // username
     if (m.contains('username') &&
         (m.contains('taken') ||
             m.contains('already') ||
@@ -364,7 +344,6 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       return 'USERNAME_TAKEN';
     }
 
-    // otp / code
     if ((m.contains('invalid') || m.contains('wrong')) &&
         (m.contains('code') || m.contains('otp') || m.contains('verification'))) {
       return 'INVALID_CODE';
@@ -376,10 +355,6 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
     return null;
   }
-
-  // ---------------------------------------------------------------------------
-  // Backend code -> Stable UI code mapping
-  // ---------------------------------------------------------------------------
 
   String? _mapBackendCodeToUiCode(String? rawCode) {
     if (rawCode == null || rawCode.trim().isEmpty) return null;
@@ -475,10 +450,6 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       'FAILURE',
     }.contains(c);
   }
-
-  // ---------------------------------------------------------------------------
-  // Dynamic readers
-  // ---------------------------------------------------------------------------
 
   String? _tryReadDynamicCode(dynamic obj) {
     try {

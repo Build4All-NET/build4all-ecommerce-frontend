@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:build4front/core/exceptions/app_exception.dart';
 import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/features/checkout/domain/errors/checkout_blocked_failure.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_last_shipping_address.dart';
@@ -572,10 +573,12 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         final publishableKey = (summary.publishableKey ?? '').toString().trim();
 
         if (clientSecret.isEmpty) {
-          throw Exception('Checkout did not return Stripe clientSecret');
+          throw AppException('Checkout did not return Stripe clientSecret');
         }
         if (publishableKey.isEmpty) {
-          throw Exception('Checkout did not return Stripe publishableKey (pk_...)');
+          throw AppException(
+            'Checkout did not return Stripe publishableKey (pk_...)',
+          );
         }
 
         try {
@@ -586,7 +589,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           );
         } on StripeException catch (se) {
           final msg = se.error.message ?? 'Stripe payment canceled';
-          throw Exception(msg);
+          throw AppException(msg, original: se);
         }
       }
 

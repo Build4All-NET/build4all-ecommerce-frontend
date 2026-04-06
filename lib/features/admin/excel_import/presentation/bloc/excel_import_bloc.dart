@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../domain/usecases/import_excel_file.dart';
 import '../../domain/usecases/validate_excel_file.dart';
 import 'excel_import_event.dart';
@@ -23,8 +24,6 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelImportPressed>(_import);
     on<ExcelReplaceToggled>(_toggleReplace);
     on<ExcelReplaceScopeChanged>(_changeScope);
-
-    // ✅ NEW
     on<ExcelDownloadTemplatePressed>(_downloadTemplate);
   }
 
@@ -54,7 +53,10 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         clearResult: true,
       ));
     } catch (e) {
-      emit(state.copyWith(picking: false, errorMessage: e.toString()));
+      emit(state.copyWith(
+        picking: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 
@@ -64,13 +66,20 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   ) async {
     if (state.file == null) return;
 
-    emit(state.copyWith(validating: true, clearError: true, clearResult: true));
+    emit(state.copyWith(
+      validating: true,
+      clearError: true,
+      clearResult: true,
+    ));
 
     try {
       final vr = await validateUc(state.file!);
       emit(state.copyWith(validating: false, validation: vr));
     } catch (e) {
-      emit(state.copyWith(validating: false, errorMessage: e.toString()));
+      emit(state.copyWith(
+        validating: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 
@@ -90,7 +99,10 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
       );
       emit(state.copyWith(importing: false, result: r));
     } catch (e) {
-      emit(state.copyWith(importing: false, errorMessage: e.toString()));
+      emit(state.copyWith(
+        importing: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
     }
   }
 
@@ -108,7 +120,6 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     emit(state.copyWith(replaceScope: event.scope));
   }
 
-  /// ✅ Template download (SAFE): save inside app docs dir (always works)
   Future<void> _downloadTemplate(
     ExcelDownloadTemplatePressed event,
     Emitter<ExcelImportState> emit,
@@ -120,15 +131,12 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     ));
 
     try {
-      // ✅ Load the template from assets
       final data = await rootBundle.load('assets/templates/Template.xlsx');
       final bytes = data.buffer.asUint8List();
 
-      // ✅ Use ApplicationSupportDirectory (internal, safest on Android)
       final dir = await getApplicationSupportDirectory();
       final outFile = File('${dir.path}/Build4All_Template.xlsx');
 
-      // ✅ Ensure dir exists
       if (!await dir.exists()) {
         await dir.create(recursive: true);
       }
@@ -142,7 +150,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     } catch (e) {
       emit(state.copyWith(
         downloadingTemplate: false,
-        errorMessage: e.toString(),
+        errorMessage: ExceptionMapper.toMessage(e),
       ));
     }
   }

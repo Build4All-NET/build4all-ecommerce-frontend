@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 
 import 'package:build4front/features/admin/tax/data/services/tax_api_service.dart';
 import 'package:build4front/features/auth/data/services/auth_token_store.dart';
@@ -93,7 +94,7 @@ class _TaxPreviewCardState extends State<TaxPreviewCard> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = e.toString();
+        _error = ExceptionMapper.toMessage(e);
       });
     }
   }
@@ -132,37 +133,34 @@ class _TaxPreviewCardState extends State<TaxPreviewCard> {
               ],
             )
           : _error != null
-          ? Text(_error!, style: text.bodySmall.copyWith(color: c.danger))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.taxPreviewTitle ?? 'Tax',
-                  style: text.titleMedium.copyWith(color: c.label),
+              ? Text(_error!, style: text.bodySmall.copyWith(color: c.danger))
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.taxPreviewTitle ?? 'Tax',
+                      style: text.titleMedium.copyWith(color: c.label),
+                    ),
+                    SizedBox(height: spacing.sm),
+                    _row(l.itemsTaxLabel ?? 'Items tax', _itemsTax, context),
+                    SizedBox(height: spacing.xs),
+                    _row(
+                      l.shippingTaxLabel ?? 'Shipping tax',
+                      _shippingTax,
+                      context,
+                    ),
+                    Divider(
+                      height: spacing.lg * 1.6,
+                      color: c.border.withOpacity(0.15),
+                    ),
+                    _row(
+                      l.totalTaxLabel ?? 'Total tax',
+                      _totalTax,
+                      context,
+                      bold: true,
+                    ),
+                  ],
                 ),
-                SizedBox(height: spacing.sm),
-
-                _row(l.itemsTaxLabel ?? 'Items tax', _itemsTax, context),
-                SizedBox(height: spacing.xs),
-                _row(
-                  l.shippingTaxLabel ?? 'Shipping tax',
-                  _shippingTax,
-                  context,
-                ),
-
-                Divider(
-                  height: spacing.lg * 1.6,
-                  color: c.border.withOpacity(0.15),
-                ),
-
-                _row(
-                  l.totalTaxLabel ?? 'Total tax',
-                  _totalTax,
-                  context,
-                  bold: true,
-                ),
-              ],
-            ),
     );
   }
 

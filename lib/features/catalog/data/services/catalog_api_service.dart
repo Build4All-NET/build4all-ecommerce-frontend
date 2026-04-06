@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:build4front/core/exceptions/app_exception.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
 import '../models/country_model.dart';
@@ -11,7 +12,7 @@ class CatalogApiService {
 
   Options _opts(String? token) {
     if (token == null || token.trim().isEmpty) {
-      return Options(); // no auth header
+      return Options();
     }
     final normalized = token.startsWith('Bearer ') ? token : 'Bearer $token';
     return Options(headers: {'Authorization': normalized});
@@ -21,14 +22,11 @@ class CatalogApiService {
     final res = await _dio.get('/api/countries', options: _opts(authToken));
 
     final data = (res.data as List?) ?? [];
-    final list =
-        data
-            .map(
-              (e) => CountryModel.fromJson((e as Map).cast<String, dynamic>()),
-            )
-            .where((c) => c.active)
-            .toList()
-          ..sort((a, b) => a.name.compareTo(b.name));
+    final list = data
+        .map((e) => CountryModel.fromJson((e as Map).cast<String, dynamic>()))
+        .where((c) => c.active)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
 
     return list;
   }
@@ -46,7 +44,6 @@ class CatalogApiService {
     return data.map((e) => (e as Map).cast<String, dynamic>()).toList();
   }
 
-  // ✅ POST create category by ownerProjectId
   Future<Map<String, dynamic>> createCategoryByOwnerProject({
     required int ownerProjectId,
     required String name,
@@ -60,21 +57,19 @@ class CatalogApiService {
 
     final data = res.data;
     if (data is Map) return data.cast<String, dynamic>();
-    throw Exception('Invalid create category response');
+
+    throw AppException('Invalid server response.');
   }
 
   Future<List<RegionModel>> listRegions({String? authToken}) async {
     final res = await _dio.get('/api/regions', options: _opts(authToken));
 
     final data = (res.data as List?) ?? [];
-    final list =
-        data
-            .map(
-              (e) => RegionModel.fromJson((e as Map).cast<String, dynamic>()),
-            )
-            .where((r) => r.active)
-            .toList()
-          ..sort((a, b) => a.name.compareTo(b.name));
+    final list = data
+        .map((e) => RegionModel.fromJson((e as Map).cast<String, dynamic>()))
+        .where((r) => r.active)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
 
     return list;
   }
