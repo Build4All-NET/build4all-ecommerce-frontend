@@ -496,82 +496,83 @@ jobs:
             fi
           fi
 
-      - name: Download Android Firebase config
-        shell: bash
-        run: |
-          set -e
-
-          if [ -z "${API_BASE:-}" ]; then
-            echo "❌ API_BASE is missing"
-            exit 1
-          fi
-
-          if [ -z "${LINK_ID:-}" ]; then
-            echo "❌ LINK_ID is missing"
-            exit 1
-          fi
-
-          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
-            echo "❌ CI_RUNTIME_TOKEN is missing"
-            exit 1
-          fi
-
-          echo "Downloading Android Firebase config for LINK_ID=$LINK_ID"
-          echo "API_BASE: $API_BASE"
-          echo "CI_RUNTIME_TOKEN: ${CI_RUNTIME_TOKEN:0:20}... (masked)"
-          echo ""
-
-         
-          RESPONSE=$(curl -v \
-            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
-            "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
-
-          echo ""
-          echo "========== curl response =========="
-          echo "$RESPONSE"
-          echo "===================================="
-          echo ""
-
-      
-          if [ -z "$RESPONSE" ]; then
-            echo "❌ curl returned EMPTY response!"
-            echo "Possible causes:"
-            echo "  1. API_BASE is wrong"
-            echo "  2. Network error"
-            echo "  3. API returned empty response"
-            exit 1
-          fi
-
-          echo "$RESPONSE" > android_firebase_response.json
-
-        
-          echo "File size: $(wc -c < android_firebase_response.json) bytes"
-          echo "File content:"
-          cat android_firebase_response.json
-          echo ""
-
-          python3 - <<'PY'
+          - name: Download Android Firebase config
+            shell: bash
+            run: |
+              set -euo pipefail
+          
+              MAX_ATTEMPTS=10
+              SLEEP_SECONDS=20
+          
+              for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading Android Firebase config for LINK_ID=$LINK_ID"
+                echo "API_BASE: ${API_BASE}"
+          
+                RESPONSE=$(curl -sS \
+                  -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+                  "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
+          
+                echo "$RESPONSE" > android_firebase_response.json
+          
+                echo "========== curl response =========="
+                cat android_firebase_response.json
+                echo
+                echo "===================================="
+          
+                STATUS=$(python3 - <<'PY'
+          import json, sys
+          
+          with open("android_firebase_response.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+          
+          if "error" in data:
+              code = data.get("code", "")
+              if code in ("FIREBASE_CONFIG_NOT_FOUND", "FIREBASE_CONFIG_NOT_READY"):
+                  print("2")
+                  sys.exit(0)
+              print("1")
+              sys.exit(0)
+          
+          print("0")
+          PY
+          )
+          
+                if [ "$STATUS" = "0" ]; then
+                  python3 - <<'PY'
           import json
           import base64
           from pathlib import Path
-
+          
           with open("android_firebase_response.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-
-          if "error" in data:
-              raise SystemExit(f"Backend returned error: {data['error']}")
-
+          
           content = base64.b64decode(data["contentBase64"])
           target = Path("android/app/google-services.json")
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_bytes(content)
-
-          print(f"✅ Wrote {target}")
-          PY
-
-          echo "----- google-services.json exists? -----"
-          ls -la android/app/google-services.json
           
+          print(f"✅ Wrote {target} ({target.stat().st_size} bytes)")
+          PY
+                  break
+                fi
+          
+                if [ "$STATUS" = "2" ]; then
+                  if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
+                    echo "❌ Firebase config still not ready after retries"
+                    cat android_firebase_response.json
+                    exit 1
+                  fi
+          
+                  echo "⏳ Firebase config not ready yet. Sleeping ${SLEEP_SECONDS}s..."
+                  sleep "$SLEEP_SECONDS"
+                  continue
+                fi
+          
+                echo "❌ Non-retryable backend error"
+                cat android_firebase_response.json
+                exit 1
+              done
+                    
       - name: Apply branding
         run: |
           set -e
