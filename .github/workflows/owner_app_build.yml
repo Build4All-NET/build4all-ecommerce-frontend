@@ -396,7 +396,7 @@ jobs:
           echo "Setting applicationId to: $PKG"
 
           if grep -qE 'applicationId\s*=\s*"' "$FILE"; then
-            sed -i "s/applicationId\s*=\s*\"[^\"]*\"/applicationId = \"$PKG\"/g" "$FILE"
+            sed -i "s|applicationId\s*=.*|applicationId = \"$PKG\"|g" "$FILE"
           elif grep -qE 'applicationId\s*"' "$FILE"; then
             sed -i "s/applicationId\s*\"[^\"]*\"/applicationId \"$PKG\"/g" "$FILE"
           else
@@ -424,20 +424,20 @@ jobs:
 
           # 1) namespace
           if grep -qE 'namespace\s*=\s*"' "$FILE"; then
-            sed -i "s/namespace\s*=\s*\"[^\"]*\"/namespace = \"$PKG\"/g" "$FILE"
+            sed -i "s|namespace\s*=.*|namespace = \"$PKG\"|g" "$FILE"
           else
             perl -0777 -i -pe "s/android\\s*\\{\\s*/android {\\n    namespace = \\\"$PKG\\\"\\n/s" "$FILE"
           fi
 
           # 2) versionCode / versionName
-          if grep -qE 'versionCode\s*=\s*[0-9]+' "$FILE"; then
-            sed -i "s/versionCode\s*=\s*[0-9]\+/versionCode = $VC/g" "$FILE"
+          if grep -qE 'versionCode\s*=' "$FILE"; then
+            sed -i "s|versionCode\s*=.*|versionCode = $VC|g" "$FILE"
           else
             perl -0777 -i -pe "s/defaultConfig\\s*\\{\\s*/defaultConfig {\\n        versionCode = $VC\\n/s" "$FILE"
           fi
-
-          if grep -qE 'versionName\s*=\s*"' "$FILE"; then
-            sed -i "s/versionName\s*=\s*\"[^\"]*\"/versionName = \"$VN\"/g" "$FILE"
+          
+          if grep -qE 'versionName\s*=' "$FILE"; then
+            sed -i "s|versionName\s*=.*|versionName = \"$VN\"|g" "$FILE"
           else
             perl -0777 -i -pe "s/defaultConfig\\s*\\{\\s*/defaultConfig {\\n        versionName = \\\"$VN\\\"\\n/s" "$FILE"
           fi
@@ -548,7 +548,7 @@ jobs:
           
           app_name_xml = escape(app_name_clean)
 
-          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or "").strip().rstrip("/")
           logo_url = (cfg.get("LOGO_URL") or "").strip()
 
           print("APP_NAME (raw):", app_name_raw)
