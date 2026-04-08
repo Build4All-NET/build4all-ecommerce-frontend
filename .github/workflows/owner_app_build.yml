@@ -273,8 +273,9 @@ jobs:
           def clean_b64(v):
               if not v:
                   return None
-              return re.sub(r"\s+", "", str(v))
-
+              return re.sub(r"\s+", "", str(v))  # removes spaces/newlines that break base64
+          
+          # ✅ only set the key if it exists (no nulls)
           for env_key, alt_key in [
               ("THEME_JSON_B64", "themeJsonB64"),
               ("NAV_JSON_B64", "navJsonB64"),
@@ -314,7 +315,7 @@ jobs:
           PY
 
       # ════════════════════════════════════════════════════════════════════
-      # 🔧 FIX: Sync menuType (BRANDING -> THEME)
+      # 🔧 FIX: Sync menuType (BRANDING -> THEME) so hamburger stays hamburger
       # ════════════════════════════════════════════════════════════════════
       - name: 🔧 Sync menuType (BRANDING -> THEME) so drawer doesn't flip to bottom
         run: |
@@ -336,11 +337,13 @@ jobs:
           branding = {}
           theme = {}
 
+          # read BRANDING
           if env.get("BRANDING_JSON_B64"):
               branding = json.loads(b64decode(env["BRANDING_JSON_B64"]) or "{}")
           elif env.get("BRANDING_JSON"):
               branding = json.loads(env["BRANDING_JSON"] or "{}")
 
+          # read THEME
           if env.get("THEME_JSON_B64"):
               theme = json.loads(b64decode(env["THEME_JSON_B64"]) or "{}")
           elif env.get("THEME_JSON"):
@@ -348,6 +351,7 @@ jobs:
 
           menu = (branding.get("menuType") or "").strip().lower()
 
+          # normalize drawer -> hamburger
           if menu == "drawer":
               menu = "hamburger"
 
@@ -495,80 +499,79 @@ jobs:
       - name: Download Android Firebase config
         shell: bash
         run: |
-          set -euo pipefail
+          set -e
 
-          MAX_ATTEMPTS=10
-          SLEEP_SECONDS=20
+          if [ -z "${API_BASE:-}" ]; then
+            echo "❌ API_BASE is missing"
+            exit 1
+          fi
 
-          for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading Android Firebase config for LINK_ID=$LINK_ID"
-            echo "API_BASE: ${API_BASE}"
+          if [ -z "${LINK_ID:-}" ]; then
+            echo "❌ LINK_ID is missing"
+            exit 1
+          fi
 
-            RESPONSE=$(curl -sS \
-              -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
-              "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
+          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
+            echo "❌ CI_RUNTIME_TOKEN is missing"
+            exit 1
+          fi
 
-            echo "$RESPONSE" > android_firebase_response.json
+          echo "Downloading Android Firebase config for LINK_ID=$LINK_ID"
+          echo "API_BASE: $API_BASE"
+          echo "CI_RUNTIME_TOKEN: ${CI_RUNTIME_TOKEN:0:20}... (masked)"
+          echo ""
 
-            echo "========== curl response =========="
-            cat android_firebase_response.json
-            echo
-            echo "===================================="
+         
+          RESPONSE=$(curl -v \
+            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+            "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
 
-            STATUS=$(python3 - <<'PY'
-          import json, sys
-          
-          with open("android_firebase_response.json", "r", encoding="utf-8") as f:
-              data = json.load(f)
-          
-          if "error" in data:
-              code = data.get("code", "")
-              if code in ("FIREBASE_CONFIG_NOT_FOUND", "FIREBASE_CONFIG_NOT_READY"):
-                  print("2")
-                  sys.exit(0)
-              print("1")
-              sys.exit(0)
-          
-          print("0")
-          PY
-                      )
-          
-                      if [ "$STATUS" = "0" ]; then
-                        python3 - <<'PY'
+          echo ""
+          echo "========== curl response =========="
+          echo "$RESPONSE"
+          echo "===================================="
+          echo ""
+
+      
+          if [ -z "$RESPONSE" ]; then
+            echo "❌ curl returned EMPTY response!"
+            echo "Possible causes:"
+            echo "  1. API_BASE is wrong"
+            echo "  2. Network error"
+            echo "  3. API returned empty response"
+            exit 1
+          fi
+
+          echo "$RESPONSE" > android_firebase_response.json
+
+        
+          echo "File size: $(wc -c < android_firebase_response.json) bytes"
+          echo "File content:"
+          cat android_firebase_response.json
+          echo ""
+
+          python3 - <<'PY'
           import json
           import base64
           from pathlib import Path
-          
+
           with open("android_firebase_response.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-          
+
+          if "error" in data:
+              raise SystemExit(f"Backend returned error: {data['error']}")
+
           content = base64.b64decode(data["contentBase64"])
           target = Path("android/app/google-services.json")
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_bytes(content)
-          
-          print(f"✅ Wrote {target} ({target.stat().st_size} bytes)")
-          PY
-                        break
-                      fi
-          
-                      if [ "$STATUS" = "2" ]; then
-                        if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
-                          echo "❌ Firebase config still not ready after retries"
-                          cat android_firebase_response.json
-                          exit 1
-                        fi
-          
-                        echo "⏳ Firebase config not ready yet. Sleeping ${SLEEP_SECONDS}s..."
-                        sleep "$SLEEP_SECONDS"
-                        continue
-                      fi
-          
-                      echo "❌ Non-retryable backend error"
-                      cat android_firebase_response.json
-                      exit 1
-                    done
 
+          print(f"✅ Wrote {target}")
+          PY
+
+          echo "----- google-services.json exists? -----"
+          ls -la android/app/google-services.json
+          
       - name: Apply branding
         run: |
           set -e
@@ -579,8 +582,22 @@ jobs:
 
           cfg = json.load(open("lib/env/ci_env.json","r",encoding="utf-8"))
 
+          def decode_js_unicode(s: str) -> str:
+              # Convert JS-style \u{XXXX} into real characters
+              def repl(m):
+                  try:
+                      return chr(int(m.group(1), 16))
+                  except Exception:
+                      return m.group(0)
+              s = re.sub(r'\\u\{([0-9a-fA-F]+)\}', repl, s)
+
+              # If anything weird is still there, neutralize it
+              s = re.sub(r'\\u\{[^}]*\}', '', s)
+              return s
+
           app_name_raw = str(cfg.get("APP_NAME") or "My App")
 
+          # Convert JS-style \u{XXXX} (hex only)
           def repl(m):
               try:
                   return chr(int(m.group(1), 16))
@@ -588,15 +605,24 @@ jobs:
                   return ""
           app_name_clean = re.sub(r'\\u\{([0-9a-fA-F]+)\}', repl, app_name_raw)
           
+          # remove any leftover \u{...} that isn't valid hex
           app_name_clean = re.sub(r'\\u\{[^}]*\}', '', app_name_clean)
+          
+          # 🔥 nuke backslashes completely (Android treats them as escapes)
           app_name_clean = app_name_clean.replace("\\", "")
+          
+          # remove literal patterns like u{...} if they appear without backslash
           app_name_clean = re.sub(r'u\{[^}]*\}', '', app_name_clean)
+          
+          # remove control chars (newlines/tabs/etc)
           app_name_clean = re.sub(r'[\x00-\x1F\x7F]', ' ', app_name_clean).strip()
+          
+          # optional: escape single quote
           app_name_clean = app_name_clean.replace("'", "\\'")
           
           app_name_xml = escape(app_name_clean)
 
-          api_base = (cfg.get("API_BASE_URL") or "").strip().rstrip("/")
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
           logo_url = (cfg.get("LOGO_URL") or "").strip()
 
           print("APP_NAME (raw):", app_name_raw)
@@ -651,6 +677,7 @@ jobs:
           echo "----- search for app_name occurrences -----"
           grep -RIn "name=\"app_name\"" android/app/src/main/res || true
 
+          # fail fast if still present
           if grep -RIn "\\\\u{" android/app/src/main/res >/dev/null 2>&1; then
             echo "❌ Found invalid \\u{...} sequence in Android resources. Failing early."
             exit 1
@@ -773,6 +800,7 @@ jobs:
           echo "========================================"
           echo ""
 
+          # Build JSON payloads (include buildId only if present)
           APK_JSON="{\"apkUrl\":\"${APK_URL}\""
           if [ -n "$BUILD_ID" ]; then
             APK_JSON="${APK_JSON},\"buildId\":\"${BUILD_ID}\""
