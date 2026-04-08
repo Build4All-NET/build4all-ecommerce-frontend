@@ -424,35 +424,35 @@ jobs:
           echo "----- ci_env.json -----"
           cat lib/env/ci_env.json
 
-          - name: Download iOS Firebase config
-            shell: bash
-            run: |
-              set -euo pipefail
-          
-              MAX_ATTEMPTS=10
-              SLEEP_SECONDS=20
-          
-              for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading iOS Firebase config for LINK_ID=$LINK_ID"
-                echo "API_BASE: ${API_BASE}"
-          
-                RESPONSE=$(curl -sS \
-                  -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
-                  "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
-          
-                echo "$RESPONSE" > ios_firebase_response.json
-          
-                echo "========== curl response =========="
-                cat ios_firebase_response.json
-                echo
-                echo "===================================="
-          
-                STATUS=$(python3 - <<'PY'
+      - name: Download iOS Firebase config
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MAX_ATTEMPTS=10
+          SLEEP_SECONDS=20
+
+          for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading iOS Firebase config for LINK_ID=$LINK_ID"
+            echo "API_BASE: ${API_BASE}"
+
+            RESPONSE=$(curl -sS \
+              -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+              "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
+
+            echo "$RESPONSE" > ios_firebase_response.json
+
+            echo "========== curl response =========="
+            cat ios_firebase_response.json
+            echo
+            echo "===================================="
+
+            STATUS=$(python3 - <<'PY'
           import json, sys
-          
+
           with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-          
+
           if "error" in data:
               code = data.get("code", "")
               if code in ("FIREBASE_CONFIG_NOT_FOUND", "FIREBASE_CONFIG_NOT_READY"):
@@ -460,46 +460,113 @@ jobs:
                   sys.exit(0)
               print("1")
               sys.exit(0)
-          
+
           print("0")
           PY
-          )
-          
-                if [ "$STATUS" = "0" ]; then
-                  python3 - <<'PY'
+            )
+
+            if [ "$STATUS" = "0" ]; then
+              python3 - <<'PY'
           import json
           import base64
           from pathlib import Path
-          
+
           with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-          
+
           content = base64.b64decode(data["contentBase64"])
           target = Path("ios/Runner/GoogleService-Info.plist")
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_bytes(content)
-          
+
           print(f"✅ Wrote {target} ({target.stat().st_size} bytes)")
           PY
-                  break
-                fi
-          
-                if [ "$STATUS" = "2" ]; then
-                  if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
-                    echo "❌ iOS Firebase config still not ready after retries"
-                    cat ios_firebase_response.json
-                    exit 1
-                  fi
-          
-                  echo "⏳ iOS Firebase config not ready yet. Sleeping ${SLEEP_SECONDS}s..."
-                  sleep "$SLEEP_SECONDS"
-                  continue
-                fi
-          
-                echo "❌ Non-retryable backend error"
+              break
+            fi
+
+            if [ "$STATUS" = "2" ]; then
+              if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
+                echo "❌ iOS Firebase config still not ready after retries"
                 cat ios_firebase_response.json
                 exit 1
-              done
+              fi
+
+              echo "⏳ iOS Firebase config not ready yet. Sleeping ${SLEEP_SECONDS}s..."
+              sleep "$SLEEP_SECONDS"
+              continue
+            fi
+
+            echo "❌ Non-retryable backend error"
+            cat ios_firebase_response.json
+            exit 1
+          done
+
+      # ════════════════════════════════════════════════════════════════════
+      # 🔐 DEMO ACCOUNT – calls BOTH endpoints, parses real credentials
+      # ════════════════════════════════════════════════════════════════════
+      - name: 🔐 Create Demo Account for Apple Review (this app)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_BASE="$(cat ci_api_base.txt)"
+          LINK_ID="$(cat ci_link_id.txt)"
+
+          echo "🔐 Creating demo account for this app…"
+          echo "   API:     $API_BASE"
+          echo "   Link ID: $LINK_ID"
+          echo ""
+
+          RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST \
+            "$API_BASE/api/auth/demo/create-apple-review-account?ownerProjectLinkId=$LINK_ID" \
+            -H "Content-Type: application/json" \
+            -H "X-Auth-Token: ${{ secrets.CI_RUNTIME_TOKEN }}" \
+            2>&1)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP $HTTP_CODE"
+          echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "⚠️  Single-app demo account creation returned HTTP $HTTP_CODE"
+            echo "    Continuing – seed-all step will run next."
+          fi
+
+          # ── Parse email + password from the response ──────────────────
+          DEMO_EMAIL=$(echo "$BODY" | python3 -c "
+          import sys, json
+          try:
+              print(json.load(sys.stdin).get('email',''))
+          except:
+              print('')
+          " 2>/dev/null || echo "")
+
+          DEMO_PASSWORD=$(echo "$BODY" | python3 -c "
+          import sys, json
+          try:
+              print(json.load(sys.stdin).get('password',''))
+          except:
+              print('')
+          " 2>/dev/null || echo "")
+
+          # Fall back to the same defaults the Java endpoint uses
+          [ -n "$DEMO_EMAIL"    ] || DEMO_EMAIL="demo@applereview.com"
+          [ -n "$DEMO_PASSWORD" ] || DEMO_PASSWORD="AppleReview2026!"
+
+          # ── Export to GITHUB_ENV so every later step can read them ─────
+          echo "DEMO_EMAIL=$DEMO_EMAIL"       >> "$GITHUB_ENV"
+          echo "DEMO_PASSWORD=$DEMO_PASSWORD" >> "$GITHUB_ENV"
+          echo "::add-mask::$DEMO_PASSWORD"
+
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "        🔐 DEMO CREDENTIALS (parsed from endpoint)"
+          echo "════════════════════════════════════════════════════════════"
+          echo "   📧 Email:    $DEMO_EMAIL"
+          echo "   🔑 Password: $DEMO_PASSWORD"
+          echo "════════════════════════════════════════════════════════════"
       # ════════════════════════════════════════════════════════════════════
       # 🔐 DEMO ACCOUNT – calls BOTH endpoints, parses real credentials
       # ════════════════════════════════════════════════════════════════════
