@@ -496,30 +496,30 @@ jobs:
             fi
           fi
 
-          - name: Download Android Firebase config
-            shell: bash
-            run: |
-              set -euo pipefail
-          
-              MAX_ATTEMPTS=10
-              SLEEP_SECONDS=20
-          
-              for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading Android Firebase config for LINK_ID=$LINK_ID"
-                echo "API_BASE: ${API_BASE}"
-          
-                RESPONSE=$(curl -sS \
-                  -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
-                  "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
-          
-                echo "$RESPONSE" > android_firebase_response.json
-          
-                echo "========== curl response =========="
-                cat android_firebase_response.json
-                echo
-                echo "===================================="
-          
-                STATUS=$(python3 - <<'PY'
+      - name: Download Android Firebase config
+        shell: bash
+        run: |
+          set -euo pipefail
+      
+          MAX_ATTEMPTS=10
+          SLEEP_SECONDS=20
+      
+          for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading Android Firebase config for LINK_ID=$LINK_ID"
+            echo "API_BASE: ${API_BASE}"
+      
+            RESPONSE=$(curl -sS \
+              -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+              "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}")
+      
+            echo "$RESPONSE" > android_firebase_response.json
+      
+            echo "========== curl response =========="
+            cat android_firebase_response.json
+            echo
+            echo "===================================="
+      
+            STATUS=$(python3 - <<'PY'
           import json, sys
           
           with open("android_firebase_response.json", "r", encoding="utf-8") as f:
@@ -572,7 +572,7 @@ jobs:
                 cat android_firebase_response.json
                 exit 1
               done
-                    
+                      
       - name: Apply branding
         run: |
           set -e
