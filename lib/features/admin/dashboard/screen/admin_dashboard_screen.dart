@@ -159,11 +159,11 @@ Future<void> _init() async {
     _loadRole(),
     _loadLicense(),
     _profileCubit.load(),
-    _syncOwnerFrontPushIfNeeded(),
+   // _syncOwnerFrontPushIfNeeded(),
   ]);
 }
 
-  Future<void> _syncOwnerFrontPushIfNeeded() async {
+/*   Future<void> _syncOwnerFrontPushIfNeeded() async {
   try {
     final role = (await _store.getRole())?.toUpperCase() ?? '';
     final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
@@ -176,7 +176,7 @@ Future<void> _init() async {
   } catch (e) {
     debugPrint('Admin dashboard front push sync failed => $e');
   }
-}
+} */
 
   Future<void> _loadRole() async {
     final role = await _store.getRole();

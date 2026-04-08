@@ -84,7 +84,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     {required String role, required Map<String, dynamic> admin}) async {
   await _enterAdminFlow();
 
-  final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+/*   final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
   if (role.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
     try {
       await FrontFirebasePushService().initAndSyncToken(
@@ -93,7 +93,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     } catch (e) {
       debugPrint('Owner front push sync failed => $e');
     }
-  }
+  } */
 
   if (!context.mounted) return;
   Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
@@ -168,7 +168,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
      
 }
 
- Future<void> _syncFrontPushToken() async {
+/*  Future<void> _syncFrontPushToken() async {
   try {
     final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
     if (ownerProjectLinkId <= 0) return;
@@ -179,7 +179,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   } catch (e) {
     debugPrint('Front push sync failed => $e');
   }
-}
+} */
       Future<void> _enterUserFlow(bool wasInactiveUser) async {
         final user = result.userEntity;
         if (user == null) return;
@@ -199,7 +199,6 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
            AppToast.success(context, 'Account restored successfully');
 await _hydrateUserAuth(false);
 await _roleStore.saveRole('user');
-await _syncFrontPushToken();
 _goToUserHome(context);
             _goToUserHome(context);
           } catch (e) {
@@ -224,7 +223,7 @@ _goToUserHome(context);
            AppToast.success(context, l10n.loginInactiveSuccess);
 await _hydrateUserAuth(true);
 await _roleStore.saveRole('user');
-await _syncFrontPushToken();
+
 _goToUserHome(context);
             _goToUserHome(context);
           } catch (e) {
@@ -236,7 +235,7 @@ _goToUserHome(context);
 
        await _hydrateUserAuth(false);
 await _roleStore.saveRole('user');
-await _syncFrontPushToken();
+
 _goToUserHome(context);
       }
 
