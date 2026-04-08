@@ -573,8 +573,6 @@ jobs:
             exit 1
           done
 
-
-                      
       - name: Apply branding
         run: |
           set -e
