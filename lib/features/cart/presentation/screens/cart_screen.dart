@@ -1,4 +1,6 @@
 // lib/features/cart/presentation/screens/cart_screen.dart
+import 'package:build4front/core/config/app_config.dart';
+import 'package:build4front/features/shell/presentation/screens/main_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -37,13 +39,17 @@ class _CartScreenState extends State<CartScreen> {
     });
   }
 
-  void _goHome() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/',
-      (route) => false,
-      arguments: const {'goHome': true},
-    );
-  }
+void _goHome() {
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => MainShell(
+        appConfig: AppConfig.fromEnv(),
+        initialIndex: 1,
+      ),
+    ),
+    (route) => false,
+  );
+}
 
   @override
   Widget build(BuildContext context) {

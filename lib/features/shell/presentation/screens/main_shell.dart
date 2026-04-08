@@ -46,8 +46,13 @@ import 'package:build4front/features/cart/presentation/screens/cart_screen.dart'
 
 class MainShell extends StatefulWidget {
   final AppConfig appConfig;
+  final int initialIndex;
 
-  const MainShell({super.key, required this.appConfig});
+  const MainShell({
+    super.key,
+    required this.appConfig,
+    this.initialIndex = 0,
+  });
 
   @override
   State<MainShell> createState() => _MainShellState();
