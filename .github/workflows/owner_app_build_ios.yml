@@ -424,58 +424,82 @@ jobs:
           echo "----- ci_env.json -----"
           cat lib/env/ci_env.json
 
-      - name: Download iOS Firebase config
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          API_BASE="$(cat ci_api_base.txt | tr -d '\r\n')"
-          LINK_ID="$(cat ci_link_id.txt | tr -d '\r\n')"
-
-          if [ -z "${API_BASE:-}" ]; then
-            echo "❌ API_BASE is missing"
-            exit 1
-          fi
-
-          if [ -z "${LINK_ID:-}" ]; then
-            echo "❌ LINK_ID is missing"
-            exit 1
-          fi
-
-          if [ -z "${CI_RUNTIME_TOKEN:-}" ]; then
-            echo "❌ CI_RUNTIME_TOKEN is missing"
-            exit 1
-          fi
-
-          echo "Downloading iOS Firebase config for LINK_ID=$LINK_ID"
-
-          RESPONSE=$(curl -sS \
-            -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
-            "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
-
-          echo "$RESPONSE" > ios_firebase_response.json
-
-          python3 - <<'PY'
+          - name: Download iOS Firebase config
+            shell: bash
+            run: |
+              set -euo pipefail
+          
+              MAX_ATTEMPTS=10
+              SLEEP_SECONDS=20
+          
+              for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Downloading iOS Firebase config for LINK_ID=$LINK_ID"
+                echo "API_BASE: ${API_BASE}"
+          
+                RESPONSE=$(curl -sS \
+                  -H "X-Auth-Token: ${CI_RUNTIME_TOKEN}" \
+                  "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}")
+          
+                echo "$RESPONSE" > ios_firebase_response.json
+          
+                echo "========== curl response =========="
+                cat ios_firebase_response.json
+                echo
+                echo "===================================="
+          
+                STATUS=$(python3 - <<'PY'
+          import json, sys
+          
+          with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+          
+          if "error" in data:
+              code = data.get("code", "")
+              if code in ("FIREBASE_CONFIG_NOT_FOUND", "FIREBASE_CONFIG_NOT_READY"):
+                  print("2")
+                  sys.exit(0)
+              print("1")
+              sys.exit(0)
+          
+          print("0")
+          PY
+          )
+          
+                if [ "$STATUS" = "0" ]; then
+                  python3 - <<'PY'
           import json
           import base64
           from pathlib import Path
-
+          
           with open("ios_firebase_response.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-
-          if "error" in data:
-              raise SystemExit(f"Backend returned error: {data['error']}")
-
+          
           content = base64.b64decode(data["contentBase64"])
           target = Path("ios/Runner/GoogleService-Info.plist")
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_bytes(content)
-
-          print(f"✅ Wrote {target}")
+          
+          print(f"✅ Wrote {target} ({target.stat().st_size} bytes)")
           PY
-
-          echo "----- GoogleService-Info.plist exists? -----"
-          ls -la ios/Runner/GoogleService-Info.plist
+                  break
+                fi
+          
+                if [ "$STATUS" = "2" ]; then
+                  if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
+                    echo "❌ iOS Firebase config still not ready after retries"
+                    cat ios_firebase_response.json
+                    exit 1
+                  fi
+          
+                  echo "⏳ iOS Firebase config not ready yet. Sleeping ${SLEEP_SECONDS}s..."
+                  sleep "$SLEEP_SECONDS"
+                  continue
+                fi
+          
+                echo "❌ Non-retryable backend error"
+                cat ios_firebase_response.json
+                exit 1
+              done
       # ════════════════════════════════════════════════════════════════════
       # 🔐 DEMO ACCOUNT – calls BOTH endpoints, parses real credentials
       # ════════════════════════════════════════════════════════════════════
