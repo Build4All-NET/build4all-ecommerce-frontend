@@ -1185,7 +1185,11 @@ jobs:
           print("HTTP", r.status_code)
           print(r.text)
 
-          if r.status_code not in (200, 201):
+          if r.status_code in (200, 201):
+              print("✅ User invited successfully")
+          elif r.status_code == 409:
+              print("✅ User already exists or already invited — continuing")
+          else:
               raise Exception("❌ Failed to invite user")
 
           print("✅ User invited to App Store Connect (all apps access)")
@@ -1306,8 +1310,12 @@ jobs:
           print("HTTP", r.status_code)
           print(r.text)
       
-          if r.status_code not in (200, 201, 204, 409):
-              raise SystemExit("Failed to grant app access to existing user")
+          if r.status_code in (200, 201, 204):
+              print("✅ App access granted")
+          elif r.status_code == 409:
+              print("✅ App already assigned to user — skipping")
+          else:
+              raise SystemExit("❌ Failed to grant app access")
       
           print("✅ App access granted to existing user")
           PY
