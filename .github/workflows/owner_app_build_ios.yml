@@ -1127,6 +1127,69 @@ jobs:
           print("=" * 60)
           PYEOF
 
+      - name: Invite App Store Connect user (all apps access)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_KEY_JSON="$GITHUB_WORKSPACE/.private/api_key.json"
+
+          python3 - "$API_KEY_JSON" <<'PY'
+          import json, jwt, time, requests
+
+          api_key = json.load(open(".private/api_key.json"))
+
+          # 🔹 CHANGE THIS EMAIL IF NEEDED
+          email = "user@example.com"
+          first_name = "Owner"
+          last_name = "User"
+          role = "DEVELOPER"   # ADMIN / APP_MANAGER / DEVELOPER ...
+
+          def token():
+              return jwt.encode(
+                  {
+                      "iss": api_key["issuer_id"],
+                      "iat": int(time.time()),
+                      "exp": int(time.time()) + 1200,
+                      "aud": "appstoreconnect-v1"
+                  },
+                  api_key["key"],
+                  algorithm="ES256",
+                  headers={"kid": api_key["key_id"], "typ": "JWT"}
+              )
+
+          headers = {
+              "Authorization": f"Bearer {token()}",
+              "Content-Type": "application/json"
+          }
+
+          payload = {
+              "data": {
+                  "type": "userInvitations",
+                  "attributes": {
+                      "email": email,
+                      "firstName": first_name,
+                      "lastName": last_name,
+                      "roles": [role],
+                      "allAppsVisible": True
+                  }
+              }
+          }
+
+          r = requests.post(
+              "https://api.appstoreconnect.apple.com/v1/userInvitations",
+              headers=headers,
+              json=payload
+          )
+
+          print("HTTP", r.status_code)
+          print(r.text)
+
+          if r.status_code not in (200, 201):
+              raise Exception("❌ Failed to invite user")
+
+          print("✅ User invited to App Store Connect (all apps access)")
+          PY
       # ════════════════════════════════════════════════════════════════════
       # PROVISIONING & EXPORT
       # ════════════════════════════════════════════════════════════════════
@@ -1144,7 +1207,97 @@ jobs:
             language:"${APPLE_PRIMARY_LOCALE:-en-US}" \
             app_name:"${APPLE_APP_NAME:-Runner}" \
             sku:"${APPLE_SKU:-$BUNDLE_ID}" || true
+            
+      - name: Grant existing App Store Connect user access to this app
+        shell: bash
+        run: |
+          set -euo pipefail
 
+          python3 - <<'PY'
+          import json, jwt, time, requests, pathlib
+
+          api_key = json.load(open(".private/api_key.json", encoding="utf-8"))
+          payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
+          cfg = payload.get("CONFIG") or {}
+
+          user_email = (cfg.get("ownerEmail") or payload.get("ownerEmail") or "").strip()
+          bundle_id = pathlib.Path("ci_ios_bundle_id.txt").read_text(encoding="utf-8").strip()
+
+          if not user_email:
+              raise SystemExit("Missing ownerEmail in payload")
+          if not bundle_id:
+              raise SystemExit("Missing bundle id")
+
+          def token():
+              return jwt.encode(
+                  {
+                      "iss": api_key["issuer_id"],
+                      "iat": int(time.time()),
+                      "exp": int(time.time()) + 1200,
+                      "aud": "appstoreconnect-v1"
+                  },
+                  api_key["key"],
+                  algorithm="ES256",
+                  headers={"kid": api_key["key_id"], "typ": "JWT"}
+              )
+
+          def headers():
+              return {
+                  "Authorization": f"Bearer {token()}",
+                  "Content-Type": "application/json"
+              }
+
+          # 1) find existing user
+          r = requests.get(
+              f"https://api.appstoreconnect.apple.com/v1/users?filter[email]={user_email}",
+              headers=headers(),
+              timeout=30
+          )
+          r.raise_for_status()
+          users = r.json().get("data", [])
+          if not users:
+              raise SystemExit(f"User not found in App Store Connect: {user_email}")
+          user_id = users[0]["id"]
+          print(f"✅ Found user: {user_email} -> {user_id}")
+
+          # 2) find app by bundle id
+          r = requests.get(
+              f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle_id}",
+              headers=headers(),
+              timeout=30
+          )
+          r.raise_for_status()
+          apps = r.json().get("data", [])
+          if not apps:
+              raise SystemExit(f"App not found for bundle id: {bundle_id}")
+          app_id = apps[0]["id"]
+          print(f"✅ Found app: {bundle_id} -> {app_id}")
+
+          # 3) add app to user's visible apps
+          payload = {
+              "data": [
+                  {
+                      "type": "apps",
+                      "id": app_id
+                  }
+              ]
+          }
+
+          r = requests.post(
+              f"https://api.appstoreconnect.apple.com/v1/users/{user_id}/relationships/visibleApps",
+              headers=headers(),
+              json=payload,
+              timeout=30
+          )
+
+          print("HTTP", r.status_code)
+          print(r.text)
+
+          if r.status_code not in (200, 201, 204):
+              raise SystemExit("Failed to grant app access to existing user")
+
+          print("✅ App access granted to existing user")
+          PY
       - name: Get provisioning profile
         shell: bash
         run: |
@@ -1703,69 +1856,6 @@ jobs:
               print(f"🔗 {public_testflight_link}")
           print("="*70)
           PYEOF
-      - name: Invite App Store Connect user (all apps access)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          API_KEY_JSON="$GITHUB_WORKSPACE/.private/api_key.json"
-
-          python3 - "$API_KEY_JSON" <<'PY'
-          import json, jwt, time, requests
-
-          api_key = json.load(open(".private/api_key.json"))
-
-          # 🔹 CHANGE THIS EMAIL IF NEEDED
-          email = "user@example.com"
-          first_name = "Owner"
-          last_name = "User"
-          role = "DEVELOPER"   # ADMIN / APP_MANAGER / DEVELOPER ...
-
-          def token():
-              return jwt.encode(
-                  {
-                      "iss": api_key["issuer_id"],
-                      "iat": int(time.time()),
-                      "exp": int(time.time()) + 1200,
-                      "aud": "appstoreconnect-v1"
-                  },
-                  api_key["key"],
-                  algorithm="ES256",
-                  headers={"kid": api_key["key_id"], "typ": "JWT"}
-              )
-
-          headers = {
-              "Authorization": f"Bearer {token()}",
-              "Content-Type": "application/json"
-          }
-
-          payload = {
-              "data": {
-                  "type": "userInvitations",
-                  "attributes": {
-                      "email": email,
-                      "firstName": first_name,
-                      "lastName": last_name,
-                      "roles": [role],
-                      "allAppsVisible": True
-                  }
-              }
-          }
-
-          r = requests.post(
-              "https://api.appstoreconnect.apple.com/v1/userInvitations",
-              headers=headers,
-              json=payload
-          )
-
-          print("HTTP", r.status_code)
-          print(r.text)
-
-          if r.status_code not in (200, 201):
-              raise Exception("❌ Failed to invite user")
-
-          print("✅ User invited to App Store Connect (all apps access)")
-          PY
       # ════════════════════════════════════════════════════════════════════
       # 💾 CALLBACK – save TestFlight link to DB
       # ════════════════════════════════════════════════════════════════════
