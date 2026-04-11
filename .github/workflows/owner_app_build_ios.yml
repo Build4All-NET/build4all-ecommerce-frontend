@@ -1218,19 +1218,22 @@ jobs:
           set -euo pipefail
       
           python3 - <<'PY'
-          import json, jwt, time, requests, pathlib
+          import json, jwt, time, requests, pathlib, sys
       
           api_key = json.load(open(".private/api_key.json", encoding="utf-8"))
           payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
           cfg = payload.get("CONFIG") or {}
       
-          user_email = (cfg.get("ownerEmail") or payload.get("ownerEmail") or "").strip()
+          user_email = (cfg.get("ownerEmail") or payload.get("ownerEmail") or "").strip().lower()
           bundle_id = pathlib.Path("ci_ios_bundle_id.txt").read_text(encoding="utf-8").strip()
       
           if not user_email:
-              raise SystemExit("Missing ownerEmail in payload")
+              print("⚠️ Missing ownerEmail in payload — skipping")
+              sys.exit(0)
+      
           if not bundle_id:
-              raise SystemExit("Missing bundle id")
+              print("⚠️ Missing bundle id — skipping")
+              sys.exit(0)
       
           def token():
               return jwt.encode(
@@ -1251,33 +1254,7 @@ jobs:
                   "Content-Type": "application/json"
               }
       
-          # 1) find existing user by listing users, then filter locally
-          user_id = None
-          next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
-      
-          while next_url:
-              r = requests.get(next_url, headers=headers(), timeout=30)
-              r.raise_for_status()
-      
-              body = r.json()
-      
-              for user in body.get("data", []):
-                  attrs = user.get("attributes", {})
-                  if (attrs.get("email") or "").strip().lower() == user_email.lower():
-                      user_id = user["id"]
-                      break
-      
-              if user_id:
-                  break
-      
-              next_url = body.get("links", {}).get("next")
-      
-          if not user_id:
-              raise SystemExit(f"User not found in App Store Connect: {user_email}")
-      
-          print(f"✅ Found user: {user_email} -> {user_id}")
-      
-          # 2) find app by bundle id
+          # 1) find app by bundle id
           r = requests.get(
               f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle_id}",
               headers=headers(),
@@ -1286,38 +1263,81 @@ jobs:
           r.raise_for_status()
           apps = r.json().get("data", [])
           if not apps:
-              raise SystemExit(f"App not found for bundle id: {bundle_id}")
+              print(f"⚠️ App not found for bundle id: {bundle_id} — skipping")
+              sys.exit(0)
+      
           app_id = apps[0]["id"]
           print(f"✅ Found app: {bundle_id} -> {app_id}")
       
-          # 3) add app to user's visible apps
-          payload = {
-              "data": [
-                  {
-                      "type": "apps",
-                      "id": app_id
-                  }
-              ]
-          }
+          # 2) try active users first
+          user_id = None
+          next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
       
-          r = requests.post(
-              f"https://api.appstoreconnect.apple.com/v1/users/{user_id}/relationships/visibleApps",
+          while next_url:
+              r = requests.get(next_url, headers=headers(), timeout=30)
+              r.raise_for_status()
+              body = r.json()
+      
+              for user in body.get("data", []):
+                  attrs = user.get("attributes", {})
+                  if (attrs.get("email") or "").strip().lower() == user_email:
+                      user_id = user["id"]
+                      break
+      
+              if user_id:
+                  break
+      
+              next_url = body.get("links", {}).get("next")
+      
+          if user_id:
+              print(f"✅ Found active user: {user_email} -> {user_id}")
+      
+              rel_payload = {
+                  "data": [
+                      {
+                          "type": "apps",
+                          "id": app_id
+                      }
+                  ]
+              }
+      
+              r = requests.post(
+                  f"https://api.appstoreconnect.apple.com/v1/users/{user_id}/relationships/visibleApps",
+                  headers=headers(),
+                  json=rel_payload,
+                  timeout=30
+              )
+      
+              print("HTTP", r.status_code)
+              print(r.text)
+      
+              if r.status_code in (200, 201, 204):
+                  print("✅ App access granted")
+              elif r.status_code == 409:
+                  print("✅ App already assigned to user — skipping")
+              else:
+                  raise SystemExit("❌ Failed to grant app access")
+      
+              sys.exit(0)
+      
+          # 3) if not active, check pending invitations
+          r = requests.get(
+              f"https://api.appstoreconnect.apple.com/v1/userInvitations?filter[email]={user_email}",
               headers=headers(),
-              json=payload,
               timeout=30
           )
+          r.raise_for_status()
+          invites = r.json().get("data", [])
       
-          print("HTTP", r.status_code)
-          print(r.text)
+          if invites:
+              invite_id = invites[0]["id"]
+              print(f"⚠️ User is only a pending invitation, not an active team user yet: {user_email} -> {invite_id}")
+              print("⚠️ The user must accept the App Store Connect invitation before normal user access can be managed.")
+              sys.exit(0)
       
-          if r.status_code in (200, 201, 204):
-              print("✅ App access granted")
-          elif r.status_code == 409:
-              print("✅ App already assigned to user — skipping")
-          else:
-              raise SystemExit("❌ Failed to grant app access")
-      
-          print("✅ App access granted to existing user")
+          # 4) nothing found — don't fail workflow
+          print(f"⚠️ No active user or pending invitation found for: {user_email} — skipping")
+          sys.exit(0)
           PY
       - name: Get provisioning profile
         shell: bash
