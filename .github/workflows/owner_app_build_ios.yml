@@ -1147,22 +1147,72 @@ jobs:
                   sys.exit(1)
           print()
 
-          # Step 4: Add internal user to internal group
+          # Step 4: Add internal tester to internal group
           if internal_user_id and internal_group_id:
-              print("🔗 Step 4: Adding internal user to internal group...")
+              print("🧪 Step 4: Ensuring beta tester record for owner...")
+              tester_id = None
+
+              r = requests.get(
+                  f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
+                  headers=h()
+              )
+              if r.status_code == 200:
+                  data = r.json().get("data", [])
+                  if data:
+                      tester_id = data[0]["id"]
+                      print(f"   ✅ Beta tester exists: {tester_id}")
+
+              if not tester_id:
+                  first = owner_name.split()[0] if owner_name.strip() else "Owner"
+                  last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else ""
+
+                  r = requests.post(
+                      "https://api.appstoreconnect.apple.com/v1/betaTesters",
+                      headers=h(),
+                      json={
+                          "data": {
+                              "type": "betaTesters",
+                              "attributes": {
+                                  "email": owner_email,
+                                  "firstName": first,
+                                  "lastName": last
+                              }
+                          }
+                      }
+                  )
+
+                  if r.status_code in (200, 201):
+                      tester_id = r.json()["data"]["id"]
+                      print(f"   ✅ Beta tester created: {tester_id}")
+                  elif r.status_code == 409:
+                      r2 = requests.get(
+                          f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
+                          headers=h()
+                      )
+                      if r2.status_code == 200:
+                          data = r2.json().get("data", [])
+                          if data:
+                              tester_id = data[0]["id"]
+                              print(f"   ✅ Found existing tester: {tester_id}")
+
+              if not tester_id:
+                  print("   ❌ Could not find or create beta tester")
+                  sys.exit(1)
+
+              print("🔗 Step 4b: Adding beta tester to internal group...")
               r = requests.post(
-                  f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/users",
+                  f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
                   headers=h(),
-                  json={"data":[{"type":"users","id":internal_user_id}]}
+                  json={"data":[{"type":"betaTesters","id":tester_id}]}
               )
 
               print("HTTP", r.status_code)
               print(r.text)
 
               if r.status_code in (200, 204, 409):
-                  print("   ✅ Internal user added (or already in group)")
+                  print("   ✅ Internal tester added (or already in group)")
               else:
-                  print(f"   ❌ Failed to add internal user: HTTP {r.status_code}")
+                  print(f"   ❌ Failed to add internal tester: HTTP {r.status_code}")
                   print(r.text)
                   sys.exit(1)
           else:
