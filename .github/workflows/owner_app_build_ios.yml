@@ -1079,6 +1079,23 @@ jobs:
           print("🚀 COMPLETE HYBRID TESTFLIGHT SETUP")
           print("="*70)
 
+          def h():
+              return {"Authorization": f"Bearer {create_token()}", "Content-Type": "application/json"}
+          
+          print("🔎 DEBUG: listing first users returned by this API key/team...")
+          next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=50"
+          seen = 0
+          while next_url and seen < 200:
+              r = requests.get(next_url, headers=h())
+              r.raise_for_status()
+              body = r.json()
+              for user in body.get("data", []):
+                  attrs = user.get("attributes", {})
+                  print(" -", (attrs.get("email") or "").strip(), "|", attrs.get("roles"))
+                  seen += 1
+              next_url = body.get("links", {}).get("next")
+          print("🔎 END user listing")
+          print()
           # Step 1: Find app
           print("📱 Step 1: Finding app in App Store Connect...")
           r = requests.get(f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle_id}", headers=h())
