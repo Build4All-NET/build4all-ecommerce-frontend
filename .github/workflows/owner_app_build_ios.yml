@@ -1110,9 +1110,9 @@ jobs:
 
           # Step 2: ENSURE USER EXISTS (OR INVITE) + CHECK PENDING INVITES
           print("👤 Step 2: Ensuring user exists in App Store Connect...")
-
+          
           internal_user_id = None
-
+          
           def find_active_user():
               next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
               while next_url:
@@ -1125,89 +1125,82 @@ jobs:
                           return user["id"]
                   next_url = body.get("links", {}).get("next")
               return None
-
+          
           def find_pending_invitation():
               r = requests.get(
                   f"https://api.appstoreconnect.apple.com/v1/userInvitations?filter[email]={owner_email}",
                   headers=h()
               )
               if r.status_code != 200:
-                  print("   ⚠️ Invitations lookup HTTP:", r.status_code)
-                  print(r.text[:1000])
                   return None
               data = r.json().get("data", [])
               return data[0]["id"] if data else None
-
+          
+          def send_invitation():
+              first = owner_name.split()[0] if owner_name else "Owner"
+              last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+              r = requests.post(
+                  "https://api.appstoreconnect.apple.com/v1/userInvitations",
+                  headers=h(),
+                  json={
+                      "data": {
+                          "type": "userInvitations",
+                          "attributes": {
+                              "email": owner_email,
+                              "firstName": first,
+                              "lastName": last,
+                              "roles": ["DEVELOPER"],
+                              "allAppsVisible": True
+                          }
+                      }
+                  }
+              )
+              print("   Invite HTTP:", r.status_code)
+              return r.status_code in (200, 201, 409)
+          
           internal_user_id = find_active_user()
-
+          
           if internal_user_id:
               print(f"   ✅ User already active: {internal_user_id}")
           else:
-              pending_invite_id = find_pending_invitation()
-
-              if pending_invite_id:
-                  print(f"   ⚠️ User has pending invitation: {pending_invite_id}")
-                  print("   👉 User must accept the App Store Connect invitation before internal testing works.")
-              else:
-                  print(f"   ⚠️ User not found → sending invitation...")
-
-                  first = owner_name.split()[0] if owner_name else "Owner"
-                  last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
-
-                  r = requests.post(
-                      "https://api.appstoreconnect.apple.com/v1/userInvitations",
-                      headers=h(),
-                      json={
-                          "data": {
-                              "type": "userInvitations",
-                              "attributes": {
-                                  "email": owner_email,
-                                  "firstName": first,
-                                  "lastName": last,
-                                  "roles": ["DEVELOPER"],
-                                  "allAppsVisible": True
-                              }
-                          }
-                      }
+              pending = find_pending_invitation()
+              if pending:
+                  print(f"   ⚠️ Pending invitation exists: {pending} — re-sending to ensure delivery")
+                  # Delete old invite and resend so the user gets a fresh email
+                  requests.delete(
+                      f"https://api.appstoreconnect.apple.com/v1/userInvitations/{pending}",
+                      headers=h()
                   )
-
-                  print("   Invite HTTP:", r.status_code)
-                  print(r.text[:1000])
-
-                  if r.status_code in (200, 201):
-                      print("   ✅ Invitation sent")
-                  elif r.status_code == 409:
-                      print("   ⚠️ Email already used, checking pending invitations...")
-                      pending_invite_id = find_pending_invitation()
-                      if pending_invite_id:
-                          print(f"   ⚠️ Pending invitation found: {pending_invite_id}")
-                      else:
-                          print("   ⚠️ No active user and no pending invitation found for this team.")
+                  time.sleep(2)
+              
+              print("   📧 Sending App Store Connect invitation...")
+              sent = send_invitation()
+              if sent:
+                  print("   ✅ Invitation sent — waiting a few seconds then re-checking...")
+                  time.sleep(10)
+                  # Sometimes the user becomes active immediately (e.g. email already in Apple system)
+                  internal_user_id = find_active_user()
+                  if internal_user_id:
+                      print(f"   ✅ User is now active: {internal_user_id}")
                   else:
-                      print("   ⚠️ Failed to invite user")
-
-              internal_user_id = find_active_user()
-
-              if internal_user_id:
-                  print(f"   ✅ Internal user is now active: {internal_user_id}")
+                      print("   ⚠️ User still pending — will add as external tester as fallback")
               else:
-                  print("   ⚠️ User is still not active in Users and Access.")
-                  print("   👉 Internal testing will be skipped until the invite is accepted.")
+                  print("   ❌ Failed to send invitation")
+          
           print()
-
+          
           # Step 3: ENSURE INTERNAL GROUP EXISTS
           print("👥 Step 3: Ensuring internal TestFlight group exists...")
-
+          
           internal_group_id = None
-
+          
           r = requests.get(
               f"https://api.appstoreconnect.apple.com/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=true",
               headers=h()
           )
           r.raise_for_status()
-
           groups = r.json().get("data", [])
-
+          
           if groups:
               internal_group_id = groups[0]["id"]
               print(f"   ✅ Internal group exists: {groups[0]['attributes']['name']}")
@@ -1228,103 +1221,85 @@ jobs:
                       }
                   }
               )
-
               if r.status_code in (200, 201):
                   internal_group_id = r.json()["data"]["id"]
                   print("   ✅ Internal group created")
               else:
                   print("   ❌ Failed to create internal group")
-                  print(r.text)
                   sys.exit(1)
-
+          
           print()
-
-          # Step 4: ADD USER TO INTERNAL TESTERS (ONLY IF ACTIVE)
-          print("🔎 DEBUG internal_user_id =", internal_user_id)
-          print("🔎 DEBUG internal_group_id =", internal_group_id)
-
-          if internal_user_id and internal_group_id:
-              print("🧪 Step 4: Adding user to internal testers...")
-
-              tester_id = None
-
-              # 4.1 find beta tester by email
+          
+          # Step 4: ADD USER TO INTERNAL TESTERS (if active) OR EXTERNAL AS FALLBACK
+          print(f"🔎 DEBUG internal_user_id = {internal_user_id}")
+          print(f"🔎 DEBUG internal_group_id = {internal_group_id}")
+          
+          def resolve_or_create_tester():
+              """Find or create a betaTester record for owner_email. Returns tester_id or None."""
               r = requests.get(
                   f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
                   headers=h()
               )
-              print("🔎 betaTesters lookup HTTP:", r.status_code)
-              print(r.text[:1000])
-
               if r.status_code == 200:
                   data = r.json().get("data", [])
                   if data:
-                      tester_id = data[0]["id"]
-                      print("✅ Existing betaTester found:", tester_id)
-
-              # 4.2 create beta tester if missing
-              if not tester_id:
-                  first = owner_name.split()[0] if owner_name else "Owner"
-                  last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else ""
-
-                  r = requests.post(
-                      "https://api.appstoreconnect.apple.com/v1/betaTesters",
-                      headers=h(),
-                      json={
-                          "data": {
-                              "type": "betaTesters",
-                              "attributes": {
-                                  "email": owner_email,
-                                  "firstName": first,
-                                  "lastName": last
-                              }
-                          }
+                      print(f"   ✅ Existing betaTester found: {data[0]['id']}")
+                      return data[0]["id"]
+          
+              first = owner_name.split()[0] if owner_name else "Owner"
+              last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else ""
+              r = requests.post(
+                  "https://api.appstoreconnect.apple.com/v1/betaTesters",
+                  headers=h(),
+                  json={
+                      "data": {
+                          "type": "betaTesters",
+                          "attributes": {"email": owner_email, "firstName": first, "lastName": last}
                       }
+                  }
+              )
+              print(f"   betaTester create HTTP: {r.status_code}")
+              if r.status_code in (200, 201):
+                  tid = r.json()["data"]["id"]
+                  print(f"   ✅ betaTester created: {tid}")
+                  return tid
+              elif r.status_code == 409:
+                  # Race condition — exists now, fetch again
+                  r2 = requests.get(
+                      f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
+                      headers=h()
                   )
-
-                  print("🔎 betaTester create HTTP:", r.status_code)
-                  print(r.text[:1000])
-
-                  if r.status_code in (200, 201):
-                      tester_id = r.json()["data"]["id"]
-                      print("✅ betaTester created:", tester_id)
-                  elif r.status_code == 409:
-                      r2 = requests.get(
-                          f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
-                          headers=h()
-                      )
-                      print("🔎 betaTester re-lookup after 409 HTTP:", r2.status_code)
-                      print(r2.text[:1000])
-                      if r2.status_code == 200:
-                          data = r2.json().get("data", [])
-                          if data:
-                              tester_id = data[0]["id"]
-                              print("✅ Existing betaTester recovered:", tester_id)
-
+                  if r2.status_code == 200:
+                      data = r2.json().get("data", [])
+                      if data:
+                          print(f"   ✅ betaTester recovered after 409: {data[0]['id']}")
+                          return data[0]["id"]
+              print("   ❌ Could not resolve tester_id")
+              return None
+          
+          if internal_user_id and internal_group_id:
+              print("🧪 Step 4: User is active — adding to INTERNAL testers group...")
+              tester_id = resolve_or_create_tester()
               if not tester_id:
-                  print("❌ Could not resolve tester_id")
                   sys.exit(1)
-
-              # 4.3 add beta tester to INTERNAL group
               r = requests.post(
                   f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
                   headers=h(),
-                  json={"data":[{"type":"betaTesters","id":tester_id}]}
+                  json={"data": [{"type": "betaTesters", "id": tester_id}]}
               )
-
-              print("🔎 add betaTester to INTERNAL group HTTP:", r.status_code)
-              print(r.text[:1000])
-
+              print(f"   add to INTERNAL group HTTP: {r.status_code}")
               if r.status_code in (200, 204, 409):
-                  print("✅ User added to internal testers")
+                  print("   ✅ User added to internal testers — can test immediately without review!")
               else:
-                  print("❌ Failed to add tester to internal group")
+                  print(f"   ❌ Failed: {r.text[:300]}")
                   sys.exit(1)
-
           else:
-              print("⚠️ User not active yet → cannot add to internal testers")
-              print("👉 User must accept App Store Connect invitation first")
-
+              print("🧪 Step 4: User not yet active — adding as EXTERNAL tester as immediate fallback...")
+              print("   👉 Invitation sent. Once accepted, they'll be moved to internal testers on next build.")
+              tester_id = resolve_or_create_tester()
+              # tester_id will be used in Step 5/8 to add them to external group automatically
+              print("   ✅ Will be added to external group in Step 8 so testing is not blocked")
+          
           print()
 
           # Step 5: EXTERNAL TESTER
