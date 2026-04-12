@@ -1091,78 +1091,91 @@ jobs:
           print(f"   ✅ App found: {app_id}")
           print()
 
-          # Step 2: ENSURE USER EXISTS (OR INVITE)
+          # Step 2: ENSURE USER EXISTS (OR INVITE) + CHECK PENDING INVITES
           print("👤 Step 2: Ensuring user exists in App Store Connect...")
 
           internal_user_id = None
 
-          next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
-          while next_url:
-              r = requests.get(next_url, headers=h())
-              r.raise_for_status()
-              body = r.json()
-              for user in body.get("data", []):
-                  attrs = user.get("attributes", {})
-                  if (attrs.get("email") or "").strip().lower() == owner_email.lower():
-                      internal_user_id = user["id"]
-                      break
-              if internal_user_id:
-                  break
-              next_url = body.get("links", {}).get("next")
+          def find_active_user():
+              next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
+              while next_url:
+                  r = requests.get(next_url, headers=h())
+                  r.raise_for_status()
+                  body = r.json()
+                  for user in body.get("data", []):
+                      attrs = user.get("attributes", {})
+                      if (attrs.get("email") or "").strip().lower() == owner_email.lower():
+                          return user["id"]
+                  next_url = body.get("links", {}).get("next")
+              return None
+
+          def find_pending_invitation():
+              r = requests.get(
+                  f"https://api.appstoreconnect.apple.com/v1/userInvitations?filter[email]={owner_email}",
+                  headers=h()
+              )
+              if r.status_code != 200:
+                  print("   ⚠️ Invitations lookup HTTP:", r.status_code)
+                  print(r.text[:1000])
+                  return None
+              data = r.json().get("data", [])
+              return data[0]["id"] if data else None
+
+          internal_user_id = find_active_user()
 
           if internal_user_id:
               print(f"   ✅ User already active: {internal_user_id}")
           else:
-              print(f"   ⚠️ User not found → sending invitation...")
+              pending_invite_id = find_pending_invitation()
 
-              first = owner_name.split()[0] if owner_name else "Owner"
-              last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+              if pending_invite_id:
+                  print(f"   ⚠️ User has pending invitation: {pending_invite_id}")
+                  print("   👉 User must accept the App Store Connect invitation before internal testing works.")
+              else:
+                  print(f"   ⚠️ User not found → sending invitation...")
 
-              r = requests.post(
-                  "https://api.appstoreconnect.apple.com/v1/userInvitations",
-                  headers=h(),
-                  json={
-                      "data": {
-                          "type": "userInvitations",
-                          "attributes": {
-                              "email": owner_email,
-                              "firstName": first,
-                              "lastName": last,
-                              "roles": ["DEVELOPER"],
-                              "allAppsVisible": True
+                  first = owner_name.split()[0] if owner_name else "Owner"
+                  last = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+
+                  r = requests.post(
+                      "https://api.appstoreconnect.apple.com/v1/userInvitations",
+                      headers=h(),
+                      json={
+                          "data": {
+                              "type": "userInvitations",
+                              "attributes": {
+                                  "email": owner_email,
+                                  "firstName": first,
+                                  "lastName": last,
+                                  "roles": ["DEVELOPER"],
+                                  "allAppsVisible": True
+                              }
                           }
                       }
-                  }
-              )
+                  )
 
-              print("   Invite HTTP:", r.status_code)
-              print(r.text)
+                  print("   Invite HTTP:", r.status_code)
+                  print(r.text[:1000])
 
-              if r.status_code in (200, 201):
-                  print("   ✅ Invitation sent")
-              elif r.status_code == 409:
-                  print("   ✅ Already invited or already exists")
-              else:
-                  print("   ⚠️ Failed to invite user")
+                  if r.status_code in (200, 201):
+                      print("   ✅ Invitation sent")
+                  elif r.status_code == 409:
+                      print("   ⚠️ Email already used, checking pending invitations...")
+                      pending_invite_id = find_pending_invitation()
+                      if pending_invite_id:
+                          print(f"   ⚠️ Pending invitation found: {pending_invite_id}")
+                      else:
+                          print("   ⚠️ No active user and no pending invitation found for this team.")
+                  else:
+                      print("   ⚠️ Failed to invite user")
 
-              next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
-              while next_url:
-                  r2 = requests.get(next_url, headers=h())
-                  r2.raise_for_status()
-                  body2 = r2.json()
-                  for user in body2.get("data", []):
-                      attrs = user.get("attributes", {})
-                      if (attrs.get("email") or "").strip().lower() == owner_email.lower():
-                          internal_user_id = user["id"]
-                          break
-                  if internal_user_id:
-                      break
-                  next_url = body2.get("links", {}).get("next")
+              internal_user_id = find_active_user()
 
               if internal_user_id:
-                  print(f"   ✅ Internal user is already active: {internal_user_id}")
+                  print(f"   ✅ Internal user is now active: {internal_user_id}")
               else:
-                  print("   ⚠️ User is still not active in Users and Access. They must accept the invite before internal testing works.")
+                  print("   ⚠️ User is still not active in Users and Access.")
+                  print("   👉 Internal testing will be skipped until the invite is accepted.")
           print()
 
           # Step 3: ENSURE INTERNAL GROUP EXISTS
