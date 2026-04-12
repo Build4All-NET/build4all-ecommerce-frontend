@@ -1304,38 +1304,41 @@ jobs:
 
           # Step 5: EXTERNAL TESTER
           print("🧪 Step 5: Setting up external beta tester...")
-          tester_id = None
-          try:
-              r = requests.get(f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}", headers=h())
-              if r.status_code == 200:
-                  data = r.json().get("data", [])
-                  if data:
-                      tester_id = data[0]["id"]
-                      print(f"   ✅ External beta tester exists: {tester_id}")
-          except Exception as e:
-              print(f"   ⚠️  Error checking testers: {str(e)[:100]}")
-
+          # tester_id may already be set from Step 4 — only resolve if not yet known
           if not tester_id:
               try:
-                  first = owner_name.split()[0] if owner_name.strip() else "Owner"
-                  last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else ""
-                  r = requests.post(
-                      "https://api.appstoreconnect.apple.com/v1/betaTesters",
-                      headers=h(),
-                      json={"data":{"type":"betaTesters","attributes":{"email":owner_email,"firstName":first,"lastName":last}}}
-                  )
-                  if r.status_code in (200, 201):
-                      tester_id = r.json()["data"]["id"]
-                      print(f"   ✅ External beta tester created: {tester_id}")
-                  elif r.status_code == 409:
-                      r2 = requests.get(f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}", headers=h())
-                      if r2.status_code == 200:
-                          data = r2.json().get("data", [])
-                          if data:
-                              tester_id = data[0]["id"]
-                              print(f"   ✅ Found existing tester: {tester_id}")
+                  r = requests.get(f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}", headers=h())
+                  if r.status_code == 200:
+                      data = r.json().get("data", [])
+                      if data:
+                          tester_id = data[0]["id"]
+                          print(f"   ✅ External beta tester exists: {tester_id}")
               except Exception as e:
-                  print(f"   ⚠️  Error creating tester: {str(e)[:100]}")
+                  print(f"   ⚠️  Error checking testers: {str(e)[:100]}")
+          
+              if not tester_id:
+                  try:
+                      first = owner_name.split()[0] if owner_name.strip() else "Owner"
+                      last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else ""
+                      r = requests.post(
+                          "https://api.appstoreconnect.apple.com/v1/betaTesters",
+                          headers=h(),
+                          json={"data":{"type":"betaTesters","attributes":{"email":owner_email,"firstName":first,"lastName":last}}}
+                      )
+                      if r.status_code in (200, 201):
+                          tester_id = r.json()["data"]["id"]
+                          print(f"   ✅ External beta tester created: {tester_id}")
+                      elif r.status_code == 409:
+                          r2 = requests.get(f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}", headers=h())
+                          if r2.status_code == 200:
+                              data = r2.json().get("data", [])
+                              if data:
+                                  tester_id = data[0]["id"]
+                                  print(f"   ✅ Found existing tester: {tester_id}")
+                  except Exception as e:
+                      print(f"   ⚠️  Error creating tester: {str(e)[:100]}")
+          else:
+              print(f"   ✅ Tester already resolved from Step 4: {tester_id}")
           print()
 
           # Step 6: EXTERNAL GROUP
