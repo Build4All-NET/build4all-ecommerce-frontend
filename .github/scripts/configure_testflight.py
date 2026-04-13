@@ -191,7 +191,8 @@ if not public_link_enabled:
         print("   ✅ Public link enabled")
 print()
 
-print("🧪 Step 5: Resolving betaTester and adding to group(s)...")
+# ── Step 5: Resolve betaTester ID only (group assignment happens after build is added) ──
+print("🧪 Step 5: Resolving betaTester ID...")
 tester_id = None
 
 r = requests.get(
@@ -237,87 +238,10 @@ if not tester_id:
     else:
         print(f"   ❌ Unexpected error: {r.text[:500]}")
 
-if not tester_id:
-    print("   ❌ FATAL: Could not resolve tester_id — cannot assign to any group")
-else:
+if tester_id:
     print(f"   ✅ tester_id confirmed: {tester_id}")
-    print()
-
-    if internal_group_id:
-        print("   📦 Adding tester to INTERNAL group...")
-        added_to_internal = False
-        for int_attempt in range(5):
-            r = requests.post(
-                f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
-                headers=h(),
-                json={"data": [{"type": "betaTesters", "id": tester_id}]}
-            )
-            print(f"   Internal group attempt {int_attempt+1}: HTTP {r.status_code} | {r.text[:300]}")
-            if r.status_code in (200, 204):
-                print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
-                added_to_internal = True
-                break
-            elif r.status_code == 409:
-                resp_text = r.text
-                if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
-                    print(f"   ⏳ STATE_ERROR — retrying in 20s (attempt {int_attempt+1}/5)...")
-                    time.sleep(20)
-                    continue
-                else:
-                    print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
-                    added_to_internal = True
-                    break
-            elif r.status_code in (403, 422):
-                if int_attempt < 4:
-                    print(f"   ⏳ User not yet an active team member (HTTP {r.status_code}), retrying in 20s (attempt {int_attempt+1}/5)...")
-                    time.sleep(20)
-                    rechk = find_active_user()
-                    if rechk:
-                        internal_user_id = rechk
-                        print(f"   ✅ User became active: {internal_user_id}")
-                else:
-                    print(f"   ⚠️ User not yet a team member after {int_attempt+1} attempts (HTTP {r.status_code})")
-                    print(f"   ℹ️  Once they accept the App Store Connect invitation, run a new build to gain internal testing access")
-            else:
-                print(f"   ⚠️ Unexpected error adding to internal group (HTTP {r.status_code}): {r.text[:200]}")
-                break
-        if not added_to_internal:
-            print("   ⚠️ Could not add to INTERNAL group — user must accept App Store Connect invitation first")
-            print("   ℹ️  They are added to the EXTERNAL group in the meantime (step 5.4 below)")
-    else:
-        print("   ⚠️ No internal group ID — skipping internal group assignment")
-    print()
-
-    print("   📦 Adding tester to EXTERNAL group...")
-    external_added = False
-    for ext_attempt in range(5):
-        r = requests.post(
-            f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}/relationships/betaTesters",
-            headers=h(),
-            json={"data": [{"type": "betaTesters", "id": tester_id}]}
-        )
-        print(f"   External group HTTP: {r.status_code} | {r.text[:300]}")
-
-        if r.status_code in (200, 204):
-            print("   ✅ Tester added to EXTERNAL group")
-            external_added = True
-            break
-        elif r.status_code == 409:
-            resp_text = r.text
-            if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
-                print(f"   ⏳ STATE_ERROR — tester cannot be assigned yet, retrying in 20s (attempt {ext_attempt+1}/5)...")
-                time.sleep(20)
-                continue
-            else:
-                print("   ✅ Tester already in EXTERNAL group")
-                external_added = True
-                break
-        else:
-            print(f"   ❌ Unexpected error adding to external group: {r.text[:300]}")
-            break
-
-    if not external_added:
-        print("   ⚠️ Could not add tester to external group after retries — they can still join via public link")
+else:
+    print("   ⚠️ Could not resolve tester_id — will skip group assignment")
 print()
 
 print("🔗 Step 6: Retrieving public TestFlight link...")
@@ -430,6 +354,89 @@ for attempt in range(15):
         continue
     time.sleep(30)
 print()
+
+# ── Step 5b: Add tester to groups NOW that builds are in both groups ──────────
+# Apple requires a build in the group before external testers can be assigned.
+if tester_id:
+    print("🧪 Step 5b: Adding tester to groups (build now in both groups)...")
+    print()
+
+    if internal_group_id:
+        print("   📦 Adding tester to INTERNAL group...")
+        added_to_internal = False
+        for int_attempt in range(5):
+            r = requests.post(
+                f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
+                headers=h(),
+                json={"data": [{"type": "betaTesters", "id": tester_id}]}
+            )
+            print(f"   Internal group attempt {int_attempt+1}: HTTP {r.status_code} | {r.text[:300]}")
+            if r.status_code in (200, 204):
+                print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
+                added_to_internal = True
+                break
+            elif r.status_code == 409:
+                resp_text = r.text
+                if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
+                    print(f"   ⏳ STATE_ERROR — retrying in 20s (attempt {int_attempt+1}/5)...")
+                    time.sleep(20)
+                    continue
+                else:
+                    print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
+                    added_to_internal = True
+                    break
+            elif r.status_code in (403, 422):
+                if int_attempt < 4:
+                    print(f"   ⏳ User not yet an active team member (HTTP {r.status_code}), retrying in 20s (attempt {int_attempt+1}/5)...")
+                    time.sleep(20)
+                    rechk = find_active_user()
+                    if rechk:
+                        internal_user_id = rechk
+                        print(f"   ✅ User became active: {internal_user_id}")
+                else:
+                    print(f"   ⚠️ User not yet a team member after {int_attempt+1} attempts (HTTP {r.status_code})")
+                    print(f"   ℹ️  Once they accept the App Store Connect invitation, run a new build to gain internal testing access")
+            else:
+                print(f"   ⚠️ Unexpected error adding to internal group (HTTP {r.status_code}): {r.text[:200]}")
+                break
+        if not added_to_internal:
+            print("   ⚠️ Could not add to INTERNAL group — user must accept App Store Connect invitation first")
+            print("   ℹ️  They can join via the public TestFlight link in the meantime")
+    else:
+        print("   ⚠️ No internal group ID — skipping internal group assignment")
+    print()
+
+    print("   📦 Adding tester to EXTERNAL group...")
+    external_added = False
+    for ext_attempt in range(5):
+        r = requests.post(
+            f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}/relationships/betaTesters",
+            headers=h(),
+            json={"data": [{"type": "betaTesters", "id": tester_id}]}
+        )
+        print(f"   External group HTTP: {r.status_code} | {r.text[:300]}")
+
+        if r.status_code in (200, 204):
+            print("   ✅ Tester added to EXTERNAL group")
+            external_added = True
+            break
+        elif r.status_code == 409:
+            resp_text = r.text
+            if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
+                print(f"   ⏳ STATE_ERROR — tester cannot be assigned yet, retrying in 20s (attempt {ext_attempt+1}/5)...")
+                time.sleep(20)
+                continue
+            else:
+                print("   ✅ Tester already in EXTERNAL group")
+                external_added = True
+                break
+        else:
+            print(f"   ❌ Unexpected error adding to external group: {r.text[:300]}")
+            break
+
+    if not external_added:
+        print("   ⚠️ Could not add tester to external group — they can join via public link")
+    print()
 
 print("📋 Step 12: Submitting for Beta App Review...")
 review_submitted = False
