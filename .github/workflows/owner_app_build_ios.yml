@@ -1323,22 +1323,56 @@ jobs:
               print(f"   ✅ tester_id confirmed: {tester_id}")
               print()
           
-              # 5.3 Add to INTERNAL group only if user is active (Apple hard requirement)
-              if internal_user_id and internal_group_id:
+              # 5.3 Add to INTERNAL group — always attempt in both cases:
+              #     a) user already active  → adds immediately
+              #     b) user just invited    → retries with backoff; if still pending,
+              #                               logs a clear message and falls back gracefully
+              if internal_group_id:
                   print("   📦 Adding tester to INTERNAL group...")
-                  r = requests.post(
-                      f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
-                      headers=h(),
-                      json={"data": [{"type": "betaTesters", "id": tester_id}]}
-                  )
-                  print(f"   Internal group HTTP: {r.status_code} | {r.text[:300]}")
-                  if r.status_code in (200, 204, 409):
-                      print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
-                  else:
-                      print(f"   ❌ Failed to add to internal group")
+                  added_to_internal = False
+                  for int_attempt in range(5):
+                      r = requests.post(
+                          f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
+                          headers=h(),
+                          json={"data": [{"type": "betaTesters", "id": tester_id}]}
+                      )
+                      print(f"   Internal group attempt {int_attempt+1}: HTTP {r.status_code} | {r.text[:300]}")
+                      if r.status_code in (200, 204):
+                          print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
+                          added_to_internal = True
+                          break
+                      elif r.status_code == 409:
+                          resp_text = r.text
+                          if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
+                              print(f"   ⏳ STATE_ERROR — retrying in 20s (attempt {int_attempt+1}/5)...")
+                              time.sleep(20)
+                              continue
+                          else:
+                              print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
+                              added_to_internal = True
+                              break
+                      elif r.status_code in (403, 422):
+                          # Apple only allows active team members in internal groups.
+                          # Retry in case the user just accepted their invitation.
+                          if int_attempt < 4:
+                              print(f"   ⏳ User not yet an active team member (HTTP {r.status_code}), retrying in 20s (attempt {int_attempt+1}/5)...")
+                              time.sleep(20)
+                              # Re-check active users — invitation may have been accepted
+                              rechk = find_active_user()
+                              if rechk:
+                                  internal_user_id = rechk
+                                  print(f"   ✅ User became active: {internal_user_id}")
+                          else:
+                              print(f"   ⚠️ User not yet a team member after {int_attempt+1} attempts (HTTP {r.status_code})")
+                              print(f"   ℹ️  Once they accept the App Store Connect invitation, run a new build to gain internal testing access")
+                      else:
+                          print(f"   ⚠️ Unexpected error adding to internal group (HTTP {r.status_code}): {r.text[:200]}")
+                          break
+                  if not added_to_internal:
+                      print("   ⚠️ Could not add to INTERNAL group — user must accept App Store Connect invitation first")
+                      print("   ℹ️  They are added to the EXTERNAL group in the meantime (step 5.4 below)")
               else:
-                  print(f"   ⚠️ User not active yet — skipping internal group")
-                  print(f"      internal_user_id={internal_user_id}, internal_group_id={internal_group_id}")
+                  print("   ⚠️ No internal group ID — skipping internal group assignment")
               print()
           
               # 5.4 ALWAYS add to EXTERNAL group with retry logic for STATE_ERROR
