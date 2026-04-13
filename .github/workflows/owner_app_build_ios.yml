@@ -1341,40 +1341,81 @@ jobs:
                   print(f"      internal_user_id={internal_user_id}, internal_group_id={internal_group_id}")
               print()
           
-              # 5.4 ALWAYS add to EXTERNAL group with retry logic for STATE_ERROR
+              # 5.4 ALWAYS add to EXTERNAL group — with fallback email invite for null-state testers
               print("   📦 Adding tester to EXTERNAL group...")
               external_added = False
-              for ext_attempt in range(5):
+              first = owner_name.split()[0] if owner_name else "Owner"
+              last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+    
+              for ext_attempt in range(3):
                   r = requests.post(
                       f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}/relationships/betaTesters",
                       headers=h(),
                       json={"data": [{"type": "betaTesters", "id": tester_id}]}
                   )
-                  print(f"   External group HTTP: {r.status_code} | {r.text[:300]}")
-          
+                  print(f"   External group assign HTTP: {r.status_code} | {r.text[:300]}")
+    
                   if r.status_code in (200, 204):
-                      print("   ✅ Tester added to EXTERNAL group")
+                      print("   ✅ Tester assigned to EXTERNAL group directly")
                       external_added = True
                       break
                   elif r.status_code == 409:
-                      # Check if it's a STATE_ERROR (cannot assign yet) or already-in-group (OK)
-                      resp_text = r.text
-                      if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
-                          print(f"   ⏳ STATE_ERROR — tester cannot be assigned yet, retrying in 20s (attempt {ext_attempt+1}/5)...")
-                          time.sleep(20)
+                      if "STATE_ERROR" in r.text or "cannot be assigned" in r.text:
+                          print(f"   ⏳ STATE_ERROR on attempt {ext_attempt+1}/3 — tester state is null, retrying in 15s...")
+                          time.sleep(15)
                           continue
                       else:
-                          # Real 409 = already in group = success
                           print("   ✅ Tester already in EXTERNAL group")
                           external_added = True
                           break
                   else:
-                      print(f"   ❌ Unexpected error adding to external group: {r.text[:300]}")
+                      print(f"   ❌ Unexpected error: {r.text[:300]}")
                       break
-          
+    
               if not external_added:
-                  print("   ⚠️ Could not add tester to external group after retries — they can still join via public link")
-          print()
+                  # FALLBACK: Create betaTester WITH betaGroups relationship in one call
+                  # This sends a direct TestFlight email invitation linked to the group
+                  # Works even when tester state=null because it goes through invite flow
+                  print("   📧 Fallback: Sending direct TestFlight group invitation via email...")
+                  r = requests.post(
+                      "https://api.appstoreconnect.apple.com/v1/betaTesters",
+                      headers=h(),
+                      json={
+                          "data": {
+                              "type": "betaTesters",
+                              "attributes": {
+                                  "email": owner_email,
+                                  "firstName": first,
+                                  "lastName": last
+                              },
+                              "relationships": {
+                                  "betaGroups": {
+                                      "data": [{"type": "betaGroups", "id": external_group_id}]
+                                  }
+                              }
+                          }
+                      }
+                  )
+                  print(f"   Fallback invite HTTP: {r.status_code} | {r.text[:500]}")
+                  if r.status_code in (200, 201):
+                      print("   ✅ Direct TestFlight invitation sent — user will receive email to join group")
+                      external_added = True
+                  elif r.status_code == 409:
+                      # Tester already exists — try patching their group membership via tester relationships
+                      print("   ⚠️ Tester exists (409) — trying to link existing tester to group via relationships...")
+                      r2 = requests.post(
+                          f"https://api.appstoreconnect.apple.com/v1/betaTesters/{tester_id}/relationships/betaGroups",
+                          headers=h(),
+                          json={"data": [{"type": "betaGroups", "id": external_group_id}]}
+                      )
+                      print(f"   Relationship link HTTP: {r2.status_code} | {r2.text[:300]}")
+                      if r2.status_code in (200, 204, 409):
+                          print("   ✅ Tester linked to EXTERNAL group via relationships endpoint")
+                          external_added = True
+                      else:
+                          print("   ⚠️ Could not link tester — they can still join via the public TestFlight link")
+                  else:
+                      print("   ⚠️ All assignment methods failed — user can still join via public TestFlight link")
           
           # ── Step 6: Get public TestFlight link ───────────────────────────────────────
           print("🔗 Step 6: Retrieving public TestFlight link...")
