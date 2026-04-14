@@ -5,6 +5,9 @@ on:
     types: [add_tester_to_app]
   workflow_dispatch:
     inputs:
+      request_id:
+        description: "Internal testing request ID"
+        required: false
       email:
         description: "Tester email"
         required: true
@@ -71,7 +74,7 @@ jobs:
           event_name = os.environ.get("GITHUB_EVENT_NAME", "")
 
           if event_name == "repository_dispatch":
-              p   = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8"))
+              p = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8"))
               cfg = p.get("CONFIG") or {}
 
               def pick(*keys):
@@ -81,31 +84,33 @@ jobs:
                           return str(v).strip()
                   return ""
 
-              email      = pick("email", "ownerEmail")
-              first_name = pick("firstName", "first_name")
-              last_name  = pick("lastName",  "last_name")
-              bundle_id  = pick("bundleId",  "iosBundleId", "IOS_BUNDLE_ID", "PACKAGE_NAME")
+              request_id = pick("REQUEST_ID", "requestId")
+              email      = pick("APPLE_EMAIL", "email", "ownerEmail")
+              first_name = pick("FIRST_NAME", "firstName", "first_name")
+              last_name  = pick("LAST_NAME", "lastName", "last_name")
+              bundle_id  = pick("IOS_BUNDLE_ID", "bundleId", "iosBundleId", "PACKAGE_NAME")
               api_base   = pick("API_BASE_URL").rstrip("/")
-              link_id    = pick("OWNER_PROJECT_LINK_ID", "ownerProjectLinkId")
+              link_id    = pick("LINK_ID", "OWNER_PROJECT_LINK_ID", "ownerProjectLinkId")
               build_id   = pick("BUILD_ID", "buildId")
+              app_name   = pick("APP_NAME", "appName")
 
-              # Full name fallback
               if not first_name:
-                  full   = pick("name", "ownerName")
-                  parts  = full.split() if full else []
+                  full = pick("name", "ownerName")
+                  parts = full.split() if full else []
                   first_name = parts[0] if parts else "Tester"
                   if not last_name:
                       last_name = " ".join(parts[1:]) if len(parts) > 1 else "User"
 
           else:
-              # workflow_dispatch — GitHub sets INPUT_* env vars
-              email      = os.environ.get("INPUT_EMAIL",        "").strip()
-              first_name = os.environ.get("INPUT_FIRST_NAME",   "").strip()
-              last_name  = os.environ.get("INPUT_LAST_NAME",    "User").strip()
-              bundle_id  = os.environ.get("INPUT_BUNDLE_ID",    "").strip()
+              request_id = os.environ.get("INPUT_REQUEST_ID", "").strip()
+              email      = os.environ.get("INPUT_EMAIL", "").strip()
+              first_name = os.environ.get("INPUT_FIRST_NAME", "").strip()
+              last_name  = os.environ.get("INPUT_LAST_NAME", "User").strip()
+              bundle_id  = os.environ.get("INPUT_BUNDLE_ID", "").strip()
               api_base   = os.environ.get("INPUT_API_BASE_URL", "").strip().rstrip("/")
-              link_id    = os.environ.get("INPUT_LINK_ID",      "").strip()
-              build_id   = os.environ.get("INPUT_BUILD_ID",     "").strip()
+              link_id    = os.environ.get("INPUT_LINK_ID", "").strip()
+              build_id   = os.environ.get("INPUT_BUILD_ID", "").strip()
+              app_name   = ""
 
           if not email:
               raise SystemExit("❌ Missing required parameter: email")
@@ -116,6 +121,7 @@ jobs:
           if not last_name:
               last_name = "User"
 
+          print(f"request_id = {request_id or '(not provided)'}")
           print(f"email      = {email}")
           print(f"first_name = {first_name}")
           print(f"last_name  = {last_name}")
@@ -123,8 +129,10 @@ jobs:
           print(f"api_base   = {api_base or '(not provided)'}")
           print(f"link_id    = {link_id  or '(not provided)'}")
           print(f"build_id   = {build_id or '(not provided)'}")
+          print(f"app_name   = {app_name or '(not provided)'}")
 
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              f.write(f"REQUEST_ID={request_id}\n")
               f.write(f"TESTER_EMAIL={email}\n")
               f.write(f"TESTER_FIRST={first_name}\n")
               f.write(f"TESTER_LAST={last_name}\n")
@@ -132,6 +140,7 @@ jobs:
               f.write(f"API_BASE={api_base}\n")
               f.write(f"LINK_ID={link_id}\n")
               f.write(f"BUILD_ID={build_id}\n")
+              f.write(f"APP_NAME={app_name}\n")
           PY
 
       - name: Create App Store Connect api_key.json
@@ -150,7 +159,8 @@ jobs:
               "in_house":  False
           }
           pathlib.Path(".private/api_key.json").write_text(
-              json.dumps(api_key_data, ensure_ascii=False, indent=2)
+              json.dumps(api_key_data, ensure_ascii=False, indent=2),
+              encoding="utf-8"
           )
           print("✅ api_key.json written")
           PY
@@ -174,7 +184,66 @@ jobs:
             "$TESTER_BUNDLE_ID" \
             "$TESTER_EMAIL" \
             "$TESTER_FIRST" \
-            "$TESTER_LAST"
+            "$TESTER_LAST" \
+            "$REQUEST_ID"
+
+      - name: Build callback payload
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          result = {}
+          result_file = pathlib.Path("tester_result.json")
+
+          if result_file.exists():
+              try:
+                  result = json.loads(result_file.read_text(encoding="utf-8"))
+              except Exception as ex:
+                  result = {
+                      "status": "ERROR",
+                      "message": f"Failed to parse tester_result.json: {ex}"
+                  }
+          else:
+              result = {
+                  "status": "ERROR",
+                  "message": "tester_result.json not found"
+              }
+
+          def to_int(v):
+              try:
+                  if v is None or str(v).strip() == "":
+                      return None
+                  return int(str(v).strip())
+              except Exception:
+                  return None
+
+          payload = {
+              "requestId": to_int("${REQUEST_ID}"),
+              "linkId": to_int("${LINK_ID}"),
+              "buildId": "${BUILD_ID}",
+              "status": result.get("status", "ERROR"),
+              "message": result.get("message", ""),
+              "appleInvitationId": result.get("appleInvitationId", ""),
+              "appleUserId": result.get("appleUserId", ""),
+              "appleBetaTesterId": result.get("appleBetaTesterId", ""),
+              "internalGroupId": result.get("internalGroupId", ""),
+              "appId": result.get("appId", ""),
+              "email": "${TESTER_EMAIL}",
+              "bundleId": "${TESTER_BUNDLE_ID}"
+          }
+
+          pathlib.Path("callback_payload.json").write_text(
+              json.dumps(payload, ensure_ascii=False),
+              encoding="utf-8"
+          )
+
+          print("✅ callback_payload.json created")
+          print(json.dumps(payload, indent=2, ensure_ascii=False))
+          PY
 
       - name: 📡 Report result to backend
         if: always()
@@ -187,23 +256,29 @@ jobs:
             exit 0
           fi
 
-          STATUS="unknown"
-          MESSAGE=""
-          if [ -f "tester_result.json" ]; then
-            STATUS="$(python3  -c "import json; print(json.load(open('tester_result.json'))['status'])")"
-            MESSAGE="$(python3 -c "import json; print(json.load(open('tester_result.json'))['message'])")"
-          fi
-
           JOB_STATUS="${{ job.status }}"
           if [ "$JOB_STATUS" != "success" ]; then
-            STATUS="ERROR"
-            MESSAGE="Workflow ${JOB_STATUS} — see GitHub Actions logs for details"
+            python3 - <<'PY'
+            import json, pathlib
+
+            p = pathlib.Path("callback_payload.json")
+            if p.exists():
+                data = json.loads(p.read_text(encoding="utf-8"))
+            else:
+                data = {}
+
+            data["status"] = "ERROR"
+            data["message"] = f"Workflow {\"${{ job.status }}\"} — see GitHub Actions logs for details"
+
+            p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            print("✅ callback payload overwritten with workflow failure status")
+            PY
           fi
 
-          echo "Reporting status=${STATUS} to ${API_BASE}"
+          echo "Reporting callback to ${API_BASE}/api/ci/add-tester/result"
 
           curl -sS -X PUT "${API_BASE}/api/ci/add-tester/result" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"status\":\"${STATUS}\",\"message\":\"${MESSAGE}\"}" \
+            --data @callback_payload.json \
             || true
