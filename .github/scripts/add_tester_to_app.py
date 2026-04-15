@@ -100,18 +100,58 @@ def write_result(
 def find_active_user():
     """Return the /v1/users id for `email`, or None.
 
-    NOTE: Apple does NOT return the Account Holder via /v1/users in some
-    API key configurations. Use try_direct_add() as a fallback.
+    Apple stores the Account Holder (and some Admins) under the `username`
+    attribute (their Apple ID) rather than `email`. We check both.
+    We also try the filter[username] query first as a fast path.
     """
+    # Fast path: filter by username (Apple ID) — finds Account Holders
+    r = requests.get(
+        f"{BASE}/v1/users?filter[username]={email}&limit=10",
+        headers=h(),
+    )
+    if r.status_code == 200:
+        for user in r.json().get("data", []):
+            attrs = user.get("attributes", {})
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == email or u_username == email:
+                print(f"   ✅ Found via username filter: {user['id']}")
+                return user["id"]
+
+    # Slow path: paginate all users checking both email and username attributes
     next_url = f"{BASE}/v1/users?limit=200"
     while next_url:
         r = requests.get(next_url, headers=h())
         r.raise_for_status()
         body = r.json()
         for user in body.get("data", []):
-            if (user.get("attributes", {}).get("email") or "").strip().lower() == email:
+            attrs = user.get("attributes", {})
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == email or u_username == email:
                 return user["id"]
         next_url = body.get("links", {}).get("next")
+    return None
+
+
+def find_team_member_tester():
+    """Return the betaTester id for `email` with inviteType=TEAM_MEMBER, or None.
+
+    TEAM_MEMBER betaTesters are the ones linked to actual App Store Connect team
+    members. Only TEAM_MEMBER type can be added to internal TestFlight groups.
+    EMAIL type betaTesters (created via POST /v1/betaTesters) give STATE_ERROR
+    when added to internal groups.
+    """
+    r = requests.get(
+        f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=TEAM_MEMBER",
+        headers=h(),
+    )
+    if r.status_code == 200:
+        data = r.json().get("data", [])
+        if data:
+            tid = data[0]["id"]
+            print(f"   ✅ TEAM_MEMBER betaTester found: {tid}")
+            return tid
     return None
 
 
@@ -221,23 +261,25 @@ def resolve_beta_tester():
 
 def try_direct_add(app_id, app_name):
     """
-    Attempt to add `email` to the internal group via betaTester lookup,
-    WITHOUT requiring the user to appear in /v1/users first.
+    Attempt to add `email` to the internal group using their TEAM_MEMBER
+    betaTester record, WITHOUT requiring /v1/users to list them first.
 
-    This is the fallback for Account Holders and Admins that the API omits
-    from /v1/users responses.  Apple will accept the group assignment if the
-    person is a team member, and reject it if they are not.
+    This is the fallback for Account Holders and Admins omitted from /v1/users.
+    IMPORTANT: only TEAM_MEMBER type betaTesters can be in internal groups.
+    EMAIL type betaTesters (created via POST /v1/betaTesters) always get
+    STATE_ERROR — so we never use them here.
 
     Returns True and writes ADDED_TO_INTERNAL on success.
-    Returns False (writes nothing) so the caller can fall through to the
-    invitation flow.
+    Returns False (writes nothing) so the caller falls through to invitation.
     """
     internal_group_id = ensure_internal_group(app_id)
     if not internal_group_id:
         return False
 
-    tester_id = resolve_beta_tester()
+    # Only look for TEAM_MEMBER type — EMAIL type causes STATE_ERROR on internal groups
+    tester_id = find_team_member_tester()
     if not tester_id:
+        print("   ℹ️  No TEAM_MEMBER betaTester found — cannot add to internal group directly")
         return False
 
     r = requests.post(
@@ -271,7 +313,7 @@ def try_direct_add(app_id, app_name):
         )
         return True
 
-    print(f"   ℹ️  Direct add declined by Apple (HTTP {r.status_code}) — not a team member, continuing to invitation flow")
+    print(f"   ℹ️  Direct add declined by Apple (HTTP {r.status_code}) — continuing to invitation flow")
     return False
 
 
@@ -294,7 +336,8 @@ def add_to_internal_group(user_id, app_id, app_name):
     print()
 
     print("🧪 Resolving betaTester record...")
-    tester_id = resolve_beta_tester()
+    # Prefer TEAM_MEMBER type — required for internal groups, avoids STATE_ERROR
+    tester_id = find_team_member_tester() or resolve_beta_tester()
     if not tester_id:
         msg = "Could not resolve betaTester ID"
         print(f"   ❌ {msg}")
