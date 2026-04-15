@@ -155,6 +155,31 @@ def find_team_member_tester():
     return None
 
 
+def find_tester_via_user_relationship(user_id):
+    """Return the betaTester ID linked to a /v1/users record (always TEAM_MEMBER type).
+
+    The user relationship endpoint returns the TEAM_MEMBER betaTester regardless
+    of whether it appears in filter[email] queries. This is the most reliable way
+    to find the betaTester for Account Holders and Admins.
+    """
+    r = requests.get(f"{BASE}/v1/users/{user_id}/relationships/betaTesters", headers=h())
+    if r.status_code == 200:
+        data = r.json().get("data", [])
+        if data:
+            tid = data[0]["id"]
+            print(f"   ✅ TEAM_MEMBER betaTester via user relationship: {tid}")
+            return tid
+    # Non-relationship endpoint as fallback
+    r2 = requests.get(f"{BASE}/v1/users/{user_id}/betaTesters", headers=h())
+    if r2.status_code == 200:
+        data2 = r2.json().get("data", [])
+        if data2:
+            tid = data2[0]["id"]
+            print(f"   ✅ TEAM_MEMBER betaTester via user betaTesters: {tid}")
+            return tid
+    return None
+
+
 def find_pending_invitation():
     """Return the /v1/userInvitations id for `email`, or None."""
     r = requests.get(
@@ -222,7 +247,8 @@ def resolve_beta_tester():
         data = r.json().get("data", [])
         if data:
             tid = data[0]["id"]
-            print(f"   ✅ betaTester found: {tid}")
+            invite_type = data[0].get("attributes", {}).get("inviteType", "?")
+            print(f"   ✅ betaTester found: {tid} (inviteType={invite_type})")
             return tid
 
     r = requests.post(
@@ -337,7 +363,8 @@ def add_to_internal_group(user_id, app_id, app_name):
 
     print("🧪 Resolving betaTester record...")
     # Prefer TEAM_MEMBER type — required for internal groups, avoids STATE_ERROR
-    tester_id = find_team_member_tester() or resolve_beta_tester()
+    # Try via user relationship first (most reliable for Account Holders/Admins)
+    tester_id = find_tester_via_user_relationship(user_id) or find_team_member_tester() or resolve_beta_tester()
     if not tester_id:
         msg = "Could not resolve betaTester ID"
         print(f"   ❌ {msg}")
@@ -366,8 +393,57 @@ def add_to_internal_group(user_id, app_id, app_name):
             break
         elif r.status_code == 409:
             if "STATE_ERROR" in r.text or "cannot be assigned" in r.text:
-                print("   ⏳ STATE_ERROR — retrying in 15 s...")
-                time.sleep(15)
+                # Fetch the betaTester's inviteType to decide how to handle this.
+                r_info = requests.get(f"{BASE}/v1/betaTesters/{tester_id}", headers=h())
+                invite_type = ""
+                if r_info.status_code == 200:
+                    invite_type = (
+                        r_info.json()
+                        .get("data", {})
+                        .get("attributes", {})
+                        .get("inviteType", "")
+                    )
+                print(f"   ℹ️  STATE_ERROR | betaTester inviteType: {invite_type!r}")
+
+                if invite_type == "TEAM_MEMBER":
+                    # TEAM_MEMBER type + STATE_ERROR means the user is already
+                    # pending in the internal group (waiting to accept TestFlight invite).
+                    # Treat as success — they already have access.
+                    print("   ✅ TEAM_MEMBER already pending in INTERNAL group — treating as added")
+                    added = True
+                    break
+
+                # EMAIL type (or unknown) — this betaTester cannot be in an internal group.
+                # Delete it and re-resolve using only TEAM_MEMBER sources.
+                print("   🗑️  EMAIL-type betaTester is blocked from internal groups — deleting all EMAIL records...")
+                r_em = requests.get(
+                    f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=EMAIL",
+                    headers=h(),
+                )
+                deleted_any = False
+                if r_em.status_code == 200:
+                    for bt in r_em.json().get("data", []):
+                        btid = bt["id"]
+                        print(f"   🗑️  Deleting EMAIL betaTester {btid}...")
+                        rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
+                        print(f"       DELETE HTTP {rd.status_code}")
+                        deleted_any = True
+                if deleted_any:
+                    print("   ⏳ Waiting 10 s for Apple to process deletion...")
+                    time.sleep(10)
+
+                # Re-resolve — ONLY via user relationship or TEAM_MEMBER filter.
+                # Do NOT fall back to resolve_beta_tester() which would recreate EMAIL type.
+                new_tid = find_tester_via_user_relationship(user_id) or find_team_member_tester()
+                if new_tid:
+                    tester_id = new_tid
+                    print(f"   ✅ Re-resolved to TEAM_MEMBER betaTester: {tester_id}")
+                    # Continue retry loop with the new TEAM_MEMBER ID
+                else:
+                    print("   ❌ No TEAM_MEMBER betaTester found after deleting EMAIL type.")
+                    print("      This team member has no TestFlight tester record yet.")
+                    print("      They may need to be added to TestFlight manually in App Store Connect.")
+                    break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
                 added = True
