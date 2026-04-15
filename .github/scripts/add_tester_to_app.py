@@ -163,6 +163,7 @@ def find_tester_via_user_relationship(user_id):
     to find the betaTester for Account Holders and Admins.
     """
     r = requests.get(f"{BASE}/v1/users/{user_id}/relationships/betaTesters", headers=h())
+    print(f"   ℹ️  /v1/users/{user_id}/relationships/betaTesters → HTTP {r.status_code} | {r.text[:300]}")
     if r.status_code == 200:
         data = r.json().get("data", [])
         if data:
@@ -171,6 +172,7 @@ def find_tester_via_user_relationship(user_id):
             return tid
     # Non-relationship endpoint as fallback
     r2 = requests.get(f"{BASE}/v1/users/{user_id}/betaTesters", headers=h())
+    print(f"   ℹ️  /v1/users/{user_id}/betaTesters → HTTP {r2.status_code} | {r2.text[:300]}")
     if r2.status_code == 200:
         data2 = r2.json().get("data", [])
         if data2:
@@ -432,9 +434,28 @@ def add_to_internal_group(user_id, app_id, app_name):
                     print("   ⏳ Waiting 10 s for Apple to process deletion...")
                     time.sleep(10)
 
-                # Re-resolve — ONLY via user relationship or TEAM_MEMBER filter.
+                # Re-resolve — try all TEAM_MEMBER sources.
                 # Do NOT fall back to resolve_beta_tester() which would recreate EMAIL type.
                 new_tid = find_tester_via_user_relationship(user_id) or find_team_member_tester()
+
+                # Last resort: plain filter[email] with no inviteType restriction.
+                # A TEAM_MEMBER record may have been shadowed by the now-deleted EMAIL records.
+                if not new_tid:
+                    r_any = requests.get(
+                        f"{BASE}/v1/betaTesters?filter[email]={email}",
+                        headers=h(),
+                    )
+                    print(f"   ℹ️  Plain betaTesters filter[email] → HTTP {r_any.status_code} | {r_any.text[:300]}")
+                    if r_any.status_code == 200:
+                        remaining = r_any.json().get("data", [])
+                        for bt in remaining:
+                            bt_type = bt.get("attributes", {}).get("inviteType", "")
+                            print(f"   ℹ️  Remaining betaTester {bt['id']} inviteType={bt_type!r}")
+                            if bt_type == "TEAM_MEMBER":
+                                new_tid = bt["id"]
+                                print(f"   ✅ Surfaced TEAM_MEMBER betaTester: {new_tid}")
+                                break
+
                 if new_tid:
                     tester_id = new_tid
                     print(f"   ✅ Re-resolved to TEAM_MEMBER betaTester: {tester_id}")
@@ -442,7 +463,7 @@ def add_to_internal_group(user_id, app_id, app_name):
                 else:
                     print("   ❌ No TEAM_MEMBER betaTester found after deleting EMAIL type.")
                     print("      This team member has no TestFlight tester record yet.")
-                    print("      They may need to be added to TestFlight manually in App Store Connect.")
+                    print("      They may need to be added to TestFlight manually once in App Store Connect.")
                     break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
