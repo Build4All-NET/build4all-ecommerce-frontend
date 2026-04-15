@@ -461,10 +461,68 @@ def add_to_internal_group(user_id, app_id, app_name):
                     print(f"   ✅ Re-resolved to TEAM_MEMBER betaTester: {tester_id}")
                     # Continue retry loop with the new TEAM_MEMBER ID
                 else:
-                    print("   ❌ No TEAM_MEMBER betaTester found after deleting EMAIL type.")
-                    print("      This team member has no TestFlight tester record yet.")
-                    print("      They may need to be added to TestFlight manually once in App Store Connect.")
-                    break
+                    # Final fallback: one-shot POST that creates the betaTester AND
+                    # assigns it to the internal group in a single API call.
+                    # For emails that match active team members Apple may create
+                    # TEAM_MEMBER type automatically when the target group is internal.
+                    print("   🔄 One-shot: POST /v1/betaTesters with internal group in relationships...")
+                    r_shot = requests.post(
+                        f"{BASE}/v1/betaTesters",
+                        headers=h(),
+                        json={
+                            "data": {
+                                "type": "betaTesters",
+                                "attributes": {
+                                    "email": email,
+                                    "firstName": first_name,
+                                    "lastName": last_name,
+                                },
+                                "relationships": {
+                                    "betaGroups": {
+                                        "data": [
+                                            {"type": "betaGroups", "id": internal_group_id}
+                                        ]
+                                    }
+                                },
+                            }
+                        },
+                    )
+                    print(f"   One-shot HTTP {r_shot.status_code} | {r_shot.text[:500]}")
+
+                    shot_new_tid = ""
+                    if r_shot.status_code in (200, 201):
+                        shot_data = r_shot.json().get("data", {})
+                        shot_new_tid = shot_data.get("id", "")
+                        shot_type   = shot_data.get("attributes", {}).get("inviteType", "")
+                        print(f"   Created betaTester {shot_new_tid!r} inviteType={shot_type!r}")
+                        if shot_type == "TEAM_MEMBER" and shot_new_tid:
+                            # Apple added them to the group directly — treat as success.
+                            added       = True
+                            tester_id   = shot_new_tid
+                            break
+                        elif shot_new_tid:
+                            # EMAIL type created — will retry group-add in next iteration.
+                            tester_id = shot_new_tid
+                    elif r_shot.status_code == 409:
+                        # betaTester already exists (possibly TEAM_MEMBER created by Apple).
+                        r_rft = requests.get(
+                            f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
+                        )
+                        print(f"   Re-fetch after 409 → HTTP {r_rft.status_code} | {r_rft.text[:300]}")
+                        if r_rft.status_code == 200:
+                            for bt in r_rft.json().get("data", []):
+                                bt_type = bt.get("attributes", {}).get("inviteType", "")
+                                if bt_type == "TEAM_MEMBER":
+                                    shot_new_tid = bt["id"]
+                                    tester_id    = shot_new_tid
+                                    print(f"   ✅ TEAM_MEMBER surfaced after 409: {tester_id}")
+                                    break
+
+                    if not shot_new_tid and not added:
+                        print("   ❌ All approaches exhausted — no TEAM_MEMBER betaTester obtainable.")
+                        print("      Add this team member to the internal group once via the")
+                        print("      App Store Connect portal; subsequent runs will work automatically.")
+                        break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
                 added = True
