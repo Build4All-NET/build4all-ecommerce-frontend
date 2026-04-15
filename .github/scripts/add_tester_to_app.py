@@ -138,6 +138,89 @@ def find_pending_invitation():
 
 user_id = find_active_user()
 
+if user_id:
+    add_active_user_to_internal(user_id, app_id, app_name)
+
+else:
+    print("   ℹ️ User is NOT yet an active App Store Connect member")
+    print()
+
+    print("📧 Step 3: Sending App Store Connect invitation...")
+
+    pending_id = find_pending_invitation()
+    if pending_id:
+        print(f"   ⚠️ Pending invite exists ({pending_id}) — checking active user again before re-inviting...")
+        recheck_user_id = find_active_user()
+        if recheck_user_id:
+            print("   ✅ User became active after invitation acceptance — switching to internal add flow")
+            add_active_user_to_internal(recheck_user_id, app_id, app_name)
+            sys.exit(0)
+
+    r = requests.post(
+        "https://api.appstoreconnect.apple.com/v1/userInvitations",
+        headers=h(),
+        json={
+            "data": {
+                "type": "userInvitations",
+                "attributes": {
+                    "email": email,
+                    "firstName": first_name,
+                    "lastName": last_name,
+                    "roles": ["DEVELOPER"],
+                    "allAppsVisible": True
+                }
+            }
+        }
+    )
+
+    print(f"   Invite HTTP: {r.status_code} | {r.text[:400]}")
+
+    if r.status_code in (200, 201):
+        print("   ✅ Invitation sent successfully")
+
+        invitation_id = ""
+        try:
+            invitation_id = r.json().get("data", {}).get("id", "")
+        except Exception:
+            invitation_id = ""
+
+        write_result(
+            "INVITATION_SENT",
+            f"An App Store Connect invitation has been sent to {email}. "
+            f"Please ask {first_name} {last_name} to accept the invitation email from Apple, "
+            f"then re-run this workflow from the interface to add them to the internal testing group.",
+            apple_invitation_id=invitation_id,
+            app_id=app_id
+        )
+
+    elif r.status_code == 409:
+        print("   ⚠️ Email already exists in Apple's system (409)")
+        recheck_user_id = find_active_user()
+
+        if recheck_user_id:
+            print("   ✅ User is now active despite 409 — switching to internal add flow")
+            add_active_user_to_internal(recheck_user_id, app_id, app_name)
+            sys.exit(0)
+
+        pending_id = find_pending_invitation()
+        write_result(
+            "INVITATION_PENDING",
+            f"An invitation already exists for {email} in App Store Connect. "
+            f"Please ask {first_name} {last_name} to check their email and accept the Apple invitation, "
+            f"then re-run this workflow from the interface to add them to the internal testing group.",
+            apple_invitation_id=pending_id or "",
+            app_id=app_id
+        )
+
+    else:
+        print(f"   ❌ Failed to send invitation (HTTP {r.status_code})")
+        write_result(
+            "ERROR",
+            f"Failed to send App Store Connect invitation to {email} (HTTP {r.status_code}). "
+            f"Please check the email address and try again.",
+            app_id=app_id
+        )
+
 # ── Branch A: User is already active → add to internal group directly ────────
 if user_id:
     print(f"   ✅ User is an active App Store Connect member: {user_id}")
