@@ -1,0 +1,283 @@
+name: Add Tester to App (TestFlight Internal)
+
+on:
+  repository_dispatch:
+    types: [add_tester_to_app]
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Internal testing request ID"
+        required: false
+      email:
+        description: "Tester email"
+        required: true
+      first_name:
+        description: "First name"
+        required: true
+      last_name:
+        description: "Last name"
+        required: false
+        default: "User"
+      bundle_id:
+        description: "iOS bundle ID (e.g. com.example.app)"
+        required: true
+      api_base_url:
+        description: "Backend API base URL (for callback)"
+        required: false
+      link_id:
+        description: "Owner project link ID (for callback)"
+        required: false
+      build_id:
+        description: "Build / job ID (for callback)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  add-tester:
+    runs-on: ubuntu-latest
+
+    env:
+      CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
+
+      ASC_KEY_ID:     ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID:  ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Save client payload locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          event = json.load(open(os.environ["GITHUB_EVENT_PATH"], "r", encoding="utf-8"))
+          payload = event.get("client_payload") or {}
+          pathlib.Path("/tmp/client_payload.json").write_text(
+              json.dumps(payload, ensure_ascii=False),
+              encoding="utf-8"
+          )
+          print("✅ Saved /tmp/client_payload.json")
+          PY
+
+      - name: Extract parameters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+
+          event_name = os.environ.get("GITHUB_EVENT_NAME", "")
+
+          if event_name == "repository_dispatch":
+              p = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8"))
+              cfg = p.get("CONFIG") or {}
+
+              def pick(*keys):
+                  for k in keys:
+                      v = cfg.get(k) or p.get(k)
+                      if v not in (None, "", []):
+                          return str(v).strip()
+                  return ""
+
+              request_id = pick("REQUEST_ID", "requestId")
+              email      = pick("APPLE_EMAIL", "email", "ownerEmail")
+              first_name = pick("FIRST_NAME", "firstName", "first_name")
+              last_name  = pick("LAST_NAME", "lastName", "last_name")
+              bundle_id  = pick("IOS_BUNDLE_ID", "bundleId", "iosBundleId", "PACKAGE_NAME")
+              api_base   = pick("API_BASE_URL").rstrip("/")
+              link_id    = pick("LINK_ID", "OWNER_PROJECT_LINK_ID", "ownerProjectLinkId")
+              build_id   = pick("BUILD_ID", "buildId")
+              app_name   = pick("APP_NAME", "appName")
+
+              if not first_name:
+                  full = pick("name", "ownerName")
+                  parts = full.split() if full else []
+                  first_name = parts[0] if parts else "Tester"
+                  if not last_name:
+                      last_name = " ".join(parts[1:]) if len(parts) > 1 else "User"
+
+          else:
+              request_id = os.environ.get("INPUT_REQUEST_ID", "").strip()
+              email      = os.environ.get("INPUT_EMAIL", "").strip()
+              first_name = os.environ.get("INPUT_FIRST_NAME", "").strip()
+              last_name  = os.environ.get("INPUT_LAST_NAME", "User").strip()
+              bundle_id  = os.environ.get("INPUT_BUNDLE_ID", "").strip()
+              api_base   = os.environ.get("INPUT_API_BASE_URL", "").strip().rstrip("/")
+              link_id    = os.environ.get("INPUT_LINK_ID", "").strip()
+              build_id   = os.environ.get("INPUT_BUILD_ID", "").strip()
+              app_name   = ""
+
+          if not email:
+              raise SystemExit("❌ Missing required parameter: email")
+          if not bundle_id:
+              raise SystemExit("❌ Missing required parameter: bundle_id / bundleId")
+          if not first_name:
+              first_name = "Tester"
+          if not last_name:
+              last_name = "User"
+
+          print(f"request_id = {request_id or '(not provided)'}")
+          print(f"email      = {email}")
+          print(f"first_name = {first_name}")
+          print(f"last_name  = {last_name}")
+          print(f"bundle_id  = {bundle_id}")
+          print(f"api_base   = {api_base or '(not provided)'}")
+          print(f"link_id    = {link_id  or '(not provided)'}")
+          print(f"build_id   = {build_id or '(not provided)'}")
+          print(f"app_name   = {app_name or '(not provided)'}")
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              f.write(f"REQUEST_ID={request_id}\n")
+              f.write(f"TESTER_EMAIL={email}\n")
+              f.write(f"TESTER_FIRST={first_name}\n")
+              f.write(f"TESTER_LAST={last_name}\n")
+              f.write(f"TESTER_BUNDLE_ID={bundle_id}\n")
+              f.write(f"API_BASE={api_base}\n")
+              f.write(f"LINK_ID={link_id}\n")
+              f.write(f"BUILD_ID={build_id}\n")
+              f.write(f"APP_NAME={app_name}\n")
+          PY
+
+      - name: Create App Store Connect api_key.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .private
+          echo "${ASC_KEY_P8_B64}" | base64 --decode > ".private/AuthKey_${ASC_KEY_ID}.p8"
+          python3 - <<'PY'
+          import json, pathlib, os
+          key_path = pathlib.Path(f".private/AuthKey_{os.environ['ASC_KEY_ID']}.p8")
+          api_key_data = {
+              "key_id":    os.environ["ASC_KEY_ID"].strip(),
+              "issuer_id": os.environ["ASC_ISSUER_ID"].strip(),
+              "key":       key_path.read_text(encoding="utf-8"),
+              "in_house":  False
+          }
+          pathlib.Path(".private/api_key.json").write_text(
+              json.dumps(api_key_data, ensure_ascii=False, indent=2),
+              encoding="utf-8"
+          )
+          print("✅ api_key.json written")
+          PY
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install --upgrade pip --quiet
+          python3 -m pip install PyJWT cryptography requests --quiet
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> "$GITHUB_ENV"
+          echo "$VIRTUAL_ENV/bin"         >> "$GITHUB_PATH"
+
+      - name: Add tester to app
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/.github/scripts/add_tester_to_app.py" \
+            ".private/api_key.json" \
+            "$TESTER_BUNDLE_ID" \
+            "$TESTER_EMAIL" \
+            "$TESTER_FIRST" \
+            "$TESTER_LAST" \
+            "$REQUEST_ID"
+
+      - name: Build callback payload
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import os
+
+          result = {}
+          result_file = pathlib.Path("tester_result.json")
+
+          if result_file.exists():
+              try:
+                  result = json.loads(result_file.read_text(encoding="utf-8"))
+              except Exception as ex:
+                  result = {
+                      "status": "ERROR",
+                      "message": f"Failed to parse tester_result.json: {ex}"
+                  }
+          else:
+              result = {
+                  "status": "ERROR",
+                  "message": "tester_result.json not found"
+              }
+
+          def to_int(v):
+              try:
+                  if v is None or str(v).strip() == "":
+                      return None
+                  return int(str(v).strip())
+              except Exception:
+                  return None
+
+          payload = {
+              "requestId": to_int(os.environ.get("REQUEST_ID")),
+              "linkId": to_int(os.environ.get("LINK_ID")),
+              "buildId": os.environ.get("BUILD_ID", ""),
+              "status": result.get("status", "ERROR"),
+              "message": result.get("message", ""),
+              "appleInvitationId": result.get("appleInvitationId", ""),
+              "appleUserId": result.get("appleUserId", ""),
+              "appleBetaTesterId": result.get("appleBetaTesterId", ""),
+              "internalGroupId": result.get("internalGroupId", ""),
+              "appId": result.get("appId", ""),
+              "email": os.environ.get("TESTER_EMAIL", ""),
+              "bundleId": os.environ.get("TESTER_BUNDLE_ID", "")
+          }
+
+          pathlib.Path("callback_payload.json").write_text(
+              json.dumps(payload, ensure_ascii=False),
+              encoding="utf-8"
+          )
+
+          print("✅ callback_payload.json created")
+          print(json.dumps(payload, indent=2, ensure_ascii=False))
+          PY
+
+      - name: Upload tester_result.json artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tester-result
+          path: tester_result.json
+          if-no-files-found: ignore
+
+      - name: 📡 Report result to backend
+        if: always()
+        shell: bash
+        run: |
+          set +e
+
+          if [ -z "${API_BASE:-}" ] || [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
+            echo "ℹ️ No API_BASE or CI_CALLBACK_TOKEN — skipping callback"
+            exit 0
+          fi
+
+          JOB_STATUS="${{ job.status }}"
+
+          if [ "$JOB_STATUS" != "success" ]; then
+            python3 -c 'import json, pathlib, os; p=pathlib.Path("callback_payload.json"); data=json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}; data["status"]="ERROR"; data["message"]="Workflow " + os.environ.get("JOB_STATUS","unknown") + " — see GitHub Actions logs for details"; p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8"); print("✅ callback payload overwritten with workflow failure status")'
+          fi
+
+          echo "Reporting callback to ${API_BASE}/api/ci/add-tester/result"
+
+          curl -sS -X PUT "${API_BASE}/api/ci/add-tester/result" \
+            -H "Content-Type: application/json" \
+            -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+            --data @callback_payload.json \
+            || true
+        env:
+          JOB_STATUS: ${{ job.status }}
