@@ -258,26 +258,9 @@ jobs:
           fi
 
           JOB_STATUS="${{ job.status }}"
-          export JOB_STATUS
 
           if [ "$JOB_STATUS" != "success" ]; then
-            python3 - <<'PY'
-            import json
-            import pathlib
-            import os
-
-            p = pathlib.Path("callback_payload.json")
-            if p.exists():
-                data = json.loads(p.read_text(encoding="utf-8"))
-            else:
-                data = {}
-
-            data["status"] = "ERROR"
-            data["message"] = f"Workflow {os.environ.get('JOB_STATUS', 'unknown')} — see GitHub Actions logs for details"
-
-            p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-            print("✅ callback payload overwritten with workflow failure status")
-            PY
+            python3 -c 'import json, pathlib, os; p=pathlib.Path("callback_payload.json"); data=json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}; data["status"]="ERROR"; data["message"]="Workflow " + os.environ.get("JOB_STATUS","unknown") + " — see GitHub Actions logs for details"; p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8"); print("✅ callback payload overwritten with workflow failure status")'
           fi
 
           echo "Reporting callback to ${API_BASE}/api/ci/add-tester/result"
@@ -287,3 +270,5 @@ jobs:
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
             --data @callback_payload.json \
             || true
+        env:
+          JOB_STATUS: ${{ job.status }}
