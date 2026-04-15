@@ -195,6 +195,7 @@ jobs:
           python3 - <<'PY'
           import json
           import pathlib
+          import os
 
           result = {}
           result_file = pathlib.Path("tester_result.json")
@@ -222,9 +223,9 @@ jobs:
                   return None
 
           payload = {
-              "requestId": to_int("${REQUEST_ID}"),
-              "linkId": to_int("${LINK_ID}"),
-              "buildId": "${BUILD_ID}",
+              "requestId": to_int(os.environ.get("REQUEST_ID")),
+              "linkId": to_int(os.environ.get("LINK_ID")),
+              "buildId": os.environ.get("BUILD_ID", ""),
               "status": result.get("status", "ERROR"),
               "message": result.get("message", ""),
               "appleInvitationId": result.get("appleInvitationId", ""),
@@ -232,8 +233,8 @@ jobs:
               "appleBetaTesterId": result.get("appleBetaTesterId", ""),
               "internalGroupId": result.get("internalGroupId", ""),
               "appId": result.get("appId", ""),
-              "email": "${TESTER_EMAIL}",
-              "bundleId": "${TESTER_BUNDLE_ID}"
+              "email": os.environ.get("TESTER_EMAIL", ""),
+              "bundleId": os.environ.get("TESTER_BUNDLE_ID", "")
           }
 
           pathlib.Path("callback_payload.json").write_text(
@@ -257,9 +258,13 @@ jobs:
           fi
 
           JOB_STATUS="${{ job.status }}"
+          export JOB_STATUS
+
           if [ "$JOB_STATUS" != "success" ]; then
             python3 - <<'PY'
-            import json, pathlib
+            import json
+            import pathlib
+            import os
 
             p = pathlib.Path("callback_payload.json")
             if p.exists():
@@ -268,7 +273,7 @@ jobs:
                 data = {}
 
             data["status"] = "ERROR"
-            data["message"] = f"Workflow {\"${{ job.status }}\"} — see GitHub Actions logs for details"
+            data["message"] = f"Workflow {os.environ.get('JOB_STATUS', 'unknown')} — see GitHub Actions logs for details"
 
             p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
             print("✅ callback payload overwritten with workflow failure status")
