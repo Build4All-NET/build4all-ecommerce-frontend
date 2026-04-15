@@ -5,15 +5,20 @@ Flow:
   1. Find the app by bundle ID.
   2. Check /v1/users — if the email is already an active team member,
      add them directly to the internal TestFlight group → ADDED_TO_INTERNAL.
+  2b. /v1/users does NOT return the Account Holder or certain Admins.
+     Fallback: attempt a direct betaTester add. If Apple accepts the group
+     assignment they are a team member → ADDED_TO_INTERNAL.
   3. If not active, check for a pending /v1/userInvitations entry.
      - If one exists, re-check whether the user is now active (they may
        have just accepted the invite).
          If yes  → internal add flow → ADDED_TO_INTERNAL.
          If still not active → INVITATION_PENDING (no duplicate invite sent).
   4. No pending invite → send a fresh invitation → INVITATION_SENT.
-  5. If Apple returns 409 on the invite call, re-check active user:
-         Active  → internal add flow → ADDED_TO_INTERNAL.
-         Not yet → INVITATION_PENDING.
+  5. If Apple returns 409 on the invite call:
+     a. Re-check /v1/users — if now active → ADDED_TO_INTERNAL.
+     b. Try direct betaTester add (handles Account Holder / Admin) →
+        if Apple accepts → ADDED_TO_INTERNAL.
+     c. Otherwise → INVITATION_PENDING.
 
 tester_result.json keys:
   status, message, requestId, appleInvitationId, appleUserId,
@@ -93,7 +98,11 @@ def write_result(
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def find_active_user():
-    """Return the /v1/users id for `email`, or None."""
+    """Return the /v1/users id for `email`, or None.
+
+    NOTE: Apple does NOT return the Account Holder via /v1/users in some
+    API key configurations. Use try_direct_add() as a fallback.
+    """
     next_url = f"{BASE}/v1/users?limit=200"
     while next_url:
         r = requests.get(next_url, headers=h())
@@ -210,9 +219,65 @@ def resolve_beta_tester():
     return None
 
 
+def try_direct_add(app_id, app_name):
+    """
+    Attempt to add `email` to the internal group via betaTester lookup,
+    WITHOUT requiring the user to appear in /v1/users first.
+
+    This is the fallback for Account Holders and Admins that the API omits
+    from /v1/users responses.  Apple will accept the group assignment if the
+    person is a team member, and reject it if they are not.
+
+    Returns True and writes ADDED_TO_INTERNAL on success.
+    Returns False (writes nothing) so the caller can fall through to the
+    invitation flow.
+    """
+    internal_group_id = ensure_internal_group(app_id)
+    if not internal_group_id:
+        return False
+
+    tester_id = resolve_beta_tester()
+    if not tester_id:
+        return False
+
+    r = requests.post(
+        f"{BASE}/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
+        headers=h(),
+        json={"data": [{"type": "betaTesters", "id": tester_id}]},
+    )
+    print(f"   Direct-add attempt: HTTP {r.status_code} | {r.text[:200]}")
+
+    if r.status_code in (200, 204):
+        print("   ✅ Direct add successful — user added to INTERNAL group!")
+        write_result(
+            "ADDED_TO_INTERNAL",
+            f"{first_name} {last_name} has been added to the internal TestFlight group for '{app_name}'. "
+            "They can now test the app directly — no Apple review required.",
+            apple_beta_tester_id=tester_id,
+            internal_group_id=internal_group_id,
+            app_id=app_id,
+        )
+        return True
+
+    if r.status_code == 409 and "STATE_ERROR" not in r.text and "cannot be assigned" not in r.text:
+        print("   ✅ User already in INTERNAL group!")
+        write_result(
+            "ADDED_TO_INTERNAL",
+            f"{first_name} {last_name} is already in the internal TestFlight group for '{app_name}'. "
+            "They can test the app directly — no Apple review required.",
+            apple_beta_tester_id=tester_id,
+            internal_group_id=internal_group_id,
+            app_id=app_id,
+        )
+        return True
+
+    print(f"   ℹ️  Direct add declined by Apple (HTTP {r.status_code}) — not a team member, continuing to invitation flow")
+    return False
+
+
 def add_to_internal_group(user_id, app_id, app_name):
     """
-    Full internal-group flow for an already-active user.
+    Full internal-group flow for a confirmed /v1/users active member.
     Writes tester_result.json and exits.
     """
     print()
@@ -329,17 +394,23 @@ try:
     print(f"   ✅ App found: '{app_name}' ({app_id})")
     print()
 
-    # ── Step 2: Check if user is already an active App Store Connect member ───
+    # ── Step 2: Check /v1/users ───────────────────────────────────────────────
     print("👤 Step 2: Checking if user is active in /v1/users...")
     user_id = find_active_user()
 
     if user_id:
-        # Already active — add directly to internal group, no invite needed
-        print(f"   ✅ User already active ({user_id}) — skipping invitation")
+        print(f"   ✅ User found in /v1/users ({user_id}) — skipping invitation")
         add_to_internal_group(user_id, app_id, app_name)   # exits
 
+    # ── Step 2b: /v1/users fallback — handles Account Holder / Admin ──────────
+    # Apple does NOT return the Account Holder (and some Admins) via /v1/users.
+    # Attempt a direct betaTester add: if Apple accepts, they are a team member.
+    print("   ℹ️  Not found in /v1/users — trying direct betaTester add")
+    print("       (Account Holders and some Admins are omitted from /v1/users)")
+    if try_direct_add(app_id, app_name):
+        sys.exit(0)
+
     # ── Step 3: Not active — check for an existing pending invitation ─────────
-    print("   ℹ️  User is NOT yet an active App Store Connect member")
     print()
     print("📧 Step 3: Checking for existing pending invitation...")
 
@@ -349,7 +420,6 @@ try:
         print("   🔄 Re-checking whether user has since become active...")
         recheck_id = find_active_user()
         if recheck_id:
-            # User accepted the invite since we last checked — proceed to group add
             print("   ✅ User is now active (accepted the invite) — proceeding to internal add flow")
             add_to_internal_group(recheck_id, app_id, app_name)   # exits
         else:
@@ -406,16 +476,23 @@ try:
         sys.exit(0)
 
     elif r.status_code == 409:
-        # Apple says the address is already known in their system — re-check active user
-        print("   ⚠️  409 from Apple — re-checking if user is now active...")
+        # Apple knows this address — could be Account Holder, existing team member,
+        # or an address with a pending invitation.
+        print("   ⚠️  409 from Apple — re-checking /v1/users...")
         recheck_id = find_active_user()
         if recheck_id:
-            print("   ✅ User is active (409 race-condition) — proceeding to internal add flow")
+            print("   ✅ User is now active — proceeding to internal add flow")
             add_to_internal_group(recheck_id, app_id, app_name)   # exits
 
-        # Not active — look up the pending invitation ID for the result payload
+        # Still not in /v1/users — try direct betaTester add
+        # (covers Account Holders and Admins Apple knows but doesn't list)
+        print("   ℹ️  Still not in /v1/users — trying direct betaTester add after 409...")
+        if try_direct_add(app_id, app_name):
+            sys.exit(0)
+
+        # Direct add also declined — look up any pending invitation
         pending_id = find_pending_invitation()
-        print("   ℹ️  User still not active after 409 — returning INVITATION_PENDING")
+        print("   ℹ️  User still not reachable — returning INVITATION_PENDING")
         write_result(
             "INVITATION_PENDING",
             f"An invitation already exists for {email} in App Store Connect. "
@@ -441,7 +518,6 @@ except SystemExit:
 
 except Exception as exc:
     traceback.print_exc()
-    # Write a meaningful error so callback_payload always has details
     app_id_safe = ""
     try:
         app_id_safe = app_id  # type: ignore[name-defined]
