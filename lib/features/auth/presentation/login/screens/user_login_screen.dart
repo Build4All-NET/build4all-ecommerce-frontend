@@ -186,7 +186,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
         // ✅ deleted restore flow first
         if (result.wasDeletedUser == true) {
-          final confirm = await _showRestoreDeletedSheet(context);
+          final confirm = await _showRestoreDeletedSheet(context, l10n);
           if (confirm != true) {
             await authApi.clearAuth();
             return;
@@ -196,7 +196,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
             await authApi.reactivateUser();
             if (!mounted) return;
 
-           AppToast.success(context, 'Account restored successfully');
+           AppToast.success(context, l10n.accountRestoredSuccessfully);
 await _hydrateUserAuth(false);
 await _roleStore.saveRole('user');
 _goToUserHome(context);
@@ -337,7 +337,7 @@ _goToUserHome(context);
     }
   }
 
-  Future<bool?> _showRestoreDeletedSheet(BuildContext context) {
+  Future<bool?> _showRestoreDeletedSheet(BuildContext context, AppLocalizations l10n) {
     final themeState = context.read<ThemeCubit>().state;
     final colors = themeState.tokens.colors;
     final t = Theme.of(context).textTheme;
@@ -367,7 +367,7 @@ _goToUserHome(context);
               ),
               const SizedBox(height: 12),
               Text(
-                'Restore deleted account?',
+                l10n.restoreDeletedAccountTitle,
                 style: tt.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: colors.label,
@@ -375,7 +375,7 @@ _goToUserHome(context);
               ),
               const SizedBox(height: 8),
               Text(
-                'This account was deleted, but it can still be restored. Do you want to reactivate it now?',
+                l10n.restoreDeletedAccountMessage,
                 style: tt.bodyMedium?.copyWith(color: colors.body),
               ),
               const SizedBox(height: 20),
@@ -388,7 +388,7 @@ _goToUserHome(context);
                         side: BorderSide(color: colors.border.withOpacity(0.6)),
                       ),
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: t.bodyMedium?.copyWith(color: colors.body),
                       ),
                     ),
@@ -402,7 +402,7 @@ _goToUserHome(context);
                         foregroundColor: colors.onPrimary,
                       ),
                       child: Text(
-                        'Restore',
+                        l10n.restoreLabel,
                         style: t.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -737,6 +737,7 @@ class _LoginMethodToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEmail = method == LoginMethod.email;
     final isPhone = method == LoginMethod.phone;
+    
 
     return Container(
       padding: const EdgeInsets.all(4),

@@ -3010,4 +3010,217 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminAllAttributeTypesAlreadyAdded => 'تمت إضافة جميع أنواع الخصائص المتاحة';
+
+  @override
+  String get adminUploadFailed => 'failed to pick image';
+
+  @override
+  String get commonClear => 'مسح';
+
+  @override
+  String get commonPrev => 'السابق';
+
+  @override
+  String get commonNext => 'التالي';
+
+  @override
+  String get commonConfirm => 'تأكيد';
+
+  @override
+  String get commonEnglish => 'الإنجليزية';
+
+  @override
+  String get commonFrench => 'الفرنسية';
+
+  @override
+  String get commonArabic => 'العربية';
+
+  @override
+  String get commonQty => 'الكمية';
+
+  @override
+  String get commonFullName => 'الاسم الكامل';
+
+  @override
+  String get commonPhone => 'الهاتف';
+
+  @override
+  String get commonAddress => 'العنوان';
+
+  @override
+  String get commonCity => 'المدينة';
+
+  @override
+  String get commonPostalCode => 'الرمز البريدي';
+
+  @override
+  String get commonUnit => 'الوحدة';
+
+  @override
+  String get commonTotal => 'الإجمالي';
+
+  @override
+  String get commonItem => 'العنصر';
+
+  @override
+  String get commonProvider => 'المزوّد';
+
+  @override
+  String get commonStatus => 'الحالة';
+
+  @override
+  String get commonRef => 'المرجع';
+
+  @override
+  String get commonCustomer => 'العميل';
+
+  @override
+  String get commonMethod => 'الطريقة';
+
+  @override
+  String get commonRetry => 'إعادة المحاولة';
+
+  @override
+  String get adminOrderEditTitle => 'تعديل الطلب';
+
+  @override
+  String get adminOrderEditRemoveHint => 'اجعل الكمية 0 لإزالة العنصر.';
+
+  @override
+  String adminOrderInvoiceDownloadFailed(Object error) {
+    return 'فشل تنزيل الفاتورة: $error';
+  }
+
+  @override
+  String get adminOrderCannotEditMissingShipping => 'لا يمكن تعديل هذا الطلب بعد لأن بلد الشحن أو طريقة الشحن مفقودة في تفاصيل الطلب.';
+
+  @override
+  String get adminDashboardNotificationsTooltip => 'الإشعارات';
+
+  @override
+  String get adminProductSetMain => 'تعيين كرئيسية';
+
+  @override
+  String get couponValidFrom => 'صالح من';
+
+  @override
+  String get couponValidTo => 'صالح حتى';
+
+  @override
+  String get excelReplaceScopeTenantSafe => 'TENANT (آمن)';
+
+  @override
+  String get excelReplaceScopeFullDangerous => 'FULL (خطير)';
+
+  @override
+  String get orderDetailsOrderCode => 'رمز الطلب';
+
+  @override
+  String get orderDetailsName => 'الاسم';
+
+  @override
+  String get orderDetailsPhone => 'الهاتف';
+
+  @override
+  String get orderDetailsAddress => 'العنوان';
+
+  @override
+  String get orderDetailsCity => 'المدينة';
+
+  @override
+  String get orderDetailsPostalCode => 'الرمز البريدي';
+
+  @override
+  String get orderDetailsPayment => 'الدفع';
+
+  @override
+  String get invoiceTitle => 'فاتورة';
+
+  @override
+  String get invoiceItems => 'العناصر';
+
+  @override
+  String get invoiceOrder => 'الطلب';
+
+  @override
+  String get invoiceDate => 'التاريخ';
+
+  @override
+  String get invoiceShipping => 'الشحن';
+
+  @override
+  String get invoiceSubtotal => 'المجموع الفرعي';
+
+  @override
+  String get invoiceTax => 'الضريبة';
+
+  @override
+  String get invoiceGrandTotal => 'الإجمالي الكلي';
+
+  @override
+  String invoiceCouponLine(Object code) {
+    return 'القسيمة ($code)';
+  }
+
+  @override
+  String get restoreLabel => 'استعادة';
+
+  @override
+  String get restoreDeletedAccountTitle => 'استعادة الحساب المحذوف؟';
+
+  @override
+  String get restoreDeletedAccountMessage => 'تم حذف هذا الحساب، ولكن لا يزال من الممكن استعادته. هل تريد إعادة تفعيله الآن؟';
+
+  @override
+  String get accountRestoredSuccessfully => 'تمت استعادة الحساب بنجاح';
+
+  @override
+  String get adminOrderMarkPaid => 'تحديد كمدفوع';
+
+  @override
+  String get adminOrderComplete => 'إكمال';
+
+  @override
+  String get adminOrderReject => 'رفض';
+
+  @override
+  String get adminOrderReopen => 'إعادة فتح';
+
+  @override
+  String get adminOrderRestore => 'استعادة';
+
+  @override
+  String get adminOrderSequenceLabel => 'Order Seq';
+
+  @override
+  String get adminOrderInternalIdLabel => 'Internal ID';
+
+  @override
+  String get adminPaymentMethodLabel => 'Payment Method';
+
+  @override
+  String get adminOrderCompleteTitle => 'Mark Completed';
+
+  @override
+  String get adminOrderCompleteBody => 'This will mark the order as completed.';
+
+  @override
+  String get adminOrderReopenTitle => 'Reopen (Cancel + Unpay)';
+
+  @override
+  String get adminOrderReopenBody => 'This will cancel the order and reset payment back to UNPAID.';
+
+  @override
+  String get adminOrderRestoreTitle => 'Restore to Pending';
+
+  @override
+  String get adminOrderRestoreBody => 'This will restore the order back to Pending.';
+
+  @override
+  String get commonSomethingWentWrongTryAgain => 'حدث خطأ ما. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String orderDetailsInvoiceDownloadFailed(Object error) {
+    return 'فشل تنزيل الفاتورة: $error';
+  }
 }

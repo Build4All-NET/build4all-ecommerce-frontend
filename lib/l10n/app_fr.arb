@@ -1,34 +1,23 @@
 {
   "@@locale": "fr",
-
   "appTitle": "App",
-
   "loginTitle": "Connexion",
   "loginSubtitle": "Bon retour ! Connectez-vous pour continuer.",
-
   "emailLabel": "E-mail",
   "passwordLabel": "Mot de passe",
   "phoneLabel": "Numéro de téléphone",
-
   "loginButton": "Se connecter",
-
   "fieldRequired": "Ce champ est obligatoire.",
   "invalidEmail": "Veuillez saisir une adresse e-mail valide.",
   "invalidPhone": "Veuillez saisir un numéro de téléphone valide.",
   "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
-
-  "authErrorGeneric": "Une erreur est survenue. Veuillez réessayer.",
-
+  "authErrorGeneric": "Une erreur s’est produite. Veuillez réessayer.",
   "noAccountText": "Vous n’avez pas de compte ?",
   "signUpText": "S’inscrire",
-
   "loginWithEmail": "E-mail",
   "loginWithPhone": "Téléphone",
-
   "loginMissingIdentifier": "Veuillez saisir votre e-mail ou votre numéro de téléphone.",
-
   "forgotPassword": "Mot de passe oublié ?",
-
   "registerTitle": "Créer votre compte",
   "registerSubtitle": "Choisissez comment vous souhaitez vous inscrire.",
   "registerStep1Of3": "Étape 1 sur 3",
@@ -38,14 +27,12 @@
   "confirmPasswordLabel": "Confirmer le mot de passe",
   "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
   "alreadyHaveAccountText": "Vous avez déjà un compte ?",
-
   "verifyCodeTitle": "Saisir le code de vérification",
   "verifyCodeSubtitleEmail": "Nous avons envoyé un code à votre e-mail.",
   "verifyCodeSubtitlePhone": "Nous avons envoyé un code à votre téléphone.",
   "verificationCodeLabel": "Code de vérification",
   "invalidVerificationCode": "Veuillez saisir un code de vérification valide.",
   "verifyButtonLabel": "Vérifier",
-
   "completeProfileTitle": "Compléter votre profil",
   "completeProfileSubtitle": "Choisissez un nom d’utilisateur et vos informations réelles.",
   "usernameLabel": "Nom d’utilisateur",
@@ -57,10 +44,8 @@
   "saveProfileButton": "Enregistrer le profil",
   "profileCompletedSuccessMessage": "Profil complété avec succès. Vous pouvez maintenant vous connecter.",
   "profileCompletedErrorMessage": "Échec de la finalisation du profil. Veuillez réessayer.",
-
   "featureComingSoon": "Cette fonctionnalité arrive bientôt.",
   "changePhotoHint": "Touchez pour ajouter une photo de profil",
-
   "previousStepButton": "Étape précédente",
   "completeProfileNamesTitle": "Compléter votre profil - Noms",
   "completeProfileNamesSubtitle": "Veuillez saisir votre prénom et votre nom.",
@@ -72,24 +57,20 @@
   "completeProfilePhotoTitle": "Compléter votre profil - Photo",
   "completeProfilePhotoSubtitle": "Ajoutez une photo de profil pour personnaliser votre compte.",
   "nextStepButton": "Étape suivante",
-
   "home_welcome": "Bienvenue 👋",
   "home_search_hint": "Rechercher des produits, marques...",
   "home_banner_title": "Offres spéciales",
   "home_banner_subtitle": "Économisez jusqu’à 50% sur une sélection d’articles.",
   "home_banner_button": "Commencer mes achats",
-
   "home_items_default_title": "Articles",
   "home_recommended_title": "Recommandés pour vous",
   "home_popular_title": "Populaire en ce moment",
   "home_bookings_title": "Réservations à venir",
   "home_reviews_title": "Derniers avis",
-
   "home_flash_sale_title": "Vente flash",
   "home_new_arrivals_title": "Nouveautés",
   "home_best_sellers_title": "Meilleures ventes",
   "home_top_rated_title": "Les mieux notés",
-
   "home_why_shop_title": "Pourquoi acheter chez nous",
   "home_why_shop_free_shipping_title": "Livraison gratuite",
   "home_why_shop_free_shipping_subtitle": "Pour toute commande supérieure à 50$",
@@ -99,12 +80,10 @@
   "home_why_shop_secure_payment_subtitle": "Transactions 100% protégées",
   "home_why_shop_support_title": "Support 24/7",
   "home_why_shop_support_subtitle": "Toujours là pour vous aider",
-
   "connection_offline": "Aucune connexion Internet",
   "connection_server_down": "Le serveur ne répond pas",
   "profile_login_required": "Veuillez vous connecter pour voir votre profil.",
   "connection_issue": "Problème de connexion",
-
   "explore_title": "Explorer",
   "explore_search_hint": "Rechercher ....",
   "explore_items_title": "Toutes les activités",
@@ -118,12 +97,10 @@
       }
     }
   },
-
   "explore_sort_relevance": "Pertinence",
   "explore_sort_price_low_high": "Prix : du moins cher au plus cher",
   "explore_sort_price_high_low": "Prix : du plus cher au moins cher",
   "explore_sort_date_soonest": "Date la plus proche",
-
   "profileMotto": "Vis ta passion !",
   "profile_load_error": "Impossible de charger votre profil. Veuillez réessayer.",
   "retry": "Réessayer",
@@ -141,7 +118,6 @@
   "language": "Langue",
   "english": "Anglais",
   "logout": "Se déconnecter",
-
   "adminDashboardTitle": "Tableau de bord admin",
   "adminDashboardSubtitle": "Gérez le contenu et les paramètres de votre app.",
   "adminProductsTitle": "Produits",
@@ -150,18 +126,15 @@
   "adminProductsBestSellers": "Meilleures ventes",
   "adminProductsDiscounted": "Produits en promotion",
   "adminProductsSearchPlaceholder": "Rechercher des produits...",
-
   "accountInactiveTitle": "Votre compte est inactif",
   "accountInactiveBody": "Votre compte est actuellement inactif. Voulez-vous le réactiver pour continuer ?",
   "reactivateButton": "Réactiver",
   "accountReactivated": "Votre compte a été réactivé avec succès",
-
   "chooseSignInRole": "Choisissez comment vous connecter",
   "enterAsOwner": "Entrer en tant que Propriétaire (Admin)",
   "enterAsUser": "Entrer en tant qu’Utilisateur",
   "roleLabel": "Rôle",
   "userLabel": "Utilisateur",
-
   "loginInactiveTitle": "Réactiver votre compte ?",
   "loginInactiveMessage": "Votre compte \"{name}\" est actuellement inactif. Voulez-vous le réactiver et continuer ?",
   "loginInactiveReactivate": "Réactiver",
@@ -173,118 +146,91 @@
   "loginRoleLabel": "Rôle :",
   "loginUserFallbackLabel": "Utilisateur",
   "loginInactiveSuccess": "Votre compte a été réactivé avec succès.",
-
   "productBadgeOnSale": "En promotion",
   "productStatusDraft": "Brouillon",
   "productStatusActive": "Actif",
   "productStatusArchived": "Archivé",
-
   "errorNetworkNoInternet": "Pas d’Internet ou serveur injoignable.",
   "errorNetworkServerDown": "Le serveur ne répond pas. Veuillez réessayer plus tard.",
   "errorServerUnexpected": "Erreur serveur inattendue. Veuillez réessayer.",
   "errorUnexpected": "Erreur inattendue. Veuillez réessayer.",
   "errorAuthUnauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
   "errorAuthForbidden": "Vous n’avez pas la permission d’effectuer cette action.",
-
   "logoutLabel": "Déconnexion",
   "adminDashboardQuickActions": "Actions rapides",
   "adminOverviewAnalytics": "Vue d’ensemble & statistiques",
-
   "adminProjectsOwners": "Projets & propriétaires",
   "adminUsersManagers": "Utilisateurs & managers",
   "adminSettings": "Paramètres",
   "adminSignedInAs": "Connecté en tant que {role}",
-
   "adminProductCreateTitle": "Créer un produit",
   "adminProductEditTitle": "Modifier le produit",
-
   "adminProductNameLabel": "Nom",
   "adminProductNameHint": "Ex : MacBook Pro",
   "adminProductNameRequired": "Le nom est obligatoire",
-
   "adminProductDescriptionLabel": "Description",
   "adminProductDescriptionHint": "Description courte...",
-
   "adminProductCategoryLabel": "Catégorie",
   "adminProductItemTypeLabel": "Type d’élément",
-
   "adminProductPriceLabel": "Prix",
   "adminProductPriceRequired": "Le prix est obligatoire",
   "adminProductPriceInvalid": "Le prix doit être supérieur à 0",
-
   "adminProductStockLabel": "Stock",
   "adminStockHint": "Ex : 50",
-
   "adminProductImageLabel": "Image",
   "adminProductPickImage": "Choisir une image",
   "adminRemove": "Supprimer",
-
   "adminProductSkuLabel": "SKU",
   "adminProductSkuHint": "Ex : SKU-123",
-
   "adminProductTypeLabel": "Type de produit",
   "adminProductTypeSimple": "Simple",
   "adminProductTypeVariable": "Variable",
   "adminProductTypeGrouped": "Groupé",
   "adminProductTypeExternal": "Externe",
-
   "adminProductVirtualLabel": "Produit virtuel",
   "adminProductDownloadableLabel": "Téléchargeable",
   "adminProductDownloadUrlLabel": "URL de téléchargement",
   "adminProductDownloadUrlHint": "https://...",
-
   "adminProductExternalUrlLabel": "URL externe",
   "adminProductExternalUrlHint": "https://...",
   "adminProductButtonTextLabel": "Texte du bouton",
   "adminProductButtonTextHint": "Acheter maintenant",
-
   "adminProductSaleSectionTitle": "Promotion",
   "adminProductSalePriceLabel": "Prix promo",
   "adminProductSaleStartLabel": "Date de début",
   "adminProductSaleEndLabel": "Date de fin",
-
   "adminProductAttributesTitle": "Attributs",
   "adminProductAttributeCodeLabel": "Code attribut",
   "adminProductAttributeValueLabel": "Valeur",
   "adminProductAddAttribute": "Ajouter un attribut",
   "adminProductNoAttributesHint": "Aucun attribut ajouté pour l’instant.",
-
   "adminProductSaveButton": "Enregistrer le produit",
-
   "adminNoCategories": "Aucune catégorie trouvée",
   "adminCreateCategory": "Créer une catégorie",
-
   "adminNoItemTypes": "Aucun type d’élément trouvé",
   "adminCreateItemType": "Créer un type d’élément",
-
   "adminTaxesTitle": "Taxes",
   "adminTaxRulesTitle": "Règles fiscales",
   "adminTaxAddRule": "Ajouter une règle",
   "adminTaxNoRules": "Aucune règle fiscale trouvée.",
   "adminTaxCreateRuleTitle": "Créer une règle fiscale",
   "adminTaxEditRuleTitle": "Modifier la règle fiscale",
-
   "adminTaxRuleNameLabel": "Nom de la règle",
   "adminTaxRuleNameHint": "Ex : TVA standard 11%",
   "adminTaxRuleNameRequired": "Le nom de la règle est obligatoire",
-
   "adminTaxRuleRateLabel": "Taux (%)",
   "adminTaxRuleRateHint": "11.00",
   "adminTaxRuleRateRequired": "Le taux est obligatoire",
   "adminTaxRuleRateInvalid": "Le taux doit être un nombre valide > 0",
-
   "adminTaxAppliesToShippingLabel": "S’applique à la livraison",
   "adminTaxEnabledLabel": "Activé",
-
   "adminTaxCountryIdLabel": "ID pays (optionnel)",
   "adminTaxCountryIdHint": "1",
   "adminTaxRegionIdLabel": "ID région (optionnel)",
   "adminTaxRegionIdHint": "2",
-
   "adminTaxRateShort": "Taux",
   "adminTaxAppliesToShippingShort": "Taxe livraison",
   "adminTaxEnabledShort": "Activé",
-
   "adminCancel": "Annuler",
   "adminCreate": "Créer",
   "adminUpdate": "Mettre à jour",
@@ -293,7 +239,6 @@
   "yes": "Oui",
   "no": "Non",
   "adminSessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
-
   "adminTaxCountryLabel": "Pays",
   "adminTaxCountryHint": "Sélectionner un pays",
   "adminTaxRegionLabel": "Région",
@@ -301,56 +246,45 @@
   "adminTaxRegionHint": "Sélectionner une région",
   "adminTaxRulesTitleShort": "Règles fiscales",
   "adminTaxRulesSubtitle": "Gérez les règles fiscales de vos produits.",
-
   "taxPreviewLoading": "Calcul de l’aperçu des taxes...",
   "taxPreviewTitle": "Aperçu des taxes",
   "itemsTaxLabel": "Taxe sur les articles",
   "shippingTaxLabel": "Taxe sur la livraison",
   "totalTaxLabel": "Total des taxes",
-
   "taxClassNone": "Aucune taxe",
   "taxClassStandard": "Taux standard",
   "taxClassReduced": "Taux réduit",
   "taxClassZero": "Taux zéro",
   "taxClassLabel": "Classe de taxe",
   "taxClassHint": "Sélectionner une classe de taxe",
-
   "adminTaxCountryRequired": "Le pays est obligatoire",
   "adminTaxRegionRequired": "La région est obligatoire",
   "adminTaxRulePresetLabel": "Préréglage",
   "adminTaxRulePresetHint": "Sélectionnez un préréglage pour remplir automatiquement",
   "adminCustom": "Personnalisé",
   "adminTaxAutoNameLabel": "Générer automatiquement le nom",
-
   "adminShippingTitle": "Modes de livraison",
   "adminShippingAdd": "Ajouter un mode",
   "adminShippingNoMethods": "Aucun mode de livraison pour l’instant",
   "adminShippingCreateTitle": "Créer un mode de livraison",
   "adminShippingEditTitle": "Modifier le mode de livraison",
-
   "adminShippingNameLabel": "Nom",
   "adminShippingNameRequired": "Le nom est obligatoire",
   "adminShippingDescLabel": "Description",
-
   "adminShippingTypeLabel": "Type de mode",
   "adminShippingTypeHint": "Sélectionner un type",
-
   "adminShippingFlatRateLabel": "Tarif fixe",
   "adminShippingPerKgLabel": "Prix par kg",
   "adminShippingThresholdLabel": "Seuil de livraison gratuite",
-
   "adminShippingCountryLabel": "Pays",
   "adminShippingCountryHint": "Sélectionner un pays",
   "adminShippingCountryRequired": "Le pays est obligatoire",
-
   "adminShippingRegionLabel": "Région",
   "adminShippingRegionHint": "Sélectionner une région (optionnel)",
   "adminShippingSelectCountryFirst": "Sélectionnez d’abord un pays",
-
   "adminShippingEnabledLabel": "Activé",
   "adminShippingEnabledShort": "Activé",
   "adminShippingTypeShort": "Type",
-
   "shippingTypeFlatRate": "Tarif fixe",
   "shippingTypeFree": "Gratuit",
   "shippingTypeWeightBased": "Basé sur le poids",
@@ -358,75 +292,56 @@
   "shippingTypePricePerKg": "Prix par kg",
   "shippingTypeLocalPickup": "Retrait sur place",
   "shippingTypeFreeOverThreshold": "Gratuit au-dessus du seuil",
-
   "adminConfirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
   "adminShippingCreateButton": "Créer le mode",
   "adminDeleted": "Élément supprimé avec succès",
   "refreshLabel": "Actualiser",
-  "adminEnabledOnly": "Activés seulement",
+  "adminEnabledOnly": "Actives seulement",
   "adminShowAll": "Afficher tout",
   "adminDisabled": "Désactivés seulement",
   "adminActive": "Actifs seulement",
   "adminCreated": "Créé avec succès",
   "adminUpdated": "Mis à jour avec succès",
-
   "adminHomeBannersTitle": "Bannières d’accueil",
   "adminHomeBannerAdd": "Ajouter une bannière",
   "adminHomeBannerNoBanners": "Aucune bannière pour l’instant",
-
   "adminHomeBannerCreateTitle": "Créer une bannière d’accueil",
   "adminHomeBannerEditTitle": "Modifier la bannière d’accueil",
-
   "adminHomeBannerTitleLabel": "Titre",
   "adminHomeBannerSubtitleLabel": "Sous-titre",
-
   "adminHomeBannerTargetTypeLabel": "Type de cible",
   "adminHomeBannerTargetIdLabel": "ID cible",
   "adminHomeBannerTargetUrlLabel": "URL cible",
-
   "adminHomeBannerSortOrderLabel": "Ordre de tri",
   "adminHomeBannerActiveLabel": "Active",
-
   "adminImageLabel": "Image de la bannière",
   "adminChooseFromGallery": "Choisir depuis la galerie",
   "adminTakePhoto": "Prendre une photo",
   "adminRemoveImage": "Supprimer l’image",
   "adminImageRequired": "L’image est obligatoire",
-
   "adminTargetShort": "Cible",
   "adminSortShort": "Tri",
   "adminUntitled": "Sans titre",
-
   "adminHomeBannerEdit": "Modifier la bannière",
   "adminHomeBannerCreate": "Créer une bannière",
-
   "adminHomeBannerImageLabel": "Image de la bannière",
   "adminHomeBannerImageRequired": "L’image est obligatoire",
   "adminPickFromGallery": "Galerie",
   "adminPickFromCamera": "Caméra",
-
   "adminHomeBannerSortLabel": "Ordre de tri",
-
   "adminHomeBannerLoadingTargets": "Chargement des cibles...",
-
   "adminHomeBannerTargetTypeHint": "Sélectionner le type de cible",
-
   "adminHomeBannerTargetNone": "Aucune",
   "adminHomeBannerTargetCategory": "Catégorie",
   "adminHomeBannerTargetProduct": "Produit",
   "adminHomeBannerTargetUrl": "URL externe",
-
-  "adminHomeBannerTargetUrlLabel": "URL cible",
   "adminHomeBannerUrlRequired": "L’URL est obligatoire",
-
   "adminHomeBannerTargetCategoryLabel": "Catégorie",
   "adminHomeBannerTargetCategoryHint": "Sélectionner une catégorie",
   "adminHomeBannerCategoryRequired": "La catégorie est obligatoire",
-
   "adminHomeBannerTargetProductLabel": "Produit",
   "adminHomeBannerTargetProductHint": "Sélectionner un produit",
   "adminHomeBannerProductRequired": "Le produit est obligatoire",
-
   "adminActiveLabel": "Active",
   "adminNoOptions": "Aucune option",
   "noResultsLabel": "Aucun résultat",
@@ -448,7 +363,6 @@
   "adminProductSectionConfigSubtitle": "Virtuel, téléchargeable, externe",
   "adminProductSaleSectionSubtitle": "Définir le prix promo et la durée",
   "adminProductAttributesSubtitle": "Ajouter des attributs personnalisés",
-
   "cart_title": "Panier",
   "cart_empty_message": "Votre panier est vide. Commencez à ajouter des articles !",
   "cart_total_label": "Total :",
@@ -463,27 +377,21 @@
   "cart_empty_cta": "Parcourir les produits",
   "cart_cleared": "Le panier a été vidé",
   "cart_add_button": "Ajouter au panier",
-
   "home_book_now_button": "Réserver",
   "home_view_details_button": "Voir les détails",
-
   "cart_login_required_title": "Connexion requise",
   "cart_login_required_message": "Veuillez vous connecter pour continuer vers le paiement.",
   "cancel_button": "Annuler",
   "login_button": "Se connecter",
   "cart_item_added_snackbar": "Article ajouté au panier",
-
   "coupons_title": "Coupons",
   "coupons_saved": "Coupon enregistré avec succès",
   "coupons_deleted": "Coupon supprimé avec succès",
   "coupons_empty": "Aucun coupon pour l’instant. Créez le premier !",
-
   "coupons_type_percent": "Remise en pourcentage",
   "coupons_type_fixed": "Remise montant fixe",
   "coupons_type_free_shipping": "Livraison gratuite",
-
   "coupons_inactive_badge": "Inactif",
-
   "coupons_delete_title": "Supprimer le coupon",
   "coupons_delete_confirm": "Êtes-vous sûr de vouloir supprimer le coupon {code} ?",
   "delete": "Supprimer",
@@ -503,12 +411,10 @@
   "coupons_active": "Actif",
   "common_save": "Enregistrer",
   "adminCouponsTitle": "Coupons",
-
   "checkoutTitle": "Paiement",
   "checkoutLoading": "Chargement du paiement…",
   "checkoutEmptyCart": "Votre panier est vide.",
   "checkoutGoBack": "Retour",
-
   "checkoutItemsTitle": "Articles",
   "checkoutAddressTitle": "Adresse de livraison",
   "checkoutCountryIdLabel": "ID pays",
@@ -520,28 +426,23 @@
   "checkoutPostalCodeLabel": "Code postal",
   "checkoutPostalCodeHint": "Optionnel",
   "checkoutApplyAddress": "Mettre à jour la livraison",
-
   "checkoutCouponTitle": "Coupon",
   "checkoutCouponLabel": "Code coupon",
   "checkoutCouponHint": "Saisissez un coupon (optionnel)",
-
   "checkoutShippingTitle": "Livraison",
   "checkoutNoShippingMethods": "Aucun mode de livraison trouvé. Mettez à jour l’adresse puis actualisez.",
   "checkoutRefreshShipping": "Actualiser la livraison",
   "checkoutSelectShipping": "Veuillez sélectionner un mode de livraison",
-
   "checkoutPaymentTitle": "Paiement",
   "checkoutPaymentCash": "Paiement à la livraison",
   "checkoutStripeNote": "Stripe nécessite une confirmation de paiement (bientôt).",
   "checkoutSelectPayment": "Veuillez sélectionner un moyen de paiement",
-
   "checkoutSummaryTitle": "Récapitulatif de commande",
   "checkoutSubtotal": "Sous-total",
   "checkoutShipping": "Livraison",
   "checkoutTax": "Taxe",
   "checkoutTotal": "Total",
   "checkoutPlaceOrder": "Passer la commande",
-
   "orderSummaryTitle": "Récapitulatif",
   "secureCheckout": "Paiement sécurisé",
   "itemsSubtotalLabel": "Sous-total des articles",
@@ -550,34 +451,67 @@
   "discountLabel": "Remise",
   "totalLabel": "Total",
   "taxesShippingNote": "Les taxes et la livraison sont calculées selon votre adresse.",
-
   "searchHint": "Rechercher...",
   "noOptions": "Aucune option",
   "noResults": "Aucun résultat",
   "missingUserToken": "Jeton utilisateur manquant",
-
   "itemNumber": "Article n°{id}",
-  "@itemNumber": { "placeholders": { "id": { "type": "int" } } },
-
+  "@itemNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
   "qtyPriceLine": "x{qty} • {price}",
-  "@qtyPriceLine": { "placeholders": { "qty": { "type": "int" }, "price": { "type": "String" } } },
-
+  "@qtyPriceLine": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "checkoutOrderPlacedToast": "Commande passée ✅ (n°{orderId})",
-  "@checkoutOrderPlacedToast": { "placeholders": { "orderId": { "type": "int" } } },
-
+  "@checkoutOrderPlacedToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
   "orderTitle": "Commande n°{orderId}",
-  "@orderTitle": { "placeholders": { "orderId": { "type": "int" } } },
-
+  "@orderTitle": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
   "orderDateLabel": "Date : {date}",
-  "@orderDateLabel": { "placeholders": { "date": { "type": "String" } } },
-
+  "@orderDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "orderItemsTitle": "Articles",
   "orderQtyUnitLine": "Qté : {qty} • Unité : {unit}",
-  "@orderQtyUnitLine": { "placeholders": { "qty": { "type": "int" }, "unit": { "type": "String" } } },
-
+  "@orderQtyUnitLine": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "grandTotalLabel": "Total général",
   "downloadInvoicePdf": "Télécharger la facture PDF",
-
   "checkoutErrorCartEmpty": "Le panier est vide",
   "checkoutErrorSelectPayment": "Sélectionnez un moyen de paiement",
   "checkoutErrorSelectCountry": "Sélectionnez un pays",
@@ -588,31 +522,27 @@
   "checkoutErrorShippingMissing": "Le mode de livraison est manquant",
   "checkoutErrorStripeNotReady": "Stripe n’est pas encore branché",
   "commonDash": "-",
-
   "orderDetailsTitle": "Commande n°{orderId}",
   "orderDetailsDateLine": "Date : {date}",
   "orderDetailsItemsTitle": "Articles",
   "orderDetailsItemFallback": "Article n°{itemId}",
   "orderDetailsQtyUnitLine": "Qté : {qty}  •  Unité : {unitPrice}",
-
   "orderDetailsSubtotal": "Sous-total",
   "orderDetailsShipping": "Livraison",
   "orderDetailsTax": "Taxe",
   "orderDetailsCouponLine": "Coupon ({code})",
   "orderDetailsGrandTotal": "Total général",
   "orderDetailsDownloadInvoice": "Télécharger la facture PDF",
-
   "common_stock_label": "Stock : {stock}",
-
   "ordersTitle": "Mes commandes",
-  "ordersLoading": "Chargement des commandes…",
-  "ordersEmptyTitle": "Aucune commande",
-  "ordersEmptyBody": "Quand vous passerez une commande, elle apparaîtra ici.",
+  "ordersLoading": "Chargement de vos commandes...",
+  "ordersEmptyTitle": "Aucune commande pour le moment",
+  "ordersEmptyBody": "Lorsque vous passez une commande, elle s’affichera ici.",
   "ordersReload": "Recharger",
-  "ordersFilterAll": "Tout",
+  "ordersFilterAll": "Toutes",
   "ordersFilterPending": "En attente",
-  "ordersFilterCompleted": "Terminée",
-  "ordersFilterCanceled": "Annulée",
+  "ordersFilterCompleted": "Terminées",
+  "ordersFilterCanceled": "Annulées",
   "ordersNoResultsForFilter": "Aucune commande ne correspond à ce filtre.",
   "ordersQtyLabel": "Qté",
   "ordersPaid": "Payée",
@@ -623,7 +553,6 @@
   "ordersStatusUnknown": "Inconnue",
   "ordersUnknownItem": "Article",
   "ordersQty": "Qté",
-
   "profileLoginRequired": "Veuillez vous connecter pour voir votre profil.",
   "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
   "login": "Se connecter",
@@ -637,78 +566,66 @@
   "dangerZone": "Zone de danger",
   "password": "Mot de passe",
   "deleteAccount": "Supprimer le compte",
-
   "notifications_title": "Notifications",
   "notifications_empty_title": "Aucune notification",
   "notifications_empty_subtitle": "Quand quelque chose arrive, ça apparaîtra ici. Pour l’instant… calme total 😌",
   "notifications_retry": "Réessayer",
-
   "privacy_policy_title": "Politique de confidentialité",
   "privacy_policy_intro_title": "Votre confidentialité compte",
   "privacy_policy_intro_body": "Cette politique explique ce que nous collectons, pourquoi nous le collectons, et comment vous contrôlez vos données.",
-
   "privacy_policy_collect_title": "Ce que nous collectons",
   "privacy_policy_collect_body": "Infos de base (nom, e-mail/téléphone), paramètres de compte, et usage nécessaire pour fournir le service.",
-
   "privacy_policy_use_title": "Comment nous utilisons vos données",
   "privacy_policy_use_body": "Pour faire fonctionner l’app, personnaliser votre expérience, améliorer les fonctionnalités et sécuriser la plateforme.",
-
   "privacy_policy_share_title": "Partage",
   "privacy_policy_share_body": "Nous ne vendons pas vos données. Nous partageons seulement ce qui est nécessaire avec des services de confiance (hébergement, etc.).",
-
   "privacy_policy_security_title": "Sécurité",
   "privacy_policy_security_body": "Nous utilisons des pratiques standards, mais aucun système n’est parfait. Gardez votre mot de passe privé.",
-
   "privacy_policy_choices_title": "Vos choix",
   "privacy_policy_choices_body": "Vous pouvez changer la visibilité (public/privé), mettre à jour le profil, ou demander des actions sur le compte selon les fonctionnalités.",
-
   "privacy_policy_contact_title": "Contact",
   "privacy_policy_contact_body": "Si vous avez des questions, contactez l’équipe support.",
-
   "privacy_policy_last_updated": "Dernière mise à jour : 19 déc. 2025",
-
   "home_bottom_slide_thankyou_title": "MERCI",
   "home_bottom_slide_thankyou_message": "Merci pour votre confiance. Notre équipe travaille chaque jour pour garantir qualité et rapidité.",
   "home_bottom_slide_secure_title": "SÛR & SÉCURISÉ",
   "home_bottom_slide_secure_message": "Paiements sécurisés, produits contrôlés, emballage propre — les bases, bien faites.",
   "home_bottom_slide_support_title": "VRAI SUPPORT",
   "home_bottom_slide_support_message": "Besoin d’aide ? On répond. Pas de mode “vu” puis disparition 😅",
-
   "home_bottom_benefit_contact": "CONTACTER UN\nEXPERT ACCRÉDITÉ",
   "home_bottom_benefit_secure_payments": "PAIEMENTS\nSÉCURISÉS",
   "home_bottom_benefit_authentic_products": "PRODUITS AUTHENTIQUES\n& CONTRÔLÉS",
   "home_bottom_benefit_free_delivery_above": "LIVRAISON GRATUITE\nDÈS {amount}",
   "@home_bottom_benefit_free_delivery_above": {
     "placeholders": {
-      "amount": { "type": "String" }
+      "amount": {
+        "type": "String"
+      }
     }
   },
-
   "home_trailing_limited_time": "Temps limité",
   "home_trailing_see_all": "Voir tout",
   "home_sale_tag": "PROMO",
   "home_stock_label": "Stock : {count}",
   "@home_stock_label": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "home_bookings_placeholder": "Le flux des réservations n’est pas encore branché.",
-
   "home_footer_contact_title": "Nous contacter",
   "home_footer_contact_desc": "Besoin d’aide ? On est à un message.",
   "home_footer_free_delivery_title": "Livraison gratuite",
   "home_footer_free_delivery_desc": "Disponible sur certaines commandes et zones.",
   "home_footer_returns_title": "Retours faciles",
   "home_footer_returns_desc": "Politique de retour simple sur les articles éligibles.",
-
   "ownerPaymentSettingsTitle": "Moyens de paiement",
   "ownerPaymentSettingsDesc": "Activer et configurer les passerelles pour ce projet",
   "ownerPaymentConfigure": "Configurer",
   "ownerPaymentIncomplete": "Incomplet",
   "ownerPaymentConfigHint": "Configurez les champs ci-dessous. Les champs obligatoires doivent être remplis.",
-
   "paymentMethodsTitle": "Moyens de paiement",
   "paymentSearchHint": "Rechercher…",
   "paymentNoResults": "Aucun résultat",
@@ -719,9 +636,7 @@
   "paymentSavedKeepHint": "Enregistré (laisser vide pour conserver)",
   "paymentRequiredLabel": "• obligatoire",
   "paymentIncomplete": "Incomplet",
-
   "adminPaymentConfigTitle": "Moyens de paiement",
-
   "checkoutConfirmDialogTitle": "Confirmer le paiement",
   "checkoutConfirmCartCleared": "{itemCount, plural, =0{Après le paiement, votre panier sera vide.} =1{Après le paiement, votre panier sera vide (1 article).} other{Après le paiement, votre panier sera vide ({itemCount} articles).}} Voulez-vous continuer ?",
   "commonYes": "Oui",
@@ -729,46 +644,39 @@
   "@checkoutConfirmCartCleared": {
     "description": "Avertissement avant de passer la commande : le panier sera vidé après le paiement.",
     "placeholders": {
-      "itemCount": { "type": "int" }
+      "itemCount": {
+        "type": "int"
+      }
     }
   },
-
   "adminOrdersTitle": "Commandes",
   "adminDashboard": "Dashboard",
   "adminAllTime": "Tout",
   "adminLast7Days": "7 derniers jours",
   "adminLast30Days": "30 derniers jours",
   "adminClear": "Effacer",
-
   "adminKpiOrders": "Commandes",
   "adminKpiGrossSales": "Ventes brutes",
   "adminKpiPaid": "Payé",
   "adminKpiOutstanding": "Restant",
   "adminKpiAvgOrder": "Moy. commande",
-
   "adminFullyPaidPercent": "Entièrement payé : {percent}%",
   "@adminFullyPaidPercent": {
     "placeholders": {
       "percent": {}
     }
   },
-
   "adminPaidRevenueLast7Days": "Revenu payé (7 derniers jours)",
-
   "adminNoOrders": "Aucune commande",
   "adminNoOrdersHint": "Essayez de changer le statut, la période, ou tirez pour actualiser.",
-
   "adminFilterAll": "Tout",
-
   "adminOrderDetailsTitle": "Commande n°{id}",
   "@adminOrderDetailsTitle": {
     "placeholders": {
       "id": {}
     }
   },
-
   "adminOrderFailedToLoad": "Échec du chargement de la commande.",
-
   "adminPaymentSummary": "Récapitulatif paiement",
   "adminOrderInfo": "Infos commande",
   "adminStatus": "Statut",
@@ -780,16 +688,13 @@
   "adminShippingCity": "Ville de livraison",
   "adminShippingMethod": "Mode de livraison",
   "adminCoupon": "Coupon",
-
   "adminItemsCount": "Articles ({count})",
   "@adminItemsCount": {
     "placeholders": {
       "count": {}
     }
   },
-
   "adminCustomer": "Client",
-
   "adminQtyPriceLine": "Qté : {qty}  •  Prix : {price}",
   "@adminQtyPriceLine": {
     "placeholders": {
@@ -797,183 +702,160 @@
       "price": {}
     }
   },
-
   "adminOrderCardTitle": "Commande n°{id}",
   "@adminOrderCardTitle": {
     "placeholders": {
       "id": {}
     }
   },
-
   "adminItemsShort": "{count} articles",
   "@adminItemsShort": {
     "placeholders": {
       "count": {}
     }
   },
-
   "adminPaidShort": "Payé : {amount}",
   "@adminPaidShort": {
     "placeholders": {
       "amount": {}
     }
   },
-
   "adminRemainingShort": "Restant : {amount}",
   "@adminRemainingShort": {
     "placeholders": {
       "amount": {}
     }
   },
-
   "adminFullyPaid": "Entièrement payé",
-
   "adminOrderStatusPending": "En attente",
   "adminOrderStatusCancelRequested": "Annulation demandée",
   "adminOrderStatusCanceled": "Annulée",
   "adminOrderStatusRejected": "Rejetée",
   "adminOrderStatusRefunded": "Remboursée",
   "adminOrderStatusCompleted": "Terminée",
-
   "adminMarkCashPaidBody": "Voulez-vous vraiment marquer cette commande comme payée en espèces ?",
   "adminMarkCashPaid": "Marquer payée en espèces",
   "adminMarkCashPaidTitle": "Marquer la commande comme payée",
   "adminMarkCashPaidButton": "Marquer comme payée",
-
   "forgotPasswordLink": "Mot de passe oublié ?",
   "forgotTitle": "Réinitialiser votre mot de passe",
   "forgotSubtitle": "Saisissez votre e-mail et nous vous enverrons un code.",
   "forgotSendCode": "Envoyer le code",
   "forgotTip": "Astuce : vérifiez aussi les spams/indésirables 👀",
-
   "forgotVerifyTitle": "Saisir le code de vérification",
   "forgotVerifySubtitle": "Nous avons envoyé un code à {email}",
-  "@forgotVerifySubtitle": { "placeholders": { "email": {} } },
-
+  "@forgotVerifySubtitle": {
+    "placeholders": {
+      "email": {}
+    }
+  },
   "forgotNewPassTitle": "Définir un nouveau mot de passe",
   "forgotNewPassSubtitle": "Faites-le solide — votre futur vous dira merci.",
   "newPasswordLabel": "Nouveau mot de passe",
   "savePasswordButton": "Enregistrer le mot de passe",
-
   "codeLabel": "Code",
   "codeTooShort": "Le code est trop court",
   "verifyButton": "Vérifier",
   "resendCode": "Renvoyer le code",
   "passwordsDontMatch": "Les mots de passe ne correspondent pas",
-    "checkoutFullNameLabel": "Nom complet",
+  "checkoutFullNameLabel": "Nom complet",
   "checkoutFullNameHint": "ton nom",
-
   "checkoutAddressLineLabel": "Adresse",
   "checkoutAddressLineHint": "ex. Immeuble, étage, rue",
-
   "checkoutPhoneLabel": "Numéro de téléphone",
   "checkoutPhoneHint": "ex. +961 70 123 456",
-
   "checkoutNotesLabel": "Notes de livraison (optionnel)",
   "checkoutNotesHint": "ex. Appelez-moi en arrivant",
   "phone": "Téléphone",
   "address": "Adresse",
   "postalCode": "Code postal",
-
   "adminShippingTotal": "Total livraison",
   "adminItemsTaxTotal": "Total taxe articles",
   "adminShippingTaxTotal": "Total taxe livraison",
   "authUsernameTaken": "Ce nom d’utilisateur est déjà utilisé.",
   "authEmailAlreadyExists": "Cet e-mail est déjà enregistré.",
   "authPhoneAlreadyExists": "Ce numéro de téléphone est déjà enregistré.",
-
   "authUserNotFound": "Aucun compte trouvé pour cet e-mail/téléphone.",
   "authWrongPassword": "Mot de passe incorrect.",
   "authInvalidCredentials": "Identifiants invalides.",
   "authAccountInactive": "Votre compte est inactif. Réactivez-le pour continuer.",
-
   "httpValidationError": "Certains champs sont invalides.",
   "httpConflict": "Conflit. Veuillez réessayer.",
   "httpUnauthorized": "Non autorisé.",
   "httpForbidden": "Vous n’avez pas la permission de faire cela.",
   "httpNotFound": "Introuvable.",
   "httpServerError": "Erreur serveur. Veuillez réessayer plus tard.",
-
   "networkNoInternet": "Aucune connexion Internet.",
   "networkTimeout": "Délai d’attente dépassé.",
   "networkError": "Erreur réseau.",
-
-  "authErrorGeneric": "Une erreur s’est produite. Veuillez réessayer.",
-   "outOfStock" :"En rupture de stock",
-   "commonCancel": "Annuler",
+  "outOfStock": "En rupture de stock",
+  "commonCancel": "Annuler",
   "commonSave": "Enregistrer",
-
   "adminMissingAdminToken": "Session expirée. Veuillez vous reconnecter.",
   "adminGenericError": "Une erreur est survenue. Réessayez.",
-
   "adminCategoryFallbackName": "Catégorie",
   "adminItemTypeFallbackName": "Type d’article",
-
   "adminDeleteCategoryTitle": "Supprimer la catégorie ?",
   "adminDeleteCategoryMessage": "Supprimer « {name} » ?\n\nCela peut aussi supprimer ses types d’articles (selon les règles backend).",
-
   "adminDeleteItemTypeTitle": "Supprimer le type d’article ?",
   "adminDeleteItemTypeMessage": "Supprimer « {name} » ?",
-
   "adminDeleteCategoryTooltip": "Supprimer la catégorie",
   "adminDeleteItemTypeTooltip": "Supprimer le type d’article",
-
   "adminNewCategoryTitle": "Nouvelle catégorie",
   "adminNewCategoryHint": "Ex : Ordinateurs",
-
   "adminNewItemTypeTitle": "Nouveau type d’article",
   "adminNewItemTypeHint": "Ex : Laptop",
-
   "adminSelectCategoryBeforeCreateItemType": "Veuillez sélectionner une catégorie avant de créer un type d’article.",
   "adminSelectCategoryBeforeSavingProduct": "Veuillez sélectionner une catégorie avant d’enregistrer.",
   "adminMissingCurrencyConfig": "Devise manquante pour cette application. Configurez d’abord une devise.",
-
   "adminButtonTextDefaultAddToCart": "Ajouter au panier",
-
   "adminPriceExampleHint": "Ex : 120.00",
   "commonDateFormatHint": "AAAA-MM-JJ",
   "adminAttributeValueExampleHint": "Ex : Samsung",
-  "adminProductAttributeValueHint": "Ex : Samsung","adminDashboardTitle": "Tableau de bord admin",
+  "adminProductAttributeValueHint": "Ex : Samsung",
   "adminDashboardHeroTitle": "Tableau de bord",
   "adminDashboardAup": "AUP {id}",
-  "@adminDashboardAup": { "placeholders": { "id": {} } },
-
-  "refreshLabel": "Actualiser",
+  "@adminDashboardAup": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "retryLabel": "Réessayer",
   "cancelLabel": "Annuler",
   "sendRequestLabel": "Envoyer la demande",
   "upgradeLabel": "Upgrade",
   "requestUpgradeLabel": "Demander l’upgrade",
-
   "licenseChecking": "Vérification de la licence…",
   "licenseAccessGranted": "Accès autorisé ",
   "licenseAccessBlocked": "Accès bloqué",
   "licenseLimitReached": "Limite atteinte : {active}/{allowed} utilisateurs",
-  "@licenseLimitReached": { "placeholders": { "active": {}, "allowed": {} } },
-
+  "@licenseLimitReached": {
+    "placeholders": {
+      "active": {},
+      "allowed": {}
+    }
+  },
   "adminDashboardStatusChecking": "Vérification du plan…",
   "adminDashboardStatusLicenseFailed": "Échec de vérification de la licence",
   "adminDashboardStatusLimitReached": "Limite utilisateurs — upgrade requis",
   "adminDashboardStatusAccessBlocked": "Accès bloqué",
   "adminDashboardStatusOk": "Tout est OK ",
-
   "adminDashboardActionsCount": "{count} actions",
-  "@adminDashboardActionsCount": { "placeholders": { "count": {} } },
-
+  "@adminDashboardActionsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "upgradeSheetTitle": "Demande d’upgrade",
   "upgradeSheetSubtitle": "Choisissez un plan pour envoyer une demande.",
   "noUpgradeAvailable": "Aucune option d’upgrade disponible.",
   "upgradeRequestSent": "Demande envoyée ",
-
   "planGeneric": "Plan",
   "planFree": "Gratuit",
   "planProHostedDb": "Pro DB hébergée",
   "planDedicated": "Dédié",
   "planProHostedDbDesc": "Utilisateurs illimités (hébergé par Build4All)",
   "planDedicatedDesc": "Serveur dédié (mise en place nécessaire)",
-
-  "adminOrdersTitle": "Commandes",
-
   "adminActionProductsSubtitle": "Catalogue & prix",
   "adminActionShippingSubtitle": "Méthodes & frais",
   "adminActionPaymentSubtitle": "Stripe & config",
@@ -988,7 +870,7 @@
   "manageProfileLabel": "Gérer",
   "aupIdLabel": "ID AUP",
   "businessIdLabel": "ID Business",
-   "adminProductSaleDatesBothRequired": "Veuillez sélectionner la date de début et la date de fin de la promotion.",
+  "adminProductSaleDatesBothRequired": "Veuillez sélectionner la date de début et la date de fin de la promotion.",
   "adminProductSaleEndBeforeStart": "La date de fin de la promotion doit être après la date de début.",
   "adminProductSaleStartInPast": "La date de début de la promotion ne peut pas être dans le passé.",
   "adminProductSaleEndInPast": "La date de fin de la promotion ne peut pas être dans le passé.",
@@ -1000,39 +882,32 @@
   "notFoundLabel": "Introuvable.",
   "serverErrorLabel": "Erreur serveur. Veuillez réessayer plus tard.",
   "networkErrorLabel": "Erreur réseau. Veuillez réessayer.",
-   "errPasswordLen6to8": "Le mot de passe doit contenir  6 caractères.",
+  "errPasswordLen6to8": "Le mot de passe doit contenir  6 caractères.",
   "errPasswordNeedSpecial": "Le mot de passe doit contenir au moins 1 caractère spécial (ex: !@#).",
   "hintPasswordRuleOwner": "Le mot de passe doit contenir  6 caractères.",
-   "msgProductDeleted": "Produit supprimé avec succès.",
- "adminProductDeleteDialogTitle": "Supprimer le produit",
+  "msgProductDeleted": "Produit supprimé avec succès.",
+  "adminProductDeleteDialogTitle": "Supprimer le produit",
   "adminProductDeleteDialogBody": "Êtes-vous sûr(e) de vouloir supprimer « {name} » ?",
   "@adminProductDeleteDialogBody": {
     "placeholders": {
       "name": {}
     }
   },
-
-  "commonCancel": "Annuler",
   "commonDelete": "Supprimer",
-
   "adminProductDeleteSuccess": "Produit supprimé avec succès.",
   "adminProductDeleteFailed": "Échec de la suppression du produit.",
-
   "adminProductDeleteBlockedCart": "Impossible de supprimer ce produit car il se trouve dans des paniers clients. ",
   "adminProductDeleteBlockedOrders": "Impossible de supprimer ce produit car il est lié à des commandes existantes. ",
   "adminProductDeleteBlockedGeneric": "Impossible de supprimer ce produit car il est lié à d’autres enregistrements (commandes ou paniers). ",
-
   "errSessionExpired": "Session expirée. Veuillez vous reconnecter.",
   "errForbidden": "Vous n’avez pas la permission d’effectuer cette action.",
   "errNotFound": "Introuvable.",
-
   "adminProductsLoadFailed": "Échec du chargement des produits.\n{details}",
   "@adminProductsLoadFailed": {
     "placeholders": {
       "details": {}
     }
   },
-
   "adminProductsCountPill": "{filtered} / {total}",
   "@adminProductsCountPill": {
     "placeholders": {
@@ -1042,67 +917,49 @@
   },
   "adminCategoryDeleteSuccess": "Catégorie supprimée avec succès.",
   "adminItemTypeDeleteSuccess": "Type d’article supprimé avec succès.",
-
   "adminCategoryDeleteBlockedItems": "Impossible de supprimer cette catégorie car elle est utilisée par {count} article(s).",
   "@adminCategoryDeleteBlockedItems": {
-    "placeholders": { "count": {} }
+    "placeholders": {
+      "count": {}
+    }
   },
-
   "adminItemTypeDeleteBlockedItems": "Impossible de supprimer ce type car il est utilisé par {count} article(s).",
   "@adminItemTypeDeleteBlockedItems": {
-    "placeholders": { "count": {} }
+    "placeholders": {
+      "count": {}
+    }
   },
-
   "adminCategoryDeleteBlockedGeneric": "Impossible de supprimer cette catégorie car elle est encore utilisée.",
   "adminItemTypeDeleteBlockedGeneric": "Impossible de supprimer ce type car il est encore utilisé.",
-
   "adminConflictGeneric": "Cette action ne peut pas être effectuée pour le moment.",
-  "errSessionExpired": "Session expirée. Veuillez vous reconnecter.",
-  "errForbidden": "Vous n’avez pas la permission d’effectuer cette action.",
-  "errNotFound": "Introuvable.",
   "adminCategoryDeleteBlockedTypes": "Impossible de supprimer cette catégorie car elle contient encore {count} type(s) d’article. Supprimez/déplacez d’abord les types.",
-  "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } },
+  "@adminCategoryDeleteBlockedTypes": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminRejectOrderTitle": "Rejeter la commande ?",
   "adminRejectOrderBody": "Cette action marquera la commande comme rejetée. Continuer ?",
   "adminRejectOrderButton": "Rejeter la commande",
-   "authGateContinueAs": "Continuer en tant que…",
+  "authGateContinueAs": "Continuer en tant que…",
   "authGateRoleAdminOwner": "Admin / Propriétaire",
   "authGateRoleUser": "Utilisateur",
-
   "appAccessTitleDeleted": "Accès supprimé",
   "appAccessTitleExpired": "Abonnement expiré",
   "appAccessTitleUnavailable": "Application indisponible",
-
   "appAccessMessageDeleted": "Cette application n'est plus disponible.",
   "appAccessMessageExpired": "L'abonnement de cette application a expiré.",
   "appAccessMessageUnavailable": "Vous n'avez plus accès à cette application.",
-
   "appAccessOwnerDisabledHint": "Cette application a été désactivée par le propriétaire ou n'est plus active.",
   "appAccessRetry": "Réessayer",
   "appAccessBlockedButton": "Accès bloqué",
   "accountAlreadyVerified": "Votre compte est déjà vérifié. Veuillez vous connecter.",
-    "ordersTitle": "Mes commandes",
-  "ordersLoading": "Chargement de vos commandes...",
-  "ordersEmptyTitle": "Aucune commande pour le moment",
-  "ordersEmptyBody": "Lorsque vous passez une commande, elle s’affichera ici.",
-  "ordersReload": "Recharger",
-  "ordersNoResultsForFilter": "Aucune commande ne correspond à ce filtre.",
-
-  "ordersFilterAll": "Toutes",
-  "ordersFilterPending": "En attente",
-  "ordersFilterCompleted": "Terminées",
-  "ordersFilterCanceled": "Annulées",
-
-  "ordersPaid": "Payée",
-  "ordersUnpaid": "Non payée",
-
   "ordersDetailsTitle": "Commande n°{orderId}",
   "@ordersDetailsTitle": {
     "placeholders": {
       "orderId": {}
     }
   },
-
   "ordersDetailsItemsTitle": "Articles",
   "ordersDetailsQty": "Qté",
   "ordersDetailsUnit": "Prix unitaire",
@@ -1126,15 +983,16 @@
   "editProfile_codeSentToast": "Code de vérification envoyé à votre nouvel e-mail",
   "editProfile_emailUpdatedToast": "E-mail mis à jour avec succès",
   "home_stock_left_label": "Stock restant : {count}",
-"@home_stock_left_label": {
-  "placeholders": {
-    "count": { "type": "int" }
-  }
-}
-,
-"editProfile_firstNameInvalid": "Le prénom contient des caractères invalides",
-"editProfile_lastNameInvalid": "Le nom de famille contient des caractères invalides",
- "licenseDetailsTitle": "Détails de la licence",
+  "@home_stock_left_label": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editProfile_firstNameInvalid": "Le prénom contient des caractères invalides",
+  "editProfile_lastNameInvalid": "Le nom de famille contient des caractères invalides",
+  "licenseDetailsTitle": "Détails de la licence",
   "licensePlanLabel": "Forfait",
   "licensePlanCodeLabel": "Code du forfait",
   "licenseStatusLabel": "Statut",
@@ -1145,36 +1003,38 @@
   "licenseRequiresDedicatedLabel": "Serveur dédié requis",
   "licenseDedicatedInfraReadyLabel": "Infrastructure dédiée prête",
   "licenseBlockingReasonLabel": "Raison du blocage",
-
   "upgradeRequestPending": "La demande de mise à niveau est en attente d’approbation",
   "requestUpgradePendingLabel": "Demandé",
-
   "upgradeRequestStatusLabel": "Statut de la demande",
   "upgradeRequestPlanLabel": "Forfait demandé",
   "upgradeRequestAtLabel": "Demandé le",
   "upgradeRequestNoteLabel": "Note de décision",
-
   "upgradeStatusPending": "En attente",
   "upgradeStatusApproved": "Approuvée",
   "upgradeStatusRejected": "Refusée",
-
   "yesLabel": "Oui",
   "noLabel": "Non",
   "checkoutCouponChecking": "Vérification du coupon…",
   "checkoutCouponApplied": "Coupon appliqué",
   "checkoutCouponAppliedDiscount": "Appliqué • -{discount}",
   "@checkoutCouponAppliedDiscount": {
-    "placeholders": { "discount": { "type": "String" } }
+    "placeholders": {
+      "discount": {
+        "type": "String"
+      }
+    }
   },
   "checkoutCouponInvalid": "Coupon invalide",
-  "checkoutCouponFailed": "Impossible d’appliquer le coupon",
+  "checkoutCouponFailed": "Le coupon n'a pas pu être appliqué.",
   "checkoutOrderPlacedWithCode": "Commande passée : {code}",
   "@checkoutOrderPlacedWithCode": {
-    "placeholders": { "code": { "type": "String" } }
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   },
-
   "commonSomethingWentWrong": "Une erreur s’est produite",
-
   "checkoutCartEmptyError": "Votre panier est vide",
   "checkoutPaymentMissingCode": "Le code du moyen de paiement est manquant",
   "checkoutCountryRequiredError": "Sélectionnez un pays",
@@ -1196,22 +1056,20 @@
   "home_support_open_whatsapp_failed": "Impossible d’ouvrir WhatsApp.",
   "home_support_invalid_phone": "Numéro du support invalide.",
   "checkoutBlockedTitle": "Paiement bloqué",
-    "adminTaxRuleRateMustBePositive": "Le taux doit être supérieur à 0",
+  "adminTaxRuleRateMustBePositive": "Le taux doit être supérieur à 0",
   "adminTaxRuleRateTooHigh": "Le taux ne peut pas dépasser 100 %",
-   "checkoutCouponExpired": "Le coupon a expiré.",
+  "checkoutCouponExpired": "Le coupon a expiré.",
   "checkoutCouponUsageLimitReached": "La limite d'utilisation du coupon a été atteinte.",
   "checkoutCouponMinimumNotReached": "Le montant minimum requis pour ce coupon n'a pas été atteint.",
   "checkoutCouponDidNotAffectOrder": "Le coupon n'a eu aucun effet sur cette commande.",
-  "checkoutCouponFailed": "Le coupon n'a pas pu être appliqué.",
   "adminProductStatusSectionTitle": "Statut du produit",
-"adminProductStatusSectionSubtitle": " Gérer la disponibilité de ce produit",
-"adminProductStatusLabel": "Statut",
-"adminProductStatusUnavailable": "Indisponible",
-"adminProductStatusRequired": "Veuillez sélectionner un statut pour ce produit.",
-"home_coming_soon_button": "Bientôt disponible",
-"connection_reconnecting":  "Reconnexion…",
-
-"adminProductSectionSaleTitle": "Promotion",
+  "adminProductStatusSectionSubtitle": " Gérer la disponibilité de ce produit",
+  "adminProductStatusLabel": "Statut",
+  "adminProductStatusUnavailable": "Indisponible",
+  "adminProductStatusRequired": "Veuillez sélectionner un statut pour ce produit.",
+  "home_coming_soon_button": "Bientôt disponible",
+  "connection_reconnecting": "Reconnexion…",
+  "adminProductSectionSaleTitle": "Promotion",
   "adminProductSectionSaleSubtitle": "Définissez un prix de promotion et une période pour ce produit",
   "adminProductLoadingCategories": "Chargement des catégories...",
   "adminProductLoadingItemTypes": "Chargement des types d'éléments...",
@@ -1219,21 +1077,19 @@
   "adminProductSelectItemTypeHint": "Sélectionnez un type d'élément",
   "adminProductSectionCategoryTypeTitle": "Catégorie et type",
   "adminProductSectionCategoryTypeSubtitle": "Sélectionnez la catégorie et le type d'élément pour ce produit",
-   "adminCreateItemTypeTooltip": " création d'un nouveau type d'élément",
+  "adminCreateItemTypeTooltip": " création d'un nouveau type d'élément",
   "adminProductSalePriceHint": "Entrez le prix de la promotion pour ce produit (il doit être inférieur au prix régulier).",
   "adminProductSaleStartHint": "Sélectionnez la date de début de la promotion",
   "adminProductSaleEndHint": "Sélectionnez la date de fin de la promotion",
-   "adminCreateCategoryTooltip":"création d'un nouveau catégorie" ,
-
-   "checkoutPaymentMethodUnavailable": "Le mode de paiement sélectionné n’est pas disponible,s'il vous plait appeler le support pour plus d’informations",
-   "adminDisable": "Désactiver",
-"adminDisableShippingMethodMessage": "Êtes-vous sûr de vouloir désactiver cette méthode de livraison ? Elle n’apparaîtra plus au moment du paiement.",
-"adminShippingMethodDisabled": "Méthode de livraison désactivée avec succès",
-"adminDisabledLabel": "Désactivée",
-"adminEnabledOnly": "Actives seulement",
-"adminDisabledOnly": "Désactivées seulement",
-"adminAllLabel": "Toutes",
- "openLinkLabel": "Ouvrir le lien",
+  "adminCreateCategoryTooltip": "création d'un nouveau catégorie",
+  "checkoutPaymentMethodUnavailable": "Le mode de paiement sélectionné n’est pas disponible,s'il vous plait appeler le support pour plus d’informations",
+  "adminDisable": "Désactiver",
+  "adminDisableShippingMethodMessage": "Êtes-vous sûr de vouloir désactiver cette méthode de livraison ? Elle n’apparaîtra plus au moment du paiement.",
+  "adminShippingMethodDisabled": "Méthode de livraison désactivée avec succès",
+  "adminDisabledLabel": "Désactivée",
+  "adminDisabledOnly": "Désactivées seulement",
+  "adminAllLabel": "Toutes",
+  "openLinkLabel": "Ouvrir le lien",
   "downloadNowLabel": "Télécharger",
   "downloadLabel": "Téléchargement",
   "downloadReadyLabel": "Prêt au téléchargement",
@@ -1252,9 +1108,74 @@
   "adminExternalUrlRequired": "L’URL externe est obligatoire pour un produit externe",
   "adminExternalCannotBeDownloadable": "Un produit externe ne peut pas être téléchargeable",
   "adminDownloadableRulesHint": "Les produits téléchargeables sont enregistrés comme Simple + Virtuel et nécessitent une URL de téléchargement.",
-  "adminAllAttributeTypesAlreadyAdded": "Tous les types d’attributs disponibles sont déjà ajoutés"
-
-
-
-
+  "adminAllAttributeTypesAlreadyAdded": "Tous les types d’attributs disponibles sont déjà ajoutés",
+  "commonClear": "Effacer",
+  "commonPrev": "Précédent",
+  "commonNext": "Suivant",
+  "commonConfirm": "Confirmer",
+  "commonEnglish": "Anglais",
+  "commonFrench": "Français",
+  "commonArabic": "العربية",
+  "commonQty": "Qté",
+  "commonFullName": "Nom complet",
+  "commonPhone": "Téléphone",
+  "commonAddress": "Adresse",
+  "commonCity": "Ville",
+  "commonPostalCode": "Code postal",
+  "commonUnit": "Unité",
+  "commonTotal": "Total",
+  "commonItem": "Article",
+  "commonProvider": "Fournisseur",
+  "commonStatus": "Statut",
+  "commonRef": "Réf",
+  "commonCustomer": "Client",
+  "commonMethod": "Méthode",
+  "commonRetry": "Réessayer",
+  "adminOrderEditTitle": "Modifier la commande",
+  "adminOrderEditRemoveHint": "Définissez la quantité à 0 pour supprimer un article.",
+  "adminOrderInvoiceDownloadFailed": "Échec du téléchargement de la facture : {error}",
+  "@adminOrderInvoiceDownloadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "adminOrderCannotEditMissingShipping": "Cette commande ne peut pas encore être modifiée car le pays d'expédition ou le mode d'expédition manque dans la réponse des détails de la commande.",
+  "adminDashboardNotificationsTooltip": "Notifications",
+  "adminProductSetMain": "Définir comme principale",
+  "couponValidFrom": "Valide à partir du",
+  "couponValidTo": "Valide jusqu'au",
+  "excelReplaceScopeTenantSafe": "TENANT (sûr)",
+  "excelReplaceScopeFullDangerous": "FULL (dangereux)",
+  "orderDetailsOrderCode": "Code de commande",
+  "orderDetailsName": "Nom",
+  "orderDetailsPhone": "Téléphone",
+  "orderDetailsAddress": "Adresse",
+  "orderDetailsCity": "Ville",
+  "orderDetailsPostalCode": "Code postal",
+  "orderDetailsPayment": "Paiement",
+  "invoiceTitle": "Facture",
+  "invoiceItems": "Articles",
+  "invoiceOrder": "Commande",
+  "invoiceDate": "Date",
+  "invoiceShipping": "Livraison",
+  "invoiceSubtotal": "Sous-total",
+  "invoiceTax": "Taxe",
+  "invoiceGrandTotal": "Total général",
+  "invoiceCouponLine": "Coupon ({code})",
+  "@invoiceCouponLine": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "restoreLabel": "Restaurer",
+  "restoreDeletedAccountTitle": "Restaurer le compte supprimé ?",
+  "restoreDeletedAccountMessage": "Ce compte a été supprimé, mais il peut encore être restauré. Voulez-vous le réactiver maintenant ?",
+  "accountRestoredSuccessfully": "Compte restauré avec succès",
+  "adminOrderMarkPaid": "Marquer comme payé",
+  "adminOrderComplete": "Terminer",
+  "adminOrderReject": "Rejeter",
+  "adminOrderReopen": "Rouvrir",
+  "adminOrderRestore": "Restaurer",
+  "commonSomethingWentWrongTryAgain": "Une erreur s’est produite. Veuillez réessayer.",
+  "orderDetailsInvoiceDownloadFailed": "Échec du téléchargement de la facture : {error}"
 }

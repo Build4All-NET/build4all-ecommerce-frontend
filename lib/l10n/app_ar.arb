@@ -1,34 +1,23 @@
 {
   "@@locale": "ar",
-
   "appTitle": "التطبيق",
-
   "loginTitle": "تسجيل الدخول",
   "loginSubtitle": "مرحبًا بعودتك! سجّل دخولك للمتابعة.",
-
   "emailLabel": "البريد الإلكتروني",
   "passwordLabel": "كلمة المرور",
   "phoneLabel": "رقم الهاتف",
-
   "loginButton": "تسجيل الدخول",
-
   "fieldRequired": "هذا الحقل مطلوب.",
   "invalidEmail": "يرجى إدخال بريد إلكتروني صحيح.",
   "invalidPhone": "يرجى إدخال رقم هاتف صحيح.",
   "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
-
-  "authErrorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-
+  "authErrorGeneric": "حدث خطأ ما. حاول مرة أخرى.",
   "noAccountText": "ليس لديك حساب؟",
   "signUpText": "إنشاء حساب",
-
   "loginWithEmail": "البريد الإلكتروني",
   "loginWithPhone": "الهاتف",
-
   "loginMissingIdentifier": "يرجى إدخال بريدك الإلكتروني أو رقم هاتفك.",
-
   "forgotPassword": "هل نسيت كلمة المرور؟",
-
   "registerTitle": "إنشاء حسابك",
   "registerSubtitle": "اختر طريقة التسجيل التي تفضلها.",
   "registerStep1Of3": "الخطوة 1 من 3",
@@ -38,14 +27,12 @@
   "confirmPasswordLabel": "تأكيد كلمة المرور",
   "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين.",
   "alreadyHaveAccountText": "لديك حساب بالفعل؟",
-
   "verifyCodeTitle": "إدخال رمز التحقق",
   "verifyCodeSubtitleEmail": "أرسلنا رمزًا إلى بريدك الإلكتروني.",
   "verifyCodeSubtitlePhone": "أرسلنا رمزًا إلى هاتفك.",
   "verificationCodeLabel": "رمز التحقق",
   "invalidVerificationCode": "يرجى إدخال رمز تحقق صحيح.",
   "verifyButtonLabel": "تحقق",
-
   "completeProfileTitle": "إكمال ملفك الشخصي",
   "completeProfileSubtitle": "اختر اسم مستخدم وأدخل اسمك الحقيقي.",
   "usernameLabel": "اسم المستخدم",
@@ -57,10 +44,8 @@
   "saveProfileButton": "حفظ الملف الشخصي",
   "profileCompletedSuccessMessage": "تم إكمال الملف الشخصي بنجاح. يمكنك الآن تسجيل الدخول.",
   "profileCompletedErrorMessage": "فشل إكمال الملف الشخصي. يرجى المحاولة مرة أخرى.",
-
   "featureComingSoon": "هذه الميزة قادمة قريبًا.",
   "changePhotoHint": "اضغط لإضافة صورة للملف الشخصي",
-
   "previousStepButton": "الخطوة السابقة",
   "completeProfileNamesTitle": "إكمال الملف الشخصي - الأسماء",
   "completeProfileNamesSubtitle": "يرجى إدخال الاسم الأول واسم العائلة.",
@@ -72,24 +57,20 @@
   "completeProfilePhotoTitle": "إكمال الملف الشخصي - الصورة",
   "completeProfilePhotoSubtitle": "أضف صورة للملف الشخصي لتخصيص حسابك.",
   "nextStepButton": "الخطوة التالية",
-
   "home_welcome": "أهلًا 👋",
   "home_search_hint": "ابحث عن المنتجات، العلامات التجارية...",
   "home_banner_title": "عروض خاصة",
   "home_banner_subtitle": "وفر حتى 50% على منتجات مختارة.",
   "home_banner_button": "ابدأ التسوق",
-
   "home_items_default_title": "المنتجات",
   "home_recommended_title": "موصى به لك",
   "home_popular_title": "الأكثر شيوعًا الآن",
   "home_bookings_title": "الحجوزات القادمة",
   "home_reviews_title": "أحدث المراجعات",
-
   "home_flash_sale_title": "تخفيضات خاطفة",
   "home_new_arrivals_title": "وصل حديثًا",
   "home_best_sellers_title": "الأكثر مبيعًا",
   "home_top_rated_title": "الأعلى تقييمًا",
-
   "home_why_shop_title": "لماذا تتسوق معنا",
   "home_why_shop_free_shipping_title": "شحن مجاني",
   "home_why_shop_free_shipping_subtitle": "على الطلبات فوق 50$",
@@ -99,12 +80,10 @@
   "home_why_shop_secure_payment_subtitle": "معاملات محمية 100%",
   "home_why_shop_support_title": "دعم 24/7",
   "home_why_shop_support_subtitle": "نحن هنا دائمًا لمساعدتك",
-
   "connection_offline": "لا يوجد اتصال بالإنترنت",
   "connection_server_down": "الخادم لا يستجيب",
   "profile_login_required": "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
   "connection_issue": "مشكلة في الاتصال",
-
   "explore_title": "استكشاف",
   "explore_search_hint": "ابحث ..",
   "explore_items_title": "كل الأنشطة",
@@ -118,12 +97,10 @@
       }
     }
   },
-
   "explore_sort_relevance": "الأكثر صلة",
   "explore_sort_price_low_high": "السعر: من الأقل إلى الأعلى",
   "explore_sort_price_high_low": "السعر: من الأعلى إلى الأقل",
   "explore_sort_date_soonest": "الأقرب موعدًا",
-
   "profileMotto": "عِش هوايتك!",
   "profile_load_error": "تعذر تحميل ملفك الشخصي. يرجى المحاولة مرة أخرى.",
   "retry": "إعادة المحاولة",
@@ -141,8 +118,7 @@
   "language": "اللغة",
   "english": "الإنجليزية",
   "logout": "تسجيل الخروج",
-
-  "adminDashboardTitle": "لوحة تحكم المدير",
+  "adminDashboardTitle": "لوحة تحكم الأدمن",
   "adminDashboardSubtitle": "إدارة محتوى التطبيق والإعدادات.",
   "adminProductsTitle": "المنتجات",
   "adminProductsEmpty": "لا توجد منتجات بعد. اضغط + لإضافة أول منتج.",
@@ -150,18 +126,15 @@
   "adminProductsBestSellers": "الأكثر مبيعًا",
   "adminProductsDiscounted": "منتجات مخفضة",
   "adminProductsSearchPlaceholder": "ابحث عن منتجات...",
-
   "accountInactiveTitle": "حسابك غير نشط",
   "accountInactiveBody": "حسابك غير نشط حاليًا. هل تريد إعادة تفعيله للمتابعة؟",
   "reactivateButton": "إعادة التفعيل",
   "accountReactivated": "تمت إعادة تفعيل حسابك بنجاح",
-
   "chooseSignInRole": "اختر طريقة تسجيل الدخول",
   "enterAsOwner": "الدخول كمالك (مدير)",
   "enterAsUser": "الدخول كمستخدم",
   "roleLabel": "الدور",
   "userLabel": "مستخدم",
-
   "loginInactiveTitle": "إعادة تفعيل حسابك؟",
   "loginInactiveMessage": "حسابك \"{name}\" غير نشط حاليًا. هل تريد إعادة تفعيله والمتابعة؟",
   "loginInactiveReactivate": "إعادة التفعيل",
@@ -173,118 +146,91 @@
   "loginRoleLabel": "الدور:",
   "loginUserFallbackLabel": "مستخدم",
   "loginInactiveSuccess": "تمت إعادة تفعيل حسابك بنجاح.",
-
   "productBadgeOnSale": "تخفيض",
   "productStatusDraft": "مسودة",
   "productStatusActive": "نشط",
   "productStatusArchived": "مؤرشف",
-
   "errorNetworkNoInternet": "لا يوجد إنترنت أو الخادم غير متاح.",
   "errorNetworkServerDown": "الخادم لا يستجيب. حاول لاحقًا.",
   "errorServerUnexpected": "خطأ غير متوقع في الخادم. حاول مرة أخرى.",
   "errorUnexpected": "حدث خطأ غير متوقع. حاول مرة أخرى.",
   "errorAuthUnauthorized": "انتهت جلستك. يرجى تسجيل الدخول مجددًا.",
   "errorAuthForbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
-
   "logoutLabel": "تسجيل الخروج",
   "adminDashboardQuickActions": "إجراءات سريعة",
   "adminOverviewAnalytics": "نظرة عامة وإحصاءات",
-
   "adminProjectsOwners": "المشاريع والمالكون",
   "adminUsersManagers": "المستخدمون والمدراء",
   "adminSettings": "الإعدادات",
   "adminSignedInAs": "مسجل الدخول كـ {role}",
-
   "adminProductCreateTitle": "إنشاء منتج",
   "adminProductEditTitle": "تعديل المنتج",
-
   "adminProductNameLabel": "الاسم",
   "adminProductNameHint": "مثال: MacBook Pro",
   "adminProductNameRequired": "الاسم مطلوب",
-
   "adminProductDescriptionLabel": "الوصف",
   "adminProductDescriptionHint": "وصف قصير...",
-
   "adminProductCategoryLabel": "الفئة",
   "adminProductItemTypeLabel": "نوع العنصر",
-
   "adminProductPriceLabel": "السعر",
   "adminProductPriceRequired": "السعر مطلوب",
   "adminProductPriceInvalid": "يجب أن يكون السعر أكبر من 0",
-
   "adminProductStockLabel": "المخزون",
   "adminStockHint": "مثال: 50",
-
   "adminProductImageLabel": "الصورة",
   "adminProductPickImage": "اختيار صورة",
   "adminRemove": "إزالة",
-
   "adminProductSkuLabel": "SKU",
   "adminProductSkuHint": "مثال: SKU-123",
-
   "adminProductTypeLabel": "نوع المنتج",
   "adminProductTypeSimple": "بسيط",
   "adminProductTypeVariable": "متغير",
   "adminProductTypeGrouped": "مجمع",
   "adminProductTypeExternal": "خارجي",
-
   "adminProductVirtualLabel": "منتج افتراضي",
   "adminProductDownloadableLabel": "قابل للتحميل",
   "adminProductDownloadUrlLabel": "رابط التحميل",
   "adminProductDownloadUrlHint": "https://...",
-
   "adminProductExternalUrlLabel": "رابط خارجي",
   "adminProductExternalUrlHint": "https://...",
   "adminProductButtonTextLabel": "نص الزر",
   "adminProductButtonTextHint": "اشترِ الآن",
-
   "adminProductSaleSectionTitle": "تخفيض",
   "adminProductSalePriceLabel": "سعر التخفيض",
   "adminProductSaleStartLabel": "تاريخ بداية التخفيض",
   "adminProductSaleEndLabel": "تاريخ نهاية التخفيض",
-
   "adminProductAttributesTitle": "السمات",
   "adminProductAttributeCodeLabel": "كود السمة",
   "adminProductAttributeValueLabel": "القيمة",
   "adminProductAddAttribute": "إضافة سمة",
   "adminProductNoAttributesHint": "لا توجد سمات مضافة بعد.",
-
   "adminProductSaveButton": "حفظ المنتج",
-
   "adminNoCategories": "لا توجد فئات",
   "adminCreateCategory": "إنشاء فئة",
-
   "adminNoItemTypes": "لا توجد أنواع عناصر",
   "adminCreateItemType": "إنشاء نوع عنصر",
-
   "adminTaxesTitle": "الضرائب",
   "adminTaxRulesTitle": "قواعد الضرائب",
   "adminTaxAddRule": "إضافة قاعدة ضريبية",
   "adminTaxNoRules": "لا توجد قواعد ضريبية.",
   "adminTaxCreateRuleTitle": "إنشاء قاعدة ضريبية",
   "adminTaxEditRuleTitle": "تعديل قاعدة ضريبية",
-
   "adminTaxRuleNameLabel": "اسم القاعدة",
   "adminTaxRuleNameHint": "مثال: ضريبة القيمة المضافة 11%",
   "adminTaxRuleNameRequired": "اسم القاعدة مطلوب",
-
   "adminTaxRuleRateLabel": "النسبة (%)",
   "adminTaxRuleRateHint": "11.00",
   "adminTaxRuleRateRequired": "النسبة مطلوبة",
   "adminTaxRuleRateInvalid": "يجب أن تكون النسبة رقمًا صحيحًا > 0",
-
   "adminTaxAppliesToShippingLabel": "تُطبق على الشحن",
   "adminTaxEnabledLabel": "مفعّل",
-
   "adminTaxCountryIdLabel": "معرّف الدولة (اختياري)",
   "adminTaxCountryIdHint": "1",
   "adminTaxRegionIdLabel": "معرّف المنطقة (اختياري)",
   "adminTaxRegionIdHint": "2",
-
   "adminTaxRateShort": "النسبة",
   "adminTaxAppliesToShippingShort": "ضريبة الشحن",
   "adminTaxEnabledShort": "مفعّل",
-
   "adminCancel": "إلغاء",
   "adminCreate": "إنشاء",
   "adminUpdate": "تحديث",
@@ -293,7 +239,6 @@
   "yes": "نعم",
   "no": "لا",
   "adminSessionExpired": "انتهت جلستك. يرجى تسجيل الدخول مجددًا.",
-
   "adminTaxCountryLabel": "الدولة",
   "adminTaxCountryHint": "اختر الدولة",
   "adminTaxRegionLabel": "المنطقة",
@@ -301,56 +246,45 @@
   "adminTaxRegionHint": "اختر المنطقة",
   "adminTaxRulesTitleShort": "قواعد الضرائب",
   "adminTaxRulesSubtitle": "إدارة قواعد الضرائب لمنتجاتك.",
-
   "taxPreviewLoading": "جارٍ حساب معاينة الضريبة...",
   "taxPreviewTitle": "معاينة الضريبة",
   "itemsTaxLabel": "ضريبة المنتجات",
   "shippingTaxLabel": "ضريبة الشحن",
   "totalTaxLabel": "إجمالي الضريبة",
-
   "taxClassNone": "بدون ضريبة",
   "taxClassStandard": "نسبة قياسية",
   "taxClassReduced": "نسبة مخفضة",
   "taxClassZero": "نسبة صفر",
   "taxClassLabel": "فئة الضريبة",
   "taxClassHint": "اختر فئة الضريبة",
-
   "adminTaxCountryRequired": "الدولة مطلوبة",
   "adminTaxRegionRequired": "المنطقة مطلوبة",
   "adminTaxRulePresetLabel": "إعداد مسبق",
   "adminTaxRulePresetHint": "اختر إعدادًا مسبقًا لملء الحقول تلقائيًا",
   "adminCustom": "مخصص",
   "adminTaxAutoNameLabel": "إنشاء اسم تلقائيًا",
-
   "adminShippingTitle": "طرق الشحن",
   "adminShippingAdd": "إضافة طريقة",
   "adminShippingNoMethods": "لا توجد طرق شحن بعد",
   "adminShippingCreateTitle": "إنشاء طريقة شحن",
   "adminShippingEditTitle": "تعديل طريقة شحن",
-
   "adminShippingNameLabel": "الاسم",
   "adminShippingNameRequired": "الاسم مطلوب",
   "adminShippingDescLabel": "الوصف",
-
   "adminShippingTypeLabel": "نوع الطريقة",
   "adminShippingTypeHint": "اختر النوع",
-
   "adminShippingFlatRateLabel": "سعر ثابت",
   "adminShippingPerKgLabel": "السعر لكل كغ",
   "adminShippingThresholdLabel": "حد الشحن المجاني",
-
   "adminShippingCountryLabel": "الدولة",
   "adminShippingCountryHint": "اختر الدولة",
   "adminShippingCountryRequired": "الدولة مطلوبة",
-
   "adminShippingRegionLabel": "المنطقة",
   "adminShippingRegionHint": "اختر المنطقة (اختياري)",
   "adminShippingSelectCountryFirst": "اختر الدولة أولًا",
-
   "adminShippingEnabledLabel": "مفعّل",
   "adminShippingEnabledShort": "مفعّل",
   "adminShippingTypeShort": "النوع",
-
   "shippingTypeFlatRate": "سعر ثابت",
   "shippingTypeFree": "مجاني",
   "shippingTypeWeightBased": "حسب الوزن",
@@ -358,7 +292,6 @@
   "shippingTypePricePerKg": "السعر لكل كغ",
   "shippingTypeLocalPickup": "استلام محلي",
   "shippingTypeFreeOverThreshold": "مجاني فوق الحد",
-
   "adminConfirmDelete": "هل أنت متأكد أنك تريد حذف هذا العنصر؟",
   "adminShippingCreateButton": "إنشاء الطريقة",
   "adminDeleted": "تم حذف العنصر بنجاح",
@@ -369,7 +302,6 @@
   "adminActive": "النشطة فقط",
   "adminCreated": "تم الإنشاء بنجاح",
   "adminUpdated": "تم التحديث بنجاح",
-
   "cart_title": "سلة التسوق",
   "cart_empty_message": "سلتك فارغة. ابدأ بإضافة المنتجات!",
   "cart_total_label": "الإجمالي:",
@@ -384,27 +316,21 @@
   "cart_empty_cta": "تصفح المنتجات",
   "cart_cleared": "تم تفريغ السلة",
   "cart_add_button": "أضف إلى السلة",
-
   "home_book_now_button": "احجز الآن",
   "home_view_details_button": "عرض التفاصيل",
-
   "cart_login_required_title": "تسجيل الدخول مطلوب",
   "cart_login_required_message": "يرجى تسجيل الدخول لإكمال الدفع.",
   "cancel_button": "إلغاء",
   "login_button": "تسجيل الدخول",
   "cart_item_added_snackbar": "تمت إضافة المنتج إلى السلة",
-
   "coupons_title": "القسائم",
   "coupons_saved": "تم حفظ القسيمة بنجاح",
   "coupons_deleted": "تم حذف القسيمة بنجاح",
   "coupons_empty": "لا توجد قسائم بعد. أنشئ أول واحدة!",
-
   "coupons_type_percent": "خصم بالنسبة المئوية",
   "coupons_type_fixed": "خصم بمبلغ ثابت",
   "coupons_type_free_shipping": "شحن مجاني",
-
   "coupons_inactive_badge": "غير نشطة",
-
   "coupons_delete_title": "حذف القسيمة",
   "coupons_delete_confirm": "هل أنت متأكد أنك تريد حذف القسيمة {code}؟",
   "delete": "حذف",
@@ -424,12 +350,10 @@
   "coupons_active": "نشطة",
   "common_save": "حفظ",
   "adminCouponsTitle": "القسائم",
-
   "checkoutTitle": "الدفع",
   "checkoutLoading": "جارٍ تحميل الدفع…",
   "checkoutEmptyCart": "سلتك فارغة.",
   "checkoutGoBack": "رجوع",
-
   "checkoutItemsTitle": "المنتجات",
   "checkoutAddressTitle": "عنوان الشحن",
   "checkoutCountryIdLabel": "معرّف الدولة",
@@ -441,28 +365,23 @@
   "checkoutPostalCodeLabel": "الرمز البريدي",
   "checkoutPostalCodeHint": "اختياري",
   "checkoutApplyAddress": "تحديث الشحن",
-
   "checkoutCouponTitle": "قسيمة",
   "checkoutCouponLabel": "كود القسيمة",
   "checkoutCouponHint": "أدخل القسيمة (اختياري)",
-
   "checkoutShippingTitle": "الشحن",
   "checkoutNoShippingMethods": "لم يتم العثور على طرق شحن. حدّث العنوان ثم قم بالتحديث.",
   "checkoutRefreshShipping": "تحديث الشحن",
   "checkoutSelectShipping": "يرجى اختيار طريقة الشحن",
-
   "checkoutPaymentTitle": "الدفع",
   "checkoutPaymentCash": "الدفع عند الاستلام",
   "checkoutStripeNote": "Stripe يتطلب تأكيد الدفع (قريبًا).",
   "checkoutSelectPayment": "يرجى اختيار طريقة الدفع",
-
   "checkoutSummaryTitle": "ملخص الطلب",
   "checkoutSubtotal": "المجموع الفرعي",
   "checkoutShipping": "الشحن",
   "checkoutTax": "الضريبة",
   "checkoutTotal": "الإجمالي",
   "checkoutPlaceOrder": "إتمام الطلب",
-
   "orderSummaryTitle": "ملخص الطلب",
   "secureCheckout": "دفع آمن",
   "itemsSubtotalLabel": "المجموع الفرعي للمنتجات",
@@ -471,34 +390,67 @@
   "discountLabel": "الخصم",
   "totalLabel": "الإجمالي",
   "taxesShippingNote": "يتم احتساب الضرائب والشحن حسب العنوان.",
-
   "searchHint": "بحث...",
   "noOptions": "لا توجد خيارات",
   "noResults": "لا توجد نتائج",
   "missingUserToken": "رمز المستخدم مفقود",
-
   "itemNumber": "العنصر رقم {id}",
-  "@itemNumber": { "placeholders": { "id": { "type": "int" } } },
-
+  "@itemNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
   "qtyPriceLine": "x{qty} • {price}",
-  "@qtyPriceLine": { "placeholders": { "qty": { "type": "int" }, "price": { "type": "String" } } },
-
+  "@qtyPriceLine": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "checkoutOrderPlacedToast": "تم إنشاء الطلب ✅ (#{orderId})",
-  "@checkoutOrderPlacedToast": { "placeholders": { "orderId": { "type": "int" } } },
-
+  "@checkoutOrderPlacedToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
   "orderTitle": "طلب رقم {orderId}",
-  "@orderTitle": { "placeholders": { "orderId": { "type": "int" } } },
-
+  "@orderTitle": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
   "orderDateLabel": "التاريخ: {date}",
-  "@orderDateLabel": { "placeholders": { "date": { "type": "String" } } },
-
+  "@orderDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "orderItemsTitle": "المنتجات",
   "orderQtyUnitLine": "الكمية: {qty} • سعر الوحدة: {unit}",
-  "@orderQtyUnitLine": { "placeholders": { "qty": { "type": "int" }, "unit": { "type": "String" } } },
-
+  "@orderQtyUnitLine": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "grandTotalLabel": "الإجمالي النهائي",
   "downloadInvoicePdf": "تحميل فاتورة PDF",
-
   "checkoutErrorCartEmpty": "السلة فارغة",
   "checkoutErrorSelectPayment": "اختر طريقة الدفع",
   "checkoutErrorSelectCountry": "اختر الدولة",
@@ -509,32 +461,28 @@
   "checkoutErrorShippingMissing": "طريقة الشحن مفقودة",
   "checkoutErrorStripeNotReady": "Stripe غير جاهز بعد",
   "commonDash": "-",
-
   "orderDetailsTitle": "تفاصيل الطلب رقم {orderId}",
   "orderDetailsDateLine": "التاريخ: {date}",
   "orderDetailsItemsTitle": "المنتجات",
   "orderDetailsItemFallback": "عنصر #{itemId}",
   "orderDetailsQtyUnitLine": "الكمية: {qty}  •  سعر الوحدة: {unitPrice}",
-
   "orderDetailsSubtotal": "المجموع الفرعي",
   "orderDetailsShipping": "الشحن",
   "orderDetailsTax": "الضريبة",
   "orderDetailsCouponLine": "قسيمة ({code})",
   "orderDetailsGrandTotal": "الإجمالي النهائي",
   "orderDetailsDownloadInvoice": "تحميل فاتورة PDF",
-
   "common_stock_label": "المخزون: {stock}",
-
   "ordersTitle": "طلباتي",
-  "ordersLoading": "جارٍ تحميل الطلبات…",
+  "ordersLoading": "جاري تحميل الطلبات...",
   "ordersEmptyTitle": "لا توجد طلبات بعد",
-  "ordersEmptyBody": "عندما تقوم بإنشاء طلب، سيظهر هنا.",
-  "ordersReload": "إعادة التحميل",
+  "ordersEmptyBody": "عند تنفيذ طلب، سيظهر هنا.",
+  "ordersReload": "إعادة تحميل",
   "ordersFilterAll": "الكل",
   "ordersFilterPending": "قيد الانتظار",
   "ordersFilterCompleted": "مكتمل",
   "ordersFilterCanceled": "ملغي",
-  "ordersNoResultsForFilter": "لا توجد طلبات مطابقة لهذا الفلتر.",
+  "ordersNoResultsForFilter": "لا توجد نتائج لهذا الفلتر.",
   "ordersQtyLabel": "الكمية",
   "ordersPaid": "مدفوع",
   "ordersUnpaid": "غير مدفوع",
@@ -544,7 +492,6 @@
   "ordersStatusUnknown": "غير معروف",
   "ordersUnknownItem": "عنصر",
   "ordersQty": "الكمية",
-
   "profileLoginRequired": "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
   "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مجددًا.",
   "login": "تسجيل الدخول",
@@ -558,78 +505,66 @@
   "dangerZone": "منطقة الخطر",
   "password": "كلمة المرور",
   "deleteAccount": "حذف الحساب",
-
   "notifications_title": "الإشعارات",
   "notifications_empty_title": "لا توجد إشعارات بعد",
   "notifications_empty_subtitle": "عندما يحدث شيء، سيظهر هنا. حاليًا… هدوء تام 😌",
   "notifications_retry": "إعادة المحاولة",
-
   "privacy_policy_title": "سياسة الخصوصية",
   "privacy_policy_intro_title": "خصوصيتك تهمّنا",
   "privacy_policy_intro_body": "تشرح هذه السياسة ما نجمعه ولماذا وكيف يمكنك التحكم ببياناتك.",
-
   "privacy_policy_collect_title": "ما الذي نجمعه",
   "privacy_policy_collect_body": "معلومات أساسية (الاسم، البريد/الهاتف)، إعدادات الحساب، واستخدام التطبيق الضروري لتقديم الخدمة.",
-
   "privacy_policy_use_title": "كيف نستخدم بياناتك",
   "privacy_policy_use_body": "لتشغيل التطبيق، تخصيص تجربتك، تحسين الميزات، وحماية المنصة.",
-
   "privacy_policy_share_title": "المشاركة",
   "privacy_policy_share_body": "لا نبيع بياناتك. نشارك فقط ما يلزم مع خدمات موثوقة (مثل الاستضافة) لتشغيل التطبيق.",
-
   "privacy_policy_security_title": "الأمان",
   "privacy_policy_security_body": "نستخدم ممارسات أمان قياسية، لكن لا يوجد نظام مثالي 100%. حافظ على كلمة المرور.",
-
   "privacy_policy_choices_title": "خياراتك",
   "privacy_policy_choices_body": "يمكنك تغيير الخصوصية (عام/خاص)، تحديث الملف الشخصي، أو طلب إجراءات على الحساب حسب ميزات التطبيق.",
-
   "privacy_policy_contact_title": "التواصل",
   "privacy_policy_contact_body": "إذا كان لديك أسئلة حول الخصوصية، تواصل مع فريق الدعم.",
-
   "privacy_policy_last_updated": "آخر تحديث: 19 ديسمبر 2025",
-
   "home_bottom_slide_thankyou_title": "شكرًا لك",
   "home_bottom_slide_thankyou_message": "نقدّر ثقتك. فريقنا يعمل يوميًا للحفاظ على الجودة وسرعة الخدمة.",
   "home_bottom_slide_secure_title": "آمن ومحمي",
   "home_bottom_slide_secure_message": "مدفوعات آمنة، منتجات مضبوطة، وتغليف نظيف — الأساسيات بشكل صحيح.",
   "home_bottom_slide_support_title": "دعم حقيقي",
   "home_bottom_slide_support_message": "تحتاج مساعدة؟ نحن نرد. مش جو “Seen” وبس 😅",
-
   "home_bottom_benefit_contact": "تواصل مع\nخبير معتمد",
   "home_bottom_benefit_secure_payments": "مدفوعات\nآمنة",
   "home_bottom_benefit_authentic_products": "منتجات أصلية\nومراقبة",
   "home_bottom_benefit_free_delivery_above": "توصيل مجاني\nفوق {amount}",
   "@home_bottom_benefit_free_delivery_above": {
     "placeholders": {
-      "amount": { "type": "String" }
+      "amount": {
+        "type": "String"
+      }
     }
   },
-
   "home_trailing_limited_time": "لفترة محدودة",
   "home_trailing_see_all": "عرض الكل",
   "home_sale_tag": "تخفيض",
   "home_stock_label": "المخزون: {count}",
   "@home_stock_label": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "home_bookings_placeholder": "قسم الحجوزات غير جاهز بعد.",
-
   "home_footer_contact_title": "تواصل معنا",
   "home_footer_contact_desc": "تحتاج مساعدة؟ نحن على بعد رسالة.",
   "home_footer_free_delivery_title": "توصيل مجاني",
   "home_footer_free_delivery_desc": "متاح على طلبات ومناطق محددة.",
   "home_footer_returns_title": "إرجاع سهل",
   "home_footer_returns_desc": "سياسة إرجاع بسيطة للعناصر المؤهلة.",
-
   "ownerPaymentSettingsTitle": "طرق الدفع",
   "ownerPaymentSettingsDesc": "فعّل وادخل إعدادات بوابات الدفع لهذا المشروع",
   "ownerPaymentConfigure": "إعداد",
   "ownerPaymentIncomplete": "غير مكتمل",
   "ownerPaymentConfigHint": "قم بإعداد الحقول أدناه. الحقول المطلوبة يجب تعبئتها.",
-
   "paymentMethodsTitle": "طرق الدفع",
   "paymentSearchHint": "بحث…",
   "paymentNoResults": "لا توجد نتائج",
@@ -640,9 +575,7 @@
   "paymentSavedKeepHint": "محفوظ (اتركه فارغًا للاحتفاظ)",
   "paymentRequiredLabel": "• مطلوب",
   "paymentIncomplete": "غير مكتمل",
-
   "adminPaymentConfigTitle": "طرق الدفع",
-
   "checkoutConfirmDialogTitle": "تأكيد الدفع",
   "checkoutConfirmCartCleared": "{itemCount, plural, =0{بعد الدفع ستصبح سلتك فارغة.} =1{بعد الدفع ستصبح سلتك فارغة (عنصر واحد).} other{بعد الدفع ستصبح سلتك فارغة ({itemCount} عناصر).}} هل تريد المتابعة؟",
   "commonYes": "نعم",
@@ -650,46 +583,39 @@
   "@checkoutConfirmCartCleared": {
     "description": "تحذير قبل إنشاء الطلب: سيتم تفريغ السلة بعد الدفع.",
     "placeholders": {
-      "itemCount": { "type": "int" }
+      "itemCount": {
+        "type": "int"
+      }
     }
   },
-
   "adminOrdersTitle": "الطلبات",
   "adminDashboard": "لوحة التحكم",
   "adminAllTime": "كل الوقت",
   "adminLast7Days": "آخر 7 أيام",
   "adminLast30Days": "آخر 30 يومًا",
   "adminClear": "مسح",
-
   "adminKpiOrders": "الطلبات",
   "adminKpiGrossSales": "إجمالي المبيعات",
   "adminKpiPaid": "مدفوع",
   "adminKpiOutstanding": "متبقي",
   "adminKpiAvgOrder": "متوسط الطلب",
-
   "adminFullyPaidPercent": "مدفوع بالكامل: {percent}%",
   "@adminFullyPaidPercent": {
     "placeholders": {
       "percent": {}
     }
   },
-
   "adminPaidRevenueLast7Days": "الإيراد المدفوع (آخر 7 أيام)",
-
   "adminNoOrders": "لا توجد طلبات",
   "adminNoOrdersHint": "جرّب تغيير الحالة أو الفترة أو اسحب للتحديث.",
-
   "adminFilterAll": "الكل",
-
   "adminOrderDetailsTitle": "طلب رقم {id}",
   "@adminOrderDetailsTitle": {
     "placeholders": {
       "id": {}
     }
   },
-
   "adminOrderFailedToLoad": "فشل تحميل الطلب.",
-
   "adminPaymentSummary": "ملخص الدفع",
   "adminOrderInfo": "معلومات الطلب",
   "adminStatus": "الحالة",
@@ -701,16 +627,13 @@
   "adminShippingCity": "مدينة الشحن",
   "adminShippingMethod": "طريقة الشحن",
   "adminCoupon": "قسيمة",
-
   "adminItemsCount": "العناصر ({count})",
   "@adminItemsCount": {
     "placeholders": {
       "count": {}
     }
   },
-
   "adminCustomer": "العميل",
-
   "adminQtyPriceLine": "الكمية: {qty}  •  السعر: {price}",
   "@adminQtyPriceLine": {
     "placeholders": {
@@ -718,182 +641,160 @@
       "price": {}
     }
   },
-
   "adminOrderCardTitle": "طلب رقم {id}",
   "@adminOrderCardTitle": {
     "placeholders": {
       "id": {}
     }
   },
-
   "adminItemsShort": "{count} عناصر",
   "@adminItemsShort": {
     "placeholders": {
       "count": {}
     }
   },
-
   "adminPaidShort": "مدفوع: {amount}",
   "@adminPaidShort": {
     "placeholders": {
       "amount": {}
     }
   },
-
   "adminRemainingShort": "متبقي: {amount}",
   "@adminRemainingShort": {
     "placeholders": {
       "amount": {}
     }
   },
-
   "adminFullyPaid": "مدفوع بالكامل",
-
   "adminOrderStatusPending": "قيد الانتظار",
   "adminOrderStatusCancelRequested": "طلب إلغاء",
   "adminOrderStatusCanceled": "ملغي",
   "adminOrderStatusRejected": "مرفوض",
   "adminOrderStatusRefunded": "مسترجع",
   "adminOrderStatusCompleted": "مكتمل",
-
   "adminMarkCashPaidBody": "هل أنت متأكد أنك تريد وضع الطلب كمدفوع نقدًا؟",
   "adminMarkCashPaid": "اعتباره مدفوع نقدًا",
   "adminMarkCashPaidTitle": "وضع الطلب كمدفوع",
   "adminMarkCashPaidButton": "وضع كمدفوع",
-
   "forgotPasswordLink": "هل نسيت كلمة المرور؟",
   "forgotTitle": "إعادة تعيين كلمة المرور",
   "forgotSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رمزًا.",
   "forgotSendCode": "إرسال الرمز",
   "forgotTip": "ملاحظة: تحقق من الرسائل غير المرغوب فيها أيضًا 👀",
-
   "forgotVerifyTitle": "إدخال رمز التحقق",
   "forgotVerifySubtitle": "أرسلنا رمزًا إلى {email}",
-  "@forgotVerifySubtitle": { "placeholders": { "email": {} } },
-
+  "@forgotVerifySubtitle": {
+    "placeholders": {
+      "email": {}
+    }
+  },
   "forgotNewPassTitle": "تعيين كلمة مرور جديدة",
   "forgotNewPassSubtitle": "اجعلها قوية — نفسك المستقبلية ستشكرك.",
   "newPasswordLabel": "كلمة المرور الجديدة",
   "savePasswordButton": "حفظ كلمة المرور",
-
   "codeLabel": "الرمز",
   "codeTooShort": "الرمز قصير جدًا",
   "verifyButton": "تحقق",
   "resendCode": "إعادة إرسال الرمز",
   "passwordsDontMatch": "كلمتا المرور غير متطابقتين",
-   "checkoutFullNameLabel": "الاسم الكامل",
+  "checkoutFullNameLabel": "الاسم الكامل",
   "checkoutFullNameHint": "اسمك",
-
   "checkoutAddressLineLabel": "العنوان",
   "checkoutAddressLineHint": "مثال: المبنى، الطابق، اسم الشارع",
-
   "checkoutPhoneLabel": "رقم الهاتف",
   "checkoutPhoneHint": "مثال: +961 70 123 456",
-
   "checkoutNotesLabel": "ملاحظات التوصيل (اختياري)",
   "checkoutNotesHint": "مثال: اتصل بي عند الوصول",
-    "phone": "الهاتف",
+  "phone": "الهاتف",
   "address": "العنوان",
   "postalCode": "الرمز البريدي",
-
   "adminShippingTotal": "إجمالي التوصيل",
   "adminItemsTaxTotal": "إجمالي ضريبة العناصر",
   "adminShippingTaxTotal": "إجمالي ضريبة التوصيل",
   "authUsernameTaken": "اسم المستخدم مستخدم بالفعل.",
   "authEmailAlreadyExists": "هذا البريد الإلكتروني مسجّل بالفعل.",
   "authPhoneAlreadyExists": "رقم الهاتف هذا مسجّل بالفعل.",
-
   "authUserNotFound": "لا يوجد حساب لهذا البريد/الرقم.",
   "authWrongPassword": "كلمة المرور غير صحيحة.",
   "authInvalidCredentials": "بيانات الدخول غير صحيحة.",
   "authAccountInactive": "حسابك غير مُفعّل. أعد تفعيل الحساب للمتابعة.",
-
   "httpValidationError": "بعض الحقول غير صحيحة.",
   "httpConflict": "يوجد تعارض. حاول مرة أخرى.",
   "httpUnauthorized": "غير مصرح لك.",
   "httpForbidden": "ليس لديك صلاحية للقيام بذلك.",
   "httpNotFound": "غير موجود.",
   "httpServerError": "خطأ في الخادم. حاول لاحقاً.",
-
   "networkNoInternet": "لا يوجد اتصال بالإنترنت.",
   "networkTimeout": "انتهت مهلة الطلب.",
   "networkError": "خطأ في الشبكة.",
-
-  "authErrorGeneric": "حدث خطأ ما. حاول مرة أخرى.",
-  "outOfStock" :"غير متوفر","commonCancel": "إلغاء",
+  "outOfStock": "غير متوفر",
+  "commonCancel": "إلغاء",
   "commonSave": "حفظ",
-
   "adminMissingAdminToken": "انتهت الجلسة. الرجاء تسجيل الدخول من جديد.",
   "adminGenericError": "صار في مشكلة. جرّب مرة تانية.",
-
   "adminCategoryFallbackName": "تصنيف",
   "adminItemTypeFallbackName": "نوع عنصر",
-
   "adminDeleteCategoryTitle": "حذف التصنيف؟",
   "adminDeleteCategoryMessage": "بدّك تحذف \"{name}\"؟\n\nممكن كمان ينحذف معه أنواع العناصر التابعة له (حسب قواعد السيرفر).",
-
   "adminDeleteItemTypeTitle": "حذف نوع العنصر؟",
   "adminDeleteItemTypeMessage": "بدّك تحذف \"{name}\"؟",
-
   "adminDeleteCategoryTooltip": "حذف التصنيف",
   "adminDeleteItemTypeTooltip": "حذف نوع العنصر",
-
   "adminNewCategoryTitle": "تصنيف جديد",
   "adminNewCategoryHint": "مثال: لابتوبات",
-
   "adminNewItemTypeTitle": "نوع عنصر جديد",
   "adminNewItemTypeHint": "مثال: Laptop",
-
   "adminSelectCategoryBeforeCreateItemType": "لازم تختار تصنيف قبل ما تعمل نوع عنصر.",
   "adminSelectCategoryBeforeSavingProduct": "لازم تختار تصنيف قبل الحفظ.",
   "adminMissingCurrencyConfig": "العملة مش محددة لهالتطبيق. حدّد العملة بالأول.",
-
   "adminButtonTextDefaultAddToCart": "أضف إلى السلة",
-
   "adminPriceExampleHint": "مثال: 120.00",
   "commonDateFormatHint": "YYYY-MM-DD",
   "adminAttributeValueExampleHint": "مثال: Samsung",
-  "adminProductAttributeValueHint": "مثال: سامسونج", "adminDashboardTitle": "لوحة تحكم الأدمن",
+  "adminProductAttributeValueHint": "مثال: سامسونج",
   "adminDashboardHeroTitle": "لوحة التحكم",
   "adminDashboardAup": "AUP {id}",
-  "@adminDashboardAup": { "placeholders": { "id": {} } },
-
-  "refreshLabel": "تحديث",
+  "@adminDashboardAup": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "retryLabel": "إعادة المحاولة",
   "cancelLabel": "إلغاء",
   "sendRequestLabel": "إرسال الطلب",
   "upgradeLabel": "ترقية",
   "requestUpgradeLabel": "طلب ترقية",
-
   "licenseChecking": "جارٍ التحقق من الترخيص…",
   "licenseAccessGranted": "تم السماح بالدخول ",
   "licenseAccessBlocked": "تم حظر الوصول",
   "licenseLimitReached": "تم الوصول للحد: {active}/{allowed} مستخدم",
-  "@licenseLimitReached": { "placeholders": { "active": {}, "allowed": {} } },
-
+  "@licenseLimitReached": {
+    "placeholders": {
+      "active": {},
+      "allowed": {}
+    }
+  },
   "adminDashboardStatusChecking": "جارٍ التحقق من الخطة…",
   "adminDashboardStatusLicenseFailed": "فشل التحقق من الترخيص",
   "adminDashboardStatusLimitReached": "تم الوصول للحد — مطلوب ترقية",
   "adminDashboardStatusAccessBlocked": "الوصول محظور",
   "adminDashboardStatusOk": "كل شي تمام ",
-
   "adminDashboardActionsCount": "{count} إجراءات",
-  "@adminDashboardActionsCount": { "placeholders": { "count": {} } },
-
+  "@adminDashboardActionsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "upgradeSheetTitle": "طلب ترقية",
   "upgradeSheetSubtitle": "اختر الخطة لإرسال طلب الترقية.",
   "noUpgradeAvailable": "لا توجد ترقية متاحة.",
   "upgradeRequestSent": "تم إرسال الطلب ",
-
   "planGeneric": "خطة",
   "planFree": "مجاني",
   "planProHostedDb": "برو (استضافة قاعدة البيانات)",
   "planDedicated": "سيرفر مخصص",
   "planProHostedDbDesc": "مستخدمين غير محدودين (استضافة Build4All)",
   "planDedicatedDesc": "سيرفر مخصص (يحتاج إعداد/تخصيص)",
-
-  "adminOrdersTitle": "الطلبات",
-
   "adminActionProductsSubtitle": "الكتالوج والأسعار",
   "adminActionShippingSubtitle": "طرق التوصيل والرسوم",
   "adminActionPaymentSubtitle": "Stripe والإعدادات",
@@ -908,7 +809,7 @@
   "manageProfileLabel": "إدارة",
   "aupIdLabel": "معرّف AUP",
   "businessIdLabel": "معرّف المتجر",
-   "adminProductSaleDatesBothRequired": "يرجى تحديد تاريخ بداية التخفيض وتاريخ نهاية التخفيض معًا.",
+  "adminProductSaleDatesBothRequired": "يرجى تحديد تاريخ بداية التخفيض وتاريخ نهاية التخفيض معًا.",
   "adminProductSaleEndBeforeStart": "يجب أن يكون تاريخ نهاية التخفيض بعد تاريخ بداية التخفيض.",
   "adminProductSaleStartInPast": "لا يمكن أن يكون تاريخ بداية التخفيض في الماضي.",
   "adminProductSaleEndInPast": "لا يمكن أن يكون تاريخ نهاية التخفيض في الماضي.",
@@ -916,43 +817,36 @@
   "adminProductSalePriceInvalid": "يجب أن يكون سعر التخفيض رقمًا صالحًا أكبر من 0.",
   "adminProductSalePriceMustBeLess": "يجب أن يكون سعر التخفيض أقل من السعر الأساسي.",
   "adminProductSaleEndAutoCleared": "تم مسح تاريخ نهاية التخفيض لأنه كان قبل تاريخ البداية.",
-   "forbiddenLabel": "ما عندك صلاحية تعمل هالشي.",
+  "forbiddenLabel": "ما عندك صلاحية تعمل هالشي.",
   "notFoundLabel": "غير موجود.",
   "serverErrorLabel": "خطأ بالسيرفر. جرّب مرة ثانية لاحقاً.",
   "networkErrorLabel": "خطأ بالشبكة. جرّب مرة ثانية.",
-   "errPasswordLen6to8": "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+  "errPasswordLen6to8": "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
   "errPasswordNeedSpecial": "كلمة المرور يجب أن تحتوي على حرف خاص واحد على الأقل (مثل !@#).",
   "hintPasswordRuleOwner": "كلمة المرور: 6 أحرف على الأقل.",
-   "msgProductDeleted": "تم حذف المنتج بنجاح.",
-   "adminProductDeleteDialogTitle": "حذف المنتج",
+  "msgProductDeleted": "تم حذف المنتج بنجاح.",
+  "adminProductDeleteDialogTitle": "حذف المنتج",
   "adminProductDeleteDialogBody": "هل أنت متأكد أنك تريد حذف \"{name}\"؟",
   "@adminProductDeleteDialogBody": {
     "placeholders": {
       "name": {}
     }
   },
-
-  "commonCancel": "إلغاء",
   "commonDelete": "حذف",
-
   "adminProductDeleteSuccess": "تم حذف المنتج بنجاح.",
   "adminProductDeleteFailed": "فشل حذف المنتج.",
-
   "adminProductDeleteBlockedCart": "لا يمكنك حذف هذا المنتج لأنه موجود في سلة العملاء.",
   "adminProductDeleteBlockedOrders": "لا يمكنك حذف هذا المنتج لأنه مرتبط بطلبات موجودة..",
   "adminProductDeleteBlockedGeneric": "لا يمكنك حذف هذا المنتج لأنه مرتبط بسجلات أخرى (طلبات أو سلات)..",
-
   "errSessionExpired": "انتهت الجلسة. الرجاء تسجيل الدخول من جديد.",
   "errForbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
   "errNotFound": "غير موجود.",
-
   "adminProductsLoadFailed": "فشل تحميل المنتجات.\n{details}",
   "@adminProductsLoadFailed": {
     "placeholders": {
       "details": {}
     }
   },
-
   "adminProductsCountPill": "{filtered} / {total}",
   "@adminProductsCountPill": {
     "placeholders": {
@@ -962,66 +856,49 @@
   },
   "adminCategoryDeleteSuccess": "تم حذف الفئة بنجاح.",
   "adminItemTypeDeleteSuccess": "تم حذف نوع العنصر بنجاح.",
-
   "adminCategoryDeleteBlockedItems": "لا يمكنك حذف هذه الفئة لأنها مستخدمة من قبل {count} عنصر/منتج.",
   "@adminCategoryDeleteBlockedItems": {
-    "placeholders": { "count": {} }
+    "placeholders": {
+      "count": {}
+    }
   },
-
   "adminItemTypeDeleteBlockedItems": "لا يمكنك حذف هذا النوع لأنه مستخدم من قبل {count} عنصر/منتج.",
   "@adminItemTypeDeleteBlockedItems": {
-    "placeholders": { "count": {} }
+    "placeholders": {
+      "count": {}
+    }
   },
-
   "adminCategoryDeleteBlockedGeneric": "لا يمكنك حذف هذه الفئة لأنها ما زالت قيد الاستخدام.",
   "adminItemTypeDeleteBlockedGeneric": "لا يمكنك حذف هذا النوع لأنه ما زال قيد الاستخدام.",
-
   "adminConflictGeneric": "لا يمكن تنفيذ هذا الإجراء حالياً.",
-  "errSessionExpired": "انتهت الجلسة. الرجاء تسجيل الدخول من جديد.",
-  "errForbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
-  "errNotFound": "غير موجود.",
-
-   "adminRejectOrderTitle": "رفض الطلب؟",
+  "adminRejectOrderTitle": "رفض الطلب؟",
   "adminRejectOrderBody": "سيتم وضع الطلب بحالة مرفوض. هل تريد المتابعة؟",
   "adminRejectOrderButton": "رفض الطلب",
   "adminCategoryDeleteBlockedTypes": "لا يمكنك حذف هذه الفئة لأنها تحتوي على {count} نوع/أنواع من العناصر. قم بحذف أو نقل هذه الأنواع أولاً.",
-  "@adminCategoryDeleteBlockedTypes": { "placeholders": { "count": {} } },
-   "authGateContinueAs": "المتابعة كـ…",
+  "@adminCategoryDeleteBlockedTypes": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "authGateContinueAs": "المتابعة كـ…",
   "authGateRoleAdminOwner": "أدمن / مالك",
   "authGateRoleUser": "مستخدم",
-
   "appAccessTitleDeleted": "تمت إزالة الوصول",
   "appAccessTitleExpired": "انتهى الاشتراك",
   "appAccessTitleUnavailable": "التطبيق غير متاح",
-
   "appAccessMessageDeleted": "هذا التطبيق لم يعد متاحًا.",
   "appAccessMessageExpired": "انتهت صلاحية اشتراك هذا التطبيق.",
   "appAccessMessageUnavailable": "لم يعد لديك صلاحية الوصول إلى هذا التطبيق.",
-
   "appAccessOwnerDisabledHint": "تم تعطيل هذا التطبيق من قبل المالك أو أنه لم يعد نشطًا.",
   "appAccessRetry": "إعادة المحاولة",
   "appAccessBlockedButton": "الوصول محظور",
   "accountAlreadyVerified": "تم التحقق من الحساب بالفعل. الرجاء تسجيل الدخول.",
-   "ordersTitle": "طلباتي",
-  "ordersLoading": "جاري تحميل الطلبات...",
-  "ordersEmptyTitle": "لا توجد طلبات بعد",
-  "ordersEmptyBody": "عند تنفيذ طلب، سيظهر هنا.",
-  "ordersReload": "إعادة تحميل",
-  "ordersNoResultsForFilter": "لا توجد نتائج لهذا الفلتر.",
-  "ordersFilterAll": "الكل",
-  "ordersFilterPending": "قيد الانتظار",
-  "ordersFilterCompleted": "مكتمل",
-  "ordersFilterCanceled": "ملغي",
-  "ordersPaid": "مدفوع",
-  "ordersUnpaid": "غير مدفوع",
-
   "ordersDetailsTitle": "طلب رقم #{orderId}",
   "@ordersDetailsTitle": {
     "placeholders": {
       "orderId": {}
     }
   },
-
   "ordersDetailsItemsTitle": "العناصر",
   "ordersDetailsQty": "الكمية",
   "ordersDetailsUnit": "سعر الوحدة",
@@ -1045,14 +922,16 @@
   "editProfile_codeSentToast": "تم إرسال رمز التحقق إلى بريدك الجديد",
   "editProfile_emailUpdatedToast": "تم تحديث البريد الإلكتروني بنجاح",
   "home_stock_left_label": "باقي {count} فقط",
-"@home_stock_left_label": {
-  "placeholders": {
-    "count": { "type": "int" }
-  }
-},
-"editProfile_firstNameInvalid": "الاسم الأول يحتوي على أحرف غير مسموحة",
-"editProfile_lastNameInvalid": "الاسم الأخير يحتوي على أحرف غير مسموحة",
- "licenseDetailsTitle": "تفاصيل الترخيص",
+  "@home_stock_left_label": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editProfile_firstNameInvalid": "الاسم الأول يحتوي على أحرف غير مسموحة",
+  "editProfile_lastNameInvalid": "الاسم الأخير يحتوي على أحرف غير مسموحة",
+  "licenseDetailsTitle": "تفاصيل الترخيص",
   "licensePlanLabel": "الخطة",
   "licensePlanCodeLabel": "رمز الخطة",
   "licenseStatusLabel": "الحالة",
@@ -1063,36 +942,38 @@
   "licenseRequiresDedicatedLabel": "يتطلب خادمًا مخصصًا",
   "licenseDedicatedInfraReadyLabel": "البنية التحتية المخصصة جاهزة",
   "licenseBlockingReasonLabel": "سبب الحظر",
-
   "upgradeRequestPending": "طلب الترقية قيد الانتظار للموافقة",
   "requestUpgradePendingLabel": "تم الطلب",
-
   "upgradeRequestStatusLabel": "حالة طلب الترقية",
   "upgradeRequestPlanLabel": "الخطة المطلوبة",
   "upgradeRequestAtLabel": "تاريخ الطلب",
   "upgradeRequestNoteLabel": "ملاحظة القرار",
-
   "upgradeStatusPending": "قيد الانتظار",
   "upgradeStatusApproved": "تمت الموافقة",
   "upgradeStatusRejected": "تم الرفض",
-
   "yesLabel": "نعم",
   "noLabel": "لا",
-   "checkoutCouponChecking": "جارٍ التحقق من الكوبون…",
+  "checkoutCouponChecking": "جارٍ التحقق من الكوبون…",
   "checkoutCouponApplied": "تم تطبيق الكوبون",
   "checkoutCouponAppliedDiscount": "تم التطبيق • -{discount}",
   "@checkoutCouponAppliedDiscount": {
-    "placeholders": { "discount": { "type": "String" } }
+    "placeholders": {
+      "discount": {
+        "type": "String"
+      }
+    }
   },
   "checkoutCouponInvalid": "كوبون غير صالح",
-  "checkoutCouponFailed": "تعذّر تطبيق الكوبون",
+  "checkoutCouponFailed": "تعذر تطبيق الكوبون.",
   "checkoutOrderPlacedWithCode": "تم إنشاء الطلب: {code}",
   "@checkoutOrderPlacedWithCode": {
-    "placeholders": { "code": { "type": "String" } }
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   },
-
   "commonSomethingWentWrong": "حدث خطأ ما",
-
   "checkoutCartEmptyError": "سلة التسوق فارغة",
   "checkoutPaymentMissingCode": "رمز طريقة الدفع مفقود",
   "checkoutCountryRequiredError": "يرجى اختيار الدولة",
@@ -1104,7 +985,7 @@
   "checkoutStripeCanceled": "تم إلغاء الدفع",
   "checkoutStripeClientSecretMissing": "لم يتم إرجاع client secret من Stripe",
   "checkoutStripePublishableKeyMissing": "لم يتم إرجاع publishable key من Stripe",
-   "home_support_sheet_title": "تواصل مع الدعم",
+  "home_support_sheet_title": "تواصل مع الدعم",
   "home_support_option_whatsapp": "واتساب",
   "home_support_option_email": "البريد الإلكتروني",
   "home_support_not_configured": "بيانات التواصل مع الدعم غير مُعدّة.",
@@ -1114,46 +995,40 @@
   "home_support_open_whatsapp_failed": "تعذّر فتح واتساب.",
   "home_support_invalid_phone": "رقم الدعم غير صالح.",
   "checkoutBlockedTitle": "الدفع غير متاح",
-   "adminTaxRuleRateMustBePositive": "يجب أن تكون النسبة أكبر من 0",
+  "adminTaxRuleRateMustBePositive": "يجب أن تكون النسبة أكبر من 0",
   "adminTaxRuleRateTooHigh": "لا يمكن أن تتجاوز النسبة 100٪",
-    "checkoutCouponExpired": "انتهت صلاحية الكوبون.",
+  "checkoutCouponExpired": "انتهت صلاحية الكوبون.",
   "checkoutCouponUsageLimitReached": "تم الوصول إلى الحد الأقصى لاستخدام الكوبون.",
   "checkoutCouponMinimumNotReached": "لم يتم الوصول إلى الحد الأدنى المطلوب لهذا الكوبون.",
   "checkoutCouponDidNotAffectOrder": "هذا الكوبون لم يؤثر على هذا الطلب.",
-  "checkoutCouponFailed": "تعذر تطبيق الكوبون.",
   "adminProductStatusSectionTitle": "حالة المنتج",
-"adminProductStatusSectionSubtitle": "حدد حالة المنتج لتتبع توافره وإدارته بشكل أفضل.",
-"adminProductStatusLabel":  "الحالة",
-"adminProductStatusUnavailable":  "غير متوفر",
-"adminProductStatusRequired": "مطلوب",
-"home_coming_soon_button": "قريبًا",
-"connection_reconnecting": "إعادة الاتصال...",
-
-
+  "adminProductStatusSectionSubtitle": "حدد حالة المنتج لتتبع توافره وإدارته بشكل أفضل.",
+  "adminProductStatusLabel": "الحالة",
+  "adminProductStatusUnavailable": "غير متوفر",
+  "adminProductStatusRequired": "مطلوب",
+  "home_coming_soon_button": "قريبًا",
+  "connection_reconnecting": "إعادة الاتصال...",
   "adminProductSectionSaleTitle": "التخفيضات",
   "adminProductSectionSaleSubtitle": "حدد سعر التخفيض وتواريخه لتقديم عروض خاصة على هذا المنتج.",
-
   "adminProductLoadingCategories": "جارٍ تحميل التصنيفات...",
   "adminProductLoadingItemTypes": "جارٍ تحميل أنواع العناصر...",
   "adminProductSelectCategoryHint": "حدد تصنيفًا",
   "adminProductSelectItemTypeHint": "حدد نوعًا للعنصر",
   "adminProductSectionCategoryTypeTitle": "التصنيف وال نوع",
   "adminProductSectionCategoryTypeSubtitle": "حدد التصنيف ونوع العنصر لهذا المنتج",
-   "adminCreateItemTypeTooltip": "إنشاء نوع عنصر جديد",
+  "adminCreateItemTypeTooltip": "إنشاء نوع عنصر جديد",
   "adminProductSalePriceHint": "أدخل سعر التخفيض لهذا المنتج (يجب أن يكون أقل من السعر الأساسي).",
   "adminProductSaleStartHint": "حدد تاريخ بداية التخفيض",
   "adminProductSaleEndHint": "حدد تاريخ نهاية التخفيض",
-   "adminCreateCategoryTooltip":"إنشاء تصنيف جديد" ,
-
-   "checkoutPaymentMethodUnavailable": "طريقة الدفع المحددة غير متاحة",
-   "adminDisable": "تعطيل",
-"adminDisableShippingMethodMessage": "هل أنت متأكد أنك تريد تعطيل طريقة الشحن هذه؟ لن تظهر بعد الآن في صفحة الدفع.",
-"adminShippingMethodDisabled": "تم تعطيل طريقة الشحن بنجاح",
-"adminDisabledLabel": "معطّلة",
-"adminEnabledOnly": "المفعّلة فقط",
-"adminDisabledOnly": "المعطّلة فقط",
-"adminAllLabel": "الكل",
-"openLinkLabel": "فتح الرابط",
+  "adminCreateCategoryTooltip": "إنشاء تصنيف جديد",
+  "checkoutPaymentMethodUnavailable": "طريقة الدفع المحددة غير متاحة",
+  "adminDisable": "تعطيل",
+  "adminDisableShippingMethodMessage": "هل أنت متأكد أنك تريد تعطيل طريقة الشحن هذه؟ لن تظهر بعد الآن في صفحة الدفع.",
+  "adminShippingMethodDisabled": "تم تعطيل طريقة الشحن بنجاح",
+  "adminDisabledLabel": "معطّلة",
+  "adminDisabledOnly": "المعطّلة فقط",
+  "adminAllLabel": "الكل",
+  "openLinkLabel": "فتح الرابط",
   "downloadNowLabel": "تنزيل",
   "downloadLabel": "التنزيل",
   "downloadReadyLabel": "جاهز للتنزيل",
@@ -1166,14 +1041,80 @@
   "invalidDownloadUrlLabel": "رابط التنزيل غير صالح",
   "missingDownloadUrlLabel": "رابط التنزيل مفقود",
   "couldNotStartDownloadLabel": "تعذر بدء التنزيل",
-    "adminDownloadableMustBeSimple": "المنتج القابل للتنزيل يجب أن يكون من النوع البسيط",
+  "adminDownloadableMustBeSimple": "المنتج القابل للتنزيل يجب أن يكون من النوع البسيط",
   "adminDownloadableMustBeVirtual": "المنتج القابل للتنزيل يجب أن يكون افتراضيًا",
   "adminDownloadUrlRequired": "رابط التنزيل مطلوب للمنتج القابل للتنزيل",
   "adminExternalUrlRequired": "الرابط الخارجي مطلوب للمنتج الخارجي",
   "adminExternalCannotBeDownloadable": "المنتج الخارجي لا يمكن أن يكون قابلاً للتنزيل",
   "adminDownloadableRulesHint": "المنتجات القابلة للتنزيل تُحفظ كمنتج بسيط وافتراضي وتتطلب رابط تنزيل.",
-  "adminAllAttributeTypesAlreadyAdded": "تمت إضافة جميع أنواع الخصائص المتاحة"
-
-
-
+  "adminAllAttributeTypesAlreadyAdded": "تمت إضافة جميع أنواع الخصائص المتاحة",
+  "commonClear": "مسح",
+  "commonPrev": "السابق",
+  "commonNext": "التالي",
+  "commonConfirm": "تأكيد",
+  "commonEnglish": "الإنجليزية",
+  "commonFrench": "الفرنسية",
+  "commonArabic": "العربية",
+  "commonQty": "الكمية",
+  "commonFullName": "الاسم الكامل",
+  "commonPhone": "الهاتف",
+  "commonAddress": "العنوان",
+  "commonCity": "المدينة",
+  "commonPostalCode": "الرمز البريدي",
+  "commonUnit": "الوحدة",
+  "commonTotal": "الإجمالي",
+  "commonItem": "العنصر",
+  "commonProvider": "المزوّد",
+  "commonStatus": "الحالة",
+  "commonRef": "المرجع",
+  "commonCustomer": "العميل",
+  "commonMethod": "الطريقة",
+  "commonRetry": "إعادة المحاولة",
+  "adminOrderEditTitle": "تعديل الطلب",
+  "adminOrderEditRemoveHint": "اجعل الكمية 0 لإزالة العنصر.",
+  "adminOrderInvoiceDownloadFailed": "فشل تنزيل الفاتورة: {error}",
+  "@adminOrderInvoiceDownloadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "adminOrderCannotEditMissingShipping": "لا يمكن تعديل هذا الطلب بعد لأن بلد الشحن أو طريقة الشحن مفقودة في تفاصيل الطلب.",
+  "adminDashboardNotificationsTooltip": "الإشعارات",
+  "adminProductSetMain": "تعيين كرئيسية",
+  "couponValidFrom": "صالح من",
+  "couponValidTo": "صالح حتى",
+  "excelReplaceScopeTenantSafe": "TENANT (آمن)",
+  "excelReplaceScopeFullDangerous": "FULL (خطير)",
+  "orderDetailsOrderCode": "رمز الطلب",
+  "orderDetailsName": "الاسم",
+  "orderDetailsPhone": "الهاتف",
+  "orderDetailsAddress": "العنوان",
+  "orderDetailsCity": "المدينة",
+  "orderDetailsPostalCode": "الرمز البريدي",
+  "orderDetailsPayment": "الدفع",
+  "invoiceTitle": "فاتورة",
+  "invoiceItems": "العناصر",
+  "invoiceOrder": "الطلب",
+  "invoiceDate": "التاريخ",
+  "invoiceShipping": "الشحن",
+  "invoiceSubtotal": "المجموع الفرعي",
+  "invoiceTax": "الضريبة",
+  "invoiceGrandTotal": "الإجمالي الكلي",
+  "invoiceCouponLine": "القسيمة ({code})",
+  "@invoiceCouponLine": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "restoreLabel": "استعادة",
+  "restoreDeletedAccountTitle": "استعادة الحساب المحذوف؟",
+  "restoreDeletedAccountMessage": "تم حذف هذا الحساب، ولكن لا يزال من الممكن استعادته. هل تريد إعادة تفعيله الآن؟",
+  "accountRestoredSuccessfully": "تمت استعادة الحساب بنجاح",
+  "adminOrderMarkPaid": "تحديد كمدفوع",
+  "adminOrderComplete": "إكمال",
+  "adminOrderReject": "رفض",
+  "adminOrderReopen": "إعادة فتح",
+  "adminOrderRestore": "استعادة",
+  "commonSomethingWentWrongTryAgain": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  "orderDetailsInvoiceDownloadFailed": "فشل تنزيل الفاتورة: {error}"
 }

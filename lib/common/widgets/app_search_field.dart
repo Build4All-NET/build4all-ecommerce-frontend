@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/l10n/app_localizations.dart';
 
 class AppSearchField extends StatefulWidget {
   final String hintText;
@@ -89,6 +90,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final c = theme.colorScheme;
     final t = theme.textTheme;
 
@@ -126,7 +128,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
             // ✅ Clear button
             suffixIcon: (widget.showClearButton && hasText && widget.enabled)
                 ? IconButton(
-                    tooltip: 'Clear',
+                    tooltip: l10n.commonClear,
                     onPressed: _clearAndNotify,
                     icon: const Icon(Icons.close_rounded),
                   )

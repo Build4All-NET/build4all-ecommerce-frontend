@@ -947,6 +947,7 @@ class _PaginationBar extends StatelessWidget {
     final c = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
+    final l10n = AppLocalizations.of(context)!;
 
     List<int> pagesToShow() {
       if (totalPages <= 5) {
@@ -1000,7 +1001,7 @@ class _PaginationBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          tooltip: 'Prev',
+          tooltip: l10n.commonPrev,
           onPressed:
               currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
           icon: const Icon(Icons.chevron_left_rounded),
@@ -1016,7 +1017,7 @@ class _PaginationBar extends StatelessWidget {
         ),
         SizedBox(width: spacing.xs),
         IconButton(
-          tooltip: 'Next',
+          tooltip: l10n.commonNext,
           onPressed: currentPage < totalPages
               ? () => onPageChanged(currentPage + 1)
               : null,

@@ -12,7 +12,6 @@ import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/utils/jwt_utils.dart';
 import 'package:build4front/features/auth/data/services/auth_token_store.dart';
 
-// Auth bloc patch imports
 import 'package:build4front/features/auth/presentation/login/bloc/auth_bloc.dart';
 import 'package:build4front/features/auth/presentation/login/bloc/auth_event.dart';
 
@@ -51,7 +50,6 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   String _effectiveToken = '';
   int _effectiveUserId = 0;
-
   int _effectiveOwnerProjectLinkId = 0;
 
   String _lastToken = '';
@@ -197,16 +195,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
   Future<void> _goToLogin() async {
     if (!mounted || _loggingOut) return;
 
-    setState(() {
-      _loggingOut = true;
-      _hydrating = false;
-    });
+    _loggingOut = true;
 
     _lastToken = '';
     _lastUserId = 0;
     _lastOwnerId = 0;
 
     _resetSessionUi();
+
     widget.onLogout();
   }
 
@@ -256,12 +252,6 @@ class _UserProfileScreenState extends State<UserProfileScreen>
   @override
   Widget build(BuildContext context) {
     final tr = AppLocalizations.of(context)!;
-
-    if (_loggingOut) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
     if (_hydrating) {
       return const Scaffold(
@@ -314,12 +304,6 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         }
       },
       builder: (context, state) {
-        if (_loggingOut) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
         if (state is UserProfileLoading) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -504,21 +488,21 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('English'),
+              title: Text(tr.commonEnglish),
               onTap: () {
                 Navigator.pop(ctx);
                 widget.onChangeLocale(const Locale('en'));
               },
             ),
             ListTile(
-              title: const Text('Français'),
+              title: Text(tr.commonFrench),
               onTap: () {
                 Navigator.pop(ctx);
                 widget.onChangeLocale(const Locale('fr'));
               },
             ),
             ListTile(
-              title: const Text('العربية'),
+              title: Text(tr.commonArabic),
               onTap: () {
                 Navigator.pop(ctx);
                 widget.onChangeLocale(const Locale('ar'));

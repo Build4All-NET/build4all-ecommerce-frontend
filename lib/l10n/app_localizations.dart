@@ -5898,6 +5898,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All available attribute types are already added'**
   String get adminAllAttributeTypesAlreadyAdded;
+
+  /// No description provided for @adminUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'failed to pick image'**
+  String get adminUploadFailed;
+
+  /// Common clear action label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get commonClear;
+
+  /// Common previous action tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get commonPrev;
+
+  /// Common next action tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get commonNext;
+
+  /// Common confirm action label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get commonConfirm;
+
+  /// Language label English
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get commonEnglish;
+
+  /// Language label French
+  ///
+  /// In en, this message translates to:
+  /// **'Français'**
+  String get commonFrench;
+
+  /// Language label Arabic
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get commonArabic;
+
+  /// Quantity short label
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get commonQty;
+
+  /// Full name label
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get commonFullName;
+
+  /// Phone label
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get commonPhone;
+
+  /// Address label
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get commonAddress;
+
+  /// City label
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get commonCity;
+
+  /// Postal code label
+  ///
+  /// In en, this message translates to:
+  /// **'Postal Code'**
+  String get commonPostalCode;
+
+  /// Unit column label
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get commonUnit;
+
+  /// Total column label
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get commonTotal;
+
+  /// Item fallback label
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get commonItem;
+
+  /// Provider label
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get commonProvider;
+
+  /// Status label
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get commonStatus;
+
+  /// Reference label
+  ///
+  /// In en, this message translates to:
+  /// **'Ref'**
+  String get commonRef;
+
+  /// Customer label
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get commonCustomer;
+
+  /// Method label
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get commonMethod;
+
+  /// Retry action label
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get commonRetry;
+
+  /// Admin order edit dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Order'**
+  String get adminOrderEditTitle;
+
+  /// Hint in admin order edit dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Set quantity to 0 to remove an item.'**
+  String get adminOrderEditRemoveHint;
+
+  /// Admin order invoice download failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice download failed: {error}'**
+  String adminOrderInvoiceDownloadFailed(Object error);
+
+  /// Admin order missing shipping edit guard
+  ///
+  /// In en, this message translates to:
+  /// **'This order cannot be edited yet because shipping country or shipping method is missing in the order details response.'**
+  String get adminOrderCannotEditMissingShipping;
+
+  /// Tooltip for admin dashboard notifications button
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get adminDashboardNotificationsTooltip;
+
+  /// Set image as main label
+  ///
+  /// In en, this message translates to:
+  /// **'Set main'**
+  String get adminProductSetMain;
+
+  /// Coupon valid from label
+  ///
+  /// In en, this message translates to:
+  /// **'Valid From'**
+  String get couponValidFrom;
+
+  /// Coupon valid to label
+  ///
+  /// In en, this message translates to:
+  /// **'Valid To'**
+  String get couponValidTo;
+
+  /// Excel replace scope tenant safe option
+  ///
+  /// In en, this message translates to:
+  /// **'TENANT (safe)'**
+  String get excelReplaceScopeTenantSafe;
+
+  /// Excel replace scope full dangerous option
+  ///
+  /// In en, this message translates to:
+  /// **'FULL (dangerous)'**
+  String get excelReplaceScopeFullDangerous;
+
+  /// Order code label
+  ///
+  /// In en, this message translates to:
+  /// **'Order code'**
+  String get orderDetailsOrderCode;
+
+  /// Order recipient name label
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get orderDetailsName;
+
+  /// Order recipient phone label
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get orderDetailsPhone;
+
+  /// Order recipient address label
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get orderDetailsAddress;
+
+  /// Order recipient city label
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get orderDetailsCity;
+
+  /// Order recipient postal code label
+  ///
+  /// In en, this message translates to:
+  /// **'Postal code'**
+  String get orderDetailsPostalCode;
+
+  /// Payment label in order details
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get orderDetailsPayment;
+
+  /// Invoice title
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get invoiceTitle;
+
+  /// Invoice items section title
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get invoiceItems;
+
+  /// Invoice order label
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get invoiceOrder;
+
+  /// Invoice date label
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get invoiceDate;
+
+  /// Invoice shipping label
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping'**
+  String get invoiceShipping;
+
+  /// Invoice subtotal label
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get invoiceSubtotal;
+
+  /// Invoice tax label
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get invoiceTax;
+
+  /// Invoice grand total label
+  ///
+  /// In en, this message translates to:
+  /// **'Grand Total'**
+  String get invoiceGrandTotal;
+
+  /// Invoice coupon line label
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon ({code})'**
+  String invoiceCouponLine(Object code);
+
+  /// Restore action label
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreLabel;
+
+  /// Restore deleted account sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deleted account?'**
+  String get restoreDeletedAccountTitle;
+
+  /// Restore deleted account sheet message
+  ///
+  /// In en, this message translates to:
+  /// **'This account was deleted, but it can still be restored. Do you want to reactivate it now?'**
+  String get restoreDeletedAccountMessage;
+
+  /// Account restored success toast
+  ///
+  /// In en, this message translates to:
+  /// **'Account restored successfully'**
+  String get accountRestoredSuccessfully;
+
+  /// Admin mark paid confirm text
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Paid'**
+  String get adminOrderMarkPaid;
+
+  /// Admin complete confirm text
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get adminOrderComplete;
+
+  /// Admin reject confirm text
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get adminOrderReject;
+
+  /// Admin reopen confirm text
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get adminOrderReopen;
+
+  /// Admin restore confirm text
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get adminOrderRestore;
+
+  /// No description provided for @adminOrderSequenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Seq'**
+  String get adminOrderSequenceLabel;
+
+  /// No description provided for @adminOrderInternalIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal ID'**
+  String get adminOrderInternalIdLabel;
+
+  /// No description provided for @adminPaymentMethodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get adminPaymentMethodLabel;
+
+  /// No description provided for @adminOrderCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Completed'**
+  String get adminOrderCompleteTitle;
+
+  /// No description provided for @adminOrderCompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will mark the order as completed.'**
+  String get adminOrderCompleteBody;
+
+  /// No description provided for @adminOrderReopenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen (Cancel + Unpay)'**
+  String get adminOrderReopenTitle;
+
+  /// No description provided for @adminOrderReopenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will cancel the order and reset payment back to UNPAID.'**
+  String get adminOrderReopenBody;
+
+  /// No description provided for @adminOrderRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore to Pending'**
+  String get adminOrderRestoreTitle;
+
+  /// No description provided for @adminOrderRestoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will restore the order back to Pending.'**
+  String get adminOrderRestoreBody;
+
+  /// No description provided for @commonSomethingWentWrongTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get commonSomethingWentWrongTryAgain;
+
+  /// No description provided for @orderDetailsInvoiceDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice download failed'**
+  String orderDetailsInvoiceDownloadFailed(Object error);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

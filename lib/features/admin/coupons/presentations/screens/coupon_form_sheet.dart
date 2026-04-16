@@ -388,7 +388,7 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Valid From', style: t.labelMedium),
+                                Text(l10n.couponValidFrom, style: t.labelMedium),
                                 SizedBox(height: spacing.xs),
                                 Text(_fmt(_startsAt), style: t.bodyMedium),
                               ],
@@ -398,7 +398,7 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                       ),
                       SizedBox(width: spacing.sm),
                       IconButton(
-                        tooltip: 'Clear',
+                        tooltip: l10n.commonClear,
                         onPressed: () => setState(() {
                           _startsAt = null;
                           _validateDates();
@@ -434,7 +434,7 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Valid To', style: t.labelMedium),
+                                Text(l10n.couponValidTo, style: t.labelMedium),
                                 SizedBox(height: spacing.xs),
                                 Text(_fmt(_expiresAt), style: t.bodyMedium),
                               ],
@@ -444,7 +444,7 @@ class _CouponFormSheetState extends State<CouponFormSheet> {
                       ),
                       SizedBox(width: spacing.sm),
                       IconButton(
-                        tooltip: 'Clear',
+                        tooltip: l10n.commonClear,
                         onPressed: () => setState(() {
                           _expiresAt = null;
                           _validateDates();

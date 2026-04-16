@@ -2042,7 +2042,7 @@ class AdminProductImageSection extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onSetMain,
                   icon: const Icon(Icons.star_border),
-                  label: const Text('Set main'),
+                  label: Text(l.adminProductSetMain),
                 ),
                 TextButton.icon(
                   onPressed: onRemove,

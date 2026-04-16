@@ -54,7 +54,7 @@ class AuthRefreshCoordinator {
 
     if (e is DioException) {
       final s = e.response?.statusCode ?? 0;
-      if (s == 401) return true;
+      if (s == 401 || s == 403) return true;
     }
 
     if (e is AppException) {
@@ -229,8 +229,10 @@ class AuthRefreshCoordinator {
 
     try {
       return await refreshUser(tenantId: tenantId);
-    } catch (_) {
-      await _userStore.clear();
+    } catch (e) {
+      if (shouldClearAfterRefreshFailure(e)) {
+        await _userStore.clear();
+      }
       return null;
     }
   }
@@ -249,8 +251,10 @@ class AuthRefreshCoordinator {
 
     try {
       return await refreshAdmin(tenantId: tenantId);
-    } catch (_) {
-      await _adminStore.clear();
+    } catch (e) {
+      if (shouldClearAfterRefreshFailure(e)) {
+        await _adminStore.clear();
+      }
       return null;
     }
   }

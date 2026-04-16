@@ -47,6 +47,7 @@ class HomeScreen extends StatefulWidget {
   final AppConfig appConfig;
   final List<HomeSectionConfig> sections;
   final VoidCallback? onOpenProfileTab;
+  
 
   const HomeScreen({
     super.key,
@@ -1413,6 +1414,7 @@ class _ProPagerBar extends StatelessWidget {
     final c = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
+    final l10n = AppLocalizations.of(context)!;
 
     final dots = _windowDots(totalPages, currentPage0);
     final label = '${currentPage0 + 1}/$totalPages';
@@ -1437,7 +1439,7 @@ class _ProPagerBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          tooltip: 'Prev',
+          tooltip: l10n.commonPrev,
           onPressed: onPrev,
           icon: const Icon(Icons.chevron_left_rounded),
         ),
@@ -1453,7 +1455,7 @@ class _ProPagerBar extends StatelessWidget {
         ),
         SizedBox(width: spacing.xs),
         IconButton(
-          tooltip: 'Next',
+          tooltip: l10n.commonNext,
           onPressed: onNext,
           icon: const Icon(Icons.chevron_right_rounded),
         ),

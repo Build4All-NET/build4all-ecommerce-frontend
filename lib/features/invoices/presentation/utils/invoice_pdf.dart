@@ -4,10 +4,53 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import '../../domain/entities/invoice_data.dart';
+import 'package:build4front/features/invoices/domain/entities/invoice_data.dart';
+
+class StandardInvoicePdfLabels {
+  final String invoiceTitle;
+  final String orderLabel;
+  final String dateLabel;
+  final String providerLabel;
+  final String statusLabel;
+  final String refLabel;
+  final String itemsLabel;
+  final String itemLabel;
+  final String qtyLabel;
+  final String unitLabel;
+  final String totalLabel;
+  final String subtotalLabel;
+  final String shippingLabel;
+  final String taxLabel;
+  final String grandTotalLabel;
+  final String Function(String code)? couponLine;
+
+  const StandardInvoicePdfLabels({
+    required this.invoiceTitle,
+    required this.orderLabel,
+    required this.dateLabel,
+    required this.providerLabel,
+    required this.statusLabel,
+    required this.refLabel,
+    required this.itemsLabel,
+    required this.itemLabel,
+    required this.qtyLabel,
+    required this.unitLabel,
+    required this.totalLabel,
+    required this.subtotalLabel,
+    required this.shippingLabel,
+    required this.taxLabel,
+    required this.grandTotalLabel,
+    this.couponLine,
+  });
+}
 
 class InvoicePdf {
-  static Future<Uint8List> build(InvoiceData s, {String? title}) async {
+  static Future<Uint8List> build(
+    InvoiceData s, {
+    String? fallbackSymbol,
+    String? title,
+    StandardInvoicePdfLabels? labels,
+  }) async {
     pw.ThemeData? theme;
     try {
       final base = pw.Font.ttf(
@@ -21,17 +64,46 @@ class InvoicePdf {
       theme = null;
     }
 
+    final l =
+        labels ??
+        const StandardInvoicePdfLabels(
+          invoiceTitle: 'Invoice',
+          orderLabel: 'Order',
+          dateLabel: 'Date',
+          providerLabel: 'Provider',
+          statusLabel: 'Status',
+          refLabel: 'Ref',
+          itemsLabel: 'Items',
+          itemLabel: 'Item',
+          qtyLabel: 'Qty',
+          unitLabel: 'Unit',
+          totalLabel: 'Total',
+          subtotalLabel: 'Subtotal',
+          shippingLabel: 'Shipping',
+          taxLabel: 'Tax',
+          grandTotalLabel: 'Grand Total',
+        );
+
     final doc = pw.Document(theme: theme);
 
-    final sym = _pickSymbol(s.currencySymbol);
+    final sym = _pickSymbol(s.currencySymbol, fallbackSymbol);
     String money(num v) => _formatMoney(v, sym);
 
     final totalTax = s.itemTaxTotal + s.shippingTaxTotal;
-    final showCoupon = s.couponCode.trim().isNotEmpty;
 
-    final shownOrderCode = s.orderCode.trim().isNotEmpty
-        ? s.orderCode.trim()
-        : (s.providerReference.trim().isNotEmpty ? s.providerReference.trim() : '—');
+    final couponCode = s.couponCode.trim();
+    final discount = s.couponDiscount;
+    final showCoupon = couponCode.isNotEmpty;
+
+    final orderCode = s.orderCode.trim();
+    final providerReference = s.providerReference.trim();
+    final shownOrderCode = orderCode.isNotEmpty
+        ? orderCode
+        : (providerReference.isNotEmpty ? providerReference : '—');
+
+    final dateText = _formatDateSafe(s.orderDateText);
+    final provider = s.paymentProvider.trim();
+    final paymentStatus = s.paymentStatus.trim();
 
     doc.addPage(
       pw.Page(
@@ -55,13 +127,18 @@ class InvoicePdf {
                     children: [
                       pw.Text(
                         k,
-                        style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey700,
+                        ),
                       ),
                       pw.Text(
                         v,
                         style: pw.TextStyle(
                           fontSize: 10,
-                          fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                          fontWeight: bold
+                              ? pw.FontWeight.bold
+                              : pw.FontWeight.normal,
                         ),
                       ),
                     ],
@@ -71,24 +148,28 @@ class InvoicePdf {
             );
           }
 
-          pw.Widget totalsRow(String l, String r, {bool bold = false}) {
+          pw.Widget totalsRow(String left, String right, {bool bold = false}) {
             return pw.Padding(
               padding: const pw.EdgeInsets.symmetric(vertical: 2),
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    l,
+                    left,
                     style: pw.TextStyle(
                       fontSize: 12,
-                      fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                      fontWeight: bold
+                          ? pw.FontWeight.bold
+                          : pw.FontWeight.normal,
                     ),
                   ),
                   pw.Text(
-                    r,
+                    right,
                     style: pw.TextStyle(
                       fontSize: 12,
-                      fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                      fontWeight: bold
+                          ? pw.FontWeight.bold
+                          : pw.FontWeight.normal,
                     ),
                   ),
                 ],
@@ -114,15 +195,15 @@ class InvoicePdf {
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             pw.Text(
-                              (title ?? 'INVOICE').toUpperCase(),
+                              (title ?? l.invoiceTitle).toUpperCase(),
                               style: pw.TextStyle(
                                 fontSize: 22,
                                 fontWeight: pw.FontWeight.bold,
                               ),
                             ),
                             pw.SizedBox(height: 8),
-                            kvLine('Order', shownOrderCode, bold: true),
-                            kvLine('Date', s.orderDateText.isEmpty ? '—' : s.orderDateText),
+                            kvLine(l.orderLabel, shownOrderCode, bold: true),
+                            kvLine(l.dateLabel, dateText),
                             if (s.customerName.trim().isNotEmpty)
                               kvLine('Customer', s.customerName.trim()),
                             if (s.customerPhone.trim().isNotEmpty)
@@ -132,9 +213,7 @@ class InvoicePdf {
                             if (s.city.trim().isNotEmpty)
                               kvLine('City', s.city.trim()),
                             if (s.postalCode.trim().isNotEmpty)
-                              kvLine('Postal', s.postalCode.trim()),
-                            if (s.shippingMethodName.trim().isNotEmpty)
-                              kvLine('Shipping', s.shippingMethodName.trim()),
+                              kvLine('Postal Code', s.postalCode.trim()),
                           ],
                         ),
                       ),
@@ -147,10 +226,22 @@ class InvoicePdf {
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            kvLine('Provider', s.paymentProvider.trim().isEmpty ? '—' : s.paymentProvider.trim()),
-                            kvLine('Status', s.paymentStatus.trim().isEmpty ? '—' : s.paymentStatus.trim()),
-                            kvLine('Method', s.paymentMethod.trim().isEmpty ? '—' : s.paymentMethod.trim()),
-                            kvLine('Ref', s.providerReference.trim().isEmpty ? '—' : s.providerReference.trim()),
+                            kvLine(
+                              l.providerLabel,
+                              provider.isEmpty ? '—' : provider,
+                            ),
+                            kvLine(
+                              l.statusLabel,
+                              paymentStatus.isEmpty ? '—' : paymentStatus,
+                            ),
+                            kvLine(
+                              l.refLabel,
+                              providerReference.isEmpty ? '—' : providerReference,
+                            ),
+                            if (s.paymentMethod.trim().isNotEmpty)
+                              kvLine('Method', s.paymentMethod.trim()),
+                            if (s.shippingMethodName.trim().isNotEmpty)
+                              kvLine('Shipping', s.shippingMethodName.trim()),
                           ],
                         ),
                       ),
@@ -158,21 +249,31 @@ class InvoicePdf {
                   ),
                 ],
               ),
-
               pw.SizedBox(height: 14),
               pw.Divider(color: PdfColors.grey300),
               pw.SizedBox(height: 10),
-
               pw.Text(
-                'Items',
-                style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                l.itemsLabel,
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
               pw.SizedBox(height: 8),
-
               pw.Table.fromTextArray(
-                headers: const ['Item', 'Qty', 'Unit', 'Total'],
-                headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+                headers: [
+                  l.itemLabel,
+                  l.qtyLabel,
+                  l.unitLabel,
+                  l.totalLabel,
+                ],
+                headerDecoration: const pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                ),
+                headerStyle: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 11,
+                ),
                 cellStyle: const pw.TextStyle(fontSize: 10),
                 columnWidths: const {
                   0: pw.FlexColumnWidth(3.2),
@@ -180,18 +281,20 @@ class InvoicePdf {
                   2: pw.FlexColumnWidth(1.2),
                   3: pw.FlexColumnWidth(1.2),
                 },
-                data: s.lines.map((l) {
+                data: s.lines.map((line) {
+                  final name = line.itemName.trim().isNotEmpty
+                      ? line.itemName.trim()
+                      : l.itemLabel;
+
                   return [
-                    l.itemName.trim().isEmpty ? 'Item' : l.itemName.trim(),
-                    l.quantity.toString(),
-                    money(l.unitPrice),
-                    money(l.lineSubtotal),
+                    name,
+                    line.quantity.toString(),
+                    money(line.unitPrice),
+                    money(line.lineSubtotal),
                   ];
                 }).toList(),
               ),
-
               pw.SizedBox(height: 16),
-
               pw.Container(
                 padding: const pw.EdgeInsets.all(12),
                 decoration: pw.BoxDecoration(
@@ -200,13 +303,22 @@ class InvoicePdf {
                 ),
                 child: pw.Column(
                   children: [
-                    totalsRow('Subtotal', money(s.itemsSubtotal)),
-                    totalsRow('Shipping', money(s.shippingTotal)),
-                    totalsRow('Tax', money(totalTax)),
+                    totalsRow(l.subtotalLabel, money(s.itemsSubtotal)),
+                    totalsRow(l.shippingLabel, money(s.shippingTotal)),
+                    totalsRow(l.taxLabel, money(totalTax)),
                     if (showCoupon)
-                      totalsRow('Coupon (${s.couponCode.trim()})', '-${money(s.couponDiscount)}'),
+                      totalsRow(
+                        l.couponLine != null
+                            ? l.couponLine!(couponCode)
+                            : 'Coupon ($couponCode)',
+                        '-${money(discount)}',
+                      ),
                     pw.Divider(color: PdfColors.grey300),
-                    totalsRow('Grand Total', money(s.grandTotal), bold: true),
+                    totalsRow(
+                      l.grandTotalLabel,
+                      money(s.grandTotal),
+                      bold: true,
+                    ),
                   ],
                 ),
               ),
@@ -219,22 +331,30 @@ class InvoicePdf {
     return doc.save();
   }
 
-  static Future<void> share(InvoiceData data, {String? title}) async {
-    final bytes = await build(data, title: title);
-    final code = data.orderCode.trim();
-    final fileName = code.isNotEmpty
-        ? 'invoice-$code.pdf'
-        : 'invoice-${data.orderId}.pdf';
+  static Future<void> share(
+    InvoiceData s, {
+    String? fallbackSymbol,
+    String? title,
+    StandardInvoicePdfLabels? labels,
+  }) async {
+    final bytes = await build(
+      s,
+      fallbackSymbol: fallbackSymbol,
+      title: title,
+      labels: labels,
+    );
 
     await Printing.sharePdf(
       bytes: bytes,
-      filename: fileName,
+      filename: 'invoice.pdf',
     );
   }
 
-  static String _pickSymbol(String? fromOrder) {
+  static String _pickSymbol(String? fromOrder, String? fallback) {
     final a = (fromOrder ?? '').trim();
     if (a.isNotEmpty) return a;
+    final b = (fallback ?? '').trim();
+    if (b.isNotEmpty) return b;
     return '\$';
   }
 
@@ -243,5 +363,17 @@ class InvoicePdf {
     final sign = val < 0 ? '-' : '';
     final abs = val.abs().toStringAsFixed(2);
     return '$sign$symbol$abs';
+  }
+
+  static String _formatDateSafe(String? raw) {
+    final s = (raw ?? '').trim();
+    if (s.isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(s).toLocal();
+      String two(int x) => x.toString().padLeft(2, '0');
+      return '${dt.year}-${two(dt.month)}-${two(dt.day)} ${two(dt.hour)}:${two(dt.minute)}';
+    } catch (_) {
+      return s;
+    }
   }
 }

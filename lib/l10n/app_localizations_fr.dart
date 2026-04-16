@@ -3010,4 +3010,217 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminAllAttributeTypesAlreadyAdded => 'Tous les types d’attributs disponibles sont déjà ajoutés';
+
+  @override
+  String get adminUploadFailed => 'failed to pick image';
+
+  @override
+  String get commonClear => 'Effacer';
+
+  @override
+  String get commonPrev => 'Précédent';
+
+  @override
+  String get commonNext => 'Suivant';
+
+  @override
+  String get commonConfirm => 'Confirmer';
+
+  @override
+  String get commonEnglish => 'Anglais';
+
+  @override
+  String get commonFrench => 'Français';
+
+  @override
+  String get commonArabic => 'العربية';
+
+  @override
+  String get commonQty => 'Qté';
+
+  @override
+  String get commonFullName => 'Nom complet';
+
+  @override
+  String get commonPhone => 'Téléphone';
+
+  @override
+  String get commonAddress => 'Adresse';
+
+  @override
+  String get commonCity => 'Ville';
+
+  @override
+  String get commonPostalCode => 'Code postal';
+
+  @override
+  String get commonUnit => 'Unité';
+
+  @override
+  String get commonTotal => 'Total';
+
+  @override
+  String get commonItem => 'Article';
+
+  @override
+  String get commonProvider => 'Fournisseur';
+
+  @override
+  String get commonStatus => 'Statut';
+
+  @override
+  String get commonRef => 'Réf';
+
+  @override
+  String get commonCustomer => 'Client';
+
+  @override
+  String get commonMethod => 'Méthode';
+
+  @override
+  String get commonRetry => 'Réessayer';
+
+  @override
+  String get adminOrderEditTitle => 'Modifier la commande';
+
+  @override
+  String get adminOrderEditRemoveHint => 'Définissez la quantité à 0 pour supprimer un article.';
+
+  @override
+  String adminOrderInvoiceDownloadFailed(Object error) {
+    return 'Échec du téléchargement de la facture : $error';
+  }
+
+  @override
+  String get adminOrderCannotEditMissingShipping => 'Cette commande ne peut pas encore être modifiée car le pays d\'expédition ou le mode d\'expédition manque dans la réponse des détails de la commande.';
+
+  @override
+  String get adminDashboardNotificationsTooltip => 'Notifications';
+
+  @override
+  String get adminProductSetMain => 'Définir comme principale';
+
+  @override
+  String get couponValidFrom => 'Valide à partir du';
+
+  @override
+  String get couponValidTo => 'Valide jusqu\'au';
+
+  @override
+  String get excelReplaceScopeTenantSafe => 'TENANT (sûr)';
+
+  @override
+  String get excelReplaceScopeFullDangerous => 'FULL (dangereux)';
+
+  @override
+  String get orderDetailsOrderCode => 'Code de commande';
+
+  @override
+  String get orderDetailsName => 'Nom';
+
+  @override
+  String get orderDetailsPhone => 'Téléphone';
+
+  @override
+  String get orderDetailsAddress => 'Adresse';
+
+  @override
+  String get orderDetailsCity => 'Ville';
+
+  @override
+  String get orderDetailsPostalCode => 'Code postal';
+
+  @override
+  String get orderDetailsPayment => 'Paiement';
+
+  @override
+  String get invoiceTitle => 'Facture';
+
+  @override
+  String get invoiceItems => 'Articles';
+
+  @override
+  String get invoiceOrder => 'Commande';
+
+  @override
+  String get invoiceDate => 'Date';
+
+  @override
+  String get invoiceShipping => 'Livraison';
+
+  @override
+  String get invoiceSubtotal => 'Sous-total';
+
+  @override
+  String get invoiceTax => 'Taxe';
+
+  @override
+  String get invoiceGrandTotal => 'Total général';
+
+  @override
+  String invoiceCouponLine(Object code) {
+    return 'Coupon ($code)';
+  }
+
+  @override
+  String get restoreLabel => 'Restaurer';
+
+  @override
+  String get restoreDeletedAccountTitle => 'Restaurer le compte supprimé ?';
+
+  @override
+  String get restoreDeletedAccountMessage => 'Ce compte a été supprimé, mais il peut encore être restauré. Voulez-vous le réactiver maintenant ?';
+
+  @override
+  String get accountRestoredSuccessfully => 'Compte restauré avec succès';
+
+  @override
+  String get adminOrderMarkPaid => 'Marquer comme payé';
+
+  @override
+  String get adminOrderComplete => 'Terminer';
+
+  @override
+  String get adminOrderReject => 'Rejeter';
+
+  @override
+  String get adminOrderReopen => 'Rouvrir';
+
+  @override
+  String get adminOrderRestore => 'Restaurer';
+
+  @override
+  String get adminOrderSequenceLabel => 'Order Seq';
+
+  @override
+  String get adminOrderInternalIdLabel => 'Internal ID';
+
+  @override
+  String get adminPaymentMethodLabel => 'Payment Method';
+
+  @override
+  String get adminOrderCompleteTitle => 'Mark Completed';
+
+  @override
+  String get adminOrderCompleteBody => 'This will mark the order as completed.';
+
+  @override
+  String get adminOrderReopenTitle => 'Reopen (Cancel + Unpay)';
+
+  @override
+  String get adminOrderReopenBody => 'This will cancel the order and reset payment back to UNPAID.';
+
+  @override
+  String get adminOrderRestoreTitle => 'Restore to Pending';
+
+  @override
+  String get adminOrderRestoreBody => 'This will restore the order back to Pending.';
+
+  @override
+  String get commonSomethingWentWrongTryAgain => 'Une erreur s’est produite. Veuillez réessayer.';
+
+  @override
+  String orderDetailsInvoiceDownloadFailed(Object error) {
+    return 'Échec du téléchargement de la facture : $error';
+  }
 }

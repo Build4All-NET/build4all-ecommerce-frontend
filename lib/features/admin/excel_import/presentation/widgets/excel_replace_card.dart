@@ -57,9 +57,9 @@ class ExcelReplaceCard extends StatelessWidget {
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             value: scope,
-            items: const [
-              DropdownMenuItem(value: 'TENANT', child: Text('TENANT (safe)')),
-              DropdownMenuItem(value: 'FULL', child: Text('FULL (dangerous)')),
+            items: [
+              DropdownMenuItem(value: 'TENANT', child: Text(l10n.excelReplaceScopeTenantSafe)),
+              DropdownMenuItem(value: 'FULL', child: Text(l10n.excelReplaceScopeFullDangerous)),
             ],
             onChanged: replace ? (v) => onScopeChanged(v ?? 'TENANT') : null,
             decoration: InputDecoration(

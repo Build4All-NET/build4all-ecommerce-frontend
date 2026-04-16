@@ -312,6 +312,7 @@ class _TaxRuleFormSheetState extends State<TaxRuleFormSheet> {
     final spacing = tokens.spacing;
     final text = tokens.typography;
     final l = AppLocalizations.of(context)!;
+ 
 
     final title = _isEdit
         ? (l.adminTaxEditRuleTitle ?? 'Edit tax rule')
@@ -510,7 +511,7 @@ class _TaxRuleFormSheetState extends State<TaxRuleFormSheet> {
                               Expanded(
                                 child: OutlinedButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text(l.adminCancel ?? 'Cancel'),
+                                  child: Text(l.adminCancel ?? l.commonCancel),
                                 ),
                               ),
                               SizedBox(width: spacing.sm),
@@ -549,6 +550,7 @@ class _InlineSwitch extends StatelessWidget {
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final c = tokens.colors;
     final text = tokens.typography;
+    final l = AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -580,6 +582,7 @@ class _ErrorState extends StatelessWidget {
     final c = tokens.colors;
     final spacing = tokens.spacing;
     final text = tokens.typography;
+    final l = AppLocalizations.of(context)!;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -594,12 +597,12 @@ class _ErrorState extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: onCancel,
-                child: const Text('Cancel'),
+                child: Text(l.commonCancel),
               ),
             ),
             SizedBox(width: spacing.sm),
             Expanded(
-              child: PrimaryButton(label: 'Retry', onPressed: onRetry),
+              child: PrimaryButton(label: l.commonRetry, onPressed: onRetry),
             ),
           ],
         ),
@@ -630,6 +633,7 @@ class _SearchablePicker<T> extends StatelessWidget {
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final c = tokens.colors;
     final text = tokens.typography;
+    final l = AppLocalizations.of(context)!;
     final spacing = tokens.spacing;
 
     final disabled = !enabled || items.isEmpty;
@@ -742,6 +746,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
     final c = tokens.colors;
     final spacing = tokens.spacing;
     final text = tokens.typography;
+    final l = AppLocalizations.of(context)!;
 
     final radius = tokens.card.radius;
     final height = MediaQuery.of(context).size.height * 0.88;

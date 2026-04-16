@@ -688,7 +688,7 @@ Future<void> _init() async {
     Navigator.of(context).pushNamed(AppRouter.notifications);
   },
   icon: Icon(Icons.notifications_none_rounded, color: colors.body),
-  tooltip: 'Notifications',
+  tooltip: l10n.adminDashboardNotificationsTooltip,
 ),
                 IconButton(
                   onPressed: () async {

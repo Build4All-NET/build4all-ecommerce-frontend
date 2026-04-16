@@ -1,3 +1,4 @@
+import 'package:build4front/features/checkout/data/models/checkout_summary_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,7 +14,11 @@ import '../../data/services/orders_api_service.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final int orderId;
-  const OrderDetailsScreen({super.key, required this.orderId});
+
+  const OrderDetailsScreen({
+    super.key,
+    required this.orderId,
+  });
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -67,12 +72,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   String _money(double v) => '\$${v.toStringAsFixed(2)}';
 
-  String _msg(Object e, {String? fallback}) {
+  String _msg(AppLocalizations l10n, Object e, {String? fallback}) {
     final mapped = ExceptionMapper.toMessage(e).trim();
     if (mapped.isNotEmpty && mapped != 'Something went wrong.') {
       return mapped;
     }
-    return fallback ?? 'Something went wrong. Please try again.';
+    return fallback ?? l10n.commonSomethingWentWrongTryAgain;
   }
 
   Future<void> _load() async {
@@ -91,14 +96,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       setState(() {
         order = (o is Map) ? o.cast<String, dynamic>() : null;
         items = (list is List)
-            ? list.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
+            ? list
+                .whereType<Map>()
+                .map((e) => e.cast<String, dynamic>())
+                .toList()
             : [];
         loading = false;
         error = null;
       });
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        error = ExceptionMapper.toMessage(e);
+        error = _msg(l10n, e);
         loading = false;
       });
     }
@@ -117,7 +126,27 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         items: items,
       );
 
-      await InvoicePdf.share(invoice);
+      await InvoicePdf.share(
+        invoice,
+        labels: StandardInvoicePdfLabels(
+          invoiceTitle: l10n.invoiceTitle,
+          orderLabel: l10n.invoiceOrder,
+          dateLabel: l10n.invoiceDate,
+          providerLabel: l10n.commonProvider,
+          statusLabel: l10n.commonStatus,
+          refLabel: l10n.commonRef,
+          itemsLabel: l10n.invoiceItems,
+          itemLabel: l10n.commonItem,
+          qtyLabel: l10n.commonQty,
+          unitLabel: l10n.commonUnit,
+          totalLabel: l10n.commonTotal,
+          subtotalLabel: l10n.invoiceSubtotal,
+          shippingLabel: l10n.invoiceShipping,
+          taxLabel: l10n.invoiceTax,
+          grandTotalLabel: l10n.invoiceGrandTotal,
+          couponLine: (code) => l10n.invoiceCouponLine(code),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -125,8 +154,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         SnackBar(
           content: Text(
             _msg(
+              l10n,
               e,
-              fallback: '${l10n.orderDetailsDownloadInvoice} failed.',
+              fallback: l10n.orderDetailsInvoiceDownloadFailed(e.toString()),
             ),
           ),
         ),
@@ -178,7 +208,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: downloadingInvoice ? null : _downloadInvoice,
+                            onPressed:
+                                downloadingInvoice ? null : _downloadInvoice,
                             icon: downloadingInvoice
                                 ? const SizedBox(
                                     width: 18,
@@ -206,7 +237,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             ? (row['item'] as Map).cast<String, dynamic>()
                             : <String, dynamic>{};
 
-                        final name = (item['itemName'] ?? 'Item').toString();
+                        final nameRaw =
+                            (item['itemName'] ?? '').toString().trim();
+                        final name =
+                            nameRaw.isEmpty ? l10n.commonItem : nameRaw;
+
                         final img = _absUrl(item['imageUrl']?.toString());
 
                         final qty = _toInt(row['quantity']);
@@ -224,7 +259,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           padding: EdgeInsets.all(tokens.card.padding),
                           decoration: BoxDecoration(
                             color: colors.surface,
-                            borderRadius: BorderRadius.circular(tokens.card.radius),
+                            borderRadius:
+                                BorderRadius.circular(tokens.card.radius),
                             border: Border.all(
                               color: colors.border.withOpacity(0.25),
                             ),
@@ -260,7 +296,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                   children: [
                                     Text(
                                       name,
-                                      style: tokens.typography.bodyMedium.copyWith(
+                                      style:
+                                          tokens.typography.bodyMedium.copyWith(
                                         color: colors.label,
                                         fontWeight: FontWeight.w800,
                                       ),
@@ -268,7 +305,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                     SizedBox(height: spacing.xs),
                                     Text(
                                       '${l10n.ordersDetailsQty}: $qty',
-                                      style: tokens.typography.bodySmall.copyWith(
+                                      style:
+                                          tokens.typography.bodySmall.copyWith(
                                         color: colors.muted,
                                       ),
                                     ),
@@ -279,20 +317,23 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                       children: [
                                         Text(
                                           '${l10n.ordersDetailsUnit}: ${_money(unitPrice)}',
-                                          style: tokens.typography.bodySmall.copyWith(
+                                          style: tokens.typography.bodySmall
+                                              .copyWith(
                                             color: colors.body,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                         Text(
                                           '•',
-                                          style: tokens.typography.bodySmall.copyWith(
+                                          style: tokens.typography.bodySmall
+                                              .copyWith(
                                             color: colors.muted,
                                           ),
                                         ),
                                         Text(
                                           '${l10n.ordersDetailsLineTotal}: ${_money(lineTotal)}',
-                                          style: tokens.typography.bodySmall.copyWith(
+                                          style: tokens.typography.bodySmall
+                                              .copyWith(
                                             color: colors.body,
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -338,7 +379,8 @@ class _HeaderCard extends StatelessWidget {
     final colors = t.colors;
     final spacing = t.spacing;
 
-    final statusUi = (order['orderStatusUi'] ?? order['orderStatus'] ?? '').toString();
+    final statusUi =
+        (order['orderStatusUi'] ?? order['orderStatus'] ?? '').toString();
     final total = _toDouble(order['totalPrice']);
     final paid = order['fullyPaid'] == true;
 
