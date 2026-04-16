@@ -155,30 +155,44 @@ def find_team_member_tester():
     return None
 
 
-def find_tester_via_user_relationship(user_id):
-    """Return the betaTester ID linked to a /v1/users record (always TEAM_MEMBER type).
+def find_team_member_tester_by_app(app_id):
+    """Search TEAM_MEMBER betaTesters scoped to the app and match by email.
 
-    The user relationship endpoint returns the TEAM_MEMBER betaTester regardless
-    of whether it appears in filter[email] queries. This is the most reliable way
-    to find the betaTester for Account Holders and Admins.
+    Apple's /v1/users/{id}/relationships/betaTesters returns 404 (PATH_ERROR).
+    Filtering by app ID is an alternative path that may surface TEAM_MEMBER
+    records not visible via the global filter[email] query.
     """
-    r = requests.get(f"{BASE}/v1/users/{user_id}/relationships/betaTesters", headers=h())
-    print(f"   ℹ️  /v1/users/{user_id}/relationships/betaTesters → HTTP {r.status_code} | {r.text[:300]}")
+    r = requests.get(
+        f"{BASE}/v1/betaTesters?filter[apps]={app_id}&filter[inviteType]=TEAM_MEMBER&limit=200",
+        headers=h(),
+    )
+    print(f"   ℹ️  betaTesters[apps][TEAM_MEMBER] → HTTP {r.status_code} | found {len(r.json().get('data', [])) if r.status_code == 200 else '?'} records")
     if r.status_code == 200:
-        data = r.json().get("data", [])
-        if data:
-            tid = data[0]["id"]
-            print(f"   ✅ TEAM_MEMBER betaTester via user relationship: {tid}")
-            return tid
-    # Non-relationship endpoint as fallback
-    r2 = requests.get(f"{BASE}/v1/users/{user_id}/betaTesters", headers=h())
-    print(f"   ℹ️  /v1/users/{user_id}/betaTesters → HTTP {r2.status_code} | {r2.text[:300]}")
-    if r2.status_code == 200:
-        data2 = r2.json().get("data", [])
-        if data2:
-            tid = data2[0]["id"]
-            print(f"   ✅ TEAM_MEMBER betaTester via user betaTesters: {tid}")
-            return tid
+        for tester in r.json().get("data", []):
+            attrs = tester.get("attributes", {})
+            t_email = (attrs.get("email") or "").strip().lower()
+            if t_email == email:
+                tid = tester["id"]
+                print(f"   ✅ TEAM_MEMBER betaTester via app filter: {tid}")
+                return tid
+    return None
+
+
+def find_tester_in_group(internal_group_id):
+    """Return betaTester ID if the email is already in the internal group."""
+    r = requests.get(
+        f"{BASE}/v1/betaGroups/{internal_group_id}/betaTesters?limit=200",
+        headers=h(),
+    )
+    print(f"   ℹ️  Internal group members → HTTP {r.status_code} | found {len(r.json().get('data', [])) if r.status_code == 200 else '?'} testers")
+    if r.status_code == 200:
+        for tester in r.json().get("data", []):
+            attrs = tester.get("attributes", {})
+            t_email = (attrs.get("email") or "").strip().lower()
+            if t_email == email:
+                tid = tester["id"]
+                print(f"   ✅ Already in internal group: {tid}")
+                return tid
     return None
 
 
@@ -375,7 +389,11 @@ def add_to_internal_group(user_id, app_id, app_name):
     # ── Phase 1: Resolve the betaTester ID ───────────────────────────────────
     print("🧪 Resolving betaTester record...")
 
-    tester_id = find_tester_via_user_relationship(user_id) or find_team_member_tester()
+    tester_id = (
+        find_tester_in_group(internal_group_id)
+        or find_team_member_tester()
+        or find_team_member_tester_by_app(app_id)
+    )
 
     if not tester_id:
         # Neither user-relationship nor TEAM_MEMBER filter found anything.
@@ -518,7 +536,11 @@ def add_to_internal_group(user_id, app_id, app_name):
                 time.sleep(10)
 
                 # Re-resolve — TEAM_MEMBER only, no EMAIL fallback.
-                new_tid = find_tester_via_user_relationship(user_id) or find_team_member_tester()
+                new_tid = (
+                    find_tester_in_group(internal_group_id)
+                    or find_team_member_tester()
+                    or find_team_member_tester_by_app(app_id)
+                )
                 if not new_tid:
                     r_any = requests.get(
                         f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
@@ -568,9 +590,12 @@ def add_to_internal_group(user_id, app_id, app_name):
     else:
         write_result(
             "ERROR",
-            f"Could not add {email} to the internal group. Please check App Store Connect.",
+            f"{email} is an active App Store Connect team member but has no TestFlight "
+            f"tester record yet. Please add them to the Internal Testers group once manually "
+            f"via App Store Connect → TestFlight → Internal Testing → [group] → '+', "
+            f"then re-run this workflow and it will succeed automatically.",
             apple_user_id=user_id,
-            apple_beta_tester_id=tester_id,
+            apple_beta_tester_id=tester_id or "",
             internal_group_id=internal_group_id,
             app_id=app_id,
         )
