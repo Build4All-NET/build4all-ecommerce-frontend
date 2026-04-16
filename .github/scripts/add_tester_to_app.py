@@ -100,18 +100,76 @@ def write_result(
 def find_active_user():
     """Return the /v1/users id for `email`, or None.
 
-    NOTE: Apple does NOT return the Account Holder via /v1/users in some
-    API key configurations. Use try_direct_add() as a fallback.
+    Apple stores the Account Holder (and some Admins) under the `username`
+    attribute (their Apple ID) rather than `email`. We check both.
+    We also try the filter[username] query first as a fast path.
     """
+    # Fast path: filter by username (Apple ID) — finds Account Holders
+    r = requests.get(
+        f"{BASE}/v1/users?filter[username]={email}&limit=10",
+        headers=h(),
+    )
+    if r.status_code == 200:
+        for user in r.json().get("data", []):
+            attrs = user.get("attributes", {})
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == email or u_username == email:
+                print(f"   ✅ Found via username filter: {user['id']}")
+                return user["id"]
+
+    # Slow path: paginate all users checking both email and username attributes
     next_url = f"{BASE}/v1/users?limit=200"
     while next_url:
         r = requests.get(next_url, headers=h())
         r.raise_for_status()
         body = r.json()
         for user in body.get("data", []):
-            if (user.get("attributes", {}).get("email") or "").strip().lower() == email:
+            attrs = user.get("attributes", {})
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == email or u_username == email:
                 return user["id"]
         next_url = body.get("links", {}).get("next")
+    return None
+
+
+def find_team_member_tester():
+    """Return the betaTester id for `email` with inviteType=TEAM_MEMBER, or None.
+
+    TEAM_MEMBER betaTesters are the ones linked to actual App Store Connect team
+    members. Only TEAM_MEMBER type can be added to internal TestFlight groups.
+    EMAIL type betaTesters (created via POST /v1/betaTesters) give STATE_ERROR
+    when added to internal groups.
+    """
+    r = requests.get(
+        f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=TEAM_MEMBER",
+        headers=h(),
+    )
+    if r.status_code == 200:
+        data = r.json().get("data", [])
+        if data:
+            tid = data[0]["id"]
+            print(f"   ✅ TEAM_MEMBER betaTester found: {tid}")
+            return tid
+    return None
+
+
+def find_tester_in_group(internal_group_id):
+    """Return betaTester ID if the email is already in the internal group."""
+    r = requests.get(
+        f"{BASE}/v1/betaGroups/{internal_group_id}/betaTesters?limit=200",
+        headers=h(),
+    )
+    print(f"   ℹ️  Internal group members → HTTP {r.status_code} | found {len(r.json().get('data', [])) if r.status_code == 200 else '?'} testers")
+    if r.status_code == 200:
+        for tester in r.json().get("data", []):
+            attrs = tester.get("attributes", {})
+            t_email = (attrs.get("email") or "").strip().lower()
+            if t_email == email:
+                tid = tester["id"]
+                print(f"   ✅ Already in internal group: {tid}")
+                return tid
     return None
 
 
@@ -182,7 +240,8 @@ def resolve_beta_tester():
         data = r.json().get("data", [])
         if data:
             tid = data[0]["id"]
-            print(f"   ✅ betaTester found: {tid}")
+            invite_type = data[0].get("attributes", {}).get("inviteType", "?")
+            print(f"   ✅ betaTester found: {tid} (inviteType={invite_type})")
             return tid
 
     r = requests.post(
@@ -221,23 +280,25 @@ def resolve_beta_tester():
 
 def try_direct_add(app_id, app_name):
     """
-    Attempt to add `email` to the internal group via betaTester lookup,
-    WITHOUT requiring the user to appear in /v1/users first.
+    Attempt to add `email` to the internal group using their TEAM_MEMBER
+    betaTester record, WITHOUT requiring /v1/users to list them first.
 
-    This is the fallback for Account Holders and Admins that the API omits
-    from /v1/users responses.  Apple will accept the group assignment if the
-    person is a team member, and reject it if they are not.
+    This is the fallback for Account Holders and Admins omitted from /v1/users.
+    IMPORTANT: only TEAM_MEMBER type betaTesters can be in internal groups.
+    EMAIL type betaTesters (created via POST /v1/betaTesters) always get
+    STATE_ERROR — so we never use them here.
 
     Returns True and writes ADDED_TO_INTERNAL on success.
-    Returns False (writes nothing) so the caller can fall through to the
-    invitation flow.
+    Returns False (writes nothing) so the caller falls through to invitation.
     """
     internal_group_id = ensure_internal_group(app_id)
     if not internal_group_id:
         return False
 
-    tester_id = resolve_beta_tester()
+    # Only look for TEAM_MEMBER type — EMAIL type causes STATE_ERROR on internal groups
+    tester_id = find_team_member_tester()
     if not tester_id:
+        print("   ℹ️  No TEAM_MEMBER betaTester found — cannot add to internal group directly")
         return False
 
     r = requests.post(
@@ -271,7 +332,7 @@ def try_direct_add(app_id, app_name):
         )
         return True
 
-    print(f"   ℹ️  Direct add declined by Apple (HTTP {r.status_code}) — not a team member, continuing to invitation flow")
+    print(f"   ℹ️  Direct add declined by Apple (HTTP {r.status_code}) — continuing to invitation flow")
     return False
 
 
@@ -279,6 +340,15 @@ def add_to_internal_group(user_id, app_id, app_name):
     """
     Full internal-group flow for a confirmed /v1/users active member.
     Writes tester_result.json and exits.
+
+    Resolution order:
+      1. GET /v1/users/{id}/relationships/betaTesters  (TEAM_MEMBER, most direct)
+      2. GET /v1/betaTesters?filter[email]&filter[inviteType]=TEAM_MEMBER
+      3. One-shot POST /v1/betaTesters with the internal group in relationships
+         — Apple creates TEAM_MEMBER type for emails matching active team members
+         and adds them to the group in one call. Exit immediately on success.
+      4. Fallback: resolve_beta_tester() (EMAIL type) → retry loop will detect
+         STATE_ERROR, delete the EMAIL record, and loop back to step 1/2.
     """
     print()
     print(f"   ✅ User is an active App Store Connect member: {user_id}")
@@ -293,10 +363,109 @@ def add_to_internal_group(user_id, app_id, app_name):
         sys.exit(1)
     print()
 
+    # ── Phase 1: Resolve the betaTester ID ───────────────────────────────────
     print("🧪 Resolving betaTester record...")
-    tester_id = resolve_beta_tester()
+
+    tester_id = find_tester_in_group(internal_group_id) or find_team_member_tester()
+
     if not tester_id:
-        msg = "Could not resolve betaTester ID"
+        # No TEAM_MEMBER betaTester found. Try one-shot: POST /v1/betaTesters
+        # with the internal group in the relationships payload.
+        # When the creation succeeds, verify the group membership immediately —
+        # Apple may have added them even if the returned inviteType is EMAIL.
+        print("   ℹ️  No TEAM_MEMBER betaTester found — trying one-shot creation...")
+        r_shot = requests.post(
+            f"{BASE}/v1/betaTesters",
+            headers=h(),
+            json={
+                "data": {
+                    "type": "betaTesters",
+                    "attributes": {
+                        "email": email,
+                        "firstName": first_name,
+                        "lastName": last_name,
+                    },
+                    "relationships": {
+                        "betaGroups": {
+                            "data": [{"type": "betaGroups", "id": internal_group_id}]
+                        }
+                    },
+                }
+            },
+        )
+        print(f"   One-shot HTTP {r_shot.status_code} | {r_shot.text[:500]}")
+
+        if r_shot.status_code in (200, 201):
+            shot_data = r_shot.json().get("data", {})
+            shot_id   = shot_data.get("id", "")
+            shot_type = shot_data.get("attributes", {}).get("inviteType", "")
+            print(f"   betaTester {shot_id!r} created — inviteType={shot_type!r}")
+
+            if shot_id:
+                tester_id = shot_id
+
+                # Regardless of the inviteType in the response, verify whether
+                # Apple actually added them to the internal group as part of
+                # the creation call (it may succeed even for EMAIL-labelled records).
+                time.sleep(3)
+                r_verify = requests.get(
+                    f"{BASE}/v1/betaGroups/{internal_group_id}/betaTesters?limit=200",
+                    headers=h(),
+                )
+                print(f"   Group verify → HTTP {r_verify.status_code} | {len(r_verify.json().get('data', [])) if r_verify.status_code == 200 else '?'} members")
+                if r_verify.status_code == 200:
+                    for member in r_verify.json().get("data", []):
+                        if member.get("id") == shot_id:
+                            print("   ✅ One-shot confirmed: betaTester IS in the internal group!")
+                            write_result(
+                                "ADDED_TO_INTERNAL",
+                                f"{first_name} {last_name} has been added to the internal TestFlight group for '{app_name}'. "
+                                "They can now test the app directly — no Apple review required.",
+                                apple_user_id=user_id,
+                                apple_beta_tester_id=shot_id,
+                                internal_group_id=internal_group_id,
+                                app_id=app_id,
+                            )
+                            sys.exit(0)
+
+                if shot_type == "TEAM_MEMBER":
+                    # TEAM_MEMBER type confirmed in response — group add succeeded.
+                    print("   ✅ TEAM_MEMBER betaTester created and added to INTERNAL group!")
+                    write_result(
+                        "ADDED_TO_INTERNAL",
+                        f"{first_name} {last_name} has been added to the internal TestFlight group for '{app_name}'. "
+                        "They can now test the app directly — no Apple review required.",
+                        apple_user_id=user_id,
+                        apple_beta_tester_id=shot_id,
+                        internal_group_id=internal_group_id,
+                        app_id=app_id,
+                    )
+                    sys.exit(0)
+
+        elif r_shot.status_code == 409:
+            # betaTester already exists — refetch to find TEAM_MEMBER type.
+            r_rft = requests.get(
+                f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
+            )
+            print(f"   Refetch after 409 → HTTP {r_rft.status_code} | {r_rft.text[:300]}")
+            if r_rft.status_code == 200:
+                for bt in r_rft.json().get("data", []):
+                    bt_type = bt.get("attributes", {}).get("inviteType", "")
+                    print(f"   ℹ️  Found betaTester {bt['id']} inviteType={bt_type!r}")
+                    if bt_type == "TEAM_MEMBER":
+                        tester_id = bt["id"]
+                        print(f"   ✅ TEAM_MEMBER betaTester surfaced after 409: {tester_id}")
+                        break
+                    if not tester_id:
+                        tester_id = bt["id"]  # EMAIL fallback
+
+    # Last resort: EMAIL-type betaTester (existing or newly created).
+    # The retry loop's STATE_ERROR handler will delete it and retry with TEAM_MEMBER.
+    if not tester_id:
+        tester_id = resolve_beta_tester()
+
+    if not tester_id:
+        msg = "Could not resolve or create any betaTester record"
         print(f"   ❌ {msg}")
         write_result(
             "ERROR", msg,
@@ -307,6 +476,7 @@ def add_to_internal_group(user_id, app_id, app_name):
         sys.exit(1)
     print()
 
+    # ── Phase 2: Add to internal group (retry loop) ───────────────────────────
     print("📦 Adding tester to INTERNAL group...")
     added = False
     for attempt in range(5):
@@ -321,22 +491,78 @@ def add_to_internal_group(user_id, app_id, app_name):
             print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
             added = True
             break
+
         elif r.status_code == 409:
             if "STATE_ERROR" in r.text or "cannot be assigned" in r.text:
-                print("   ⏳ STATE_ERROR — retrying in 15 s...")
-                time.sleep(15)
+                # Fetch the betaTester's inviteType to decide how to handle this.
+                r_info = requests.get(f"{BASE}/v1/betaTesters/{tester_id}", headers=h())
+                invite_type = ""
+                if r_info.status_code == 200:
+                    invite_type = (
+                        r_info.json()
+                        .get("data", {})
+                        .get("attributes", {})
+                        .get("inviteType", "")
+                    )
+                print(f"   ℹ️  STATE_ERROR | betaTester inviteType: {invite_type!r}")
+
+                if invite_type == "TEAM_MEMBER":
+                    # TEAM_MEMBER + STATE_ERROR = already pending in the group.
+                    print("   ✅ TEAM_MEMBER already pending in INTERNAL group — treating as added")
+                    added = True
+                    break
+
+                # EMAIL type — delete all EMAIL records and try to surface a TEAM_MEMBER.
+                print("   🗑️  EMAIL betaTester blocked — deleting all EMAIL records...")
+                r_em = requests.get(
+                    f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=EMAIL",
+                    headers=h(),
+                )
+                if r_em.status_code == 200:
+                    for bt in r_em.json().get("data", []):
+                        btid = bt["id"]
+                        print(f"   🗑️  Deleting {btid}...")
+                        rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
+                        print(f"       DELETE HTTP {rd.status_code}")
+                print("   ⏳ Waiting 10 s...")
+                time.sleep(10)
+
+                # Re-resolve — TEAM_MEMBER only, no EMAIL fallback.
+                new_tid = find_tester_in_group(internal_group_id) or find_team_member_tester()
+                if not new_tid:
+                    r_any = requests.get(
+                        f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
+                    )
+                    print(f"   Plain filter[email] → HTTP {r_any.status_code} | {r_any.text[:300]}")
+                    if r_any.status_code == 200:
+                        for bt in r_any.json().get("data", []):
+                            bt_type = bt.get("attributes", {}).get("inviteType", "")
+                            print(f"   ℹ️  betaTester {bt['id']} inviteType={bt_type!r}")
+                            if bt_type == "TEAM_MEMBER":
+                                new_tid = bt["id"]
+                                break
+
+                if new_tid:
+                    tester_id = new_tid
+                    print(f"   ✅ Re-resolved: {tester_id}")
+                else:
+                    print("   ❌ No TEAM_MEMBER betaTester obtainable after EMAIL deletion.")
+                    print("      Add this team member to the internal group once via the")
+                    print("      App Store Connect portal; subsequent runs will succeed.")
+                    break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
                 added = True
                 break
+
         elif r.status_code in (403, 422):
             if attempt < 4:
-                print(f"   ⏳ Not yet active (HTTP {r.status_code}), retrying in 15 s...")
+                print(f"   ⏳ HTTP {r.status_code} — retrying in 15 s...")
                 time.sleep(15)
             else:
-                print("   ❌ Could not add — Apple rejected assignment after retries")
+                print("   ❌ Apple rejected assignment after retries")
         else:
-            print(f"   ❌ Unexpected error (HTTP {r.status_code})")
+            print(f"   ❌ Unexpected HTTP {r.status_code}")
             break
 
     if added:
@@ -352,9 +578,12 @@ def add_to_internal_group(user_id, app_id, app_name):
     else:
         write_result(
             "ERROR",
-            f"Could not add {email} to the internal group. Please check App Store Connect.",
+            f"{email} is an active App Store Connect team member but has no TestFlight "
+            f"tester record yet. Please add them to the Internal Testers group once manually "
+            f"via App Store Connect → TestFlight → Internal Testing → [group] → '+', "
+            f"then re-run this workflow and it will succeed automatically.",
             apple_user_id=user_id,
-            apple_beta_tester_id=tester_id,
+            apple_beta_tester_id=tester_id or "",
             internal_group_id=internal_group_id,
             app_id=app_id,
         )
