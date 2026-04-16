@@ -523,31 +523,30 @@ if tester_id:
         print("   ⚠️ Could not add tester to external group — they can join via public link")
     print()
 
-print("📝 Step 11.5: Ensuring beta app description is set...")
+print("📝 Step 11.5: Ensuring beta app description and feedback email are set...")
 r = requests.get(
     f"{BASE}/v1/betaAppLocalizations?filter[app]={app_id}",
     headers=h()
 )
 if r.status_code == 200 and r.json().get("data"):
     loc_id = r.json()["data"][0]["id"]
-    existing_desc = (r.json()["data"][0].get("attributes", {}).get("description") or "").strip()
-    if not existing_desc:
-        r_p = requests.patch(
-            f"{BASE}/v1/betaAppLocalizations/{loc_id}",
-            headers=h(),
-            json={"data": {
-                "type": "betaAppLocalizations",
-                "id": loc_id,
-                "attributes": {"description": beta_description, "feedbackEmail": feedback_email}
-            }}
-        )
-        print(f"   PATCH HTTP: {r_p.status_code}")
-        if r_p.status_code == 200:
-            print("   ✅ Beta app description updated")
-        else:
-            print(f"   ⚠️ PATCH failed: {r_p.text[:200]}")
+    existing_attrs = r.json()["data"][0].get("attributes", {})
+    print(f"   Existing localization {loc_id}: desc={bool((existing_attrs.get('description') or '').strip())} feedbackEmail={bool((existing_attrs.get('feedbackEmail') or '').strip())}")
+    # Always PATCH to ensure both description and feedbackEmail are set
+    r_p = requests.patch(
+        f"{BASE}/v1/betaAppLocalizations/{loc_id}",
+        headers=h(),
+        json={"data": {
+            "type": "betaAppLocalizations",
+            "id": loc_id,
+            "attributes": {"description": beta_description, "feedbackEmail": feedback_email}
+        }}
+    )
+    print(f"   PATCH HTTP: {r_p.status_code}")
+    if r_p.status_code == 200:
+        print("   ✅ Beta app description + feedbackEmail updated")
     else:
-        print("   ✅ Beta app description already set")
+        print(f"   ⚠️ PATCH failed: {r_p.text[:300]}")
 else:
     r_c = requests.post(
         f"{BASE}/v1/betaAppLocalizations",
@@ -562,9 +561,56 @@ else:
     if r_c.status_code in (200, 201):
         print("   ✅ Beta app description created")
     elif r_c.status_code == 409:
-        print("   ✅ Beta app description already exists")
+        # Already exists but wasn't found by filter — try to fetch and patch
+        r2 = requests.get(f"{BASE}/v1/betaAppLocalizations?filter[app]={app_id}", headers=h())
+        if r2.status_code == 200 and r2.json().get("data"):
+            loc_id2 = r2.json()["data"][0]["id"]
+            r_p2 = requests.patch(
+                f"{BASE}/v1/betaAppLocalizations/{loc_id2}",
+                headers=h(),
+                json={"data": {
+                    "type": "betaAppLocalizations",
+                    "id": loc_id2,
+                    "attributes": {"description": beta_description, "feedbackEmail": feedback_email}
+                }}
+            )
+            print(f"   PATCH after 409 HTTP: {r_p2.status_code}")
+            if r_p2.status_code == 200:
+                print("   ✅ Beta app description updated after 409")
+        else:
+            print("   ✅ Beta app description already exists (409)")
     else:
-        print(f"   ⚠️ Could not create description: {r_c.text[:200]}")
+        print(f"   ⚠️ Could not create description: {r_c.text[:300]}")
+print()
+
+print("📝 Step 11.6: Ensuring beta app review detail is set...")
+first = owner_name.split()[0] if owner_name else "Owner"
+last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+r = requests.get(f"{BASE}/v1/apps/{app_id}/betaAppReviewDetail", headers=h())
+print(f"   GET betaAppReviewDetail HTTP: {r.status_code}")
+if r.status_code == 200:
+    detail_id = r.json()["data"]["id"]
+    r_p = requests.patch(
+        f"{BASE}/v1/betaAppReviewDetails/{detail_id}",
+        headers=h(),
+        json={"data": {
+            "type": "betaAppReviewDetails",
+            "id": detail_id,
+            "attributes": {
+                "contactFirstName": first,
+                "contactLastName": last,
+                "contactPhone": contact_phone,
+                "contactEmail": feedback_email
+            }
+        }}
+    )
+    print(f"   PATCH betaAppReviewDetail HTTP: {r_p.status_code}")
+    if r_p.status_code == 200:
+        print("   ✅ Beta app review detail updated")
+    else:
+        print(f"   ⚠️ PATCH failed: {r_p.text[:300]}")
+else:
+    print(f"   ⚠️ Could not fetch betaAppReviewDetail: {r.text[:200]}")
 print()
 
 print("📋 Step 12: Submitting for Beta App Review...")
@@ -575,12 +621,12 @@ r = requests.post(
     json={"data": {"type": "betaAppReviewSubmissions",
           "relationships": {"build": {"data": {"type": "builds", "id": build_id}}}}}
 )
-print(f"   HTTP: {r.status_code} | {r.text[:200]}")
+print(f"   HTTP: {r.status_code} | {r.text[:600]}")
 if r.status_code in (200, 201, 409):
     print("   ✅ Submitted for Beta App Review")
     review_submitted = True
 else:
-    print(f"   ⚠️ Review submission issue: {r.text[:200]}")
+    print(f"   ⚠️ Review submission issue: {r.text[:600]}")
 
 status = "SUBMITTED_FOR_REVIEW" if review_submitted else "BUILD_ADDED"
 with open("testflight_status.txt", "w") as f:
