@@ -9,6 +9,8 @@ beta_description = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6] else f"Test 
 feedback_email   = sys.argv[7] if len(sys.argv) > 7 and sys.argv[7] else owner_email
 contact_phone    = sys.argv[8] if len(sys.argv) > 8 and sys.argv[8] else "+1234567890"
 
+BASE = "https://api.appstoreconnect.apple.com"
+
 def create_token():
     return jwt.encode({
         "iss": api_key["issuer_id"],
@@ -26,10 +28,7 @@ print("🚀 COMPLETE HYBRID TESTFLIGHT SETUP")
 print("="*70)
 
 print("📱 Step 1: Finding app in App Store Connect...")
-r = requests.get(
-    f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle_id}",
-    headers=h()
-)
+r = requests.get(f"{BASE}/v1/apps?filter[bundleId]={bundle_id}", headers=h())
 r.raise_for_status()
 apps = r.json().get("data", [])
 if not apps:
@@ -43,21 +42,34 @@ print("👤 Step 2: Ensuring user exists in App Store Connect...")
 internal_user_id = None
 
 def find_active_user():
-    next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
+    # Fast path: filter by username (Apple ID) — finds Account Holders
+    r = requests.get(f"{BASE}/v1/users?filter[username]={owner_email}&limit=10", headers=h())
+    if r.status_code == 200:
+        for user in r.json().get("data", []):
+            attrs = user.get("attributes", {})
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == owner_email.lower() or u_username == owner_email.lower():
+                print(f"   ✅ Found via username filter: {user['id']}")
+                return user["id"]
+    # Slow path: paginate all users checking both email and username
+    next_url = f"{BASE}/v1/users?limit=200"
     while next_url:
         r = requests.get(next_url, headers=h())
         r.raise_for_status()
         body = r.json()
         for user in body.get("data", []):
             attrs = user.get("attributes", {})
-            if (attrs.get("email") or "").strip().lower() == owner_email.lower():
+            u_email    = (attrs.get("email")    or "").strip().lower()
+            u_username = (attrs.get("username") or "").strip().lower()
+            if u_email == owner_email.lower() or u_username == owner_email.lower():
                 return user["id"]
         next_url = body.get("links", {}).get("next")
     return None
 
 def find_pending_invitation():
     r = requests.get(
-        f"https://api.appstoreconnect.apple.com/v1/userInvitations?filter[email]={owner_email}",
+        f"{BASE}/v1/userInvitations?filter[email]={owner_email}",
         headers=h()
     )
     if r.status_code != 200:
@@ -74,17 +86,14 @@ else:
     pending_invite_id = find_pending_invitation()
     if pending_invite_id:
         print(f"   ⚠️ Pending invite exists: {pending_invite_id} — deleting and resending...")
-        requests.delete(
-            f"https://api.appstoreconnect.apple.com/v1/userInvitations/{pending_invite_id}",
-            headers=h()
-        )
+        requests.delete(f"{BASE}/v1/userInvitations/{pending_invite_id}", headers=h())
         time.sleep(3)
 
     print("   📧 Sending App Store Connect invitation...")
     first = owner_name.split()[0] if owner_name else "Owner"
     last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
     r = requests.post(
-        "https://api.appstoreconnect.apple.com/v1/userInvitations",
+        f"{BASE}/v1/userInvitations",
         headers=h(),
         json={"data": {"type": "userInvitations", "attributes": {
             "email": owner_email, "firstName": first, "lastName": last,
@@ -115,7 +124,7 @@ print()
 print("👥 Step 3: Ensuring internal TestFlight group exists...")
 internal_group_id = None
 r = requests.get(
-    f"https://api.appstoreconnect.apple.com/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=true",
+    f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=true",
     headers=h()
 )
 r.raise_for_status()
@@ -125,7 +134,7 @@ if groups:
     print(f"   ✅ Internal group exists: {groups[0]['attributes']['name']}")
 else:
     r = requests.post(
-        "https://api.appstoreconnect.apple.com/v1/betaGroups",
+        f"{BASE}/v1/betaGroups",
         headers=h(),
         json={"data": {"type": "betaGroups", "attributes": {
             "name": "Internal Testers", "isInternalGroup": True
@@ -144,7 +153,7 @@ external_group_id = None
 public_link_enabled = False
 
 r = requests.get(
-    f"https://api.appstoreconnect.apple.com/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
+    f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
     headers=h()
 )
 r.raise_for_status()
@@ -164,7 +173,7 @@ if not external_group_id and groups:
 
 if not external_group_id:
     r = requests.post(
-        "https://api.appstoreconnect.apple.com/v1/betaGroups",
+        f"{BASE}/v1/betaGroups",
         headers=h(),
         json={"data": {"type": "betaGroups", "attributes": {
             "name": "External Testers", "isInternalGroup": False,
@@ -182,7 +191,7 @@ if not external_group_id:
 
 if not public_link_enabled:
     r = requests.patch(
-        f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}",
+        f"{BASE}/v1/betaGroups/{external_group_id}",
         headers=h(),
         json={"data": {"type": "betaGroups", "id": external_group_id,
               "attributes": {"publicLinkEnabled": True, "publicLinkLimitEnabled": False}}}
@@ -191,65 +200,106 @@ if not public_link_enabled:
         print("   ✅ Public link enabled")
 print()
 
-# ── Step 5: Resolve betaTester ID only (group assignment happens after build is added) ──
-print("🧪 Step 5: Resolving betaTester ID...")
+# ── Step 5: Resolve betaTester and add to INTERNAL group (one-shot approach) ──
+print("🧪 Step 5: Resolving betaTester and adding to internal group...")
 tester_id = None
+added_to_internal_already = False  # True when Step 5 confirms internal membership
 
-r = requests.get(
-    f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
-    headers=h()
-)
-print(f"   betaTesters lookup HTTP: {r.status_code}")
-print(f"   betaTesters response: {r.text[:500]}")
-if r.status_code == 200:
-    data = r.json().get("data", [])
-    if data:
-        tester_id = data[0]["id"]
-        print(f"   ✅ Existing betaTester found: {tester_id}")
+if internal_group_id:
+    # Check if already in internal group
+    r = requests.get(
+        f"{BASE}/v1/betaGroups/{internal_group_id}/betaTesters?limit=200",
+        headers=h()
+    )
+    member_count = len(r.json().get("data", [])) if r.status_code == 200 else "?"
+    print(f"   Internal group members → HTTP {r.status_code} | found {member_count} testers")
+    if r.status_code == 200:
+        for tester in r.json().get("data", []):
+            attrs = tester.get("attributes", {})
+            t_email = (attrs.get("email") or "").strip().lower()
+            if t_email == owner_email.lower():
+                tester_id = tester["id"]
+                added_to_internal_already = True
+                print(f"   ✅ Already in internal group: {tester_id}")
+                break
 
+# Check for TEAM_MEMBER betaTester
 if not tester_id:
+    r = requests.get(
+        f"{BASE}/v1/betaTesters?filter[email]={owner_email}&filter[inviteType]=TEAM_MEMBER",
+        headers=h()
+    )
+    if r.status_code == 200:
+        data = r.json().get("data", [])
+        if data:
+            tester_id = data[0]["id"]
+            print(f"   ✅ TEAM_MEMBER betaTester found: {tester_id}")
+
+# One-shot: POST /v1/betaTesters with internal group relationship
+if not tester_id and internal_group_id:
+    print("   ℹ️  No TEAM_MEMBER betaTester found — trying one-shot creation...")
     first = owner_name.split()[0] if owner_name else "Owner"
     last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
-    create_payload = {"data": {"type": "betaTesters", "attributes": {
-        "email": owner_email, "firstName": first, "lastName": last
-    }}}
-    print(f"   📝 Creating betaTester: {json.dumps(create_payload)}")
-    r = requests.post(
-        "https://api.appstoreconnect.apple.com/v1/betaTesters",
-        headers=h(), json=create_payload
+    r_shot = requests.post(
+        f"{BASE}/v1/betaTesters",
+        headers=h(),
+        json={"data": {
+            "type": "betaTesters",
+            "attributes": {"email": owner_email, "firstName": first, "lastName": last},
+            "relationships": {
+                "betaGroups": {"data": [{"type": "betaGroups", "id": internal_group_id}]}
+            }
+        }}
     )
-    print(f"   betaTester create HTTP: {r.status_code}")
-    print(f"   betaTester create response: {r.text[:500]}")
-    if r.status_code in (200, 201):
-        tester_id = r.json()["data"]["id"]
-        print(f"   ✅ betaTester created: {tester_id}")
-    elif r.status_code == 409:
-        print("   ⚠️ 409 — tester already exists, re-fetching...")
-        r2 = requests.get(
-            f"https://api.appstoreconnect.apple.com/v1/betaTesters?filter[email]={owner_email}",
+    print(f"   One-shot HTTP {r_shot.status_code} | {r_shot.text[:500]}")
+    if r_shot.status_code in (200, 201):
+        shot_data = r_shot.json().get("data", {})
+        shot_id   = shot_data.get("id", "")
+        shot_type = shot_data.get("attributes", {}).get("inviteType", "")
+        print(f"   betaTester {shot_id!r} created — inviteType={shot_type!r}")
+        if shot_id:
+            tester_id = shot_id
+            time.sleep(3)
+            r_verify = requests.get(
+                f"{BASE}/v1/betaGroups/{internal_group_id}/betaTesters?limit=200",
+                headers=h()
+            )
+            member_count = len(r_verify.json().get("data", [])) if r_verify.status_code == 200 else "?"
+            print(f"   Group verify → HTTP {r_verify.status_code} | {member_count} members")
+            if r_verify.status_code == 200:
+                for member in r_verify.json().get("data", []):
+                    if member.get("id") == shot_id:
+                        print("   ✅ One-shot confirmed: betaTester IS in the internal group!")
+                        added_to_internal_already = True
+                        break
+            if not added_to_internal_already and shot_type == "TEAM_MEMBER":
+                added_to_internal_already = True
+    elif r_shot.status_code == 409:
+        r_rft = requests.get(
+            f"{BASE}/v1/betaTesters?filter[email]={owner_email}",
             headers=h()
         )
-        print(f"   re-fetch HTTP: {r2.status_code} | {r2.text[:300]}")
-        if r2.status_code == 200:
-            data = r2.json().get("data", [])
-            if data:
-                tester_id = data[0]["id"]
-                print(f"   ✅ betaTester recovered: {tester_id}")
-    else:
-        print(f"   ❌ Unexpected error: {r.text[:500]}")
+        print(f"   Refetch after 409 → HTTP {r_rft.status_code} | {r_rft.text[:300]}")
+        if r_rft.status_code == 200:
+            for bt in r_rft.json().get("data", []):
+                bt_type = bt.get("attributes", {}).get("inviteType", "")
+                if bt_type == "TEAM_MEMBER":
+                    tester_id = bt["id"]
+                    print(f"   ✅ TEAM_MEMBER found after 409: {tester_id}")
+                    break
+            if not tester_id and r_rft.json().get("data"):
+                tester_id = r_rft.json()["data"][0]["id"]
+                print(f"   ℹ️  Using fallback betaTester: {tester_id}")
 
 if tester_id:
-    print(f"   ✅ tester_id confirmed: {tester_id}")
+    print(f"   ✅ tester_id confirmed: {tester_id} | already_in_internal={added_to_internal_already}")
 else:
     print("   ⚠️ Could not resolve tester_id — will skip group assignment")
 print()
 
 print("🔗 Step 6: Retrieving public TestFlight link...")
 public_testflight_link = None
-r = requests.get(
-    f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}",
-    headers=h()
-)
+r = requests.get(f"{BASE}/v1/betaGroups/{external_group_id}", headers=h())
 if r.status_code == 200:
     public_testflight_link = r.json()["data"]["attributes"].get("publicLink")
     if public_testflight_link:
@@ -266,7 +316,7 @@ print("⏳ Step 7: Waiting for build to finish processing...")
 build_id = version = build_num = None
 for attempt in range(20):
     r = requests.get(
-        f"https://api.appstoreconnect.apple.com/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=1",
+        f"{BASE}/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=1",
         headers=h()
     )
     r.raise_for_status()
@@ -294,7 +344,7 @@ print()
 
 print("🔒 Step 8: Setting export compliance...")
 r = requests.patch(
-    f"https://api.appstoreconnect.apple.com/v1/builds/{build_id}",
+    f"{BASE}/v1/builds/{build_id}",
     headers=h(),
     json={"data": {"type": "builds", "id": build_id,
           "attributes": {"usesNonExemptEncryption": False}}}
@@ -307,7 +357,7 @@ print()
 
 print("📝 Step 9: Adding beta build localization...")
 r = requests.post(
-    "https://api.appstoreconnect.apple.com/v1/betaBuildLocalizations",
+    f"{BASE}/v1/betaBuildLocalizations",
     headers=h(),
     json={"data": {"type": "betaBuildLocalizations",
           "attributes": {"locale": "en-US", "whatsNew": f"Welcome to {app_name} beta!"},
@@ -322,7 +372,7 @@ if internal_group_id:
     print("📦 Step 10: Adding build to internal group...")
     for attempt in range(15):
         r = requests.post(
-            f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/builds",
+            f"{BASE}/v1/betaGroups/{internal_group_id}/relationships/builds",
             headers=h(),
             json={"data": [{"type": "builds", "id": build_id}]}
         )
@@ -340,7 +390,7 @@ if internal_group_id:
 print("📦 Step 11: Adding build to external group...")
 for attempt in range(15):
     r = requests.post(
-        f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}/relationships/builds",
+        f"{BASE}/v1/betaGroups/{external_group_id}/relationships/builds",
         headers=h(),
         json={"data": [{"type": "builds", "id": build_id}]}
     )
@@ -356,76 +406,111 @@ for attempt in range(15):
 print()
 
 # ── Step 5b: Add tester to groups NOW that builds are in both groups ──────────
-# Apple requires a build in the group before external testers can be assigned.
 if tester_id:
     print("🧪 Step 5b: Adding tester to groups (build now in both groups)...")
     print()
 
     if internal_group_id:
-        print("   📦 Adding tester to INTERNAL group...")
-        added_to_internal = False
-        for int_attempt in range(5):
-            r = requests.post(
-                f"https://api.appstoreconnect.apple.com/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
-                headers=h(),
-                json={"data": [{"type": "betaTesters", "id": tester_id}]}
-            )
-            print(f"   Internal group attempt {int_attempt+1}: HTTP {r.status_code} | {r.text[:300]}")
-            if r.status_code in (200, 204):
-                print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
-                added_to_internal = True
-                break
-            elif r.status_code == 409:
-                resp_text = r.text
-                if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
-                    print(f"   ⏳ STATE_ERROR — retrying in 20s (attempt {int_attempt+1}/5)...")
-                    time.sleep(20)
-                    continue
-                else:
-                    print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
+        if added_to_internal_already:
+            print("   ✅ Tester already confirmed in INTERNAL group (added in Step 5)")
+        else:
+            print("   📦 Adding tester to INTERNAL group...")
+            added_to_internal = False
+            for int_attempt in range(5):
+                r = requests.post(
+                    f"{BASE}/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
+                    headers=h(),
+                    json={"data": [{"type": "betaTesters", "id": tester_id}]}
+                )
+                print(f"   Internal group attempt {int_attempt+1}: HTTP {r.status_code} | {r.text[:300]}")
+                if r.status_code in (200, 204):
+                    print("   ✅ Tester added to INTERNAL group — instant access, no review needed!")
                     added_to_internal = True
                     break
-            elif r.status_code in (403, 422):
-                if int_attempt < 4:
-                    print(f"   ⏳ User not yet an active team member (HTTP {r.status_code}), retrying in 20s (attempt {int_attempt+1}/5)...")
-                    time.sleep(20)
-                    rechk = find_active_user()
-                    if rechk:
-                        internal_user_id = rechk
-                        print(f"   ✅ User became active: {internal_user_id}")
+                elif r.status_code == 409:
+                    if "STATE_ERROR" in r.text or "cannot be assigned" in r.text:
+                        print(f"   ⏳ STATE_ERROR — retrying in 20s (attempt {int_attempt+1}/5)...")
+                        time.sleep(20)
+                        continue
+                    else:
+                        print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
+                        added_to_internal = True
+                        break
+                elif r.status_code in (403, 422):
+                    if int_attempt < 4:
+                        print(f"   ⏳ HTTP {r.status_code} — retrying in 20s...")
+                        time.sleep(20)
+                    else:
+                        print(f"   ⚠️ User not yet a team member after {int_attempt+1} attempts")
                 else:
-                    print(f"   ⚠️ User not yet a team member after {int_attempt+1} attempts (HTTP {r.status_code})")
-                    print(f"   ℹ️  Once they accept the App Store Connect invitation, run a new build to gain internal testing access")
-            else:
-                print(f"   ⚠️ Unexpected error adding to internal group (HTTP {r.status_code}): {r.text[:200]}")
-                break
-        if not added_to_internal:
-            print("   ⚠️ Could not add to INTERNAL group — user must accept App Store Connect invitation first")
-            print("   ℹ️  They can join via the public TestFlight link in the meantime")
+                    print(f"   ⚠️ Unexpected error (HTTP {r.status_code}): {r.text[:200]}")
+                    break
+            if not added_to_internal:
+                print("   ⚠️ Could not add to INTERNAL group — user must accept App Store Connect invitation first")
     else:
         print("   ⚠️ No internal group ID — skipping internal group assignment")
     print()
 
     print("   📦 Adding tester to EXTERNAL group...")
     external_added = False
-    for ext_attempt in range(5):
+    for ext_attempt in range(3):
         r = requests.post(
-            f"https://api.appstoreconnect.apple.com/v1/betaGroups/{external_group_id}/relationships/betaTesters",
+            f"{BASE}/v1/betaGroups/{external_group_id}/relationships/betaTesters",
             headers=h(),
             json={"data": [{"type": "betaTesters", "id": tester_id}]}
         )
         print(f"   External group HTTP: {r.status_code} | {r.text[:300]}")
-
         if r.status_code in (200, 204):
             print("   ✅ Tester added to EXTERNAL group")
             external_added = True
             break
         elif r.status_code == 409:
-            resp_text = r.text
-            if "STATE_ERROR" in resp_text or "cannot be assigned" in resp_text:
-                print(f"   ⏳ STATE_ERROR — tester cannot be assigned yet, retrying in 20s (attempt {ext_attempt+1}/5)...")
-                time.sleep(20)
-                continue
+            if "STATE_ERROR" in r.text or "cannot be assigned" in r.text:
+                print(f"   ⏳ STATE_ERROR on external group — deleting conflicting EMAIL betaTesters...")
+                r_em = requests.get(
+                    f"{BASE}/v1/betaTesters?filter[email]={owner_email}&filter[inviteType]=EMAIL",
+                    headers=h()
+                )
+                if r_em.status_code == 200:
+                    for bt in r_em.json().get("data", []):
+                        btid = bt["id"]
+                        if btid != tester_id:
+                            print(f"   🗑️  Deleting conflicting betaTester {btid}...")
+                            rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
+                            print(f"       DELETE HTTP {rd.status_code}")
+                time.sleep(10)
+                first = owner_name.split()[0] if owner_name else "Owner"
+                last  = " ".join(owner_name.split()[1:]) if len(owner_name.split()) > 1 else "User"
+                r_ext = requests.post(
+                    f"{BASE}/v1/betaTesters",
+                    headers=h(),
+                    json={"data": {
+                        "type": "betaTesters",
+                        "attributes": {"email": owner_email, "firstName": first, "lastName": last},
+                        "relationships": {
+                            "betaGroups": {"data": [{"type": "betaGroups", "id": external_group_id}]}
+                        }
+                    }}
+                )
+                print(f"   External one-shot HTTP {r_ext.status_code} | {r_ext.text[:300]}")
+                if r_ext.status_code in (200, 201):
+                    time.sleep(3)
+                    r_ev = requests.get(
+                        f"{BASE}/v1/betaGroups/{external_group_id}/betaTesters?limit=200",
+                        headers=h()
+                    )
+                    if r_ev.status_code == 200:
+                        for member in r_ev.json().get("data", []):
+                            m_email = (member.get("attributes", {}).get("email") or "").strip().lower()
+                            if m_email == owner_email.lower():
+                                print("   ✅ One-shot confirmed: tester in external group!")
+                                external_added = True
+                                break
+                elif r_ext.status_code == 409:
+                    print("   ✅ Tester already in external group (409)")
+                    external_added = True
+                if not external_added:
+                    time.sleep(20)
             else:
                 print("   ✅ Tester already in EXTERNAL group")
                 external_added = True
@@ -438,10 +523,54 @@ if tester_id:
         print("   ⚠️ Could not add tester to external group — they can join via public link")
     print()
 
+print("📝 Step 11.5: Ensuring beta app description is set...")
+r = requests.get(
+    f"{BASE}/v1/betaAppLocalizations?filter[app]={app_id}",
+    headers=h()
+)
+if r.status_code == 200 and r.json().get("data"):
+    loc_id = r.json()["data"][0]["id"]
+    existing_desc = (r.json()["data"][0].get("attributes", {}).get("description") or "").strip()
+    if not existing_desc:
+        r_p = requests.patch(
+            f"{BASE}/v1/betaAppLocalizations/{loc_id}",
+            headers=h(),
+            json={"data": {
+                "type": "betaAppLocalizations",
+                "id": loc_id,
+                "attributes": {"description": beta_description, "feedbackEmail": feedback_email}
+            }}
+        )
+        print(f"   PATCH HTTP: {r_p.status_code}")
+        if r_p.status_code == 200:
+            print("   ✅ Beta app description updated")
+        else:
+            print(f"   ⚠️ PATCH failed: {r_p.text[:200]}")
+    else:
+        print("   ✅ Beta app description already set")
+else:
+    r_c = requests.post(
+        f"{BASE}/v1/betaAppLocalizations",
+        headers=h(),
+        json={"data": {
+            "type": "betaAppLocalizations",
+            "attributes": {"locale": "en-US", "description": beta_description, "feedbackEmail": feedback_email},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}
+        }}
+    )
+    print(f"   POST HTTP: {r_c.status_code}")
+    if r_c.status_code in (200, 201):
+        print("   ✅ Beta app description created")
+    elif r_c.status_code == 409:
+        print("   ✅ Beta app description already exists")
+    else:
+        print(f"   ⚠️ Could not create description: {r_c.text[:200]}")
+print()
+
 print("📋 Step 12: Submitting for Beta App Review...")
 review_submitted = False
 r = requests.post(
-    "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions",
+    f"{BASE}/v1/betaAppReviewSubmissions",
     headers=h(),
     json={"data": {"type": "betaAppReviewSubmissions",
           "relationships": {"build": {"data": {"type": "builds", "id": build_id}}}}}
