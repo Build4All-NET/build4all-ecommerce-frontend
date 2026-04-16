@@ -615,18 +615,27 @@ print()
 
 print("📋 Step 12: Submitting for Beta App Review...")
 review_submitted = False
-r = requests.post(
-    f"{BASE}/v1/betaAppReviewSubmissions",
-    headers=h(),
-    json={"data": {"type": "betaAppReviewSubmissions",
-          "relationships": {"build": {"data": {"type": "builds", "id": build_id}}}}}
-)
-print(f"   HTTP: {r.status_code} | {r.text[:600]}")
-if r.status_code in (200, 201, 409):
-    print("   ✅ Submitted for Beta App Review")
-    review_submitted = True
-else:
-    print(f"   ⚠️ Review submission issue: {r.text[:600]}")
+# Wait for Apple to propagate the betaAppLocalization update before submitting
+time.sleep(8)
+for review_attempt in range(4):
+    r = requests.post(
+        f"{BASE}/v1/betaAppReviewSubmissions",
+        headers=h(),
+        json={"data": {"type": "betaAppReviewSubmissions",
+              "relationships": {"build": {"data": {"type": "builds", "id": build_id}}}}}
+    )
+    print(f"   Attempt {review_attempt+1}: HTTP {r.status_code} | {r.text[:600]}")
+    if r.status_code in (200, 201, 409):
+        print("   ✅ Submitted for Beta App Review")
+        review_submitted = True
+        break
+    elif r.status_code == 422 and "betaAppLocalization" in r.text and review_attempt < 3:
+        print(f"   ⏳ betaAppLocalization not yet visible — waiting 15s and retrying (attempt {review_attempt+1}/4)...")
+        time.sleep(15)
+        continue
+    else:
+        print(f"   ⚠️ Review submission issue: {r.text[:600]}")
+        break
 
 status = "SUBMITTED_FOR_REVIEW" if review_submitted else "BUILD_ADDED"
 with open("testflight_status.txt", "w") as f:
