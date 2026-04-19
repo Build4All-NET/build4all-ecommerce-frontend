@@ -4,7 +4,14 @@ import 'package:build4front/app/app_router.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/notifications/front_firebase_push_service.dart';
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/data/repositories/licensing_repository_impl.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/confirm_upgrade_payment.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/get_available_upgrade_plans.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/initiate_upgrade_payment.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/refresh_owner_subscription.dart';
+import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_bloc.dart';
+import 'package:build4front/features/admin/licensing/presentation/widgets/upgrade_request_sheet.dart';
 
 import 'package:build4front/features/admin/profile/data/repository/admin_profile_repository_impl.dart';
 import 'package:build4front/features/admin/profile/data/servcies/admin_user_api_service.dart';
@@ -292,6 +299,19 @@ Future<void> _init() async {
     );
   }
 
+  UpgradeFlowBloc _buildUpgradeFlowBloc() {
+    final repo = LicensingRepositoryImpl(
+      api: _licensingApi,
+      tokenStore: _store,
+    );
+    return UpgradeFlowBloc(
+      getPlansUc: GetAvailableUpgradePlans(repo),
+      initiatePaymentUc: InitiateUpgradePayment(repo),
+      confirmPaymentUc: ConfirmUpgradePayment(repo),
+      refreshSubscriptionUc: RefreshOwnerSubscription(repo),
+    );
+  }
+
   Future<void> _showUpgradeSheet(OwnerAppAccessResponse access) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -301,222 +321,27 @@ Future<void> _init() async {
     }
 
     final current = access.planCode;
+    final canRequest = current == PlanCode.FREE ||
+        current == PlanCode.PRO_HOSTEDB;
 
-    final options = <_UpgradeOption>[];
-
-    if (current == PlanCode.FREE) {
-      options.add(_UpgradeOption(
-        code: 'PRO_HOSTEDB',
-        title: l10n.planProHostedDb,
-        desc: l10n.planProHostedDbDesc,
-      ));
-      options.add(_UpgradeOption(
-        code: 'DEDICATED',
-        title: l10n.planDedicated,
-        desc: l10n.planDedicatedDesc,
-      ));
-    } else if (current == PlanCode.PRO_HOSTEDB) {
-      options.add(_UpgradeOption(
-        code: 'DEDICATED',
-        title: l10n.planDedicated,
-        desc: l10n.planDedicatedDesc,
-      ));
-    }
-
-    if (options.isEmpty) {
+    if (!canRequest) {
       AppToast.error(context, l10n.noUpgradeAvailable);
       return;
     }
 
-    String selected = options.first.code;
-
-    final sent = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) {
-        final tokens = ctx.watch<ThemeCubit>().state.tokens;
-        final colors = tokens.colors;
-        final t = Theme.of(ctx).textTheme;
-
-        return StatefulBuilder(
-          builder: (ctx2, setModalState) {
-            final inset = _bottomInset(ctx2);
-
-            return SafeArea(
-              top: false,
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: EdgeInsets.only(bottom: inset),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            height: 4,
-                            width: 40,
-                            decoration: BoxDecoration(
-                              color: colors.border.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: colors.primary.withOpacity(.10),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: colors.primary.withOpacity(.18),
-                                  ),
-                                ),
-                                child: Icon(Icons.upgrade, color: colors.primary),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  l10n.upgradeSheetTitle,
-                                  style: t.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.label,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.upgradeSheetSubtitle,
-                            style: t.bodyMedium?.copyWith(color: colors.body),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 14),
-                          for (final o in options)
-                            InkWell(
-                              onTap: () => setModalState(() => selected = o.code),
-                              borderRadius: BorderRadius.circular(16),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                curve: Curves.easeOut,
-                                margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: selected == o.code
-                                      ? colors.primary.withOpacity(.08)
-                                      : colors.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: selected == o.code
-                                        ? colors.primary.withOpacity(.35)
-                                        : colors.border.withOpacity(.20),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      selected == o.code
-                                          ? Icons.radio_button_checked
-                                          : Icons.radio_button_off,
-                                      color: selected == o.code
-                                          ? colors.primary
-                                          : colors.body,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            o.title,
-                                            style: t.bodyLarge?.copyWith(
-                                              color: colors.label,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            o.desc,
-                                            style: t.bodySmall?.copyWith(
-                                              color: colors.body,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () => Navigator.pop(ctx2, true),
-                              icon: const Icon(Icons.send),
-                              label: Text(l10n.sendRequestLabel),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(ctx2, false),
-                              child: Text(l10n.cancelLabel),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (sent != true) return;
-
-    final role = (await _store.getRole())?.toUpperCase() ?? '';
-
+    final bloc = _buildUpgradeFlowBloc();
+    OwnerAppAccessResponse? updated;
     try {
-      if (role == 'OWNER') {
-        await _licensingApi.requestUpgradeMe(planCode: selected);
-      } else if (role == 'SUPER_ADMIN') {
-        final aupId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-        await _licensingApi.requestUpgradeAsSuperAdmin(
-          aupId: aupId,
-          planCode: selected,
-        );
-      } else {
-        throw Exception('Unsupported role for upgrade request: $role');
-      }
+      updated = await showUpgradeRequestSheet(context: context, bloc: bloc);
+    } finally {
+      await bloc.close();
+    }
 
-      if (!mounted) return;
-      AppToast.success(context, l10n.upgradeRequestSent);
+    if (!mounted) return;
+    if (updated != null) {
+      setState(() => _license = updated);
+    } else {
       await _loadLicense();
-    } catch (e) {
-      if (!mounted) return;
-      AppToast.error(context, ExceptionMapper.toMessage(e));
     }
   }
 
@@ -1847,14 +1672,3 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _UpgradeOption {
-  final String code;
-  final String title;
-  final String desc;
-
-  const _UpgradeOption({
-    required this.code,
-    required this.title,
-    required this.desc,
-  });
-}

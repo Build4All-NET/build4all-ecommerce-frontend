@@ -2738,6 +2738,45 @@ class AppLocalizationsFr extends AppLocalizations {
   String get upgradeRequestPending => 'La demande de mise à niveau est en attente d’approbation';
 
   @override
+  String get payNowLabel => 'Payer maintenant';
+
+  @override
+  String get billingCycleMonthly => 'Mensuel';
+
+  @override
+  String get billingCycleYearly => 'Annuel';
+
+  @override
+  String get upgradeBillingCycleLabel => 'CYCLE DE FACTURATION';
+
+  @override
+  String get upgradePriceLabel => 'PRIX';
+
+  @override
+  String get perMonthSuffix => '/ mois';
+
+  @override
+  String get perYearSuffix => '/ an';
+
+  @override
+  String get upgradeYearlyDiscountBadge => 'Économisez';
+
+  @override
+  String get upgradePlansLoadError => 'Impossible de charger les offres de mise à niveau.';
+
+  @override
+  String get upgradePaymentSuccess => 'Paiement réussi. Votre formule a été mise à niveau.';
+
+  @override
+  String get upgradePaymentCanceled => 'Le paiement a été annulé.';
+
+  @override
+  String get upgradePaymentMissingConfig => 'La configuration de paiement est manquante.';
+
+  @override
+  String get upgradePaymentUnsupportedProvider => 'Le fournisseur de paiement n’est pas encore pris en charge.';
+
+  @override
   String get requestUpgradePendingLabel => 'Demandé';
 
   @override
