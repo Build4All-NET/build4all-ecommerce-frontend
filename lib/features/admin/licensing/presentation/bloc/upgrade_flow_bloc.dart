@@ -116,13 +116,14 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         errorMessage: null,
       ));
 
-      final access = await confirmPaymentUc(
+      final receipt = await confirmPaymentUc(
         paymentIntentId: event.paymentIntentId,
       );
 
       emit(state.copyWith(
         status: UpgradeFlowStatus.success,
-        confirmedAccess: access,
+        paymentReceipt: receipt,
+        confirmedAccess: receipt.access,
         lastMessage: 'upgrade_payment_success',
       ));
     } catch (e) {

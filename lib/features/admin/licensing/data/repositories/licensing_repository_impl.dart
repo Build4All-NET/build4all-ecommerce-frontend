@@ -4,8 +4,10 @@ import 'package:build4front/features/admin/licensing/data/models/plan_pricing_mo
 import 'package:build4front/features/admin/licensing/data/models/upgrade_plan_model.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/upgrade_request.dart';
 import 'package:build4front/features/admin/licensing/domain/repositories/i_licensing_repository.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 
@@ -26,7 +28,7 @@ class LicensingRepositoryImpl implements ILicensingRepository {
   Future<OwnerAppAccessResponse> _loadAccess() async {
     final role = await _role();
     if (role == 'OWNER') {
-      return api.getAccessMe();
+      return api.getCurrentLicensePlan();
     }
     if (role == 'SUPER_ADMIN') {
       return api.getAccessAsSuperAdmin(_aupIdFromEnv());
@@ -93,10 +95,18 @@ class LicensingRepositoryImpl implements ILicensingRepository {
   }
 
   @override
-  Future<OwnerAppAccessResponse> confirmUpgradePayment({
+  Future<UpgradePaymentConfirmation> confirmUpgradePayment({
     required String paymentIntentId,
-  }) {
-    return api.confirmUpgradePayment(paymentIntentId: paymentIntentId);
+  }) async {
+    final model =
+        await api.confirmUpgradePayment(paymentIntentId: paymentIntentId);
+    return model.toEntity();
+  }
+
+  @override
+  Future<List<UpgradeRequest>> listUpgradeRequests() async {
+    final models = await api.listUpgradeRequests();
+    return models.map((m) => m.toEntity()).toList();
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
 import 'package:equatable/equatable.dart';
@@ -22,6 +23,7 @@ class UpgradeFlowState extends Equatable {
   final PlanCode? selectedPlan;
   final BillingCycle billingCycle;
   final UpgradePaymentIntent? paymentIntent;
+  final UpgradePaymentConfirmation? paymentReceipt;
   final OwnerAppAccessResponse? confirmedAccess;
   final String? errorMessage;
   final String? lastMessage;
@@ -32,6 +34,7 @@ class UpgradeFlowState extends Equatable {
     required this.selectedPlan,
     required this.billingCycle,
     required this.paymentIntent,
+    required this.paymentReceipt,
     required this.confirmedAccess,
     required this.errorMessage,
     required this.lastMessage,
@@ -43,6 +46,7 @@ class UpgradeFlowState extends Equatable {
         selectedPlan: null,
         billingCycle: BillingCycle.MONTHLY,
         paymentIntent: null,
+        paymentReceipt: null,
         confirmedAccess: null,
         errorMessage: null,
         lastMessage: null,
@@ -64,6 +68,18 @@ class UpgradeFlowState extends Equatable {
     return null;
   }
 
+  /// Amount currently shown on the CTA / preview, derived from the selected
+  /// plan + cycle. Returns `null` when no plan is selected.
+  double? get displayedAmount {
+    final details = selectedPlanDetails;
+    if (details == null) return null;
+    return billingCycle == BillingCycle.YEARLY
+        ? details.pricing.effectiveYearlyPrice
+        : details.pricing.monthlyPrice;
+  }
+
+  String? get displayedCurrency => selectedPlanDetails?.pricing.currency;
+
   UpgradeFlowState copyWith({
     UpgradeFlowStatus? status,
     List<UpgradePlan>? plans,
@@ -72,6 +88,8 @@ class UpgradeFlowState extends Equatable {
     BillingCycle? billingCycle,
     UpgradePaymentIntent? paymentIntent,
     bool clearPaymentIntent = false,
+    UpgradePaymentConfirmation? paymentReceipt,
+    bool clearPaymentReceipt = false,
     OwnerAppAccessResponse? confirmedAccess,
     bool clearConfirmedAccess = false,
     String? errorMessage,
@@ -80,10 +98,13 @@ class UpgradeFlowState extends Equatable {
     return UpgradeFlowState(
       status: status ?? this.status,
       plans: plans ?? this.plans,
-      selectedPlan: clearSelectedPlan ? null : (selectedPlan ?? this.selectedPlan),
+      selectedPlan:
+          clearSelectedPlan ? null : (selectedPlan ?? this.selectedPlan),
       billingCycle: billingCycle ?? this.billingCycle,
       paymentIntent:
           clearPaymentIntent ? null : (paymentIntent ?? this.paymentIntent),
+      paymentReceipt:
+          clearPaymentReceipt ? null : (paymentReceipt ?? this.paymentReceipt),
       confirmedAccess: clearConfirmedAccess
           ? null
           : (confirmedAccess ?? this.confirmedAccess),
@@ -99,6 +120,7 @@ class UpgradeFlowState extends Equatable {
         selectedPlan,
         billingCycle,
         paymentIntent,
+        paymentReceipt,
         confirmedAccess,
         errorMessage,
         lastMessage,
