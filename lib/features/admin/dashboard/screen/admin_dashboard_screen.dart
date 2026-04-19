@@ -203,7 +203,7 @@ Future<void> _init() async {
       OwnerAppAccessResponse access;
 
       if (role == 'OWNER') {
-        access = await _licensingApi.getAccessMe();
+        access = await _licensingApi.getCurrentLicensePlan();
       } else if (role == 'SUPER_ADMIN') {
         final aupId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
         access = await _licensingApi.getAccessAsSuperAdmin(aupId);
