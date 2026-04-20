@@ -189,13 +189,19 @@ class _UpgradePopupState extends State<UpgradePopup> {
 
   void _handlePayNow() {
     final plan = _selectedPlan;
+    // ignore: avoid_print
+    print('[UpgradePopup] Pay now tapped. plan=$plan method=$_selectedMethodCode cycle=$_cycle isProcessing=${widget.isProcessing}');
     if (plan == null ||
         widget.isProcessing ||
         _selectedMethodCode == null ||
         _selectedMethodCode!.isEmpty) {
+      // ignore: avoid_print
+      print('[UpgradePopup] Pay now SILENTLY ABORTED — plan or method missing');
       return;
     }
     widget.onPayNow?.call(plan, _cycle);
+    // ignore: avoid_print
+    print('[UpgradePopup] Pay now dispatched to parent onPayNow callback');
   }
 
   void _handleClose() {
