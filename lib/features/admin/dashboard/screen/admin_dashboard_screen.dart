@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:build4front/app/app_router.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/notifications/front_firebase_push_service.dart';
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/data/repositories/licensing_repository_impl.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/confirm_upgrade_payment.dart';
@@ -135,7 +136,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final _store = AdminTokenStore();
   String? _role;
 
-  OwnerAppAccessResponse? _license;
+  OwnerAppAccess? _license;
   bool _licenseLoading = true;
   String? _licenseError;
 
@@ -201,7 +202,7 @@ Future<void> _init() async {
 
       final role = (await _store.getRole())?.toUpperCase() ?? '';
 
-      OwnerAppAccessResponse access;
+      OwnerAppAccess access;
 
       if (role == 'OWNER') {
         access = await _licensingApi.getCurrentLicensePlan();
@@ -281,7 +282,7 @@ Future<void> _init() async {
     );
   }
 
-  Future<void> _openLicenseDetails(OwnerAppAccessResponse access) async {
+  Future<void> _openLicenseDetails(OwnerAppAccess access) async {
     final l10n = AppLocalizations.of(context)!;
 
     await showModalBottomSheet(
@@ -314,7 +315,7 @@ Future<void> _init() async {
     );
   }
 
-  Future<void> _showUpgradeSheet(OwnerAppAccessResponse access) async {
+  Future<void> _showUpgradeSheet(OwnerAppAccess access) async {
     final l10n = AppLocalizations.of(context)!;
 
     if (access.hasPendingUpgradeRequest) {
@@ -332,7 +333,7 @@ Future<void> _init() async {
     }
 
     final bloc = _buildUpgradeFlowBloc();
-    OwnerAppAccessResponse? updated;
+    OwnerAppAccess? updated;
     try {
       updated = await showUpgradeRequestSheet(context: context, bloc: bloc);
     } finally {
@@ -1218,7 +1219,7 @@ class _AdminActionCardState extends State<_AdminActionCard> {
 class _LicenseBanner extends StatelessWidget {
   final bool loading;
   final String? error;
-  final OwnerAppAccessResponse? access;
+  final OwnerAppAccess? access;
   final VoidCallback onRetry;
   final VoidCallback onRequestUpgrade;
   final VoidCallback onOpenDetails;
@@ -1417,7 +1418,7 @@ class _LicenseBanner extends StatelessWidget {
 // =========================== LICENSE DETAILS SHEET ===========================
 
 class _LicenseDetailsSheet extends StatelessWidget {
-  final OwnerAppAccessResponse access;
+  final OwnerAppAccess access;
   final AppLocalizations l10n;
   final VoidCallback onRequestUpgrade;
 

@@ -1,5 +1,5 @@
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 
 enum UpgradeRequestStatus { pending, approved, rejected, canceled, unknown }
 

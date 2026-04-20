@@ -1,10 +1,10 @@
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
 
 /// Domain representation of the response returned by the backend after a
 /// successful upgrade payment is confirmed (either synchronously by the
 /// frontend or asynchronously via webhook polling).
 class UpgradePaymentConfirmation {
-  final OwnerAppAccessResponse access;
+  final OwnerAppAccess access;
   final String? paymentIntentId;
   final String? status; // e.g. PAID / PROCESSING / FAILED
   final double? amount;
