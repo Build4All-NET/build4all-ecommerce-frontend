@@ -2750,6 +2750,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeBillingCycleLabel => 'BILLING CYCLE';
 
   @override
+  String get upgradePaymentMethodLabel => 'PAYMENT METHOD';
+
+  @override
+  String get upgradeNoPaymentMethods => 'No payment method is currently available. Please contact support.';
+
+  @override
   String get upgradePriceLabel => 'PRICE';
 
   @override

@@ -1,6 +1,7 @@
 import 'package:build4front/common/widgets/primary_button.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/plan_pricing.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
@@ -23,8 +24,11 @@ Future<T?> showUpgradePopup<T>({
   bool isProcessing = false,
   PlanCode? initialSelectedPlan,
   BillingCycle initialBillingCycle = BillingCycle.MONTHLY,
+  List<AvailablePaymentMethod> paymentMethods = const [],
+  String? selectedPaymentMethodCode,
   String? errorMessage,
   void Function(PlanCode? plan, BillingCycle cycle)? onSelectionChanged,
+  ValueChanged<String>? onPaymentMethodSelected,
   void Function(PlanCode plan, BillingCycle cycle)? onPayNow,
   VoidCallback? onClose,
 }) {
@@ -42,8 +46,11 @@ Future<T?> showUpgradePopup<T>({
       plans: plans,
       initialSelectedPlan: initialSelectedPlan,
       initialBillingCycle: initialBillingCycle,
+      paymentMethods: paymentMethods,
+      selectedPaymentMethodCode: selectedPaymentMethodCode,
       errorMessage: errorMessage,
       onSelectionChanged: onSelectionChanged,
+      onPaymentMethodSelected: onPaymentMethodSelected,
       onPayNow: onPayNow,
       onClose: onClose,
     ),
@@ -71,12 +78,23 @@ class UpgradePopup extends StatefulWidget {
   /// Starting billing cycle; defaults to monthly.
   final BillingCycle initialBillingCycle;
 
+  /// Payment methods the owner may pick from. When empty, the section
+  /// is hidden (and [onPayNow] stays disabled until a method is set).
+  final List<AvailablePaymentMethod> paymentMethods;
+
+  /// Pre-selected payment method code. When null, the owner must pick one
+  /// before the CTA is enabled.
+  final String? selectedPaymentMethodCode;
+
   /// Optional inline error to show above the plans section.
   final String? errorMessage;
 
   /// Called whenever the plan or billing cycle changes.
   /// `plan` may be null if selection was cleared.
   final void Function(PlanCode? plan, BillingCycle cycle)? onSelectionChanged;
+
+  /// Called when the user picks a payment method.
+  final ValueChanged<String>? onPaymentMethodSelected;
 
   /// Called when the user taps the CTA after selecting a plan.
   final void Function(PlanCode plan, BillingCycle cycle)? onPayNow;
@@ -92,8 +110,11 @@ class UpgradePopup extends StatefulWidget {
     this.isProcessing = false,
     this.initialSelectedPlan,
     this.initialBillingCycle = BillingCycle.MONTHLY,
+    this.paymentMethods = const [],
+    this.selectedPaymentMethodCode,
     this.errorMessage,
     this.onSelectionChanged,
+    this.onPaymentMethodSelected,
     this.onPayNow,
     this.onClose,
   });
@@ -105,12 +126,14 @@ class UpgradePopup extends StatefulWidget {
 class _UpgradePopupState extends State<UpgradePopup> {
   late PlanCode? _selectedPlan;
   late BillingCycle _cycle;
+  String? _selectedMethodCode;
 
   @override
   void initState() {
     super.initState();
     _selectedPlan = widget.initialSelectedPlan;
     _cycle = widget.initialBillingCycle;
+    _selectedMethodCode = widget.selectedPaymentMethodCode;
   }
 
   @override
@@ -125,6 +148,11 @@ class _UpgradePopupState extends State<UpgradePopup> {
     if (oldWidget.initialBillingCycle != widget.initialBillingCycle &&
         widget.initialBillingCycle != _cycle) {
       _cycle = widget.initialBillingCycle;
+    }
+    if (oldWidget.selectedPaymentMethodCode !=
+            widget.selectedPaymentMethodCode &&
+        widget.selectedPaymentMethodCode != _selectedMethodCode) {
+      _selectedMethodCode = widget.selectedPaymentMethodCode;
     }
   }
 
@@ -148,9 +176,25 @@ class _UpgradePopupState extends State<UpgradePopup> {
     widget.onSelectionChanged?.call(_selectedPlan, cycle);
   }
 
+  void _selectMethod(String code) {
+    if (widget.isProcessing) return;
+    setState(() => _selectedMethodCode = code);
+    widget.onPaymentMethodSelected?.call(code);
+  }
+
+  bool get _hasSelection =>
+      _selectedPlan != null &&
+      _selectedMethodCode != null &&
+      _selectedMethodCode!.isNotEmpty;
+
   void _handlePayNow() {
     final plan = _selectedPlan;
-    if (plan == null || widget.isProcessing) return;
+    if (plan == null ||
+        widget.isProcessing ||
+        _selectedMethodCode == null ||
+        _selectedMethodCode!.isEmpty) {
+      return;
+    }
     widget.onPayNow?.call(plan, _cycle);
   }
 
@@ -174,7 +218,7 @@ class _UpgradePopupState extends State<UpgradePopup> {
     final colors = tokens.colors;
     final textTheme = Theme.of(context).textTheme;
     final inset = _bottomInset(context);
-    final hasSelection = _selectedPlan != null;
+    final hasSelection = _hasSelection;
 
     return SafeArea(
       top: false,
@@ -240,6 +284,28 @@ class _UpgradePopupState extends State<UpgradePopup> {
                               pricing: _selectedPlanDetails!.pricing,
                               cycle: _cycle,
                             ),
+                          if (widget.paymentMethods.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            _SectionLabel(
+                              text: l10n.upgradePaymentMethodLabel,
+                              colors: colors,
+                              textTheme: textTheme,
+                            ),
+                            const SizedBox(height: 8),
+                            _PaymentMethodList(
+                              methods: widget.paymentMethods,
+                              selectedCode: _selectedMethodCode,
+                              disabled: widget.isProcessing,
+                              onSelected: _selectMethod,
+                            ),
+                          ] else if (!widget.isLoading) ...[
+                            const SizedBox(height: 14),
+                            _InlineError(
+                              message: l10n.upgradeNoPaymentMethods,
+                              colors: colors,
+                              textTheme: textTheme,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -554,6 +620,117 @@ class _PricePreview extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PaymentMethodList extends StatelessWidget {
+  final List<AvailablePaymentMethod> methods;
+  final String? selectedCode;
+  final bool disabled;
+  final ValueChanged<String> onSelected;
+
+  const _PaymentMethodList({
+    required this.methods,
+    required this.selectedCode,
+    required this.disabled,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.watch<ThemeCubit>().state.tokens;
+    final colors = tokens.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      children: [
+        for (final method in methods)
+          _PaymentMethodTile(
+            method: method,
+            selected: selectedCode == method.selectionCode,
+            disabled: disabled,
+            colors: colors,
+            textTheme: textTheme,
+            onTap: disabled ? null : () => onSelected(method.selectionCode),
+          ),
+      ],
+    );
+  }
+}
+
+class _PaymentMethodTile extends StatelessWidget {
+  final AvailablePaymentMethod method;
+  final bool selected;
+  final bool disabled;
+  final dynamic colors;
+  final TextTheme textTheme;
+  final VoidCallback? onTap;
+
+  const _PaymentMethodTile({
+    required this.method,
+    required this.selected,
+    required this.disabled,
+    required this.colors,
+    required this.textTheme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: disabled ? 0.55 : 1,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.primary.withOpacity(.08)
+                : colors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? colors.primary.withOpacity(.35)
+                  : colors.border.withOpacity(.20),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected ? colors.primary : colors.body,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      method.displayName.isNotEmpty
+                          ? method.displayName
+                          : method.typeName,
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colors.label,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      method.typeName,
+                      style: textTheme.bodySmall?.copyWith(color: colors.body),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:build4front/features/admin/licensing/data/models/owner_app_acces
 import 'package:build4front/features/admin/licensing/data/repositories/licensing_repository_impl.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/confirm_upgrade_payment.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/get_available_payment_methods.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/get_available_upgrade_plans.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/initiate_upgrade_payment.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/refresh_owner_subscription.dart';
@@ -306,6 +307,7 @@ Future<void> _init() async {
     );
     return UpgradeFlowBloc(
       getPlansUc: GetAvailableUpgradePlans(repo),
+      getPaymentMethodsUc: GetAvailablePaymentMethods(repo),
       initiatePaymentUc: InitiateUpgradePayment(repo),
       confirmPaymentUc: ConfirmUpgradePayment(repo),
       refreshSubscriptionUc: RefreshOwnerSubscription(repo),

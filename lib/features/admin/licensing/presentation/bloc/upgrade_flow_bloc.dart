@@ -1,5 +1,6 @@
 import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/confirm_upgrade_payment.dart';
+import 'package:build4front/features/admin/licensing/domain/usecases/get_available_payment_methods.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/get_available_upgrade_plans.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/initiate_upgrade_payment.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/refresh_owner_subscription.dart';
@@ -10,12 +11,14 @@ import 'upgrade_flow_state.dart';
 
 class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
   final GetAvailableUpgradePlans getPlansUc;
+  final GetAvailablePaymentMethods getPaymentMethodsUc;
   final InitiateUpgradePayment initiatePaymentUc;
   final ConfirmUpgradePayment confirmPaymentUc;
   final RefreshOwnerSubscription refreshSubscriptionUc;
 
   UpgradeFlowBloc({
     required this.getPlansUc,
+    required this.getPaymentMethodsUc,
     required this.initiatePaymentUc,
     required this.confirmPaymentUc,
     required this.refreshSubscriptionUc,
@@ -23,6 +26,7 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     on<UpgradePlansRequested>(_onPlansRequested);
     on<UpgradePlanSelected>(_onPlanSelected);
     on<UpgradeBillingCycleSelected>(_onCycleSelected);
+    on<UpgradePaymentMethodSelected>(_onPaymentMethodSelected);
     on<UpgradePaymentRequested>(_onPaymentRequested);
     on<UpgradePaymentSucceeded>(_onPaymentSucceeded);
     on<UpgradePaymentFailed>(_onPaymentFailed);
@@ -40,10 +44,25 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         errorMessage: null,
         lastMessage: null,
       ));
-      final plans = await getPlansUc();
+      // Fetch plans and payment methods concurrently — both populate the popup.
+      final results = await Future.wait([
+        getPlansUc(),
+        getPaymentMethodsUc(),
+      ]);
+      final plans = results[0] as dynamic;
+      final methods = results[1] as dynamic;
+
+      // Auto-select the only method if there's just one, so the CTA is
+      // immediately actionable.
+      final autoSelected = (methods.length == 1)
+          ? (methods.first.selectionCode as String)
+          : null;
+
       emit(state.copyWith(
         status: UpgradeFlowStatus.plansReady,
         plans: plans,
+        availablePaymentMethods: methods,
+        selectedPaymentMethodCode: autoSelected,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -67,6 +86,13 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     emit(state.copyWith(billingCycle: event.cycle));
   }
 
+  void _onPaymentMethodSelected(
+    UpgradePaymentMethodSelected event,
+    Emitter<UpgradeFlowState> emit,
+  ) {
+    emit(state.copyWith(selectedPaymentMethodCode: event.code));
+  }
+
   Future<void> _onPaymentRequested(
     UpgradePaymentRequested event,
     Emitter<UpgradeFlowState> emit,
@@ -76,6 +102,14 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
       emit(state.copyWith(
         status: UpgradeFlowStatus.error,
         errorMessage: 'Please select a plan.',
+      ));
+      return;
+    }
+    final methodCode = state.selectedPaymentMethodCode;
+    if (methodCode == null || methodCode.isEmpty) {
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.error,
+        errorMessage: 'Please select a payment method.',
       ));
       return;
     }
@@ -91,6 +125,7 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         InitiateUpgradePaymentParams(
           planCode: plan,
           billingCycle: state.billingCycle,
+          paymentMethodCode: methodCode,
         ),
       );
 

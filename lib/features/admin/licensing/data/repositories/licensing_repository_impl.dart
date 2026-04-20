@@ -3,6 +3,7 @@ import 'package:build4front/features/admin/licensing/data/models/owner_app_acces
 import 'package:build4front/features/admin/licensing/data/models/plan_pricing_model.dart';
 import 'package:build4front/features/admin/licensing/data/models/upgrade_plan_model.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
@@ -81,14 +82,22 @@ class LicensingRepositoryImpl implements ILicensingRepository {
   }
 
   @override
+  Future<List<AvailablePaymentMethod>> getAvailablePaymentMethods() async {
+    final models = await api.getAvailablePaymentMethods();
+    return models.map((m) => m.toEntity()).toList();
+  }
+
+  @override
   Future<UpgradePaymentIntent> initiateUpgradePayment({
     required PlanCode planCode,
     required BillingCycle billingCycle,
+    required String paymentMethodCode,
     int? usersAllowedOverride,
   }) async {
     final model = await api.initiateUpgradePayment(
       planCode: _planCodeToApiString(planCode),
       billingCycle: billingCycleToString(billingCycle),
+      paymentMethodCode: paymentMethodCode,
       usersAllowedOverride: usersAllowedOverride,
     );
     return model.toEntity();

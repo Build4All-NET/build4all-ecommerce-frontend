@@ -947,6 +947,8 @@
   "billingCycleMonthly": "شهري",
   "billingCycleYearly": "سنوي",
   "upgradeBillingCycleLabel": "دورة الفوترة",
+  "upgradePaymentMethodLabel": "طريقة الدفع",
+  "upgradeNoPaymentMethods": "لا توجد طريقة دفع متاحة حالياً. الرجاء التواصل مع الدعم.",
   "upgradePriceLabel": "السعر",
   "perMonthSuffix": "/ شهر",
   "perYearSuffix": "/ سنة",

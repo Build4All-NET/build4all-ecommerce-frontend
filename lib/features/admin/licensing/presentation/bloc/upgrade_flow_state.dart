@@ -1,4 +1,5 @@
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
@@ -22,6 +23,8 @@ class UpgradeFlowState extends Equatable {
   final List<UpgradePlan> plans;
   final PlanCode? selectedPlan;
   final BillingCycle billingCycle;
+  final List<AvailablePaymentMethod> availablePaymentMethods;
+  final String? selectedPaymentMethodCode;
   final UpgradePaymentIntent? paymentIntent;
   final UpgradePaymentConfirmation? paymentReceipt;
   final OwnerAppAccessResponse? confirmedAccess;
@@ -33,6 +36,8 @@ class UpgradeFlowState extends Equatable {
     required this.plans,
     required this.selectedPlan,
     required this.billingCycle,
+    required this.availablePaymentMethods,
+    required this.selectedPaymentMethodCode,
     required this.paymentIntent,
     required this.paymentReceipt,
     required this.confirmedAccess,
@@ -45,6 +50,8 @@ class UpgradeFlowState extends Equatable {
         plans: [],
         selectedPlan: null,
         billingCycle: BillingCycle.MONTHLY,
+        availablePaymentMethods: [],
+        selectedPaymentMethodCode: null,
         paymentIntent: null,
         paymentReceipt: null,
         confirmedAccess: null,
@@ -52,7 +59,11 @@ class UpgradeFlowState extends Equatable {
         lastMessage: null,
       );
 
-  bool get hasSelection => selectedPlan != null;
+  /// Ready to tap Pay Now — owner has picked both a plan and a payment method.
+  bool get hasSelection =>
+      selectedPlan != null &&
+      selectedPaymentMethodCode != null &&
+      selectedPaymentMethodCode!.isNotEmpty;
 
   bool get isBusy =>
       status == UpgradeFlowStatus.loadingPlans ||
@@ -86,6 +97,9 @@ class UpgradeFlowState extends Equatable {
     PlanCode? selectedPlan,
     bool clearSelectedPlan = false,
     BillingCycle? billingCycle,
+    List<AvailablePaymentMethod>? availablePaymentMethods,
+    String? selectedPaymentMethodCode,
+    bool clearSelectedPaymentMethod = false,
     UpgradePaymentIntent? paymentIntent,
     bool clearPaymentIntent = false,
     UpgradePaymentConfirmation? paymentReceipt,
@@ -101,6 +115,11 @@ class UpgradeFlowState extends Equatable {
       selectedPlan:
           clearSelectedPlan ? null : (selectedPlan ?? this.selectedPlan),
       billingCycle: billingCycle ?? this.billingCycle,
+      availablePaymentMethods:
+          availablePaymentMethods ?? this.availablePaymentMethods,
+      selectedPaymentMethodCode: clearSelectedPaymentMethod
+          ? null
+          : (selectedPaymentMethodCode ?? this.selectedPaymentMethodCode),
       paymentIntent:
           clearPaymentIntent ? null : (paymentIntent ?? this.paymentIntent),
       paymentReceipt:
@@ -119,6 +138,8 @@ class UpgradeFlowState extends Equatable {
         plans,
         selectedPlan,
         billingCycle,
+        availablePaymentMethods,
+        selectedPaymentMethodCode,
         paymentIntent,
         paymentReceipt,
         confirmedAccess,

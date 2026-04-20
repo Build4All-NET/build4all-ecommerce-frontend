@@ -135,6 +135,8 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           plans: state.plans,
           initialSelectedPlan: state.selectedPlan,
           initialBillingCycle: state.billingCycle,
+          paymentMethods: state.availablePaymentMethods,
+          selectedPaymentMethodCode: state.selectedPaymentMethodCode,
           errorMessage: inlineError,
           onSelectionChanged: (plan, cycle) {
             if (cycle != state.billingCycle) {
@@ -146,6 +148,9 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
               ctx.read<UpgradeFlowBloc>().add(UpgradePlanSelected(plan));
             }
           },
+          onPaymentMethodSelected: (code) => ctx
+              .read<UpgradeFlowBloc>()
+              .add(UpgradePaymentMethodSelected(code)),
           onPayNow: (_, __) => ctx
               .read<UpgradeFlowBloc>()
               .add(const UpgradePaymentRequested()),
