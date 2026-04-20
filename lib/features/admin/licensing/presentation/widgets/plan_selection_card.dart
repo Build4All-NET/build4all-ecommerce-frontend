@@ -1,5 +1,5 @@
 import 'package:build4front/core/theme/theme_cubit.dart';
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
 import 'package:build4front/l10n/app_localizations.dart';

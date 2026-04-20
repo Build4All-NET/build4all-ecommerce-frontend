@@ -1,6 +1,6 @@
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/core/payments/stripe_payment_sheet.dart';
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
 import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_bloc.dart';
 import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_event.dart';
 import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_state.dart';
@@ -11,13 +11,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'upgrade_popup.dart';
 
 /// Opens the upgrade popup wired to the provided [UpgradeFlowBloc].
-/// Returns the refreshed [OwnerAppAccessResponse] after a successful payment,
+/// Returns the refreshed [OwnerAppAccess] after a successful payment,
 /// or `null` if the sheet was dismissed.
-Future<OwnerAppAccessResponse?> showUpgradeRequestSheet({
+Future<OwnerAppAccess?> showUpgradeRequestSheet({
   required BuildContext context,
   required UpgradeFlowBloc bloc,
 }) {
-  return showModalBottomSheet<OwnerAppAccessResponse?>(
+  return showModalBottomSheet<OwnerAppAccess?>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

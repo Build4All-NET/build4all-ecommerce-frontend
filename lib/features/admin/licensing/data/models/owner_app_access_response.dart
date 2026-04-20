@@ -1,115 +1,66 @@
-enum PlanCode { FREE, PRO_HOSTEDB, DEDICATED }
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/subscription_status.dart';
 
-enum SubscriptionStatus { ACTIVE, EXPIRED, SUSPENDED, CANCELED }
+// Re-export the domain entities so existing data-layer call sites that
+// rely on `PlanCode` / `SubscriptionStatus` / `OwnerAppAccess` via this
+// model file keep compiling. Domain and presentation code should import
+// the domain entities directly, not this file.
+export 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+export 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
+export 'package:build4front/features/admin/licensing/domain/entities/subscription_status.dart';
 
-PlanCode _planCodeFrom(String v) {
-  switch (v) {
-    case 'FREE':
-      return PlanCode.FREE;
-    case 'PRO_HOSTEDB':
-      return PlanCode.PRO_HOSTEDB;
-    case 'DEDICATED':
-      return PlanCode.DEDICATED;
-    default:
-      return PlanCode.FREE;
-  }
-}
-
-SubscriptionStatus _subStatusFrom(String v) {
-  switch (v) {
-    case 'ACTIVE':
-      return SubscriptionStatus.ACTIVE;
-    case 'EXPIRED':
-      return SubscriptionStatus.EXPIRED;
-    case 'SUSPENDED':
-      return SubscriptionStatus.SUSPENDED;
-    case 'CANCELED':
-      return SubscriptionStatus.CANCELED;
-    default:
-      return SubscriptionStatus.EXPIRED;
-  }
-}
-
-class OwnerAppAccessResponse {
-  final bool canAccessDashboard;
-  final String? blockingReason;
-
-  final PlanCode? planCode;
-  final String? planName;
-
-  final SubscriptionStatus? subscriptionStatus;
-  final String? periodEnd;
-  final int daysLeft;
-
-  final int? usersAllowed;
-  final int activeUsers;
-  final int? usersRemaining;
-
-  final bool requiresDedicatedServer;
-  final bool dedicatedInfraReady;
-
-  // ✅ NEW (upgrade request state)
-  final String? upgradeRequestStatus; // PENDING / APPROVED / REJECTED / null
-  final PlanCode? upgradeRequestedPlan; // requestedPlanCode
-  final String? upgradeRequestedAt; // LocalDateTime -> string
-  final String? upgradeDecisionNote;
-
-  OwnerAppAccessResponse({
-    required this.canAccessDashboard,
-    required this.blockingReason,
-    required this.planCode,
-    required this.planName,
-    required this.subscriptionStatus,
-    required this.periodEnd,
-    required this.daysLeft,
-    required this.usersAllowed,
-    required this.activeUsers,
-    required this.usersRemaining,
-    required this.requiresDedicatedServer,
-    required this.dedicatedInfraReady,
-    required this.upgradeRequestStatus,
-    required this.upgradeRequestedPlan,
-    required this.upgradeRequestedAt,
-    required this.upgradeDecisionNote,
+/// Data-layer JSON wrapper for [OwnerAppAccess]. Keeps `fromJson` out of
+/// the domain layer — domain code should depend on [OwnerAppAccess] only.
+class OwnerAppAccessResponse extends OwnerAppAccess {
+  const OwnerAppAccessResponse({
+    required super.canAccessDashboard,
+    required super.blockingReason,
+    required super.planCode,
+    required super.planName,
+    required super.subscriptionStatus,
+    required super.periodEnd,
+    required super.daysLeft,
+    required super.usersAllowed,
+    required super.activeUsers,
+    required super.usersRemaining,
+    required super.requiresDedicatedServer,
+    required super.dedicatedInfraReady,
+    required super.upgradeRequestStatus,
+    required super.upgradeRequestedPlan,
+    required super.upgradeRequestedAt,
+    required super.upgradeDecisionNote,
   });
-
-  bool get hasPendingUpgradeRequest =>
-      (upgradeRequestStatus ?? '').toUpperCase() == 'PENDING';
 
   factory OwnerAppAccessResponse.fromJson(Map<String, dynamic> j) {
     final upPlanRaw = j['upgradeRequestedPlan']?.toString();
     return OwnerAppAccessResponse(
       canAccessDashboard: j['canAccessDashboard'] == true,
       blockingReason: j['blockingReason'] as String?,
-
-      planCode: j['planCode'] != null ? _planCodeFrom(j['planCode'].toString()) : null,
-      planName: j['planName'] as String?,
-
-      subscriptionStatus: j['subscriptionStatus'] != null
-          ? _subStatusFrom(j['subscriptionStatus'].toString())
+      planCode: j['planCode'] != null
+          ? planCodeFromString(j['planCode'].toString())
           : null,
-
+      planName: j['planName'] as String?,
+      subscriptionStatus: j['subscriptionStatus'] != null
+          ? subscriptionStatusFromString(j['subscriptionStatus'].toString())
+          : null,
       periodEnd: j['periodEnd']?.toString(),
       daysLeft: (j['daysLeft'] ?? 0) is int
           ? (j['daysLeft'] ?? 0)
           : int.tryParse('${j['daysLeft']}') ?? 0,
-
       usersAllowed: j['usersAllowed'] as int?,
       activeUsers: (j['activeUsers'] ?? 0) is int
           ? (j['activeUsers'] ?? 0)
           : int.tryParse('${j['activeUsers']}') ?? 0,
-
       usersRemaining: j['usersRemaining'] == null
           ? null
           : (j['usersRemaining'] as num).toInt(),
-
       requiresDedicatedServer: j['requiresDedicatedServer'] == true,
       dedicatedInfraReady: j['dedicatedInfraReady'] == true,
-
-      // ✅ new fields
       upgradeRequestStatus: j['upgradeRequestStatus']?.toString(),
-      upgradeRequestedPlan:
-          (upPlanRaw == null || upPlanRaw.isEmpty) ? null : _planCodeFrom(upPlanRaw),
+      upgradeRequestedPlan: (upPlanRaw == null || upPlanRaw.isEmpty)
+          ? null
+          : planCodeFromString(upPlanRaw),
       upgradeRequestedAt: j['upgradeRequestedAt']?.toString(),
       upgradeDecisionNote: j['upgradeDecisionNote']?.toString(),
     );

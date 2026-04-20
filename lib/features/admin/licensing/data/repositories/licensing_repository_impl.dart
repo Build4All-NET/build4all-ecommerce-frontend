@@ -5,6 +5,8 @@ import 'package:build4front/features/admin/licensing/data/models/upgrade_plan_mo
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
@@ -26,7 +28,7 @@ class LicensingRepositoryImpl implements ILicensingRepository {
 
   int _aupIdFromEnv() => int.tryParse(Env.ownerProjectLinkId) ?? 0;
 
-  Future<OwnerAppAccessResponse> _loadAccess() async {
+  Future<OwnerAppAccess> _loadAccess() async {
     final role = await _role();
     if (role == 'OWNER') {
       return api.getCurrentLicensePlan();
@@ -38,10 +40,10 @@ class LicensingRepositoryImpl implements ILicensingRepository {
   }
 
   @override
-  Future<OwnerAppAccessResponse> getCurrentLicensePlan() => _loadAccess();
+  Future<OwnerAppAccess> getCurrentLicensePlan() => _loadAccess();
 
   @override
-  Future<OwnerAppAccessResponse> refreshOwnerSubscription() => _loadAccess();
+  Future<OwnerAppAccess> refreshOwnerSubscription() => _loadAccess();
 
   @override
   Future<List<UpgradePlan>> getAvailableUpgradePlans() async {

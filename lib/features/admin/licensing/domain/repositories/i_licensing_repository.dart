@@ -1,6 +1,7 @@
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
@@ -8,7 +9,7 @@ import 'package:build4front/features/admin/licensing/domain/entities/upgrade_req
 
 abstract class ILicensingRepository {
   /// Current owner license/subscription snapshot.
-  Future<OwnerAppAccessResponse> getCurrentLicensePlan();
+  Future<OwnerAppAccess> getCurrentLicensePlan();
 
   /// Plans this owner can upgrade to, with dynamic pricing.
   Future<List<UpgradePlan>> getAvailableUpgradePlans();
@@ -32,7 +33,7 @@ abstract class ILicensingRepository {
   });
 
   /// Convenience call to re-fetch license after any state change.
-  Future<OwnerAppAccessResponse> refreshOwnerSubscription();
+  Future<OwnerAppAccess> refreshOwnerSubscription();
 
   /// Historical upgrade requests for the current owner.
   Future<List<UpgradeRequest>> listUpgradeRequests();

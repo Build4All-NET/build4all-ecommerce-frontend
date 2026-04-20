@@ -1,4 +1,5 @@
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
@@ -27,7 +28,7 @@ class UpgradeFlowState extends Equatable {
   final String? selectedPaymentMethodCode;
   final UpgradePaymentIntent? paymentIntent;
   final UpgradePaymentConfirmation? paymentReceipt;
-  final OwnerAppAccessResponse? confirmedAccess;
+  final OwnerAppAccess? confirmedAccess;
   final String? errorMessage;
   final String? lastMessage;
 
@@ -104,7 +105,7 @@ class UpgradeFlowState extends Equatable {
     bool clearPaymentIntent = false,
     UpgradePaymentConfirmation? paymentReceipt,
     bool clearPaymentReceipt = false,
-    OwnerAppAccessResponse? confirmedAccess,
+    OwnerAppAccess? confirmedAccess,
     bool clearConfirmedAccess = false,
     String? errorMessage,
     String? lastMessage,
