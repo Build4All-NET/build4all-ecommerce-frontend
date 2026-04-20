@@ -46,7 +46,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     context.read<UpgradeFlowBloc>().add(const UpgradePlansRequested());
   }
 
-  Future<void> _handleStripePayment(UpgradeFlowState state) async {
+  Future<void> _handlePayment(UpgradeFlowState state) async {
     final l10n = AppLocalizations.of(context)!;
     final intent = state.paymentIntent;
     if (intent == null) return;
@@ -88,9 +88,12 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       return;
     }
 
-    context
-        .read<UpgradeFlowBloc>()
-        .add(UpgradePaymentFailed(l10n.upgradePaymentUnsupportedProvider));
+    // Any other provider (cash / bank transfer / paypal / …) is a manual
+    // request — the server has already created a PlanUpgradeRequest in
+    // PENDING state. Tell the owner to wait for approval and close the
+    // sheet so the dashboard refreshes.
+    AppToast.success(context, l10n.upgradeRequestSent);
+    Navigator.of(context).pop(null);
   }
 
   @override
@@ -105,7 +108,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       listener: (ctx, state) {
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
             state.paymentIntent != null) {
-          _handleStripePayment(state);
+          _handlePayment(state);
         }
         if (state.status == UpgradeFlowStatus.success &&
             state.confirmedAccess != null) {
