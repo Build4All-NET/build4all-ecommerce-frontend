@@ -10,6 +10,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'upgrade_popup.dart';
 
+
+/// Re-export the raw popup for call sites that want to use it directly
+/// without the BLoC orchestration layer.
+export 'upgrade_popup.dart' show UpgradePopup, showUpgradePopup;
+
 /// Opens the upgrade popup wired to the provided [UpgradeFlowBloc].
 /// Returns the refreshed [OwnerAppAccess] after a successful payment,
 /// or `null` if the sheet was dismissed.
@@ -161,6 +166,3 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   }
 }
 
-/// Re-export the raw popup for call sites that want to use it directly
-/// without the BLoC orchestration layer.
-export 'upgrade_popup.dart' show UpgradePopup, showUpgradePopup;

@@ -94,57 +94,73 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
   }
 
   Future<void> _onPaymentRequested(
-    UpgradePaymentRequested event,
-    Emitter<UpgradeFlowState> emit,
-  ) async {
-    // ignore: avoid_print
-    print('[UpgradeFlowBloc] UpgradePaymentRequested received. state.selectedPlan=${state.selectedPlan} state.methodCode=${state.selectedPaymentMethodCode} state.billingCycle=${state.billingCycle}');
-    final plan = state.selectedPlan;
-    if (plan == null) {
-      emit(state.copyWith(
-        status: UpgradeFlowStatus.error,
-        errorMessage: 'Please select a plan.',
-      ));
-      return;
-    }
-    final methodCode = state.selectedPaymentMethodCode;
-    if (methodCode == null || methodCode.isEmpty) {
-      emit(state.copyWith(
-        status: UpgradeFlowStatus.error,
-        errorMessage: 'Please select a payment method.',
-      ));
-      return;
-    }
+  UpgradePaymentRequested event,
+  Emitter<UpgradeFlowState> emit,
+) async {
+  print('[UpgradeFlowBloc] UpgradePaymentRequested received. '
+      'state.selectedPlan=${state.selectedPlan} '
+      'state.methodCode=${state.selectedPaymentMethodCode} '
+      'state.billingCycle=${state.billingCycle}');
 
-    try {
-      emit(state.copyWith(
-        status: UpgradeFlowStatus.initiatingPayment,
-        errorMessage: null,
-        lastMessage: null,
-      ));
-
-      final intent = await initiatePaymentUc(
-        InitiateUpgradePaymentParams(
-          planCode: plan,
-          billingCycle: state.billingCycle,
-          paymentMethodCode: methodCode,
-        ),
-      );
-      // ignore: avoid_print
-      print('[UpgradeFlowBloc] Stripe intent response OK: provider=${intent.provider} id=${intent.paymentIntentId}');
-
-      emit(state.copyWith(
-        status: UpgradeFlowStatus.awaitingPayment,
-        paymentIntent: intent,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: UpgradeFlowStatus.error,
-        errorMessage: ExceptionMapper.toMessage(e),
-      ));
-    }
+  final plan = state.selectedPlan;
+  if (plan == null) {
+    emit(state.copyWith(
+      status: UpgradeFlowStatus.error,
+      errorMessage: 'Please select a plan.',
+    ));
+    return;
   }
 
+  final methodCode = state.selectedPaymentMethodCode;
+  if (methodCode == null || methodCode.isEmpty) {
+    emit(state.copyWith(
+      status: UpgradeFlowStatus.error,
+      errorMessage: 'Please select a payment method.',
+    ));
+    return;
+  }
+
+  try {
+    emit(state.copyWith(
+      status: UpgradeFlowStatus.initiatingPayment,
+      errorMessage: null,
+      lastMessage: null,
+    ));
+
+    final intent = await initiatePaymentUc(
+      InitiateUpgradePaymentParams(
+        planCode: plan,
+        billingCycle: state.billingCycle,
+        paymentMethodCode: methodCode,
+      ),
+    );
+
+    print('[UpgradeFlowBloc] initiatePaymentUc OK: '
+        'provider=${intent.provider} id=${intent.paymentIntentId}');
+
+    // ✅ IMPORTANT: CASH_LOCAL should not stay stuck in awaitingPayment
+    if (methodCode == 'CASH_LOCAL' ||
+        intent.provider.toUpperCase() == 'CASH_LOCAL') {
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.success,
+        paymentIntent: intent,
+        lastMessage: 'cash_upgrade_request_submitted',
+      ));
+      return;
+    }
+
+    // Online methods only
+    emit(state.copyWith(
+      status: UpgradeFlowStatus.awaitingPayment,
+      paymentIntent: intent,
+    ));
+  } catch (e) {
+    emit(state.copyWith(
+      status: UpgradeFlowStatus.error,
+      errorMessage: ExceptionMapper.toMessage(e),
+    ));
+  }
+}
   Future<void> _onPaymentSucceeded(
     UpgradePaymentSucceeded event,
     Emitter<UpgradeFlowState> emit,

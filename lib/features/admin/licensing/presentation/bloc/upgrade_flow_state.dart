@@ -66,11 +66,10 @@ class UpgradeFlowState extends Equatable {
       selectedPaymentMethodCode != null &&
       selectedPaymentMethodCode!.isNotEmpty;
 
-  bool get isBusy =>
-      status == UpgradeFlowStatus.loadingPlans ||
-      status == UpgradeFlowStatus.initiatingPayment ||
-      status == UpgradeFlowStatus.awaitingPayment ||
-      status == UpgradeFlowStatus.confirmingPayment;
+bool get isBusy =>
+    status == UpgradeFlowStatus.loadingPlans ||
+    status == UpgradeFlowStatus.initiatingPayment ||
+    status == UpgradeFlowStatus.confirmingPayment;
 
   UpgradePlan? get selectedPlanDetails {
     if (selectedPlan == null) return null;
