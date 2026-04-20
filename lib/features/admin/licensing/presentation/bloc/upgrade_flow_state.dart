@@ -60,16 +60,18 @@ class UpgradeFlowState extends Equatable {
         lastMessage: null,
       );
 
-  /// Ready to tap Pay Now — owner has picked both a plan and a payment method.
   bool get hasSelection =>
       selectedPlan != null &&
       selectedPaymentMethodCode != null &&
       selectedPaymentMethodCode!.isNotEmpty;
 
-bool get isBusy =>
-    status == UpgradeFlowStatus.loadingPlans ||
-    status == UpgradeFlowStatus.initiatingPayment ||
-    status == UpgradeFlowStatus.confirmingPayment;
+  // ✅ awaitingPayment is NOT busy:
+  // at this stage UI needs to either open Stripe sheet
+  // or close manual flow with refresh.
+  bool get isBusy =>
+      status == UpgradeFlowStatus.loadingPlans ||
+      status == UpgradeFlowStatus.initiatingPayment ||
+      status == UpgradeFlowStatus.confirmingPayment;
 
   UpgradePlan? get selectedPlanDetails {
     if (selectedPlan == null) return null;
@@ -79,8 +81,6 @@ bool get isBusy =>
     return null;
   }
 
-  /// Amount currently shown on the CTA / preview, derived from the selected
-  /// plan + cycle. Returns `null` when no plan is selected.
   double? get displayedAmount {
     final details = selectedPlanDetails;
     if (details == null) return null;

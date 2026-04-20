@@ -44,16 +44,15 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         errorMessage: null,
         lastMessage: null,
       ));
-      // Fetch plans and payment methods concurrently — both populate the popup.
+
       final results = await Future.wait([
         getPlansUc(),
         getPaymentMethodsUc(),
       ]);
+
       final plans = results[0] as dynamic;
       final methods = results[1] as dynamic;
 
-      // Auto-select the only method if there's just one, so the CTA is
-      // immediately actionable.
       final autoSelected = (methods.length == 1)
           ? (methods.first.selectionCode as String)
           : null;
@@ -63,11 +62,14 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         plans: plans,
         availablePaymentMethods: methods,
         selectedPaymentMethodCode: autoSelected,
+        errorMessage: null,
+        lastMessage: null,
       ));
     } catch (e) {
       emit(state.copyWith(
         status: UpgradeFlowStatus.plansError,
         errorMessage: ExceptionMapper.toMessage(e),
+        lastMessage: null,
       ));
     }
   }
@@ -94,73 +96,73 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
   }
 
   Future<void> _onPaymentRequested(
-  UpgradePaymentRequested event,
-  Emitter<UpgradeFlowState> emit,
-) async {
-  print('[UpgradeFlowBloc] UpgradePaymentRequested received. '
-      'state.selectedPlan=${state.selectedPlan} '
-      'state.methodCode=${state.selectedPaymentMethodCode} '
-      'state.billingCycle=${state.billingCycle}');
+    UpgradePaymentRequested event,
+    Emitter<UpgradeFlowState> emit,
+  ) async {
+    print('[UpgradeFlowBloc] UpgradePaymentRequested received. '
+        'state.selectedPlan=${state.selectedPlan} '
+        'state.methodCode=${state.selectedPaymentMethodCode} '
+        'state.billingCycle=${state.billingCycle}');
 
-  final plan = state.selectedPlan;
-  if (plan == null) {
-    emit(state.copyWith(
-      status: UpgradeFlowStatus.error,
-      errorMessage: 'Please select a plan.',
-    ));
-    return;
-  }
-
-  final methodCode = state.selectedPaymentMethodCode;
-  if (methodCode == null || methodCode.isEmpty) {
-    emit(state.copyWith(
-      status: UpgradeFlowStatus.error,
-      errorMessage: 'Please select a payment method.',
-    ));
-    return;
-  }
-
-  try {
-    emit(state.copyWith(
-      status: UpgradeFlowStatus.initiatingPayment,
-      errorMessage: null,
-      lastMessage: null,
-    ));
-
-    final intent = await initiatePaymentUc(
-      InitiateUpgradePaymentParams(
-        planCode: plan,
-        billingCycle: state.billingCycle,
-        paymentMethodCode: methodCode,
-      ),
-    );
-
-    print('[UpgradeFlowBloc] initiatePaymentUc OK: '
-        'provider=${intent.provider} id=${intent.paymentIntentId}');
-
-    // ✅ IMPORTANT: CASH_LOCAL should not stay stuck in awaitingPayment
-    if (methodCode == 'CASH_LOCAL' ||
-        intent.provider.toUpperCase() == 'CASH_LOCAL') {
+    final plan = state.selectedPlan;
+    if (plan == null) {
       emit(state.copyWith(
-        status: UpgradeFlowStatus.success,
-        paymentIntent: intent,
-        lastMessage: 'cash_upgrade_request_submitted',
+        status: UpgradeFlowStatus.error,
+        errorMessage: 'Please select a plan.',
+        lastMessage: null,
       ));
       return;
     }
 
-    // Online methods only
-    emit(state.copyWith(
-      status: UpgradeFlowStatus.awaitingPayment,
-      paymentIntent: intent,
-    ));
-  } catch (e) {
-    emit(state.copyWith(
-      status: UpgradeFlowStatus.error,
-      errorMessage: ExceptionMapper.toMessage(e),
-    ));
+    final methodCode = state.selectedPaymentMethodCode;
+    if (methodCode == null || methodCode.isEmpty) {
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.error,
+        errorMessage: 'Please select a payment method.',
+        lastMessage: null,
+      ));
+      return;
+    }
+
+    try {
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.initiatingPayment,
+        errorMessage: null,
+        lastMessage: null,
+        clearPaymentIntent: true,
+        clearPaymentReceipt: true,
+        clearConfirmedAccess: true,
+      ));
+
+      final intent = await initiatePaymentUc(
+        InitiateUpgradePaymentParams(
+          planCode: plan,
+          billingCycle: state.billingCycle,
+          paymentMethodCode: methodCode,
+        ),
+      );
+
+      print('[UpgradeFlowBloc] initiatePaymentUc OK: '
+          'provider=${intent.provider} id=${intent.paymentIntentId}');
+
+      // ✅ Unified flow:
+      // Stripe and manual providers both move to awaitingPayment.
+      // The sheet decides what to do based on intent.provider.
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.awaitingPayment,
+        paymentIntent: intent,
+        errorMessage: null,
+        lastMessage: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: UpgradeFlowStatus.error,
+        errorMessage: ExceptionMapper.toMessage(e),
+        lastMessage: null,
+      ));
+    }
   }
-}
+
   Future<void> _onPaymentSucceeded(
     UpgradePaymentSucceeded event,
     Emitter<UpgradeFlowState> emit,
@@ -169,6 +171,7 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
       emit(state.copyWith(
         status: UpgradeFlowStatus.confirmingPayment,
         errorMessage: null,
+        lastMessage: null,
       ));
 
       final receipt = await confirmPaymentUc(
@@ -179,12 +182,14 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
         status: UpgradeFlowStatus.success,
         paymentReceipt: receipt,
         confirmedAccess: receipt.access,
+        errorMessage: null,
         lastMessage: 'upgrade_payment_success',
       ));
     } catch (e) {
       emit(state.copyWith(
         status: UpgradeFlowStatus.error,
         errorMessage: ExceptionMapper.toMessage(e),
+        lastMessage: null,
       ));
     }
   }
@@ -196,6 +201,7 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     emit(state.copyWith(
       status: UpgradeFlowStatus.error,
       errorMessage: event.message,
+      lastMessage: null,
     ));
   }
 
@@ -210,6 +216,9 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     UpgradeFlowMessagesCleared event,
     Emitter<UpgradeFlowState> emit,
   ) {
-    emit(state.copyWith(errorMessage: null, lastMessage: null));
+    emit(state.copyWith(
+      errorMessage: null,
+      lastMessage: null,
+    ));
   }
 }

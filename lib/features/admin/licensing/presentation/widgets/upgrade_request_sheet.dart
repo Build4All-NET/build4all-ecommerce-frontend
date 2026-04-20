@@ -40,6 +40,9 @@ class _UpgradeRequestSheet extends StatefulWidget {
 
 class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   bool _manualRequestHandled = false;
+  bool _stripeHandled = false;
+  bool _pendingHandled = false;
+  bool _successHandled = false;
 
   @override
   void initState() {
@@ -47,66 +50,91 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     context.read<UpgradeFlowBloc>().add(const UpgradePlansRequested());
   }
 
-  Future<void> _handlePayment(UpgradeFlowState state) async {
-    final l10n = AppLocalizations.of(context)!;
+  Future<void> _closeWithRefresh({
+    required String toastMessage,
+    bool isErrorToast = false,
+  }) async {
     final bloc = context.read<UpgradeFlowBloc>();
-    final intent = state.paymentIntent;
-
-    if (intent == null) return;
-
-    final provider = intent.provider.toLowerCase().trim();
-
-    if (provider == 'stripe') {
-      final pk = (intent.publishableKey ?? '').trim();
-      final cs = (intent.clientSecret ?? '').trim();
-
-      if (pk.isEmpty || cs.isEmpty) {
-        bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
-        return;
-      }
-
-      try {
-        final result = await StripePaymentSheet.pay(
-          publishableKey: pk,
-          clientSecret: cs,
-          merchantName: l10n.appTitle,
-        );
-
-        if (!mounted) return;
-
-        if (result == StripePayStatus.paid) {
-          bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
-        } else {
-          bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
-        }
-      } catch (e) {
-        if (!mounted) return;
-        bloc.add(UpgradePaymentFailed(e.toString()));
-      }
-
-      return;
-    }
-
-    // Manual providers: cash / bank transfer / paypal manual flow / etc.
-    // Server already created the pending upgrade request.
-    // Refresh dashboard access, then close the sheet with updated data.
-    if (_manualRequestHandled) return;
-    _manualRequestHandled = true;
 
     try {
       final refreshed = await bloc.refreshSubscriptionUc();
       if (!mounted) return;
 
-      AppToast.success(context, l10n.upgradeRequestSent);
+      if (isErrorToast) {
+        AppToast.error(context, toastMessage);
+      } else {
+        AppToast.success(context, toastMessage);
+      }
+
       Navigator.of(context).pop(refreshed);
     } catch (_) {
       if (!mounted) return;
 
-      // Even if refresh fails, still close with null after showing success,
-      // so the dashboard can fallback to its own reload logic.
-      AppToast.success(context, l10n.upgradeRequestSent);
+      if (isErrorToast) {
+        AppToast.error(context, toastMessage);
+      } else {
+        AppToast.success(context, toastMessage);
+      }
+
       Navigator.of(context).pop(null);
     }
+  }
+
+  Future<void> _handleStripePayment(UpgradeFlowState state) async {
+    final l10n = AppLocalizations.of(context)!;
+    final bloc = context.read<UpgradeFlowBloc>();
+    final intent = state.paymentIntent;
+
+    if (intent == null) return;
+    if (_stripeHandled) return;
+    _stripeHandled = true;
+
+    final pk = (intent.publishableKey ?? '').trim();
+    final cs = (intent.clientSecret ?? '').trim();
+
+    if (pk.isEmpty || cs.isEmpty) {
+      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
+      return;
+    }
+
+    try {
+      final result = await StripePaymentSheet.pay(
+        publishableKey: pk,
+        clientSecret: cs,
+        merchantName: l10n.appTitle,
+      );
+
+      if (!mounted) return;
+
+      if (result == StripePayStatus.paid) {
+        bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
+      } else {
+        bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      bloc.add(UpgradePaymentFailed(e.toString()));
+    }
+  }
+
+  Future<void> _handleManualSuccess() async {
+    if (_manualRequestHandled) return;
+    _manualRequestHandled = true;
+
+    final l10n = AppLocalizations.of(context)!;
+    await _closeWithRefresh(
+      toastMessage: l10n.upgradeRequestSent,
+    );
+  }
+
+  Future<void> _handleAlreadyPending() async {
+    if (_pendingHandled) return;
+    _pendingHandled = true;
+
+    final l10n = AppLocalizations.of(context)!;
+    await _closeWithRefresh(
+      toastMessage: l10n.upgradeRequestPending,
+    );
   }
 
   @override
@@ -118,22 +146,58 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           prev.status != next.status ||
           prev.errorMessage != next.errorMessage ||
           prev.lastMessage != next.lastMessage ||
-          prev.paymentIntent != next.paymentIntent,
+          prev.paymentIntent != next.paymentIntent ||
+          prev.confirmedAccess != next.confirmedAccess,
       listener: (ctx, state) async {
+        final provider = state.paymentIntent?.provider.toLowerCase().trim();
+
+        // 1) Stripe payment sheet
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
-            state.paymentIntent != null) {
-          await _handlePayment(state);
+            state.paymentIntent != null &&
+            provider == 'stripe') {
+          await _handleStripePayment(state);
           return;
         }
 
+        // 2) Manual provider reached awaitingPayment
+        if (state.status == UpgradeFlowStatus.awaitingPayment &&
+            state.paymentIntent != null &&
+            provider != null &&
+            provider != 'stripe') {
+          await _handleManualSuccess();
+          return;
+        }
+
+        // 3) Manual provider reached success without confirmedAccess
+        if (state.status == UpgradeFlowStatus.success &&
+            provider != null &&
+            provider != 'stripe' &&
+            state.confirmedAccess == null) {
+          await _handleManualSuccess();
+          return;
+        }
+
+        // 4) Stripe success after confirm
         if (state.status == UpgradeFlowStatus.success &&
             state.confirmedAccess != null) {
+          if (_successHandled) return;
+          _successHandled = true;
+
           AppToast.success(ctx, l10n.upgradePaymentSuccess);
           Navigator.of(ctx).pop(state.confirmedAccess);
           return;
         }
 
+        // 5) Backend says request/payment already pending
         if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
+          final msg = state.errorMessage!.toLowerCase().trim();
+
+          if (msg.contains('already pending')) {
+            await _handleAlreadyPending();
+            ctx.read<UpgradeFlowBloc>().add(const UpgradeFlowMessagesCleared());
+            return;
+          }
+
           AppToast.error(ctx, state.errorMessage!);
           ctx.read<UpgradeFlowBloc>().add(const UpgradeFlowMessagesCleared());
         }
@@ -157,14 +221,18 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           errorMessage: inlineError,
           onSelectionChanged: (plan, cycle) {
             if (cycle != state.billingCycle) {
-              ctx.read<UpgradeFlowBloc>().add(UpgradeBillingCycleSelected(cycle));
+              ctx
+                  .read<UpgradeFlowBloc>()
+                  .add(UpgradeBillingCycleSelected(cycle));
             }
             if (plan != null && plan != state.selectedPlan) {
               ctx.read<UpgradeFlowBloc>().add(UpgradePlanSelected(plan));
             }
           },
           onPaymentMethodSelected: (code) {
-            ctx.read<UpgradeFlowBloc>().add(UpgradePaymentMethodSelected(code));
+            ctx
+                .read<UpgradeFlowBloc>()
+                .add(UpgradePaymentMethodSelected(code));
           },
           onPayNow: (_, __) {
             ctx.read<UpgradeFlowBloc>().add(const UpgradePaymentRequested());
