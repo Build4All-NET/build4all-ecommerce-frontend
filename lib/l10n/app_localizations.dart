@@ -5383,6 +5383,18 @@ abstract class AppLocalizations {
   /// **'BILLING CYCLE'**
   String get upgradeBillingCycleLabel;
 
+  /// No description provided for @upgradePaymentMethodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PAYMENT METHOD'**
+  String get upgradePaymentMethodLabel;
+
+  /// No description provided for @upgradeNoPaymentMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment method is currently available. Please contact support.'**
+  String get upgradeNoPaymentMethods;
+
   /// No description provided for @upgradePriceLabel.
   ///
   /// In en, this message translates to:

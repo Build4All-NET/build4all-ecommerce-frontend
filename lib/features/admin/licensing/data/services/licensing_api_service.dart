@@ -1,4 +1,5 @@
 import 'package:build4front/core/config/env.dart';
+import 'package:build4front/features/admin/licensing/data/models/available_payment_method_model.dart';
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/data/models/upgrade_payment_confirmation_model.dart';
 import 'package:build4front/features/admin/licensing/data/models/upgrade_payment_intent_model.dart';
@@ -101,15 +102,41 @@ class LicensingApiService {
     return const [];
   }
 
+  /// Returns the payment methods the owner can pick from on the Pay Now
+  /// popup (filtered server-side to only active, SUPER_ADMIN-configured
+  /// methods).
+  ///
+  /// Endpoint: `GET /api/licensing/apps/me/payment-methods`
+  Future<List<AvailablePaymentMethodModel>> getAvailablePaymentMethods() async {
+    final res = await _dio.get(
+      '/licensing/apps/me/payment-methods',
+      options: await _authOptions(),
+    );
+
+    final data = res.data;
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((e) => AvailablePaymentMethodModel.fromJson(
+                e.cast<String, dynamic>(),
+              ))
+          .toList();
+    }
+    return const [];
+  }
+
   /// Creates a server-side payment intent for the chosen plan + billing cycle.
   /// The returned intent carries everything the client needs to present the
   /// provider's payment sheet (publishable key, client secret for Stripe, or
-  /// `checkoutUrl` for redirect-based providers).
+  /// `checkoutUrl` for redirect-based providers). For non-Stripe methods,
+  /// `clientSecret`/`publishableKey` are null and `provider` reflects the
+  /// chosen method (e.g. "cash").
   ///
   /// Endpoint: `POST /api/licensing/apps/me/upgrade/payment-intent`
   Future<UpgradePaymentIntentModel> initiateUpgradePayment({
     required String planCode,
     required String billingCycle,
+    required String paymentMethodCode,
     int? usersAllowedOverride,
   }) async {
     final res = await _dio.post(
@@ -117,6 +144,7 @@ class LicensingApiService {
       data: {
         'planCode': planCode,
         'billingCycle': billingCycle,
+        'paymentMethodCode': paymentMethodCode,
         'usersAllowedOverride': usersAllowedOverride,
       },
       options: await _authOptions(),

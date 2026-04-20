@@ -1008,6 +1008,8 @@
   "billingCycleMonthly": "Mensuel",
   "billingCycleYearly": "Annuel",
   "upgradeBillingCycleLabel": "CYCLE DE FACTURATION",
+  "upgradePaymentMethodLabel": "MODE DE PAIEMENT",
+  "upgradeNoPaymentMethods": "Aucun mode de paiement n'est disponible actuellement. Veuillez contacter le support.",
   "upgradePriceLabel": "PRIX",
   "perMonthSuffix": "/ mois",
   "perYearSuffix": "/ an",

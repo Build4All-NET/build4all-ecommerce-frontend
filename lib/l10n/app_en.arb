@@ -1077,6 +1077,8 @@
   "billingCycleMonthly": "Monthly",
   "billingCycleYearly": "Yearly",
   "upgradeBillingCycleLabel": "BILLING CYCLE",
+  "upgradePaymentMethodLabel": "PAYMENT METHOD",
+  "upgradeNoPaymentMethods": "No payment method is currently available. Please contact support.",
   "upgradePriceLabel": "PRICE",
   "perMonthSuffix": "/ month",
   "perYearSuffix": "/ year",

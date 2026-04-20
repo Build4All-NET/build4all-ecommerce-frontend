@@ -2750,6 +2750,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upgradeBillingCycleLabel => 'دورة الفوترة';
 
   @override
+  String get upgradePaymentMethodLabel => 'طريقة الدفع';
+
+  @override
+  String get upgradeNoPaymentMethods => 'لا توجد طريقة دفع متاحة حالياً. الرجاء التواصل مع الدعم.';
+
+  @override
   String get upgradePriceLabel => 'السعر';
 
   @override

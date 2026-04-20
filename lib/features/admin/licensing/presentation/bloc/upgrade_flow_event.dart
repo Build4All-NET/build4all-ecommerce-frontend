@@ -29,6 +29,14 @@ class UpgradeBillingCycleSelected extends UpgradeFlowEvent {
   List<Object?> get props => [cycle];
 }
 
+class UpgradePaymentMethodSelected extends UpgradeFlowEvent {
+  final String code;
+  const UpgradePaymentMethodSelected(this.code);
+
+  @override
+  List<Object?> get props => [code];
+}
+
 class UpgradePaymentRequested extends UpgradeFlowEvent {
   const UpgradePaymentRequested();
 }
