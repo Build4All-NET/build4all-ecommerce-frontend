@@ -10,14 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'upgrade_popup.dart';
 
-
-/// Re-export the raw popup for call sites that want to use it directly
-/// without the BLoC orchestration layer.
 export 'upgrade_popup.dart' show UpgradePopup, showUpgradePopup;
 
-/// Opens the upgrade popup wired to the provided [UpgradeFlowBloc].
-/// Returns the refreshed [OwnerAppAccess] after a successful payment,
-/// or `null` if the sheet was dismissed.
 Future<OwnerAppAccess?> showUpgradeRequestSheet({
   required BuildContext context,
   required UpgradeFlowBloc bloc,
@@ -45,6 +39,8 @@ class _UpgradeRequestSheet extends StatefulWidget {
 }
 
 class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
+  bool _manualRequestHandled = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,18 +49,19 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
   Future<void> _handlePayment(UpgradeFlowState state) async {
     final l10n = AppLocalizations.of(context)!;
+    final bloc = context.read<UpgradeFlowBloc>();
     final intent = state.paymentIntent;
+
     if (intent == null) return;
 
-    final provider = intent.provider.toLowerCase();
+    final provider = intent.provider.toLowerCase().trim();
 
     if (provider == 'stripe') {
       final pk = (intent.publishableKey ?? '').trim();
       final cs = (intent.clientSecret ?? '').trim();
+
       if (pk.isEmpty || cs.isEmpty) {
-        context
-            .read<UpgradeFlowBloc>()
-            .add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
+        bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
         return;
       }
 
@@ -74,31 +71,42 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           clientSecret: cs,
           merchantName: l10n.appTitle,
         );
+
         if (!mounted) return;
+
         if (result == StripePayStatus.paid) {
-          context
-              .read<UpgradeFlowBloc>()
-              .add(UpgradePaymentSucceeded(intent.paymentIntentId));
+          bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
         } else {
-          context
-              .read<UpgradeFlowBloc>()
-              .add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
+          bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
         }
       } catch (e) {
         if (!mounted) return;
-        context
-            .read<UpgradeFlowBloc>()
-            .add(UpgradePaymentFailed(e.toString()));
+        bloc.add(UpgradePaymentFailed(e.toString()));
       }
+
       return;
     }
 
-    // Any other provider (cash / bank transfer / paypal / …) is a manual
-    // request — the server has already created a PlanUpgradeRequest in
-    // PENDING state. Tell the owner to wait for approval and close the
-    // sheet so the dashboard refreshes.
-    AppToast.success(context, l10n.upgradeRequestSent);
-    Navigator.of(context).pop(null);
+    // Manual providers: cash / bank transfer / paypal manual flow / etc.
+    // Server already created the pending upgrade request.
+    // Refresh dashboard access, then close the sheet with updated data.
+    if (_manualRequestHandled) return;
+    _manualRequestHandled = true;
+
+    try {
+      final refreshed = await bloc.refreshSubscriptionUc();
+      if (!mounted) return;
+
+      AppToast.success(context, l10n.upgradeRequestSent);
+      Navigator.of(context).pop(refreshed);
+    } catch (_) {
+      if (!mounted) return;
+
+      // Even if refresh fails, still close with null after showing success,
+      // so the dashboard can fallback to its own reload logic.
+      AppToast.success(context, l10n.upgradeRequestSent);
+      Navigator.of(context).pop(null);
+    }
   }
 
   @override
@@ -109,27 +117,31 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       listenWhen: (prev, next) =>
           prev.status != next.status ||
           prev.errorMessage != next.errorMessage ||
-          prev.lastMessage != next.lastMessage,
-      listener: (ctx, state) {
+          prev.lastMessage != next.lastMessage ||
+          prev.paymentIntent != next.paymentIntent,
+      listener: (ctx, state) async {
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
             state.paymentIntent != null) {
-          _handlePayment(state);
+          await _handlePayment(state);
+          return;
         }
+
         if (state.status == UpgradeFlowStatus.success &&
             state.confirmedAccess != null) {
           AppToast.success(ctx, l10n.upgradePaymentSuccess);
           Navigator.of(ctx).pop(state.confirmedAccess);
+          return;
         }
+
         if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
           AppToast.error(ctx, state.errorMessage!);
-          ctx
-              .read<UpgradeFlowBloc>()
-              .add(const UpgradeFlowMessagesCleared());
+          ctx.read<UpgradeFlowBloc>().add(const UpgradeFlowMessagesCleared());
         }
       },
       builder: (ctx, state) {
         final isLoading = state.status == UpgradeFlowStatus.loadingPlans;
         final isProcessing = state.isBusy && !isLoading;
+
         final inlineError = state.status == UpgradeFlowStatus.plansError
             ? (state.errorMessage ?? l10n.upgradePlansLoadError)
             : null;
@@ -145,24 +157,21 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           errorMessage: inlineError,
           onSelectionChanged: (plan, cycle) {
             if (cycle != state.billingCycle) {
-              ctx
-                  .read<UpgradeFlowBloc>()
-                  .add(UpgradeBillingCycleSelected(cycle));
+              ctx.read<UpgradeFlowBloc>().add(UpgradeBillingCycleSelected(cycle));
             }
             if (plan != null && plan != state.selectedPlan) {
               ctx.read<UpgradeFlowBloc>().add(UpgradePlanSelected(plan));
             }
           },
-          onPaymentMethodSelected: (code) => ctx
-              .read<UpgradeFlowBloc>()
-              .add(UpgradePaymentMethodSelected(code)),
-          onPayNow: (_, __) => ctx
-              .read<UpgradeFlowBloc>()
-              .add(const UpgradePaymentRequested()),
+          onPaymentMethodSelected: (code) {
+            ctx.read<UpgradeFlowBloc>().add(UpgradePaymentMethodSelected(code));
+          },
+          onPayNow: (_, __) {
+            ctx.read<UpgradeFlowBloc>().add(const UpgradePaymentRequested());
+          },
           onClose: () => Navigator.of(ctx).pop(null),
         );
       },
     );
   }
 }
-
