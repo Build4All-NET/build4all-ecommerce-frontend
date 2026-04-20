@@ -2738,6 +2738,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeRequestPending => 'Upgrade request is pending approval';
 
   @override
+  String get payNowLabel => 'Pay now';
+
+  @override
+  String get billingCycleMonthly => 'Monthly';
+
+  @override
+  String get billingCycleYearly => 'Yearly';
+
+  @override
+  String get upgradeBillingCycleLabel => 'BILLING CYCLE';
+
+  @override
+  String get upgradePriceLabel => 'PRICE';
+
+  @override
+  String get perMonthSuffix => '/ month';
+
+  @override
+  String get perYearSuffix => '/ year';
+
+  @override
+  String get upgradeYearlyDiscountBadge => 'Save';
+
+  @override
+  String get upgradePlansLoadError => 'Could not load upgrade plans.';
+
+  @override
+  String get upgradePaymentSuccess => 'Payment successful. Your plan has been upgraded.';
+
+  @override
+  String get upgradePaymentCanceled => 'Payment was canceled.';
+
+  @override
+  String get upgradePaymentMissingConfig => 'Payment configuration is missing.';
+
+  @override
+  String get upgradePaymentUnsupportedProvider => 'Payment provider is not supported yet.';
+
+  @override
   String get requestUpgradePendingLabel => 'Requested';
 
   @override

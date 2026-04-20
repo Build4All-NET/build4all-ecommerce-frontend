@@ -5359,6 +5359,84 @@ abstract class AppLocalizations {
   /// **'Upgrade request is pending approval'**
   String get upgradeRequestPending;
 
+  /// No description provided for @payNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay now'**
+  String get payNowLabel;
+
+  /// No description provided for @billingCycleMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get billingCycleMonthly;
+
+  /// No description provided for @billingCycleYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get billingCycleYearly;
+
+  /// No description provided for @upgradeBillingCycleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BILLING CYCLE'**
+  String get upgradeBillingCycleLabel;
+
+  /// No description provided for @upgradePriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PRICE'**
+  String get upgradePriceLabel;
+
+  /// No description provided for @perMonthSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'/ month'**
+  String get perMonthSuffix;
+
+  /// No description provided for @perYearSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'/ year'**
+  String get perYearSuffix;
+
+  /// No description provided for @upgradeYearlyDiscountBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get upgradeYearlyDiscountBadge;
+
+  /// No description provided for @upgradePlansLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load upgrade plans.'**
+  String get upgradePlansLoadError;
+
+  /// No description provided for @upgradePaymentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful. Your plan has been upgraded.'**
+  String get upgradePaymentSuccess;
+
+  /// No description provided for @upgradePaymentCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment was canceled.'**
+  String get upgradePaymentCanceled;
+
+  /// No description provided for @upgradePaymentMissingConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment configuration is missing.'**
+  String get upgradePaymentMissingConfig;
+
+  /// No description provided for @upgradePaymentUnsupportedProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment provider is not supported yet.'**
+  String get upgradePaymentUnsupportedProvider;
+
   /// No description provided for @requestUpgradePendingLabel.
   ///
   /// In en, this message translates to:

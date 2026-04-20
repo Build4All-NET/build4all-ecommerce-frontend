@@ -2738,6 +2738,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upgradeRequestPending => 'طلب الترقية قيد الانتظار للموافقة';
 
   @override
+  String get payNowLabel => 'ادفع الآن';
+
+  @override
+  String get billingCycleMonthly => 'شهري';
+
+  @override
+  String get billingCycleYearly => 'سنوي';
+
+  @override
+  String get upgradeBillingCycleLabel => 'دورة الفوترة';
+
+  @override
+  String get upgradePriceLabel => 'السعر';
+
+  @override
+  String get perMonthSuffix => '/ شهر';
+
+  @override
+  String get perYearSuffix => '/ سنة';
+
+  @override
+  String get upgradeYearlyDiscountBadge => 'وفّر';
+
+  @override
+  String get upgradePlansLoadError => 'تعذر تحميل باقات الترقية.';
+
+  @override
+  String get upgradePaymentSuccess => 'تمت عملية الدفع بنجاح. تم ترقية باقتك.';
+
+  @override
+  String get upgradePaymentCanceled => 'تم إلغاء عملية الدفع.';
+
+  @override
+  String get upgradePaymentMissingConfig => 'إعدادات الدفع غير مكتملة.';
+
+  @override
+  String get upgradePaymentUnsupportedProvider => 'مزوّد الدفع غير مدعوم حالياً.';
+
+  @override
   String get requestUpgradePendingLabel => 'تم الطلب';
 
   @override
