@@ -97,6 +97,8 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     UpgradePaymentRequested event,
     Emitter<UpgradeFlowState> emit,
   ) async {
+    // ignore: avoid_print
+    print('[UpgradeFlowBloc] UpgradePaymentRequested received. state.selectedPlan=${state.selectedPlan} state.methodCode=${state.selectedPaymentMethodCode} state.billingCycle=${state.billingCycle}');
     final plan = state.selectedPlan;
     if (plan == null) {
       emit(state.copyWith(
@@ -128,6 +130,8 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
           paymentMethodCode: methodCode,
         ),
       );
+      // ignore: avoid_print
+      print('[UpgradeFlowBloc] Stripe intent response OK: provider=${intent.provider} id=${intent.paymentIntentId}');
 
       emit(state.copyWith(
         status: UpgradeFlowStatus.awaitingPayment,
