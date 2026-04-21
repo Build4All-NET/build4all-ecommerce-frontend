@@ -31,6 +31,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
   late final List<Map<String, dynamic>> _fields;
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, String> _selected = {};
+  final Map<String, bool> _toggles = {};
 
   @override
   void initState() {
@@ -52,6 +53,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         final existing = widget.existingValues[key]?.toString();
         final def = f['default']?.toString();
         _selected[key] = existing ?? def ?? '';
+      } else if (type == 'boolean') {
+        final existing = widget.existingValues[key];
+        final def = f['default'];
+        _toggles[key] = _coerceBool(existing) ?? _coerceBool(def) ?? false;
       } else {
         final existing = widget.existingValues[key]?.toString();
         final def = f['default']?.toString();
@@ -62,6 +67,16 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         _controllers[key] = TextEditingController(text: initialText);
       }
     }
+  }
+
+  bool? _coerceBool(Object? v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    final s = v.toString().trim().toLowerCase();
+    if (s == 'true') return true;
+    if (s == 'false') return false;
+    return null;
   }
 
   @override
@@ -283,6 +298,8 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
       if (type == 'select') {
         final sel = (_selected[key] ?? '').trim();
         if (sel.isNotEmpty) out[key] = sel;
+      } else if (type == 'boolean') {
+        out[key] = _toggles[key] ?? false;
       } else {
         final raw = (_controllers[key]?.text ?? '').trim();
         if (raw.isEmpty) continue;
@@ -350,6 +367,18 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
             borderSide: BorderSide(color: c.primary, width: 1),
           ),
         ),
+      );
+    } else if (type == 'boolean') {
+      final v = _toggles[key] ?? false;
+      input = SwitchListTile.adaptive(
+        value: v,
+        onChanged: (nv) => setState(() => _toggles[key] = nv),
+        contentPadding: EdgeInsets.zero,
+        title: Text(
+          v ? 'On' : 'Off',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.label),
+        ),
+        activeColor: c.primary,
       );
     } else {
       final ctrl = _controllers[key]!;
@@ -473,6 +502,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         if ((finalValue as String).isEmpty) {
           finalValue = widget.existingValues[key]?.toString() ?? '';
         }
+      } else if (type == 'boolean') {
+        // Booleans always have a value (default false); never "missing".
+        out[key] = _toggles[key] ?? false;
+        continue;
       } else {
         final raw = (_controllers[key]?.text ?? '').trim();
 
