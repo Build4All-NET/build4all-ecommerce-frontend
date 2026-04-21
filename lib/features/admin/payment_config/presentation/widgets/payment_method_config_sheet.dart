@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -79,6 +80,8 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
     final l10n = AppLocalizations.of(context)!;
 
     final title = (widget.schema['title'] ?? widget.methodName).toString();
+    final description = widget.schema['description']?.toString();
+    final docsUrl = widget.schema['docsUrl']?.toString();
 
     return SafeArea(
       child: Padding(
@@ -113,6 +116,72 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                   context,
                 ).textTheme.bodySmall?.copyWith(color: c.muted),
               ),
+              if (description != null && description.isNotEmpty) ...[
+                SizedBox(height: s.md),
+                Container(
+                  padding: EdgeInsets.all(s.md),
+                  decoration: BoxDecoration(
+                    color: c.surface,
+                    borderRadius: BorderRadius.circular(theme.card.radius),
+                    border: Border.all(
+                      color: c.border.withOpacity(0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: c.primary,
+                          ),
+                          SizedBox(width: s.sm),
+                          Expanded(
+                            child: Text(
+                              description,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: c.body),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (docsUrl != null && docsUrl.isNotEmpty) ...[
+                        SizedBox(height: s.sm),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => _openUrl(docsUrl),
+                            icon: Icon(
+                              Icons.open_in_new,
+                              size: 16,
+                              color: c.primary,
+                            ),
+                            label: Text(
+                              'Open provider docs',
+                              style: TextStyle(color: c.primary),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: s.sm,
+                                vertical: 0,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: s.lg),
 
               ..._fields.map((f) => _buildField(context, f)).toList(),
@@ -248,6 +317,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
     final label = (f['label'] ?? key).toString();
     final type = (f['type'] ?? 'text').toString();
     final requiredField = (f['required'] == true);
+    final hint = f['hint']?.toString();
+    final helpUrl = f['helpUrl']?.toString();
+    final placeholder = f['placeholder']?.toString();
 
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(theme.card.radius),
@@ -285,6 +357,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
       final isTextArea = type == 'textarea';
       final isNumber = type == 'number';
 
+      final String? hintText = (isPassword && widget.existingValues[key] != null)
+          ? l10n.paymentSavedKeepHint
+          : placeholder;
+
       input = TextField(
         controller: ctrl,
         obscureText: isPassword,
@@ -292,9 +368,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         maxLines: isTextArea ? 4 : 1,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.label),
         decoration: InputDecoration(
-          hintText: (isPassword && widget.existingValues[key] != null)
-              ? l10n.paymentSavedKeepHint
-              : null,
+          hintText: hintText,
           filled: true,
           fillColor: c.surface,
           contentPadding: EdgeInsets.symmetric(
@@ -323,9 +397,65 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           ),
           SizedBox(height: s.xs),
           input,
+          if (hint != null && hint.isNotEmpty) ...[
+            SizedBox(height: s.xs),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    hint,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: c.muted),
+                  ),
+                ),
+                if (helpUrl != null && helpUrl.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _openUrl(helpUrl),
+                    child: Padding(
+                      padding: EdgeInsets.only(left: s.sm),
+                      child: Text(
+                        'Learn more',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: c.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ] else if (helpUrl != null && helpUrl.isNotEmpty) ...[
+            SizedBox(height: s.xs),
+            GestureDetector(
+              onTap: () => _openUrl(helpUrl),
+              child: Text(
+                'Learn more',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: c.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Could not open $url');
+    }
   }
 
   void _onSave() {
