@@ -8,4 +8,9 @@ abstract class OwnerPaymentConfigRepository {
     required bool enabled,
     required Map<String, Object?> configValues,
   });
+
+  Future<({bool ok, String? error})> testMethodConfig({
+    required String methodName,
+    required Map<String, Object?> configValues,
+  });
 }

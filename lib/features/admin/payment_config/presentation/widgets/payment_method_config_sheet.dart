@@ -5,6 +5,10 @@ import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 
+import '../bloc/owner_payment_config_bloc.dart';
+import '../bloc/owner_payment_config_event.dart';
+import '../bloc/owner_payment_config_state.dart';
+
 class PaymentMethodConfigSheet extends StatefulWidget {
   final String methodName;
   final Map<String, dynamic> schema;
@@ -113,7 +117,59 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
 
               ..._fields.map((f) => _buildField(context, f)).toList(),
 
-              SizedBox(height: s.lg),
+              SizedBox(height: s.md),
+              BlocConsumer<OwnerPaymentConfigBloc, OwnerPaymentConfigState>(
+                listenWhen: (p, n) {
+                  final code = widget.methodName.toUpperCase();
+                  return p.testResults[code] != n.testResults[code] &&
+                      n.testResults[code] != null;
+                },
+                listener: (ctx, state) {
+                  final code = widget.methodName.toUpperCase();
+                  final outcome = state.testResults[code];
+                  if (outcome == null) return;
+                  if (outcome.ok) {
+                    AppToast.success(ctx, 'Connection succeeded');
+                  } else {
+                    AppToast.error(
+                      ctx,
+                      outcome.error ?? 'Connection failed',
+                    );
+                  }
+                },
+                buildWhen: (p, n) {
+                  final code = widget.methodName.toUpperCase();
+                  return p.testingCodes.contains(code) !=
+                          n.testingCodes.contains(code) ||
+                      p.testResults[code] != n.testResults[code];
+                },
+                builder: (ctx, state) {
+                  final code = widget.methodName.toUpperCase();
+                  final testing = state.testingCodes.contains(code);
+
+                  return SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: testing ? null : () => _onTest(ctx),
+                      icon: testing
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: c.primary,
+                              ),
+                            )
+                          : Icon(Icons.link, color: c.primary),
+                      label: Text(
+                        testing ? 'Testing…' : 'Test connection',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              SizedBox(height: s.md),
               Row(
                 children: [
                   Expanded(
@@ -146,6 +202,40 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         ),
       ),
     );
+  }
+
+  Map<String, Object?> _collectValuesForTest() {
+    final out = <String, Object?>{};
+
+    for (final f in _fields) {
+      final key = (f['key'] ?? '').toString();
+      final type = (f['type'] ?? 'text').toString();
+
+      if (type == 'select') {
+        final sel = (_selected[key] ?? '').trim();
+        if (sel.isNotEmpty) out[key] = sel;
+      } else {
+        final raw = (_controllers[key]?.text ?? '').trim();
+        if (raw.isEmpty) continue;
+        if (type == 'number') {
+          final parsed = num.tryParse(raw);
+          if (parsed != null) out[key] = parsed;
+        } else {
+          out[key] = raw;
+        }
+      }
+    }
+    return out;
+  }
+
+  void _onTest(BuildContext ctx) {
+    final values = _collectValuesForTest();
+    ctx.read<OwnerPaymentConfigBloc>().add(
+          OwnerPaymentConfigTest(
+            methodName: widget.methodName,
+            configValues: values,
+          ),
+        );
   }
 
   Widget _buildField(BuildContext context, Map<String, dynamic> f) {
