@@ -13,6 +13,7 @@ import '../../data/repositories/owner_payment_config_repository_impl.dart';
 import '../../data/services/owner_payment_config_api_service.dart';
 import '../../domain/usecases/get_owner_payment_methods.dart';
 import '../../domain/usecases/save_owner_payment_method_config.dart';
+import '../../domain/usecases/test_owner_payment_method_config.dart';
 import '../bloc/owner_payment_config_bloc.dart';
 import '../bloc/owner_payment_config_event.dart';
 import '../bloc/owner_payment_config_state.dart';
@@ -43,6 +44,7 @@ class OwnerPaymentConfigScreen extends StatelessWidget {
       create: (_) => OwnerPaymentConfigBloc(
         getMethods: GetOwnerPaymentMethods(repo),
         saveConfig: SaveOwnerPaymentMethodConfig(repo),
+        testConfig: TestOwnerPaymentMethodConfig(repo),
       )..add(OwnerPaymentConfigLoad()),
       child: const _OwnerPaymentConfigView(),
     );
@@ -183,10 +185,14 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                                   top: Radius.circular(tokens.card.radius),
                                 ),
                               ),
-                              builder: (_) => PaymentMethodConfigSheet(
-                                methodName: it.name,
-                                schema: it.configSchema,
-                                existingValues: it.configValues,
+                              builder: (_) => BlocProvider.value(
+                                value:
+                                    context.read<OwnerPaymentConfigBloc>(),
+                                child: PaymentMethodConfigSheet(
+                                  methodName: it.name,
+                                  schema: it.configSchema,
+                                  existingValues: it.configValues,
+                                ),
                               ),
                             );
 
@@ -215,10 +221,14 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                                   top: Radius.circular(tokens.card.radius),
                                 ),
                               ),
-                              builder: (_) => PaymentMethodConfigSheet(
-                                methodName: it.name,
-                                schema: it.configSchema,
-                                existingValues: it.configValues,
+                              builder: (_) => BlocProvider.value(
+                                value:
+                                    context.read<OwnerPaymentConfigBloc>(),
+                                child: PaymentMethodConfigSheet(
+                                  methodName: it.name,
+                                  schema: it.configSchema,
+                                  existingValues: it.configValues,
+                                ),
                               ),
                             );
 

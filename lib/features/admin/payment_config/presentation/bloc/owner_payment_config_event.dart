@@ -15,3 +15,18 @@ class OwnerPaymentConfigSave extends OwnerPaymentConfigEvent {
     required this.configValues,
   });
 }
+
+class OwnerPaymentConfigTest extends OwnerPaymentConfigEvent {
+  final String methodName;
+  final Map<String, Object?> configValues;
+
+  OwnerPaymentConfigTest({
+    required this.methodName,
+    required this.configValues,
+  });
+}
+
+class OwnerPaymentConfigTestResultCleared extends OwnerPaymentConfigEvent {
+  final String methodName;
+  OwnerPaymentConfigTestResultCleared(this.methodName);
+}

@@ -47,4 +47,18 @@ class OwnerPaymentConfigRepositoryImpl implements OwnerPaymentConfigRepository {
       configValues: configValues,
     );
   }
+
+  @override
+  Future<({bool ok, String? error})> testMethodConfig({
+    required String methodName,
+    required Map<String, Object?> configValues,
+  }) async {
+    final token = await tokenProvider();
+
+    return api.testMethodConfig(
+      token: token,
+      methodName: methodName,
+      configValues: configValues,
+    );
+  }
 }

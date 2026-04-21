@@ -44,4 +44,26 @@ class OwnerPaymentConfigApiService {
       options: _auth(token),
     );
   }
+
+  Future<({bool ok, String? error})> testMethodConfig({
+    required String token,
+    required String methodName,
+    required Map<String, Object?> configValues,
+  }) async {
+    final url = '${_apiRoot()}/owner/projects/payment/methods/$methodName/test';
+
+    final res = await dio.post(
+      url,
+      data: {'configValues': configValues},
+      options: _auth(token),
+    );
+
+    final data = res.data;
+    if (data is Map) {
+      final ok = data['ok'] == true;
+      final error = data['error']?.toString();
+      return (ok: ok, error: ok ? null : error);
+    }
+    return (ok: false, error: 'Unexpected response');
+  }
 }
