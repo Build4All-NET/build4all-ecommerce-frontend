@@ -3424,13 +3424,13 @@ abstract class AppLocalizations {
   /// No description provided for @ownerPaymentSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Payment Methods'**
+  /// **'Checkout Gateways'**
   String get ownerPaymentSettingsTitle;
 
   /// No description provided for @ownerPaymentSettingsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Enable and configure gateways for this project'**
+  /// **'How your customers pay you'**
   String get ownerPaymentSettingsDesc;
 
   /// No description provided for @ownerPaymentConfigure.
@@ -3454,7 +3454,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentMethodsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Payment Methods'**
+  /// **'Checkout Gateways'**
   String get paymentMethodsTitle;
 
   /// No description provided for @paymentSearchHint.
@@ -3514,7 +3514,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminPaymentConfigTitle.
   ///
   /// In en, this message translates to:
-  /// **'Payment Methods'**
+  /// **'Checkout Gateways'**
   String get adminPaymentConfigTitle;
 
   /// No description provided for @checkoutConfirmDialogTitle.

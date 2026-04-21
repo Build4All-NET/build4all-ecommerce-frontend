@@ -1714,10 +1714,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_footer_returns_desc => 'سياسة إرجاع بسيطة للعناصر المؤهلة.';
 
   @override
-  String get ownerPaymentSettingsTitle => 'طرق الدفع';
+  String get ownerPaymentSettingsTitle => 'بوابات الدفع';
 
   @override
-  String get ownerPaymentSettingsDesc => 'فعّل وادخل إعدادات بوابات الدفع لهذا المشروع';
+  String get ownerPaymentSettingsDesc => 'كيف يدفع عملاؤك لك';
 
   @override
   String get ownerPaymentConfigure => 'إعداد';
@@ -1729,7 +1729,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ownerPaymentConfigHint => 'قم بإعداد الحقول أدناه. الحقول المطلوبة يجب تعبئتها.';
 
   @override
-  String get paymentMethodsTitle => 'طرق الدفع';
+  String get paymentMethodsTitle => 'بوابات الدفع';
 
   @override
   String get paymentSearchHint => 'بحث…';
@@ -1759,7 +1759,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paymentIncomplete => 'غير مكتمل';
 
   @override
-  String get adminPaymentConfigTitle => 'طرق الدفع';
+  String get adminPaymentConfigTitle => 'بوابات الدفع';
 
   @override
   String get checkoutConfirmDialogTitle => 'تأكيد الدفع';

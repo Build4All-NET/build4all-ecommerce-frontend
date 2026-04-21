@@ -1714,10 +1714,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_footer_returns_desc => 'Simple return policy on eligible items.';
 
   @override
-  String get ownerPaymentSettingsTitle => 'Payment Methods';
+  String get ownerPaymentSettingsTitle => 'Checkout Gateways';
 
   @override
-  String get ownerPaymentSettingsDesc => 'Enable and configure gateways for this project';
+  String get ownerPaymentSettingsDesc => 'How your customers pay you';
 
   @override
   String get ownerPaymentConfigure => 'Configure';
@@ -1729,7 +1729,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerPaymentConfigHint => 'Configure fields below. Required fields must be filled.';
 
   @override
-  String get paymentMethodsTitle => 'Payment Methods';
+  String get paymentMethodsTitle => 'Checkout Gateways';
 
   @override
   String get paymentSearchHint => 'Search…';
@@ -1759,7 +1759,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentIncomplete => 'Incomplete';
 
   @override
-  String get adminPaymentConfigTitle => 'Payment Methods';
+  String get adminPaymentConfigTitle => 'Checkout Gateways';
 
   @override
   String get checkoutConfirmDialogTitle => 'Confirm checkout';
