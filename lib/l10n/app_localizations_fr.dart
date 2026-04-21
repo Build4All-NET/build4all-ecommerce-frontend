@@ -1714,10 +1714,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get home_footer_returns_desc => 'Politique de retour simple sur les articles éligibles.';
 
   @override
-  String get ownerPaymentSettingsTitle => 'Moyens de paiement';
+  String get ownerPaymentSettingsTitle => 'Passerelles de paiement';
 
   @override
-  String get ownerPaymentSettingsDesc => 'Activer et configurer les passerelles pour ce projet';
+  String get ownerPaymentSettingsDesc => 'Comment vos clients vous paient';
 
   @override
   String get ownerPaymentConfigure => 'Configurer';
@@ -1729,7 +1729,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ownerPaymentConfigHint => 'Configurez les champs ci-dessous. Les champs obligatoires doivent être remplis.';
 
   @override
-  String get paymentMethodsTitle => 'Moyens de paiement';
+  String get paymentMethodsTitle => 'Passerelles de paiement';
 
   @override
   String get paymentSearchHint => 'Rechercher…';
@@ -1759,7 +1759,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paymentIncomplete => 'Incomplet';
 
   @override
-  String get adminPaymentConfigTitle => 'Moyens de paiement';
+  String get adminPaymentConfigTitle => 'Passerelles de paiement';
 
   @override
   String get checkoutConfirmDialogTitle => 'Confirmer le paiement';
