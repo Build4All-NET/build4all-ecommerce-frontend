@@ -7,6 +7,7 @@ import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_f
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'upgrade_popup.dart';
 
@@ -41,6 +42,7 @@ class _UpgradeRequestSheet extends StatefulWidget {
 class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   bool _manualRequestHandled = false;
   bool _stripeHandled = false;
+  bool _paypalHandled = false;
   bool _pendingHandled = false;
   bool _successHandled = false;
 
@@ -117,6 +119,70 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     }
   }
 
+  Future<void> _handlePaypalPayment(UpgradeFlowState state) async {
+    if (_paypalHandled) return;
+    _paypalHandled = true;
+
+    final l10n = AppLocalizations.of(context)!;
+    final bloc = context.read<UpgradeFlowBloc>();
+    final intent = state.paymentIntent;
+
+    if (intent == null) return;
+
+    final approval = (intent.checkoutUrl ?? '').trim();
+    if (approval.isEmpty) {
+      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
+      return;
+    }
+
+    // Open PayPal approval URL in the external browser. Then prompt the
+    // owner to confirm once they've completed the PayPal flow so we can
+    // capture the order server-side.
+    final uri = Uri.tryParse(approval);
+    if (uri != null) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        // Fall through to the dialog — the user may still have another
+        // way to open it, and we still want to offer confirm/cancel.
+      }
+    }
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Complete PayPal payment'),
+          content: const Text(
+              "We've opened PayPal in your browser. "
+              'After you finish paying, come back here and tap '
+              '"I\'ve paid" so we can activate your plan.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text("I've paid"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    if (confirmed == true) {
+      bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
+    } else {
+      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
+    }
+  }
+
   Future<void> _handleManualSuccess() async {
     if (_manualRequestHandled) return;
     _manualRequestHandled = true;
@@ -159,25 +225,35 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           return;
         }
 
-        // 2) Manual provider reached awaitingPayment
+        // 2) PayPal approval URL → external browser → "I've paid" confirm
+        if (state.status == UpgradeFlowStatus.awaitingPayment &&
+            state.paymentIntent != null &&
+            provider == 'paypal') {
+          await _handlePaypalPayment(state);
+          return;
+        }
+
+        // 3) Manual provider reached awaitingPayment
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
             state.paymentIntent != null &&
             provider != null &&
-            provider != 'stripe') {
+            provider != 'stripe' &&
+            provider != 'paypal') {
           await _handleManualSuccess();
           return;
         }
 
-        // 3) Manual provider reached success without confirmedAccess
+        // 4) Manual provider reached success without confirmedAccess
         if (state.status == UpgradeFlowStatus.success &&
             provider != null &&
             provider != 'stripe' &&
+            provider != 'paypal' &&
             state.confirmedAccess == null) {
           await _handleManualSuccess();
           return;
         }
 
-        // 4) Stripe success after confirm
+        // 5) Paid-provider success after confirm (Stripe or PayPal)
         if (state.status == UpgradeFlowStatus.success &&
             state.confirmedAccess != null) {
           if (_successHandled) return;
