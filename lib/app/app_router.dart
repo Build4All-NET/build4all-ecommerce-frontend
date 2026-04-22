@@ -48,6 +48,7 @@ import 'package:build4front/features/checkout/domain/usecases/get_payment_method
 import 'package:build4front/features/checkout/domain/usecases/get_shipping_quotes.dart';
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
+import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
 
 // Orders (USER)
 import 'package:build4front/features/orders/orders_feature.dart';
@@ -213,6 +214,7 @@ class AppRouter {
                   getShippingQuotes: GetShippingQuotes(repo),
                   previewTax: PreviewTax(repo),
                   placeOrder: PlaceOrder(repo),
+                  confirmPayment: ConfirmPayment(repo),
                   ownerProjectId: ownerProjectId,
                   currencyId: currencyId,
                   getLastShippingAddress: GetLastShippingAddress(repo),

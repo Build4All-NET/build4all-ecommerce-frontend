@@ -42,5 +42,12 @@ abstract class CheckoutRepository {
     String? destinationAccountId,
   });
 
+  /// Tells the backend the mobile SDK has completed the provider payment
+  /// (Stripe PaymentSheet success / PayPal approval). The server verifies
+  /// with the provider and flips the local ledger row to PAID.
+  ///
+  /// No webhook involved. Fires per-order.
+  Future<void> confirmPayment({required int orderId});
+
   Future<ShippingAddress> getMyLastShippingAddress();
 }
