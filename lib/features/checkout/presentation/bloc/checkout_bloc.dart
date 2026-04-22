@@ -12,6 +12,7 @@ import 'package:build4front/core/payments/stripe_payment_sheet.dart';
 
 import 'package:build4front/features/checkout/data/models/checkout_summary_model.dart';
 import 'package:build4front/features/checkout/domain/entities/checkout_entities.dart';
+import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_checkout_cart.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_payment_methods.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_shipping_quotes.dart';
@@ -29,6 +30,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final GetLastShippingAddress getLastShippingAddress;
   final PreviewTax previewTax;
   final PlaceOrder placeOrder;
+  final ConfirmPayment confirmPayment;
   final QuoteFromCart quoteFromCart;
 
   final int ownerProjectId;
@@ -44,6 +46,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.getShippingQuotes,
     required this.previewTax,
     required this.placeOrder,
+    required this.confirmPayment,
     required this.ownerProjectId,
     required this.currencyId,
     required this.getLastShippingAddress,
@@ -590,6 +593,34 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         } on StripeException catch (se) {
           final msg = se.error.message ?? 'Stripe payment canceled';
           throw AppException(msg, original: se);
+        }
+
+        // ✅ Synchronous server confirm: the backend retrieves the
+        // PaymentIntent from Stripe, verifies "succeeded", and flips the
+        // local PaymentTransaction row to PAID. No webhook required.
+        if (summary.orderId > 0) {
+          try {
+            await confirmPayment(orderId: summary.orderId);
+          } catch (err) {
+            throw AppException(
+              'Payment succeeded on Stripe but the server could not confirm it. '
+              'Please pull to refresh your order in a moment.',
+              original: err,
+            );
+          }
+        }
+      } else if (provider == 'PAYPAL') {
+        // PayPal customer-checkout approval UI is not wired yet; if a
+        // future step opens the approval URL and returns success, the
+        // same backend endpoint will capture via PayPal and flip the
+        // ledger to PAID.
+        if (summary.orderId > 0) {
+          try {
+            await confirmPayment(orderId: summary.orderId);
+          } catch (_) {
+            // Swallow here — the UI flow for PayPal isn't complete, so
+            // the owner will still see UNPAID until approval is wired.
+          }
         }
       }
 

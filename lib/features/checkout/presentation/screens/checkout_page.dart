@@ -15,6 +15,7 @@ import 'package:build4front/features/checkout/domain/usecases/get_payment_method
 import 'package:build4front/features/checkout/domain/usecases/get_shipping_quotes.dart';
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
+import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
 
 import '../bloc/checkout_bloc.dart';
 import 'checkout_screen.dart';
@@ -46,6 +47,7 @@ class CheckoutPage extends StatelessWidget {
     final getQuotes = GetShippingQuotes(repo);
     final tax = PreviewTax(repo);
     final place = PlaceOrder(repo);
+    final confirm = ConfirmPayment(repo);
     final lastAddr = GetLastShippingAddress(repo);
 
     // ✅ NEW: quote usecase (shows totals before place order)
@@ -58,6 +60,7 @@ class CheckoutPage extends StatelessWidget {
         getShippingQuotes: getQuotes,
         previewTax: tax,
         placeOrder: place,
+        confirmPayment: confirm,
         ownerProjectId: ownerId,
         currencyId: currencyId,
         getLastShippingAddress: lastAddr,

@@ -235,6 +235,30 @@ class CheckoutApiService {
     }
   }
 
+  /// POST /api/orders/{orderId}/confirm-payment
+  ///
+  /// Called after the Stripe PaymentSheet / PayPal approval reports
+  /// success. The backend verifies with the provider and flips the
+  /// local payment transaction to PAID so the order reads as paid.
+  Future<void> confirmPayment({required int orderId}) async {
+    try {
+      await _fetch.fetch(
+        HttpMethod.post,
+        '/api/orders/$orderId/confirm-payment',
+      );
+    } on CheckoutBlockedFailure {
+      rethrow;
+    } on AppException catch (e) {
+      _rethrowFromAppException(e);
+    } on DioException catch (e) {
+      _throwCheckoutError(
+        status: e.response?.statusCode,
+        raw: e.response?.data,
+        original: e,
+      );
+    }
+  }
+
   /// GET /api/orders/myorders/last-shipping-address
   Future<Map<String, dynamic>> getMyLastShippingAddress() async {
     final res = await _fetch.fetch(

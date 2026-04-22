@@ -214,4 +214,9 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     final json = await api.checkout(body);
     return CheckoutSummaryModel.fromJson(json);
   }
+
+  @override
+  Future<void> confirmPayment({required int orderId}) async {
+    await api.confirmPayment(orderId: orderId);
+  }
 }
