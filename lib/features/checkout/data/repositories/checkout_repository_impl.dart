@@ -215,6 +215,124 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     return CheckoutSummaryModel.fromJson(json);
   }
 
+  Map<String, dynamic> _buildCheckoutBody({
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  }) {
+    final body = <String, dynamic>{
+      'ownerProjectId': ownerProjectId,
+      'currencyId': currencyId,
+      'paymentMethod': paymentMethod,
+      'shippingMethodId': shippingMethodId,
+      'shippingAddress': {
+        ..._addressToJson(shippingAddress),
+        'shippingMethodId': shippingMethodId,
+        'shippingMethodName': shippingMethodName,
+      },
+      'lines': lines.map(_lineToJson).toList(),
+    };
+    final c = (couponCode ?? '').trim();
+    if (c.isNotEmpty) body['couponCode'] = c;
+    final dest = (destinationAccountId ?? '').trim();
+    if (dest.isNotEmpty) body['destinationAccountId'] = dest;
+    return body;
+  }
+
+  @override
+  Future<CheckoutSummaryModel> prepareStripePayment({
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  }) async {
+    final body = _buildCheckoutBody(
+      ownerProjectId: ownerProjectId,
+      currencyId: currencyId,
+      paymentMethod: paymentMethod,
+      couponCode: couponCode,
+      shippingMethodId: shippingMethodId,
+      shippingMethodName: shippingMethodName,
+      shippingAddress: shippingAddress,
+      lines: lines,
+      destinationAccountId: destinationAccountId,
+    );
+    final json = await api.prepareCheckoutPayment(body);
+    return CheckoutSummaryModel.fromJson(json);
+  }
+
+  @override
+  Future<CheckoutSummaryModel> finalizeStripeCheckout({
+    required String paymentIntentId,
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  }) async {
+    final body = _buildCheckoutBody(
+      ownerProjectId: ownerProjectId,
+      currencyId: currencyId,
+      paymentMethod: paymentMethod,
+      couponCode: couponCode,
+      shippingMethodId: shippingMethodId,
+      shippingMethodName: shippingMethodName,
+      shippingAddress: shippingAddress,
+      lines: lines,
+      destinationAccountId: destinationAccountId,
+    );
+    final json = await api.finalizeCheckoutPayment(
+      paymentIntentId: paymentIntentId,
+      checkoutBody: body,
+    );
+    return CheckoutSummaryModel.fromJson(json);
+  }
+
+  @override
+  Future<void> abandonStripeCheckout({
+    required String paymentIntentId,
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  }) async {
+    final body = _buildCheckoutBody(
+      ownerProjectId: ownerProjectId,
+      currencyId: currencyId,
+      paymentMethod: paymentMethod,
+      couponCode: couponCode,
+      shippingMethodId: shippingMethodId,
+      shippingMethodName: shippingMethodName,
+      shippingAddress: shippingAddress,
+      lines: lines,
+      destinationAccountId: destinationAccountId,
+    );
+    await api.abandonCheckoutPayment(
+      paymentIntentId: paymentIntentId,
+      checkoutBody: body,
+    );
+  }
+
   @override
   Future<void> confirmPayment({required int orderId}) async {
     await api.confirmPayment(orderId: orderId);

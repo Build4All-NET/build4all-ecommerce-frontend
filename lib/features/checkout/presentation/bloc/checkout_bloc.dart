@@ -12,11 +12,14 @@ import 'package:build4front/core/payments/stripe_payment_sheet.dart';
 
 import 'package:build4front/features/checkout/data/models/checkout_summary_model.dart';
 import 'package:build4front/features/checkout/domain/entities/checkout_entities.dart';
+import 'package:build4front/features/checkout/domain/usecases/abandon_stripe_checkout.dart';
 import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
+import 'package:build4front/features/checkout/domain/usecases/finalize_stripe_checkout.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_checkout_cart.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_payment_methods.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_shipping_quotes.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
+import 'package:build4front/features/checkout/domain/usecases/prepare_stripe_checkout.dart';
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
 import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.dart';
 
@@ -31,6 +34,9 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final PreviewTax previewTax;
   final PlaceOrder placeOrder;
   final ConfirmPayment confirmPayment;
+  final PrepareStripeCheckout prepareStripeCheckout;
+  final FinalizeStripeCheckout finalizeStripeCheckout;
+  final AbandonStripeCheckout abandonStripeCheckout;
   final QuoteFromCart quoteFromCart;
 
   final int ownerProjectId;
@@ -47,6 +53,9 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.previewTax,
     required this.placeOrder,
     required this.confirmPayment,
+    required this.prepareStripeCheckout,
+    required this.finalizeStripeCheckout,
+    required this.abandonStripeCheckout,
     required this.ownerProjectId,
     required this.currencyId,
     required this.getLastShippingAddress,
@@ -555,82 +564,125 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final destinationAccountId =
           pmCode == 'STRIPE' ? _stripeAccountIdFromPaymentMethod(selectedPm) : null;
 
-      final CheckoutSummaryModel summary = await placeOrder(
-        ownerProjectId: ownerProjectId,
-        currencyId: _resolvedCurrencyId(),
-        paymentMethod: pmCode,
-        couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
-        stripePaymentId: null,
-        destinationAccountId: destinationAccountId,
-        shippingMethodId: shipId,
-        shippingMethodName: shipName,
-        shippingAddress: addr,
-        lines: lines,
-      );
+      CheckoutSummaryModel summary;
 
-      final provider =
-          (summary.paymentProviderCode ?? pmCode).toString().trim().toUpperCase();
+      if (pmCode == 'STRIPE') {
+        // ---------- STRIPE prepare-then-finalize ----------
+        // Nothing hits the DB yet: no Order, cart still intact. If the
+        // user closes the sheet the cart is exactly where they left it.
+        final prepared = await prepareStripeCheckout(
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
 
-      if (provider == 'STRIPE') {
-        final clientSecret = (summary.clientSecret ?? '').toString().trim();
-        final publishableKey = (summary.publishableKey ?? '').toString().trim();
+        final clientSecret = (prepared.clientSecret ?? '').toString().trim();
+        final publishableKey = (prepared.publishableKey ?? '').toString().trim();
+        final paymentIntentId =
+            (prepared.providerPaymentId ?? '').toString().trim();
 
-        if (clientSecret.isEmpty) {
-          throw AppException('Checkout did not return Stripe clientSecret');
-        }
-        if (publishableKey.isEmpty) {
+        if (clientSecret.isEmpty ||
+            publishableKey.isEmpty ||
+            paymentIntentId.isEmpty) {
           throw AppException(
-            'Checkout did not return Stripe publishableKey (pk_...)',
+            'Checkout could not prepare a Stripe payment. Please try again.',
           );
         }
 
+        StripePayStatus sheetResult;
         try {
-          final sheetResult = await StripePaymentSheet.pay(
+          sheetResult = await StripePaymentSheet.pay(
             publishableKey: publishableKey,
             clientSecret: clientSecret,
             merchantName: Env.appName,
           );
           // ignore: avoid_print
-          print('[checkout] StripePaymentSheet result=$sheetResult orderId=${summary.orderId}');
+          print('[checkout] StripePaymentSheet result=$sheetResult');
         } on StripeException catch (se) {
+          // User canceled or provider error. Abandon the intent; no order
+          // was created so nothing else to roll back.
+          await abandonStripeCheckout(
+            paymentIntentId: paymentIntentId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
           final msg = se.error.message ?? 'Stripe payment canceled';
           throw AppException(msg, original: se);
         }
 
-        // ✅ Synchronous server confirm: the backend retrieves the
-        // PaymentIntent from Stripe, verifies "succeeded", and flips the
-        // local PaymentTransaction row to PAID. No webhook required.
-        if (summary.orderId > 0) {
-          try {
-            // ignore: avoid_print
-            print('[checkout] POST /confirm-payment orderId=${summary.orderId}');
-            await confirmPayment(orderId: summary.orderId);
-            // ignore: avoid_print
-            print('[checkout] confirm-payment OK orderId=${summary.orderId}');
-          } catch (err) {
-            // ignore: avoid_print
-            print('[checkout] confirm-payment FAILED orderId=${summary.orderId} err=$err');
-            throw AppException(
-              'Payment succeeded on Stripe but the server could not confirm it. '
-              'Please pull to refresh your order in a moment.',
-              original: err,
-            );
-          }
-        } else {
-          // ignore: avoid_print
-          print('[checkout] skip confirm-payment — summary.orderId is 0');
+        if (sheetResult != StripePayStatus.paid) {
+          // Sheet closed without paying. Best-effort cancel the intent
+          // and bail out with a benign "canceled" state (no error toast).
+          await abandonStripeCheckout(
+            paymentIntentId: paymentIntentId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
+          // Cart is still intact — leave the user on the checkout screen.
+          emit(state.copyWith(placing: false, clearError: true));
+          return;
         }
-      } else if (provider == 'PAYPAL') {
-        // PayPal customer-checkout approval UI is not wired yet; if a
-        // future step opens the approval URL and returns success, the
-        // same backend endpoint will capture via PayPal and flip the
-        // ledger to PAID.
-        if (summary.orderId > 0) {
+
+        // Paid. NOW ask the server to create the Order + empty the cart.
+        summary = await finalizeStripeCheckout(
+          paymentIntentId: paymentIntentId,
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
+      } else {
+        // ---------- Legacy path (Cash / PayPal / offline) ----------
+        summary = await placeOrder(
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          stripePaymentId: null,
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
+
+        final provider = (summary.paymentProviderCode ?? pmCode)
+            .toString()
+            .trim()
+            .toUpperCase();
+        if (provider == 'PAYPAL' && summary.orderId > 0) {
+          // PayPal customer-checkout approval UI is not wired yet; if a
+          // future step opens the approval URL and returns success, the
+          // existing /confirm-payment endpoint will capture via PayPal.
           try {
             await confirmPayment(orderId: summary.orderId);
           } catch (_) {
-            // Swallow here — the UI flow for PayPal isn't complete, so
-            // the owner will still see UNPAID until approval is wired.
+            // Swallow until PayPal approval UI is wired.
           }
         }
       }
