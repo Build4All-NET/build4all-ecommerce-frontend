@@ -585,11 +585,13 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         }
 
         try {
-          await StripePaymentSheet.pay(
+          final sheetResult = await StripePaymentSheet.pay(
             publishableKey: publishableKey,
             clientSecret: clientSecret,
             merchantName: Env.appName,
           );
+          // ignore: avoid_print
+          print('[checkout] StripePaymentSheet result=$sheetResult orderId=${summary.orderId}');
         } on StripeException catch (se) {
           final msg = se.error.message ?? 'Stripe payment canceled';
           throw AppException(msg, original: se);
@@ -600,14 +602,23 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         // local PaymentTransaction row to PAID. No webhook required.
         if (summary.orderId > 0) {
           try {
+            // ignore: avoid_print
+            print('[checkout] POST /confirm-payment orderId=${summary.orderId}');
             await confirmPayment(orderId: summary.orderId);
+            // ignore: avoid_print
+            print('[checkout] confirm-payment OK orderId=${summary.orderId}');
           } catch (err) {
+            // ignore: avoid_print
+            print('[checkout] confirm-payment FAILED orderId=${summary.orderId} err=$err');
             throw AppException(
               'Payment succeeded on Stripe but the server could not confirm it. '
               'Please pull to refresh your order in a moment.',
               original: err,
             );
           }
+        } else {
+          // ignore: avoid_print
+          print('[checkout] skip confirm-payment — summary.orderId is 0');
         }
       } else if (provider == 'PAYPAL') {
         // PayPal customer-checkout approval UI is not wired yet; if a
