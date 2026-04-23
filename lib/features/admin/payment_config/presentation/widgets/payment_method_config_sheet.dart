@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
@@ -33,6 +35,19 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
   final Map<String, String> _selected = {};
   final Map<String, bool> _toggles = {};
 
+  bool get _isStripe => widget.methodName.toUpperCase() == 'STRIPE';
+
+  String get _computedWebhookUrl {
+    final fromSchema = widget.schema['webhookUrl']?.toString().trim();
+    if (fromSchema != null && fromSchema.isNotEmpty) {
+      return fromSchema;
+    }
+
+    final base = Env.apiBaseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    final ownerProjectId = Env.ownerProjectLinkId.trim();
+    return '$base/api/webhooks/payments/checkout/stripe/$ownerProjectId';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +55,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
     final rawFields = widget.schema['fields'];
     _fields = (rawFields is List)
         ? rawFields
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList()
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList()
         : <Map<String, dynamic>>[];
 
     for (final f in _fields) {
@@ -60,10 +75,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
       } else {
         final existing = widget.existingValues[key]?.toString();
         final def = f['default']?.toString();
-
-        // ✅ Password stays empty (don't show secrets)
         final initialText = (type == 'password') ? '' : (existing ?? def ?? '');
-
         _controllers[key] = TextEditingController(text: initialText);
       }
     }
@@ -113,92 +125,48 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: c.label,
-                  fontWeight: FontWeight.w800,
-                ),
+                      color: c.label,
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
               SizedBox(height: s.sm),
               Text(
                 l10n.paymentFillFields,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: c.body),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: c.body),
               ),
               SizedBox(height: s.sm),
               Text(
                 l10n.paymentSavedKeepHint,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: c.muted),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: c.muted),
               ),
+
               if (description != null && description.isNotEmpty) ...[
                 SizedBox(height: s.md),
-                Container(
-                  padding: EdgeInsets.all(s.md),
-                  decoration: BoxDecoration(
-                    color: c.surface,
-                    borderRadius: BorderRadius.circular(theme.card.radius),
-                    border: Border.all(
-                      color: c.border.withOpacity(0.25),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 18,
-                            color: c.primary,
-                          ),
-                          SizedBox(width: s.sm),
-                          Expanded(
-                            child: Text(
-                              description,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: c.body),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (docsUrl != null && docsUrl.isNotEmpty) ...[
-                        SizedBox(height: s.sm),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () => _openUrl(docsUrl),
-                            icon: Icon(
-                              Icons.open_in_new,
-                              size: 16,
-                              color: c.primary,
-                            ),
-                            label: Text(
-                              'Open provider docs',
-                              style: TextStyle(color: c.primary),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: s.sm,
-                                vertical: 0,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                _buildInfoCard(
+                  context,
+                  icon: Icons.info_outline,
+                  text: description,
+                  actionLabel: (docsUrl != null && docsUrl.isNotEmpty)
+                      ? 'Open provider docs'
+                      : null,
+                  onAction: (docsUrl != null && docsUrl.isNotEmpty)
+                      ? () => _openUrl(docsUrl)
+                      : null,
                 ),
               ],
-              SizedBox(height: s.lg),
 
+              if (_isStripe) ...[
+                SizedBox(height: s.md),
+                _buildStripeWebhookCard(context),
+              ],
+
+              SizedBox(height: s.lg),
               ..._fields.map((f) => _buildField(context, f)).toList(),
 
               SizedBox(height: s.md),
@@ -215,10 +183,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                   if (outcome.ok) {
                     AppToast.success(ctx, 'Connection succeeded');
                   } else {
-                    AppToast.error(
-                      ctx,
-                      outcome.error ?? 'Connection failed',
-                    );
+                    AppToast.error(ctx, outcome.error ?? 'Connection failed');
                   }
                 },
                 buildWhen: (p, n) {
@@ -245,9 +210,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                               ),
                             )
                           : Icon(Icons.link, color: c.primary),
-                      label: Text(
-                        testing ? 'Testing…' : 'Test connection',
-                      ),
+                      label: Text(testing ? 'Testing…' : 'Test connection'),
                     ),
                   );
                 },
@@ -270,9 +233,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                         foregroundColor: c.onPrimary,
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            theme.card.radius,
-                          ),
+                          borderRadius: BorderRadius.circular(theme.card.radius),
                         ),
                       ),
                       onPressed: _onSave,
@@ -284,6 +245,160 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final theme = context.watch<ThemeCubit>().state.tokens;
+    final c = theme.colors;
+    final s = theme.spacing;
+
+    return Container(
+      padding: EdgeInsets.all(s.md),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(theme.card.radius),
+        border: Border.all(
+          color: c.border.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 18, color: c.primary),
+              SizedBox(width: s.sm),
+              Expanded(
+                child: Text(
+                  text,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: c.body),
+                ),
+              ),
+            ],
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            SizedBox(height: s.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: onAction,
+                icon: Icon(Icons.open_in_new, size: 16, color: c.primary),
+                label: Text(
+                  actionLabel,
+                  style: TextStyle(color: c.primary),
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: 0),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStripeWebhookCard(BuildContext context) {
+    final theme = context.watch<ThemeCubit>().state.tokens;
+    final c = theme.colors;
+    final s = theme.spacing;
+
+    final webhookUrl = _computedWebhookUrl;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(s.md),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(theme.card.radius),
+        border: Border.all(
+          color: c.primary.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.webhook, color: c.primary, size: 18),
+              SizedBox(width: s.sm),
+              Expanded(
+                child: Text(
+                  'Stripe webhook URL',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: c.label,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: s.sm),
+          Text(
+            'Paste this URL inside your Stripe dashboard webhook endpoint settings.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: c.body,
+                ),
+          ),
+          SizedBox(height: s.sm),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(s.md),
+            decoration: BoxDecoration(
+              color: c.background,
+              borderRadius: BorderRadius.circular(theme.card.radius),
+              border: Border.all(
+                color: c.border.withOpacity(0.25),
+                width: 1,
+              ),
+            ),
+            child: SelectableText(
+              webhookUrl,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: c.label,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          SizedBox(height: s.sm),
+          Wrap(
+            spacing: s.sm,
+            runSpacing: s.sm,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: webhookUrl));
+                  if (mounted) {
+                    AppToast.success(context, 'Webhook URL copied');
+                  }
+                },
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('Copy'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _openUrl('https://dashboard.stripe.com/webhooks'),
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: const Text('Open Stripe'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -376,7 +491,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         contentPadding: EdgeInsets.zero,
         title: Text(
           v ? 'On' : 'Off',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.label),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: c.label),
         ),
         activeColor: c.primary,
       );
@@ -386,16 +504,20 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
       final isTextArea = type == 'textarea';
       final isNumber = type == 'number';
 
-      final String? hintText = (isPassword && widget.existingValues[key] != null)
-          ? l10n.paymentSavedKeepHint
-          : placeholder;
+      final String? hintText =
+          (isPassword && widget.existingValues[key] != null)
+              ? l10n.paymentSavedKeepHint
+              : placeholder;
 
       input = TextField(
         controller: ctrl,
         obscureText: isPassword,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         maxLines: isTextArea ? 4 : 1,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.label),
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: c.label),
         decoration: InputDecoration(
           hintText: hintText,
           filled: true,
@@ -420,9 +542,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         children: [
           Text(
             requiredField ? '$label *' : label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: c.muted),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: c.muted),
           ),
           SizedBox(height: s.xs),
           input,
@@ -447,10 +570,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                       padding: EdgeInsets.only(left: s.sm),
                       child: Text(
                         'Learn more',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: c.primary,
                               decoration: TextDecoration.underline,
                             ),
@@ -503,14 +623,12 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           finalValue = widget.existingValues[key]?.toString() ?? '';
         }
       } else if (type == 'boolean') {
-        // Booleans always have a value (default false); never "missing".
         out[key] = _toggles[key] ?? false;
         continue;
       } else {
         final raw = (_controllers[key]?.text ?? '').trim();
 
         if (raw.isEmpty) {
-          // empty => keep existing (especially for passwords)
           finalValue = widget.existingValues[key];
         } else {
           if (type == 'number') {

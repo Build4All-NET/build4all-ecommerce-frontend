@@ -60,9 +60,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       if (error) {
         AppToast.error(context, m);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(m)),
-        );
+        AppToast.success(context, m);
       }
     });
   }
