@@ -235,11 +235,92 @@ class CheckoutApiService {
     }
   }
 
+  /// POST /api/orders/checkout/prepare-payment
+  ///
+  /// Step 1 of the Stripe prepare-then-finalize flow. Validates the cart,
+  /// returns a Stripe PaymentIntent + clientSecret. Does NOT create an
+  /// Order or touch the cart — that only happens on finalize.
+  Future<Map<String, dynamic>> prepareCheckoutPayment(
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final res = await _fetch.fetch(
+        HttpMethod.post,
+        '/api/orders/checkout/prepare-payment',
+        data: body,
+      );
+      return Map<String, dynamic>.from(res.data as Map);
+    } on CheckoutBlockedFailure {
+      rethrow;
+    } on AppException catch (e) {
+      _rethrowFromAppException(e);
+    } on DioException catch (e) {
+      _throwCheckoutError(
+        status: e.response?.statusCode,
+        raw: e.response?.data,
+        original: e,
+      );
+    }
+  }
+
+  /// POST /api/orders/checkout/finalize
+  ///
+  /// Step 2: the Stripe sheet closed with success. Backend verifies the
+  /// intent with Stripe, creates the Order + OrderItems, empties the
+  /// cart, and marks the PaymentTransaction as PAID.
+  Future<Map<String, dynamic>> finalizeCheckoutPayment({
+    required String paymentIntentId,
+    required Map<String, dynamic> checkoutBody,
+  }) async {
+    try {
+      final res = await _fetch.fetch(
+        HttpMethod.post,
+        '/api/orders/checkout/finalize',
+        data: {
+          'paymentIntentId': paymentIntentId,
+          'checkoutRequest': checkoutBody,
+        },
+      );
+      return Map<String, dynamic>.from(res.data as Map);
+    } on CheckoutBlockedFailure {
+      rethrow;
+    } on AppException catch (e) {
+      _rethrowFromAppException(e);
+    } on DioException catch (e) {
+      _throwCheckoutError(
+        status: e.response?.statusCode,
+        raw: e.response?.data,
+        original: e,
+      );
+    }
+  }
+
+  /// POST /api/orders/checkout/abandon
+  ///
+  /// Cancels a prepared-but-unpaid Stripe PaymentIntent when the user
+  /// closes the sheet. Best-effort — never throws to the caller.
+  Future<void> abandonCheckoutPayment({
+    required String paymentIntentId,
+    required Map<String, dynamic> checkoutBody,
+  }) async {
+    try {
+      await _fetch.fetch(
+        HttpMethod.post,
+        '/api/orders/checkout/abandon',
+        data: {
+          'paymentIntentId': paymentIntentId,
+          'checkoutRequest': checkoutBody,
+        },
+      );
+    } catch (_) {
+      // Swallow: a failed abandon is purely cosmetic.
+    }
+  }
+
   /// POST /api/orders/{orderId}/confirm-payment
   ///
-  /// Called after the Stripe PaymentSheet / PayPal approval reports
-  /// success. The backend verifies with the provider and flips the
-  /// local payment transaction to PAID so the order reads as paid.
+  /// Legacy synchronous close for the old /checkout endpoint. Kept alive
+  /// so cash / offline paths continue to work.
   Future<void> confirmPayment({required int orderId}) async {
     try {
       await _fetch.fetch(

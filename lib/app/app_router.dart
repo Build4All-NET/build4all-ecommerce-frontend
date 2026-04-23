@@ -49,6 +49,9 @@ import 'package:build4front/features/checkout/domain/usecases/get_shipping_quote
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
 import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
+import 'package:build4front/features/checkout/domain/usecases/prepare_stripe_checkout.dart';
+import 'package:build4front/features/checkout/domain/usecases/finalize_stripe_checkout.dart';
+import 'package:build4front/features/checkout/domain/usecases/abandon_stripe_checkout.dart';
 
 // Orders (USER)
 import 'package:build4front/features/orders/orders_feature.dart';
@@ -215,6 +218,9 @@ class AppRouter {
                   previewTax: PreviewTax(repo),
                   placeOrder: PlaceOrder(repo),
                   confirmPayment: ConfirmPayment(repo),
+                  prepareStripeCheckout: PrepareStripeCheckout(repo),
+                  finalizeStripeCheckout: FinalizeStripeCheckout(repo),
+                  abandonStripeCheckout: AbandonStripeCheckout(repo),
                   ownerProjectId: ownerProjectId,
                   currencyId: currencyId,
                   getLastShippingAddress: GetLastShippingAddress(repo),

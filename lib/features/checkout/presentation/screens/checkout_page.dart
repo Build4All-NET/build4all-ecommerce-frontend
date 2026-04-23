@@ -16,6 +16,9 @@ import 'package:build4front/features/checkout/domain/usecases/get_shipping_quote
 import 'package:build4front/features/checkout/domain/usecases/preview_tax.dart';
 import 'package:build4front/features/checkout/domain/usecases/place_order.dart';
 import 'package:build4front/features/checkout/domain/usecases/confirm_payment.dart';
+import 'package:build4front/features/checkout/domain/usecases/prepare_stripe_checkout.dart';
+import 'package:build4front/features/checkout/domain/usecases/finalize_stripe_checkout.dart';
+import 'package:build4front/features/checkout/domain/usecases/abandon_stripe_checkout.dart';
 
 import '../bloc/checkout_bloc.dart';
 import 'checkout_screen.dart';
@@ -48,6 +51,9 @@ class CheckoutPage extends StatelessWidget {
     final tax = PreviewTax(repo);
     final place = PlaceOrder(repo);
     final confirm = ConfirmPayment(repo);
+    final prepareStripe = PrepareStripeCheckout(repo);
+    final finalizeStripe = FinalizeStripeCheckout(repo);
+    final abandonStripe = AbandonStripeCheckout(repo);
     final lastAddr = GetLastShippingAddress(repo);
 
     // ✅ NEW: quote usecase (shows totals before place order)
@@ -61,11 +67,12 @@ class CheckoutPage extends StatelessWidget {
         previewTax: tax,
         placeOrder: place,
         confirmPayment: confirm,
+        prepareStripeCheckout: prepareStripe,
+        finalizeStripeCheckout: finalizeStripe,
+        abandonStripeCheckout: abandonStripe,
         ownerProjectId: ownerId,
         currencyId: currencyId,
         getLastShippingAddress: lastAddr,
-
-        // ✅ required by the updated bloc
         quoteFromCart: quote,
       ),
       child: CheckoutScreen(appConfig: appConfig, ownerProjectId: ownerId),

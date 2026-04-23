@@ -49,5 +49,52 @@ abstract class CheckoutRepository {
   /// No webhook involved. Fires per-order.
   Future<void> confirmPayment({required int orderId});
 
+  /// Prepare-then-finalize Stripe flow.
+  ///
+  /// [prepareStripePayment] asks the backend to compute pricing + create a
+  /// Stripe PaymentIntent. Returns (paymentIntentId, clientSecret,
+  /// publishableKey, amount, currency) as a model. No order is created yet.
+  Future<CheckoutSummaryModel> prepareStripePayment({
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  });
+
+  /// [finalizeStripeCheckout] tells the backend the Stripe sheet succeeded.
+  /// Backend verifies the intent, THEN creates the Order and empties the
+  /// cart.
+  Future<CheckoutSummaryModel> finalizeStripeCheckout({
+    required String paymentIntentId,
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  });
+
+  /// Cancels a prepared-but-unpaid Stripe intent. Best-effort.
+  Future<void> abandonStripeCheckout({
+    required String paymentIntentId,
+    required int ownerProjectId,
+    required int currencyId,
+    required String paymentMethod,
+    String? couponCode,
+    required int shippingMethodId,
+    required String shippingMethodName,
+    required ShippingAddress shippingAddress,
+    required List<CartLine> lines,
+    String? destinationAccountId,
+  });
+
   Future<ShippingAddress> getMyLastShippingAddress();
 }
