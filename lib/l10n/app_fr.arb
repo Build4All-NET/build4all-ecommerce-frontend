@@ -638,7 +638,7 @@
   "paymentIncomplete": "Incomplet",
   "adminPaymentConfigTitle": "Passerelles de paiement",
   "checkoutConfirmDialogTitle": "Confirmer le paiement",
-  "checkoutConfirmCartCleared": "{itemCount, plural, =0{Après le paiement, votre panier sera vide.} =1{Après le paiement, votre panier sera vide (1 article).} other{Après le paiement, votre panier sera vide ({itemCount} articles).}} Voulez-vous continuer ?",
+  "checkoutConfirmCartCleared": "Voulez-vous continuer le paiement ?",
   "commonYes": "Oui",
   "commonNo": "Non",
   "@checkoutConfirmCartCleared": {
@@ -1192,5 +1192,42 @@
   "adminOrderReopen": "Rouvrir",
   "adminOrderRestore": "Restaurer",
   "commonSomethingWentWrongTryAgain": "Une erreur s’est produite. Veuillez réessayer.",
-  "orderDetailsInvoiceDownloadFailed": "Échec du téléchargement de la facture : {error}"
+  "orderDetailsInvoiceDownloadFailed": "Échec du téléchargement de la facture : {error}",
+  "stripeWebhookSetupTitle": "Configuration du webhook Stripe",
+"stripeWebhookSetupDescription": "Pour que le statut du paiement soit mis à jour correctement dans l’application, créez un webhook Stripe et sélectionnez les événements requis ci-dessous.",
+"stripeWebhookStep1": "1. Ouvrez votre tableau de bord Stripe.",
+"stripeWebhookStep2": "2. Allez dans Developers > Webhooks.",
+"stripeWebhookStep3": "3. Cliquez sur « Add endpoint ».",
+"stripeWebhookStep4": "4. Collez l’URL du webhook affichée ci-dessous.",
+"stripeWebhookStep5": "5. Sélectionnez ces événements :",
+"stripeWebhookStep6": "6. Cliquez sur « Add endpoint ».",
+"stripeWebhookStep7": "7. Copiez le Signing Secret depuis Stripe.",
+"stripeWebhookStep8": "8. Collez le Signing Secret dans cette configuration de paiement puis enregistrez.",
+"stripeWebhookImportant": "Important : sans ce webhook, Stripe peut recevoir le paiement, mais l’application peut encore afficher la commande comme non payée.",
+"stripeWebhookUrlLabel": "URL du webhook",
+"stripeWebhookCopyButton": "Copier l’URL du webhook",
+"stripeWebhookCopied": "URL du webhook copiée",
+"stripeWebhookOpenStripe": "Ouvrir Stripe",
+"stripeWebhookMustTestFirst": "Veuillez tester la connexion Stripe et le webhook avant d’enregistrer.",
+"connectionSucceeded": "Connexion réussie",
+"connectionFailed": "Échec de la connexion",
+"paymentTestingConnection": "Test en cours…",
+"paymentTestConnection": "Tester la connexion",
+"paymentOpenProviderDocs": "Ouvrir la documentation du fournisseur",
+"paymentOn": "Activé",
+"paymentOff": "Désactivé",
+"paymentLearnMore": "En savoir plus",
+"paymentCouldNotOpenUrl": "Impossible d’ouvrir le lien.",
+"paymentInvalidNumber": "Nombre invalide : {field}",
+"@paymentInvalidNumber": {
+  "placeholders": {
+    "field": {}
+  }
+},
+"paymentMissingRequiredField": "Champ requis manquant : {field}",
+"@paymentMissingRequiredField": {
+  "placeholders": {
+    "field": {}
+  }
+}
 }

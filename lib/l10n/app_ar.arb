@@ -577,7 +577,7 @@
   "paymentIncomplete": "غير مكتمل",
   "adminPaymentConfigTitle": "بوابات الدفع",
   "checkoutConfirmDialogTitle": "تأكيد الدفع",
-  "checkoutConfirmCartCleared": "{itemCount, plural, =0{بعد الدفع ستصبح سلتك فارغة.} =1{بعد الدفع ستصبح سلتك فارغة (عنصر واحد).} other{بعد الدفع ستصبح سلتك فارغة ({itemCount} عناصر).}} هل تريد المتابعة؟",
+ "checkoutConfirmCartCleared": "هل تريد المتابعة إلى الدفع؟",
   "commonYes": "نعم",
   "commonNo": "لا",
   "@checkoutConfirmCartCleared": {
@@ -1131,5 +1131,42 @@
   "adminOrderReopen": "إعادة فتح",
   "adminOrderRestore": "استعادة",
   "commonSomethingWentWrongTryAgain": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-  "orderDetailsInvoiceDownloadFailed": "فشل تنزيل الفاتورة: {error}"
+  "orderDetailsInvoiceDownloadFailed": "فشل تنزيل الفاتورة: {error}",
+  "stripeWebhookSetupTitle": "إعداد Webhook الخاص بـ Stripe",
+"stripeWebhookSetupDescription": "لكي يتم تحديث حالة الدفع بشكل صحيح داخل التطبيق، أنشئ Webhook في Stripe واختر الأحداث المطلوبة أدناه.",
+"stripeWebhookStep1": "1. افتح لوحة تحكم Stripe.",
+"stripeWebhookStep2": "2. انتقل إلى Developers > Webhooks.",
+"stripeWebhookStep3": "3. اضغط على “Add endpoint”.",
+"stripeWebhookStep4": "4. الصق رابط الـ Webhook الظاهر أدناه.",
+"stripeWebhookStep5": "5. اختر هذه الأحداث:",
+"stripeWebhookStep6": "6. اضغط على “Add endpoint”.",
+"stripeWebhookStep7": "7. انسخ Signing Secret من Stripe.",
+"stripeWebhookStep8": "8. الصق Signing Secret داخل إعدادات الدفع هذه ثم احفظ.",
+"stripeWebhookImportant": "مهم: بدون هذا الـ Webhook، قد يستلم Stripe الدفع، لكن قد يبقى الطلب داخل التطبيق ظاهرًا كغير مدفوع.",
+"stripeWebhookUrlLabel": "رابط الـ Webhook",
+"stripeWebhookCopyButton": "نسخ رابط الـ Webhook",
+"stripeWebhookCopied": "تم نسخ رابط الـ Webhook",
+"stripeWebhookOpenStripe": "فتح Stripe",
+"stripeWebhookMustTestFirst": "يرجى اختبار اتصال Stripe والـ Webhook قبل الحفظ.",
+"connectionSucceeded": "تم الاتصال بنجاح",
+"connectionFailed": "فشل الاتصال",
+"paymentTestingConnection": "جارٍ الاختبار…",
+"paymentTestConnection": "اختبار الاتصال",
+"paymentOpenProviderDocs": "فتح توثيق المزود",
+"paymentOn": "مفعل",
+"paymentOff": "غير مفعل",
+"paymentLearnMore": "معرفة المزيد",
+"paymentCouldNotOpenUrl": "تعذر فتح الرابط.",
+"paymentInvalidNumber": "رقم غير صالح: {field}",
+"@paymentInvalidNumber": {
+  "placeholders": {
+    "field": {}
+  }
+},
+"paymentMissingRequiredField": "حقل مطلوب مفقود: {field}",
+"@paymentMissingRequiredField": {
+  "placeholders": {
+    "field": {}
+  }
+}
 }

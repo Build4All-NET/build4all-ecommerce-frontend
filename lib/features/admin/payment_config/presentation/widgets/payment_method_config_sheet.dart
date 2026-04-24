@@ -35,6 +35,8 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
   final Map<String, String> _selected = {};
   final Map<String, bool> _toggles = {};
 
+  bool _connectionTestPassed = false;
+
   bool get _isStripe => widget.methodName.toUpperCase() == 'STRIPE';
 
   String get _computedWebhookUrl {
@@ -85,9 +87,11 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
     if (v == null) return null;
     if (v is bool) return v;
     if (v is num) return v != 0;
+
     final s = v.toString().trim().toLowerCase();
     if (s == 'true') return true;
     if (s == 'false') return false;
+
     return null;
   }
 
@@ -129,7 +133,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                       fontWeight: FontWeight.w800,
                     ),
               ),
+
               SizedBox(height: s.sm),
+
               Text(
                 l10n.paymentFillFields,
                 style: Theme.of(context)
@@ -137,7 +143,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                     .bodyMedium
                     ?.copyWith(color: c.body),
               ),
+
               SizedBox(height: s.sm),
+
               Text(
                 l10n.paymentSavedKeepHint,
                 style: Theme.of(context)
@@ -152,10 +160,10 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                   context,
                   icon: Icons.info_outline,
                   text: description,
-                  actionLabel: (docsUrl != null && docsUrl.isNotEmpty)
-                      ? 'Open provider docs'
+                  actionLabel: docsUrl != null && docsUrl.isNotEmpty
+                      ? l10n.paymentOpenProviderDocs
                       : null,
-                  onAction: (docsUrl != null && docsUrl.isNotEmpty)
+                  onAction: docsUrl != null && docsUrl.isNotEmpty
                       ? () => _openUrl(docsUrl)
                       : null,
                 ),
@@ -167,9 +175,11 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
               ],
 
               SizedBox(height: s.lg),
-              ..._fields.map((f) => _buildField(context, f)).toList(),
+
+              ..._fields.map((f) => _buildField(context, f)),
 
               SizedBox(height: s.md),
+
               BlocConsumer<OwnerPaymentConfigBloc, OwnerPaymentConfigState>(
                 listenWhen: (p, n) {
                   final code = widget.methodName.toUpperCase();
@@ -177,13 +187,21 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                       n.testResults[code] != null;
                 },
                 listener: (ctx, state) {
+                  final l10n = AppLocalizations.of(ctx)!;
                   final code = widget.methodName.toUpperCase();
                   final outcome = state.testResults[code];
+
                   if (outcome == null) return;
+
                   if (outcome.ok) {
-                    AppToast.success(ctx, 'Connection succeeded');
+                    setState(() => _connectionTestPassed = true);
+                    AppToast.success(ctx, l10n.connectionSucceeded);
                   } else {
-                    AppToast.error(ctx, outcome.error ?? 'Connection failed');
+                    setState(() => _connectionTestPassed = false);
+                    AppToast.error(
+                      ctx,
+                      outcome.error ?? l10n.connectionFailed,
+                    );
                   }
                 },
                 buildWhen: (p, n) {
@@ -210,13 +228,18 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                               ),
                             )
                           : Icon(Icons.link, color: c.primary),
-                      label: Text(testing ? 'Testing…' : 'Test connection'),
+                      label: Text(
+                        testing
+                            ? l10n.paymentTestingConnection
+                            : l10n.paymentTestConnection,
+                      ),
                     ),
                   );
                 },
               ),
 
               SizedBox(height: s.md),
+
               Row(
                 children: [
                   Expanded(
@@ -317,8 +340,41 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
     final theme = context.watch<ThemeCubit>().state.tokens;
     final c = theme.colors;
     final s = theme.spacing;
+    final l10n = AppLocalizations.of(context)!;
 
     final webhookUrl = _computedWebhookUrl;
+
+    Widget step(String text) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: s.xs),
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: c.body,
+                height: 1.35,
+              ),
+        ),
+      );
+    }
+
+    Widget eventName(String text) {
+      return Container(
+        margin: EdgeInsets.only(right: s.xs, bottom: s.xs),
+        padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
+        decoration: BoxDecoration(
+          color: c.primary.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: c.primary.withOpacity(0.25)),
+        ),
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: c.primary,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -340,23 +396,83 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
               SizedBox(width: s.sm),
               Expanded(
                 child: Text(
-                  'Stripe webhook URL',
+                  l10n.stripeWebhookSetupTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: c.label,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                       ),
                 ),
               ),
             ],
           ),
+
           SizedBox(height: s.sm),
+
           Text(
-            'Paste this URL inside your Stripe dashboard webhook endpoint settings.',
+            l10n.stripeWebhookSetupDescription,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: c.body,
+                  height: 1.35,
                 ),
           ),
+
+          SizedBox(height: s.md),
+
+          step(l10n.stripeWebhookStep1),
+          step(l10n.stripeWebhookStep2),
+          step(l10n.stripeWebhookStep3),
+          step(l10n.stripeWebhookStep4),
+          step(l10n.stripeWebhookStep5),
+
+          SizedBox(height: s.xs),
+
+          Wrap(
+            children: [
+              eventName('checkout.session.completed'),
+              eventName('payment_intent.succeeded'),
+              eventName('payment_intent.payment_failed'),
+              eventName('charge.refunded'),
+            ],
+          ),
+
           SizedBox(height: s.sm),
+
+          step(l10n.stripeWebhookStep6),
+          step(l10n.stripeWebhookStep7),
+          step(l10n.stripeWebhookStep8),
+
+          SizedBox(height: s.sm),
+
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(s.sm),
+            decoration: BoxDecoration(
+              color: c.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(theme.card.radius),
+              border: Border.all(color: c.primary.withOpacity(0.20)),
+            ),
+            child: Text(
+              l10n.stripeWebhookImportant,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: c.label,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                  ),
+            ),
+          ),
+
+          SizedBox(height: s.md),
+
+          Text(
+            l10n.stripeWebhookUrlLabel,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: c.label,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+
+          SizedBox(height: s.xs),
+
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(s.md),
@@ -376,7 +492,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                   ),
             ),
           ),
+
           SizedBox(height: s.sm),
+
           Wrap(
             spacing: s.sm,
             runSpacing: s.sm,
@@ -384,17 +502,19 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
               OutlinedButton.icon(
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: webhookUrl));
+
                   if (mounted) {
-                    AppToast.success(context, 'Webhook URL copied');
+                    AppToast.success(context, l10n.stripeWebhookCopied);
                   }
                 },
                 icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Copy'),
+                label: Text(l10n.stripeWebhookCopyButton),
               ),
               OutlinedButton.icon(
-                onPressed: () => _openUrl('https://dashboard.stripe.com/webhooks'),
+                onPressed: () =>
+                    _openUrl('https://dashboard.stripe.com/webhooks'),
                 icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('Open Stripe'),
+                label: Text(l10n.stripeWebhookOpenStripe),
               ),
             ],
           ),
@@ -417,7 +537,9 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         out[key] = _toggles[key] ?? false;
       } else {
         final raw = (_controllers[key]?.text ?? '').trim();
+
         if (raw.isEmpty) continue;
+
         if (type == 'number') {
           final parsed = num.tryParse(raw);
           if (parsed != null) out[key] = parsed;
@@ -426,11 +548,15 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         }
       }
     }
+
     return out;
   }
 
   void _onTest(BuildContext ctx) {
+    setState(() => _connectionTestPassed = false);
+
     final values = _collectValuesForTest();
+
     ctx.read<OwnerPaymentConfigBloc>().add(
           OwnerPaymentConfigTest(
             methodName: widget.methodName,
@@ -474,7 +600,12 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         items: options
             .map((o) => DropdownMenuItem(value: o, child: Text(o)))
             .toList(),
-        onChanged: (nv) => setState(() => _selected[key] = nv ?? ''),
+        onChanged: (nv) {
+          setState(() {
+            _selected[key] = nv ?? '';
+            _connectionTestPassed = false;
+          });
+        },
         decoration: InputDecoration(
           border: border,
           enabledBorder: border,
@@ -485,12 +616,18 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
       );
     } else if (type == 'boolean') {
       final v = _toggles[key] ?? false;
+
       input = SwitchListTile.adaptive(
         value: v,
-        onChanged: (nv) => setState(() => _toggles[key] = nv),
+        onChanged: (nv) {
+          setState(() {
+            _toggles[key] = nv;
+            _connectionTestPassed = false;
+          });
+        },
         contentPadding: EdgeInsets.zero,
         title: Text(
-          v ? 'On' : 'Off',
+          v ? l10n.paymentOn : l10n.paymentOff,
           style: Theme.of(context)
               .textTheme
               .bodyMedium
@@ -514,6 +651,11 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         obscureText: isPassword,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         maxLines: isTextArea ? 4 : 1,
+        onChanged: (_) {
+          if (_connectionTestPassed) {
+            setState(() => _connectionTestPassed = false);
+          }
+        },
         style: Theme.of(context)
             .textTheme
             .bodyMedium
@@ -549,6 +691,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           ),
           SizedBox(height: s.xs),
           input,
+
           if (hint != null && hint.isNotEmpty) ...[
             SizedBox(height: s.xs),
             Row(
@@ -569,7 +712,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
                     child: Padding(
                       padding: EdgeInsets.only(left: s.sm),
                       child: Text(
-                        'Learn more',
+                        l10n.paymentLearnMore,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: c.primary,
                               decoration: TextDecoration.underline,
@@ -584,7 +727,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
             GestureDetector(
               onTap: () => _openUrl(helpUrl),
               child: Text(
-                'Learn more',
+                l10n.paymentLearnMore,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: c.primary,
                       decoration: TextDecoration.underline,
@@ -600,14 +743,25 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
   Future<void> _openUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
+
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      if (mounted) AppToast.error(context, 'Could not open $url');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        AppToast.error(context, l10n.paymentCouldNotOpenUrl);
+      }
     }
   }
 
   void _onSave() {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_isStripe && !_connectionTestPassed) {
+      AppToast.error(context, l10n.stripeWebhookMustTestFirst);
+      return;
+    }
+
     final out = <String, Object?>{};
 
     for (final f in _fields) {
@@ -619,6 +773,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
 
       if (type == 'select') {
         finalValue = (_selected[key] ?? '').trim();
+
         if ((finalValue as String).isEmpty) {
           finalValue = widget.existingValues[key]?.toString() ?? '';
         }
@@ -633,10 +788,12 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
         } else {
           if (type == 'number') {
             final parsed = num.tryParse(raw);
+
             if (parsed == null) {
-              AppToast.error(context, 'Invalid number: $key');
+              AppToast.error(context, l10n.paymentInvalidNumber(key));
               return;
             }
+
             finalValue = parsed;
           } else {
             finalValue = raw;
@@ -648,7 +805,7 @@ class _PaymentMethodConfigSheetState extends State<PaymentMethodConfigSheet> {
           finalValue == null || finalValue.toString().trim().isEmpty;
 
       if (requiredField && missing) {
-        AppToast.error(context, 'Missing required field: $key');
+        AppToast.error(context, l10n.paymentMissingRequiredField(key));
         return;
       }
 

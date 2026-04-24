@@ -640,7 +640,7 @@
   "paymentIncomplete": "Incomplete",
   "adminPaymentConfigTitle": "Checkout Gateways",
   "checkoutConfirmDialogTitle": "Confirm checkout",
-  "checkoutConfirmCartCleared": "{itemCount, plural, =0{After checkout, your cart will become empty.} =1{After checkout, your cart will become empty (1 item).} other{After checkout, your cart will become empty ({itemCount} items).}} Do you want to continue?",
+  "checkoutConfirmCartCleared": "Do you want to continue with checkout?",
   "commonYes": "Yes",
   "commonNo": "No",
   "@checkoutConfirmCartCleared": {
@@ -1437,5 +1437,42 @@
 "adminOrderRestoreTitle": "Restore to Pending",
 "adminOrderRestoreBody": "This will restore the order back to Pending.",
 "commonSomethingWentWrongTryAgain": "Something went wrong. Please try again.",
-"orderDetailsInvoiceDownloadFailed": "Invoice download failed"
+"orderDetailsInvoiceDownloadFailed": "Invoice download failed",
+"stripeWebhookSetupTitle": "Stripe webhook setup",
+"stripeWebhookSetupDescription": "To make payment status update correctly inside the app, create a Stripe webhook and select the required events below.",
+"stripeWebhookStep1": "1. Open your Stripe Dashboard.",
+"stripeWebhookStep2": "2. Go to Developers > Webhooks.",
+"stripeWebhookStep3": "3. Click “Add endpoint”.",
+"stripeWebhookStep4": "4. Paste the webhook URL shown below.",
+"stripeWebhookStep5": "5. Select these events:",
+"stripeWebhookStep6": "6. Click “Add endpoint”.",
+"stripeWebhookStep7": "7. Copy the Signing Secret from Stripe.",
+"stripeWebhookStep8": "8. Paste the Signing Secret in this payment configuration and save.",
+"stripeWebhookImportant": "Important: Without this webhook, Stripe may receive the payment, but the app may still show the order as unpaid.",
+"stripeWebhookUrlLabel": "Webhook URL",
+"stripeWebhookCopyButton": "Copy webhook URL",
+"stripeWebhookCopied": "Webhook URL copied",
+"stripeWebhookOpenStripe": "Open Stripe",
+"stripeWebhookMustTestFirst": "Please test Stripe connection and webhook before saving.",
+"connectionSucceeded": "Connection succeeded",
+"connectionFailed": "Connection failed",
+"paymentTestingConnection": "Testing…",
+"paymentTestConnection": "Test connection",
+"paymentOpenProviderDocs": "Open provider docs",
+"paymentOn": "On",
+"paymentOff": "Off",
+"paymentLearnMore": "Learn more",
+"paymentCouldNotOpenUrl": "Could not open the link.",
+"paymentInvalidNumber": "Invalid number: {field}",
+"@paymentInvalidNumber": {
+  "placeholders": {
+    "field": {}
+  }
+},
+"paymentMissingRequiredField": "Missing required field: {field}",
+"@paymentMissingRequiredField": {
+  "placeholders": {
+    "field": {}
+  }
+}
 }

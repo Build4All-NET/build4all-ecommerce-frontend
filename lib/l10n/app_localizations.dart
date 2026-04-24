@@ -3526,7 +3526,7 @@ abstract class AppLocalizations {
   /// Warning shown before placing order: cart will be cleared after checkout.
   ///
   /// In en, this message translates to:
-  /// **'{itemCount, plural, =0{After checkout, your cart will become empty.} =1{After checkout, your cart will become empty (1 item).} other{After checkout, your cart will become empty ({itemCount} items).}} Do you want to continue?'**
+  /// **'Do you want to continue with checkout?'**
   String checkoutConfirmCartCleared(int itemCount);
 
   /// No description provided for @commonYes.
@@ -6402,6 +6402,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invoice download failed'**
   String orderDetailsInvoiceDownloadFailed(Object error);
+
+  /// No description provided for @stripeWebhookSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe webhook setup'**
+  String get stripeWebhookSetupTitle;
+
+  /// No description provided for @stripeWebhookSetupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'To make payment status update correctly inside the app, create a Stripe webhook and select the required events below.'**
+  String get stripeWebhookSetupDescription;
+
+  /// No description provided for @stripeWebhookStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Open your Stripe Dashboard.'**
+  String get stripeWebhookStep1;
+
+  /// No description provided for @stripeWebhookStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Go to Developers > Webhooks.'**
+  String get stripeWebhookStep2;
+
+  /// No description provided for @stripeWebhookStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Click “Add endpoint”.'**
+  String get stripeWebhookStep3;
+
+  /// No description provided for @stripeWebhookStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Paste the webhook URL shown below.'**
+  String get stripeWebhookStep4;
+
+  /// No description provided for @stripeWebhookStep5.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Select these events:'**
+  String get stripeWebhookStep5;
+
+  /// No description provided for @stripeWebhookStep6.
+  ///
+  /// In en, this message translates to:
+  /// **'6. Click “Add endpoint”.'**
+  String get stripeWebhookStep6;
+
+  /// No description provided for @stripeWebhookStep7.
+  ///
+  /// In en, this message translates to:
+  /// **'7. Copy the Signing Secret from Stripe.'**
+  String get stripeWebhookStep7;
+
+  /// No description provided for @stripeWebhookStep8.
+  ///
+  /// In en, this message translates to:
+  /// **'8. Paste the Signing Secret in this payment configuration and save.'**
+  String get stripeWebhookStep8;
+
+  /// No description provided for @stripeWebhookImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Important: Without this webhook, Stripe may receive the payment, but the app may still show the order as unpaid.'**
+  String get stripeWebhookImportant;
+
+  /// No description provided for @stripeWebhookUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook URL'**
+  String get stripeWebhookUrlLabel;
+
+  /// No description provided for @stripeWebhookCopyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy webhook URL'**
+  String get stripeWebhookCopyButton;
+
+  /// No description provided for @stripeWebhookCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook URL copied'**
+  String get stripeWebhookCopied;
+
+  /// No description provided for @stripeWebhookOpenStripe.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Stripe'**
+  String get stripeWebhookOpenStripe;
+
+  /// No description provided for @stripeWebhookMustTestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please test Stripe connection and webhook before saving.'**
+  String get stripeWebhookMustTestFirst;
+
+  /// No description provided for @connectionSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection succeeded'**
+  String get connectionSucceeded;
+
+  /// No description provided for @connectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get connectionFailed;
+
+  /// No description provided for @paymentTestingConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing…'**
+  String get paymentTestingConnection;
+
+  /// No description provided for @paymentTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get paymentTestConnection;
+
+  /// No description provided for @paymentOpenProviderDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Open provider docs'**
+  String get paymentOpenProviderDocs;
+
+  /// No description provided for @paymentOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get paymentOn;
+
+  /// No description provided for @paymentOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get paymentOff;
+
+  /// No description provided for @paymentLearnMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get paymentLearnMore;
+
+  /// No description provided for @paymentCouldNotOpenUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link.'**
+  String get paymentCouldNotOpenUrl;
+
+  /// No description provided for @paymentInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid number: {field}'**
+  String paymentInvalidNumber(Object field);
+
+  /// No description provided for @paymentMissingRequiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing required field: {field}'**
+  String paymentMissingRequiredField(Object field);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

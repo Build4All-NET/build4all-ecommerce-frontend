@@ -1766,14 +1766,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String checkoutConfirmCartCleared(int itemCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      itemCount,
-      locale: localeName,
-      other: 'بعد الدفع ستصبح سلتك فارغة ($itemCount عناصر).',
-      one: 'بعد الدفع ستصبح سلتك فارغة (عنصر واحد).',
-      zero: 'بعد الدفع ستصبح سلتك فارغة.',
-    );
-    return '$_temp0 هل تريد المتابعة؟';
+    return 'هل تريد المتابعة إلى الدفع؟';
   }
 
   @override
@@ -3267,5 +3260,90 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String orderDetailsInvoiceDownloadFailed(Object error) {
     return 'فشل تنزيل الفاتورة: $error';
+  }
+
+  @override
+  String get stripeWebhookSetupTitle => 'إعداد Webhook الخاص بـ Stripe';
+
+  @override
+  String get stripeWebhookSetupDescription => 'لكي يتم تحديث حالة الدفع بشكل صحيح داخل التطبيق، أنشئ Webhook في Stripe واختر الأحداث المطلوبة أدناه.';
+
+  @override
+  String get stripeWebhookStep1 => '1. افتح لوحة تحكم Stripe.';
+
+  @override
+  String get stripeWebhookStep2 => '2. انتقل إلى Developers > Webhooks.';
+
+  @override
+  String get stripeWebhookStep3 => '3. اضغط على “Add endpoint”.';
+
+  @override
+  String get stripeWebhookStep4 => '4. الصق رابط الـ Webhook الظاهر أدناه.';
+
+  @override
+  String get stripeWebhookStep5 => '5. اختر هذه الأحداث:';
+
+  @override
+  String get stripeWebhookStep6 => '6. اضغط على “Add endpoint”.';
+
+  @override
+  String get stripeWebhookStep7 => '7. انسخ Signing Secret من Stripe.';
+
+  @override
+  String get stripeWebhookStep8 => '8. الصق Signing Secret داخل إعدادات الدفع هذه ثم احفظ.';
+
+  @override
+  String get stripeWebhookImportant => 'مهم: بدون هذا الـ Webhook، قد يستلم Stripe الدفع، لكن قد يبقى الطلب داخل التطبيق ظاهرًا كغير مدفوع.';
+
+  @override
+  String get stripeWebhookUrlLabel => 'رابط الـ Webhook';
+
+  @override
+  String get stripeWebhookCopyButton => 'نسخ رابط الـ Webhook';
+
+  @override
+  String get stripeWebhookCopied => 'تم نسخ رابط الـ Webhook';
+
+  @override
+  String get stripeWebhookOpenStripe => 'فتح Stripe';
+
+  @override
+  String get stripeWebhookMustTestFirst => 'يرجى اختبار اتصال Stripe والـ Webhook قبل الحفظ.';
+
+  @override
+  String get connectionSucceeded => 'تم الاتصال بنجاح';
+
+  @override
+  String get connectionFailed => 'فشل الاتصال';
+
+  @override
+  String get paymentTestingConnection => 'جارٍ الاختبار…';
+
+  @override
+  String get paymentTestConnection => 'اختبار الاتصال';
+
+  @override
+  String get paymentOpenProviderDocs => 'فتح توثيق المزود';
+
+  @override
+  String get paymentOn => 'مفعل';
+
+  @override
+  String get paymentOff => 'غير مفعل';
+
+  @override
+  String get paymentLearnMore => 'معرفة المزيد';
+
+  @override
+  String get paymentCouldNotOpenUrl => 'تعذر فتح الرابط.';
+
+  @override
+  String paymentInvalidNumber(Object field) {
+    return 'رقم غير صالح: $field';
+  }
+
+  @override
+  String paymentMissingRequiredField(Object field) {
+    return 'حقل مطلوب مفقود: $field';
   }
 }

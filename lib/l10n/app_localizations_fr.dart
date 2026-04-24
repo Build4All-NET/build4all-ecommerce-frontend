@@ -1766,14 +1766,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String checkoutConfirmCartCleared(int itemCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      itemCount,
-      locale: localeName,
-      other: 'Après le paiement, votre panier sera vide ($itemCount articles).',
-      one: 'Après le paiement, votre panier sera vide (1 article).',
-      zero: 'Après le paiement, votre panier sera vide.',
-    );
-    return '$_temp0 Voulez-vous continuer ?';
+    return 'Voulez-vous continuer le paiement ?';
   }
 
   @override
@@ -2753,7 +2746,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get upgradePaymentMethodLabel => 'MODE DE PAIEMENT';
 
   @override
-  String get upgradeNoPaymentMethods => "Aucun mode de paiement n'est disponible actuellement. Veuillez contacter le support.";
+  String get upgradeNoPaymentMethods => 'Aucun mode de paiement n\'est disponible actuellement. Veuillez contacter le support.';
 
   @override
   String get upgradePriceLabel => 'PRIX';
@@ -3267,5 +3260,90 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String orderDetailsInvoiceDownloadFailed(Object error) {
     return 'Échec du téléchargement de la facture : $error';
+  }
+
+  @override
+  String get stripeWebhookSetupTitle => 'Configuration du webhook Stripe';
+
+  @override
+  String get stripeWebhookSetupDescription => 'Pour que le statut du paiement soit mis à jour correctement dans l’application, créez un webhook Stripe et sélectionnez les événements requis ci-dessous.';
+
+  @override
+  String get stripeWebhookStep1 => '1. Ouvrez votre tableau de bord Stripe.';
+
+  @override
+  String get stripeWebhookStep2 => '2. Allez dans Developers > Webhooks.';
+
+  @override
+  String get stripeWebhookStep3 => '3. Cliquez sur « Add endpoint ».';
+
+  @override
+  String get stripeWebhookStep4 => '4. Collez l’URL du webhook affichée ci-dessous.';
+
+  @override
+  String get stripeWebhookStep5 => '5. Sélectionnez ces événements :';
+
+  @override
+  String get stripeWebhookStep6 => '6. Cliquez sur « Add endpoint ».';
+
+  @override
+  String get stripeWebhookStep7 => '7. Copiez le Signing Secret depuis Stripe.';
+
+  @override
+  String get stripeWebhookStep8 => '8. Collez le Signing Secret dans cette configuration de paiement puis enregistrez.';
+
+  @override
+  String get stripeWebhookImportant => 'Important : sans ce webhook, Stripe peut recevoir le paiement, mais l’application peut encore afficher la commande comme non payée.';
+
+  @override
+  String get stripeWebhookUrlLabel => 'URL du webhook';
+
+  @override
+  String get stripeWebhookCopyButton => 'Copier l’URL du webhook';
+
+  @override
+  String get stripeWebhookCopied => 'URL du webhook copiée';
+
+  @override
+  String get stripeWebhookOpenStripe => 'Ouvrir Stripe';
+
+  @override
+  String get stripeWebhookMustTestFirst => 'Veuillez tester la connexion Stripe et le webhook avant d’enregistrer.';
+
+  @override
+  String get connectionSucceeded => 'Connexion réussie';
+
+  @override
+  String get connectionFailed => 'Échec de la connexion';
+
+  @override
+  String get paymentTestingConnection => 'Test en cours…';
+
+  @override
+  String get paymentTestConnection => 'Tester la connexion';
+
+  @override
+  String get paymentOpenProviderDocs => 'Ouvrir la documentation du fournisseur';
+
+  @override
+  String get paymentOn => 'Activé';
+
+  @override
+  String get paymentOff => 'Désactivé';
+
+  @override
+  String get paymentLearnMore => 'En savoir plus';
+
+  @override
+  String get paymentCouldNotOpenUrl => 'Impossible d’ouvrir le lien.';
+
+  @override
+  String paymentInvalidNumber(Object field) {
+    return 'Nombre invalide : $field';
+  }
+
+  @override
+  String paymentMissingRequiredField(Object field) {
+    return 'Champ requis manquant : $field';
   }
 }
