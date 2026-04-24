@@ -23,6 +23,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:build4front/core/config/app_config.dart';
 import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/payments/paypal_approval_flow.dart';
 
 import 'package:build4front/features/auth/presentation/gate/auth_gate.dart';
 import 'package:build4front/features/auth/presentation/login/screens/user_login_screen.dart';
@@ -211,7 +212,7 @@ class AppRouter {
               final repo = context.read<CheckoutRepository>();
 
               return BlocProvider(
-                create: (_) => CheckoutBloc(
+                create: (ctx) => CheckoutBloc(
                   getCart: GetCheckoutCart(repo),
                   getPaymentMethods: GetPaymentMethods(repo),
                   getShippingQuotes: GetShippingQuotes(repo),
@@ -225,6 +226,10 @@ class AppRouter {
                   currencyId: currencyId,
                   getLastShippingAddress: GetLastShippingAddress(repo),
                   quoteFromCart: QuoteFromCart(repo),
+                  paypalApprovalRunner: (approvalUrl) => PaypalApprovalFlow.run(
+                    context: ctx,
+                    approvalUrl: approvalUrl,
+                  ),
                 ),
                 child: CheckoutScreen(
                   appConfig: appConfig,

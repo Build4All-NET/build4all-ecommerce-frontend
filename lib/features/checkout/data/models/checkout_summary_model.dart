@@ -107,7 +107,7 @@ message: json['message']?.toString(),
       providerPaymentId: (json['providerPaymentId'] ?? json['paymentIntentId'])?.toString(),
       clientSecret: (json['clientSecret'] ?? json['paymentIntentClientSecret'])?.toString(),
       publishableKey: (json['publishableKey'] ?? json['stripePublishableKey'])?.toString(),
-      redirectUrl: (json['redirectUrl'] ?? json['approvalUrl'])?.toString(),
+      redirectUrl: (json['redirectUrl'] ?? json['approvalUrl'] ?? json['checkoutUrl'])?.toString(),
       paymentStatus: (json['paymentStatus'] ?? json['status'])?.toString(),
     );
   }

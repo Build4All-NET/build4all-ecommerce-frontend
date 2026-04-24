@@ -26,6 +26,14 @@ import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.da
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
+/// Signature for the PayPal approval UX runner the page injects.
+///
+/// The bloc cannot show a dialog itself (no [BuildContext]). The page
+/// supplies a runner that opens the approval URL externally and waits
+/// for the user to come back and tap "I've paid" or "Cancel". Returns
+/// `true` when the user confirmed payment, `false` otherwise.
+typedef PaypalApprovalRunner = Future<bool> Function(String approvalUrl);
+
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final GetCheckoutCart getCart;
   final GetPaymentMethods getPaymentMethods;
@@ -38,6 +46,11 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final FinalizeStripeCheckout finalizeStripeCheckout;
   final AbandonStripeCheckout abandonStripeCheckout;
   final QuoteFromCart quoteFromCart;
+
+  /// Called for PAYPAL place-order: launches the approval URL and waits
+  /// for the user to confirm. May be null on hosts that don't render any
+  /// PayPal payment method (it's only used when the buyer picks PayPal).
+  final PaypalApprovalRunner? paypalApprovalRunner;
 
   final int ownerProjectId;
   final int? currencyId;
@@ -60,6 +73,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.currencyId,
     required this.getLastShippingAddress,
     required this.quoteFromCart,
+    this.paypalApprovalRunner,
   }) : super(CheckoutState.initial()) {
     on<CheckoutStarted>(_onStarted);
     on<CheckoutAddressChanged>(_onAddressChanged);
@@ -656,8 +670,94 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           shippingAddress: addr,
           lines: lines,
         );
+      } else if (pmCode == 'PAYPAL') {
+        // ---------- PAYPAL prepare-then-finalize ----------
+        // Mirrors the Stripe flow: nothing hits the DB until the buyer
+        // returns from PayPal and we successfully capture. If they
+        // close the browser the cart is exactly where they left it.
+        if (paypalApprovalRunner == null) {
+          throw AppException(
+            'PayPal is not available in this app build.',
+          );
+        }
+
+        final prepared = await prepareStripeCheckout(
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
+
+        final approvalUrl = (prepared.redirectUrl ?? '').toString().trim();
+        final paypalOrderId =
+            (prepared.providerPaymentId ?? '').toString().trim();
+
+        if (approvalUrl.isEmpty || paypalOrderId.isEmpty) {
+          throw AppException(
+            'Checkout could not prepare a PayPal payment. Please try again.',
+          );
+        }
+
+        bool approved;
+        try {
+          approved = await paypalApprovalRunner!(approvalUrl);
+        } catch (e) {
+          // Treat any error from the approval UX as a cancel: best-effort
+          // abandon (PayPal orders auto-expire anyway) and leave the cart
+          // intact.
+          await abandonStripeCheckout(
+            paymentIntentId: paypalOrderId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
+          rethrow;
+        }
+
+        if (!approved) {
+          await abandonStripeCheckout(
+            paymentIntentId: paypalOrderId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
+          // Cart is still intact — leave the user on the checkout screen.
+          emit(state.copyWith(placing: false, clearError: true));
+          return;
+        }
+
+        // Buyer approved on PayPal. Capture + create the order.
+        summary = await finalizeStripeCheckout(
+          paymentIntentId: paypalOrderId,
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
       } else {
-        // ---------- Legacy path (Cash / PayPal / offline) ----------
+        // ---------- Legacy path (Cash / offline) ----------
         summary = await placeOrder(
           ownerProjectId: ownerProjectId,
           currencyId: _resolvedCurrencyId(),
@@ -670,21 +770,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           shippingAddress: addr,
           lines: lines,
         );
-
-        final provider = (summary.paymentProviderCode ?? pmCode)
-            .toString()
-            .trim()
-            .toUpperCase();
-        if (provider == 'PAYPAL' && summary.orderId > 0) {
-          // PayPal customer-checkout approval UI is not wired yet; if a
-          // future step opens the approval URL and returns success, the
-          // existing /confirm-payment endpoint will capture via PayPal.
-          try {
-            await confirmPayment(orderId: summary.orderId);
-          } catch (_) {
-            // Swallow until PayPal approval UI is wired.
-          }
-        }
       }
 
       final rejectedCoupon = _summaryRejectedCoupon(summary);
