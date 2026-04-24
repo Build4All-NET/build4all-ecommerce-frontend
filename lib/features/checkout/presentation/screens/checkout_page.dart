@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:build4front/core/config/app_config.dart';
 import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/payments/paypal_approval_flow.dart';
 
 import 'package:build4front/features/checkout/domain/repositories/checkout_repository.dart';
 
@@ -60,7 +61,7 @@ class CheckoutPage extends StatelessWidget {
     final quote = QuoteFromCart(repo);
 
     return BlocProvider(
-      create: (_) => CheckoutBloc(
+      create: (ctx) => CheckoutBloc(
         getCart: getCart,
         getPaymentMethods: getPms,
         getShippingQuotes: getQuotes,
@@ -74,6 +75,10 @@ class CheckoutPage extends StatelessWidget {
         currencyId: currencyId,
         getLastShippingAddress: lastAddr,
         quoteFromCart: quote,
+        paypalApprovalRunner: (approvalUrl) => PaypalApprovalFlow.run(
+          context: ctx,
+          approvalUrl: approvalUrl,
+        ),
       ),
       child: CheckoutScreen(appConfig: appConfig, ownerProjectId: ownerId),
     );
