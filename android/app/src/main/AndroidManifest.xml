@@ -21,6 +21,21 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!--
+              Stripe redirect-back deep link for redirect-style payment
+              methods (Link OTP, Cash App Pay, bank redirect, Klarna, ...).
+              The Stripe SDK opens these in a Custom Tab on Android, then
+              redirects to <applicationId>://stripe-redirect. ${applicationId}
+              is substituted per tenant build, so two B4A apps installed
+              side-by-side don't collide on the same scheme.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="${applicationId}" android:host="stripe-redirect"/>
+            </intent-filter>
         </activity>
 
         <meta-data
