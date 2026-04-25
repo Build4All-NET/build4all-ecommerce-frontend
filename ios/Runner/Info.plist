@@ -47,5 +47,26 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!--
+		  Stripe redirect-back deep link for redirect-style payment
+		  methods (Link OTP, Cash App Pay, bank redirect, Klarna, ...).
+		  iOS works without this on flutter_stripe today (it falls back
+		  to ASWebAuthenticationSession which auto-returns), but having
+		  the scheme registered keeps both platforms symmetric and is
+		  required by the Stripe SDK if it ever uses native URL dispatch
+		  for app-to-app jumps. $(PRODUCT_BUNDLE_IDENTIFIER) is
+		  substituted at build time so each tenant gets its own scheme.
+		-->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>stripe-redirect</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>
