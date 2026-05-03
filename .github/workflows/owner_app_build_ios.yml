@@ -814,81 +814,121 @@ jobs:
           app_id = apps[0]["id"]
           print(f"Resolved app_id={app_id} for bundle {bundle_id}")
 
-          # 2) Try inviting the user with allAppsVisible=False + visibleApps scoped to this app.
-          invite_payload = {
-              "data": {
-                  "type": "userInvitations",
-                  "attributes": {
-                      "email": email,
-                      "firstName": first_name,
-                      "lastName": last_name,
-                      "roles": [role],
-                      "allAppsVisible": False,
-                      "provisioningAllowed": False
-                  },
-                  "relationships": {
-                      "visibleApps": {
-                          "data": [{"type": "apps", "id": app_id}]
+          def build_invite_payload():
+              return {
+                  "data": {
+                      "type": "userInvitations",
+                      "attributes": {
+                          "email": email,
+                          "firstName": first_name,
+                          "lastName": last_name,
+                          "roles": [role],
+                          "allAppsVisible": False,
+                          "provisioningAllowed": False
+                      },
+                      "relationships": {
+                          "visibleApps": {
+                              "data": [{"type": "apps", "id": app_id}]
+                          }
                       }
                   }
               }
-          }
+
+          # 2) Try inviting.
           r = requests.post(
               "https://api.appstoreconnect.apple.com/v1/userInvitations",
-              headers=h(), json=invite_payload, timeout=30
+              headers=h(), json=build_invite_payload(), timeout=30
           )
 
           if r.status_code in (200, 201):
               print(f"Invited {email} scoped to {bundle_id}")
               raise SystemExit(0)
 
-          # 3) 409 = user already exists. Force-correct their visibility.
-          if r.status_code == 409:
-              print(f"User {email} already exists, correcting visibility...")
-              user_id = None
-              next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
-              while next_url:
-                  ur = requests.get(next_url, headers=h(), timeout=30)
-                  ur.raise_for_status()
-                  body = ur.json()
-                  for user in body.get("data", []):
-                      attrs = user.get("attributes", {})
-                      if (attrs.get("email") or "").strip().lower() == email.lower():
-                          user_id = user["id"]
-                          break
-                  if user_id:
+          if r.status_code != 409:
+              raise SystemExit(f"Invitation failed: {r.status_code} {r.text}")
+
+          # 3) 409 — either a pending invitation exists, or the user has already accepted.
+
+          # 3a) Check for a PENDING invitation first (most common case for old leaky invites).
+          pending_id = None
+          inv = requests.get(
+              f"https://api.appstoreconnect.apple.com/v1/userInvitations?filter[email]={email}&limit=200",
+              headers=h(), timeout=30
+          )
+          if inv.status_code == 200:
+              for item in inv.json().get("data", []):
+                  attrs = item.get("attributes", {})
+                  if (attrs.get("email") or "").strip().lower() == email.lower():
+                      pending_id = item["id"]
                       break
-                  next_url = body.get("links", {}).get("next")
 
-              if not user_id:
-                  raise SystemExit(f"409 from invitation but user {email} not found in /v1/users")
-
-              # 3a) Force allAppsVisible=False on the existing user.
-              pr = requests.patch(
-                  f"https://api.appstoreconnect.apple.com/v1/users/{user_id}",
-                  headers=h(),
-                  json={"data": {"type": "users", "id": user_id,
-                                 "attributes": {"allAppsVisible": False}}},
-                  timeout=30
+          if pending_id:
+              print(f"Pending invitation found ({pending_id}) — deleting and re-issuing with correct visibility...")
+              dr = requests.delete(
+                  f"https://api.appstoreconnect.apple.com/v1/userInvitations/{pending_id}",
+                  headers=h(), timeout=30
               )
-              if pr.status_code not in (200, 204):
-                  print(f"WARN: failed to set allAppsVisible=false on {user_id}: {pr.status_code} {pr.text}")
+              if dr.status_code not in (200, 204):
+                  raise SystemExit(f"Failed to delete stale invitation {pending_id}: {dr.status_code} {dr.text}")
 
-              # 3b) APPEND this app to visibleApps. POST = append (preserves access to other apps the user owns).
-              ar = requests.post(
-                  f"https://api.appstoreconnect.apple.com/v1/users/{user_id}/relationships/visibleApps",
-                  headers=h(),
-                  json={"data": [{"type": "apps", "id": app_id}]},
-                  timeout=30
+              # Re-create with the correct payload.
+              r2 = requests.post(
+                  "https://api.appstoreconnect.apple.com/v1/userInvitations",
+                  headers=h(), json=build_invite_payload(), timeout=30
               )
-              if ar.status_code not in (200, 201, 204, 409):
-                  raise SystemExit(f"Failed to add app to visibleApps: {ar.status_code} {ar.text}")
+              if r2.status_code in (200, 201):
+                  print(f"Re-issued invitation for {email} scoped to {bundle_id}")
+                  raise SystemExit(0)
+              raise SystemExit(f"Re-invite failed: {r2.status_code} {r2.text}")
 
-              print(f"Existing user {email} corrected: allAppsVisible=false, +visibleApps[{bundle_id}]")
-              raise SystemExit(0)
+          # 3b) No pending invitation — the user must already exist in /v1/users (accepted previously).
+          user_id = None
+          next_url = "https://api.appstoreconnect.apple.com/v1/users?limit=200"
+          while next_url:
+              ur = requests.get(next_url, headers=h(), timeout=30)
+              ur.raise_for_status()
+              body = ur.json()
+              for user in body.get("data", []):
+                  attrs = user.get("attributes", {})
+                  candidates = [
+                      (attrs.get("email") or "").strip().lower(),
+                      (attrs.get("username") or "").strip().lower(),
+                  ]
+                  if email.lower() in candidates:
+                      user_id = user["id"]
+                      break
+              if user_id:
+                  break
+              next_url = body.get("links", {}).get("next")
 
-          # 4) Anything else is a real failure.
-          raise SystemExit(f"Invitation failed: {r.status_code} {r.text}")
+          if not user_id:
+              raise SystemExit(
+                  f"409 from invitation but {email} not found in /v1/userInvitations or /v1/users. "
+                  "Manual cleanup needed in App Store Connect."
+              )
+
+          # 3c) Force allAppsVisible=False on the existing accepted user.
+          pr = requests.patch(
+              f"https://api.appstoreconnect.apple.com/v1/users/{user_id}",
+              headers=h(),
+              json={"data": {"type": "users", "id": user_id,
+                             "attributes": {"allAppsVisible": False}}},
+              timeout=30
+          )
+          if pr.status_code not in (200, 204):
+              print(f"WARN: failed to set allAppsVisible=false on {user_id}: {pr.status_code} {pr.text}")
+
+          # 3d) Append this app to visibleApps (POST = append, preserves their other apps).
+          ar = requests.post(
+              f"https://api.appstoreconnect.apple.com/v1/users/{user_id}/relationships/visibleApps",
+              headers=h(),
+              json={"data": [{"type": "apps", "id": app_id}]},
+              timeout=30
+          )
+          if ar.status_code not in (200, 201, 204, 409):
+              raise SystemExit(f"Failed to add app to visibleApps: {ar.status_code} {ar.text}")
+
+          print(f"Existing user {email} corrected: allAppsVisible=false, +visibleApps[{bundle_id}]")
           PY
 
       - name: Ensure App ID exists
