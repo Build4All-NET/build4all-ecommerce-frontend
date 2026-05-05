@@ -43,6 +43,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   bool _manualRequestHandled = false;
   bool _stripeHandled = false;
   bool _paypalHandled = false;
+  bool _mpgsHandled = false;
   bool _pendingHandled = false;
   bool _successHandled = false;
 
@@ -183,6 +184,69 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     }
   }
 
+  Future<void> _handleMpgsPayment(UpgradeFlowState state) async {
+    if (_mpgsHandled) return;
+    _mpgsHandled = true;
+
+    final l10n = AppLocalizations.of(context)!;
+    final bloc = context.read<UpgradeFlowBloc>();
+    final intent = state.paymentIntent;
+
+    if (intent == null) return;
+
+    // Backend returns the absolute URL of our /api/licensing/mpgs/checkout
+    // page, which loads MPGS's checkout.min.js for the configured session.
+    final checkoutUrl = (intent.checkoutUrl ?? '').trim();
+    if (checkoutUrl.isEmpty) {
+      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
+      return;
+    }
+
+    final uri = Uri.tryParse(checkoutUrl);
+    if (uri != null) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        // Fall through to the dialog — owner may still have a way to
+        // open it, and they can dismiss with "Cancel" if not.
+      }
+    }
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Complete card payment'),
+          content: const Text(
+              "We've opened the secure card payment page in your browser. "
+              'After you finish paying, come back here and tap '
+              '"I\'ve paid" so we can activate your plan.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text("I've paid"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    if (confirmed == true) {
+      bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
+    } else {
+      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
+    }
+  }
+
   Future<void> _handleManualSuccess() async {
     if (_manualRequestHandled) return;
     _manualRequestHandled = true;
@@ -233,12 +297,21 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           return;
         }
 
+        // 2.b) MPGS hosted-checkout URL → external browser → "I've paid"
+        if (state.status == UpgradeFlowStatus.awaitingPayment &&
+            state.paymentIntent != null &&
+            provider == 'mpgs') {
+          await _handleMpgsPayment(state);
+          return;
+        }
+
         // 3) Manual provider reached awaitingPayment
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
             state.paymentIntent != null &&
             provider != null &&
             provider != 'stripe' &&
-            provider != 'paypal') {
+            provider != 'paypal' &&
+            provider != 'mpgs') {
           await _handleManualSuccess();
           return;
         }
@@ -248,12 +321,13 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             provider != null &&
             provider != 'stripe' &&
             provider != 'paypal' &&
+            provider != 'mpgs' &&
             state.confirmedAccess == null) {
           await _handleManualSuccess();
           return;
         }
 
-        // 5) Paid-provider success after confirm (Stripe or PayPal)
+        // 5) Paid-provider success after confirm (Stripe / PayPal / MPGS)
         if (state.status == UpgradeFlowStatus.success &&
             state.confirmedAccess != null) {
           if (_successHandled) return;
