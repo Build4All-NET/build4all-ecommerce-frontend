@@ -226,9 +226,12 @@ class AppRouter {
                   currencyId: currencyId,
                   getLastShippingAddress: GetLastShippingAddress(repo),
                   quoteFromCart: QuoteFromCart(repo),
-                  paypalApprovalRunner: (approvalUrl) => PaypalApprovalFlow.run(
+                  paypalApprovalRunner: (approvalUrl,
+                          {String providerLabel = 'PayPal'}) =>
+                      PaypalApprovalFlow.run(
                     context: ctx,
                     approvalUrl: approvalUrl,
+                    providerLabel: providerLabel,
                   ),
                 ),
                 child: CheckoutScreen(

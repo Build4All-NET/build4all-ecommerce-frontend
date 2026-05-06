@@ -26,13 +26,19 @@ import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.da
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
-/// Signature for the PayPal approval UX runner the page injects.
+/// Signature for the external-payment UX runner the page injects.
 ///
-/// The bloc cannot show a dialog itself (no [BuildContext]). The page
-/// supplies a runner that opens the approval URL externally and waits
-/// for the user to come back and tap "I've paid" or "Cancel". Returns
-/// `true` when the user confirmed payment, `false` otherwise.
-typedef PaypalApprovalRunner = Future<bool> Function(String approvalUrl);
+/// Used for any provider that asks the buyer to leave the app to
+/// complete payment — currently PayPal and MPGS. The bloc cannot show
+/// a dialog itself (no [BuildContext]); the page supplies a runner
+/// that opens the URL externally and waits for the user to confirm.
+/// [providerLabel] is shown in the dialog ("Complete PayPal payment"
+/// vs. "Complete card payment"). Returns `true` when the user
+/// confirmed payment, `false` otherwise.
+typedef PaypalApprovalRunner = Future<bool> Function(
+  String approvalUrl, {
+  String providerLabel,
+});
 
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final GetCheckoutCart getCart;
@@ -705,7 +711,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
         bool approved;
         try {
-          approved = await paypalApprovalRunner!(approvalUrl);
+          approved = await paypalApprovalRunner!(approvalUrl,
+              providerLabel: 'PayPal');
         } catch (e) {
           // Treat any error from the approval UX as a cancel: best-effort
           // abandon (PayPal orders auto-expire anyway) and leave the cart
@@ -746,6 +753,91 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         // Buyer approved on PayPal. Capture + create the order.
         summary = await finalizeStripeCheckout(
           paymentIntentId: paypalOrderId,
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
+      } else if (pmCode == 'MPGS') {
+        // ---------- MPGS (Visa / Mastercard) prepare-then-finalize ----------
+        // Same shape as PayPal: open the bank's hosted checkout page in
+        // the system browser, ask the buyer to confirm with "I've paid",
+        // then call finalize (which verifies the capture server-side).
+        if (paypalApprovalRunner == null) {
+          throw AppException(
+            'Card payment (MPGS) is not available in this app build.',
+          );
+        }
+
+        final prepared = await prepareStripeCheckout(
+          ownerProjectId: ownerProjectId,
+          currencyId: _resolvedCurrencyId(),
+          paymentMethod: pmCode,
+          couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+          destinationAccountId: destinationAccountId,
+          shippingMethodId: shipId,
+          shippingMethodName: shipName,
+          shippingAddress: addr,
+          lines: lines,
+        );
+
+        // Backend returns an absolute URL to /api/orders/mpgs/checkout
+        // that loads MPGS's hosted card form for this session.
+        final checkoutUrl = (prepared.redirectUrl ?? '').toString().trim();
+        final mpgsOrderId =
+            (prepared.providerPaymentId ?? '').toString().trim();
+
+        if (checkoutUrl.isEmpty || mpgsOrderId.isEmpty) {
+          throw AppException(
+            'Checkout could not prepare a card payment. Please try again.',
+          );
+        }
+
+        bool approved;
+        try {
+          approved = await paypalApprovalRunner!(checkoutUrl,
+              providerLabel: 'card');
+        } catch (e) {
+          await abandonStripeCheckout(
+            paymentIntentId: mpgsOrderId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
+          rethrow;
+        }
+
+        if (!approved) {
+          await abandonStripeCheckout(
+            paymentIntentId: mpgsOrderId,
+            ownerProjectId: ownerProjectId,
+            currencyId: _resolvedCurrencyId(),
+            paymentMethod: pmCode,
+            couponCode: state.coupon.trim().isEmpty ? null : state.coupon.trim(),
+            destinationAccountId: destinationAccountId,
+            shippingMethodId: shipId,
+            shippingMethodName: shipName,
+            shippingAddress: addr,
+            lines: lines,
+          );
+          emit(state.copyWith(placing: false, clearError: true));
+          return;
+        }
+
+        // Buyer paid at MPGS. Server verifies + creates the Order.
+        summary = await finalizeStripeCheckout(
+          paymentIntentId: mpgsOrderId,
           ownerProjectId: ownerProjectId,
           currencyId: _resolvedCurrencyId(),
           paymentMethod: pmCode,

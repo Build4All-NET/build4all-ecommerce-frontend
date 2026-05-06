@@ -1,9 +1,11 @@
 // lib/core/payments/paypal_approval_flow.dart
 //
-// PayPal approval-URL helper for the customer checkout flow.
+// External-payment-page helper for the customer checkout flow.
 //
-// Mobile cannot host the PayPal approval page in-app, so the flow is:
-//   1) Open the approval URL in the system browser.
+// Used for any provider that asks the buyer to leave the app to complete
+// payment — currently PayPal (approval URL) and MPGS (hosted card form).
+// Flow:
+//   1) Open the URL in the system browser.
 //   2) Show a non-dismissible dialog asking the buyer to confirm once
 //      they've finished the payment.
 //   3) Resolve to `true` if the buyer tapped "I've paid", `false` if
@@ -16,9 +18,13 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaypalApprovalFlow {
+  /// [providerLabel] is the human-readable name shown in the dialog
+  /// title and body. Defaults to "PayPal" for the historical caller;
+  /// MPGS callers pass "card" so the buyer sees "Complete card payment".
   static Future<bool> run({
     required BuildContext context,
     required String approvalUrl,
+    String providerLabel = 'PayPal',
   }) async {
     final url = approvalUrl.trim();
     if (url.isEmpty) return false;
@@ -40,11 +46,11 @@ class PaypalApprovalFlow {
       barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Complete PayPal payment'),
-          content: const Text(
-            "We've opened PayPal in your browser. After you finish "
-            'paying there, come back and tap "I\'ve paid" so we can '
-            'place your order.',
+          title: Text('Complete $providerLabel payment'),
+          content: Text(
+            "We've opened the $providerLabel payment page in your browser. "
+            'After you finish paying there, come back and tap "I\'ve paid" '
+            'so we can place your order.',
           ),
           actions: [
             TextButton(

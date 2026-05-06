@@ -75,9 +75,12 @@ class CheckoutPage extends StatelessWidget {
         currencyId: currencyId,
         getLastShippingAddress: lastAddr,
         quoteFromCart: quote,
-        paypalApprovalRunner: (approvalUrl) => PaypalApprovalFlow.run(
+        paypalApprovalRunner: (approvalUrl,
+                {String providerLabel = 'PayPal'}) =>
+            PaypalApprovalFlow.run(
           context: ctx,
           approvalUrl: approvalUrl,
+          providerLabel: providerLabel,
         ),
       ),
       child: CheckoutScreen(appConfig: appConfig, ownerProjectId: ownerId),
