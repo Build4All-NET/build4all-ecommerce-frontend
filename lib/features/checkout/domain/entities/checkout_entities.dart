@@ -270,10 +270,14 @@ class PaymentMethod {
   }
 
   factory PaymentMethod.fromJson(Map<String, dynamic> j) {
+    // Buyer-facing label comes from the backend's gateway plugin
+    // (`displayName`). Older backends only sent `name` (the technical
+    // code), so we fall through to keep both directions compatible.
+    final display = (j['displayName'] ?? j['name'] ?? '').toString();
     return PaymentMethod(
       id: (j['id'] is num) ? (j['id'] as num).toInt() : int.tryParse('${j['id']}'),
       code: (j['code'] ?? '').toString(),
-      name: (j['name'] ?? '').toString(),
+      name: display,
       configMap: (j['configMap'] is Map)
           ? Map<String, dynamic>.from(j['configMap'] as Map)
           : null,

@@ -70,8 +70,11 @@ class CheckoutPaymentMethods extends StatelessWidget {
                 onChanged: (v) {
                   if (v != null) onSelectIndex(v);
                 },
+                // m.name now carries the buyer-facing displayName from the
+                // gateway plugin (e.g. MPGS → "Card"). The technical code
+                // (m.code) is intentionally not shown — it's developer
+                // jargon and confused buyers seeing "MPGS / MPGS".
                 title: Text(m.name),
-                subtitle: Text((m.code).toUpperCase()),
                 contentPadding: EdgeInsets.symmetric(horizontal: spacing.sm),
                 dense: true,
               ),

@@ -185,7 +185,12 @@ class PaymentMethodModel {
   factory PaymentMethodModel.fromJson(Map<String, dynamic> j) {
     String pick(dynamic v) => (v ?? '').toString().trim();
 
-    final name = pick(j['name'] ?? j['label']);
+    // Buyer-facing label. Backend now returns `displayName` from the
+    // gateway plugin (e.g. MPGS → "Card", STRIPE → "Stripe"). Older
+    // responses only had `name` (= the technical code), so fall back
+    // through `name` / `label` so old clients hitting a new backend
+    // and new clients hitting an old backend both keep working.
+    final name = pick(j['displayName'] ?? j['name'] ?? j['label']);
     final code = pick(j['code'] ?? j['paymentMethod'] ?? j['method'] ?? name).toUpperCase();
 
     final enabled = (j['enabled'] is bool) ? (j['enabled'] as bool) : true;
