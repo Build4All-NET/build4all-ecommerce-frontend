@@ -291,6 +291,83 @@ jobs:
               print(k, "=", "YES" if env.get(k) else "NO")
           PY
 
+      - name: 🔥 Fetch Firebase iOS config from backend
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          API_BASE="$(tr -d '\r\n' < ci_api_base.txt)"
+          LINK_ID="$(tr -d '\r\n' < ci_link_id.txt)"
+
+          if [ -z "$API_BASE" ]; then
+            echo "❌ API_BASE is empty"
+            exit 1
+          fi
+
+          if [ -z "$LINK_ID" ]; then
+            echo "❌ LINK_ID is empty"
+            exit 1
+          fi
+
+          if [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
+            echo "❌ CI_CALLBACK_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "🔥 Fetching Firebase iOS config for linkId=$LINK_ID"
+          echo "Backend: $API_BASE"
+
+          HTTP_CODE="$(curl -sS -w "%{http_code}" \
+            -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+            -H "Accept: application/json" \
+            "${API_BASE}/api/ci/firebase-config/ios?linkId=${LINK_ID}" \
+            -o firebase_ios_response.json)"
+
+          echo "HTTP_CODE=$HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to fetch iOS Firebase config"
+            cat firebase_ios_response.json || true
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json, base64, pathlib, sys
+
+          data = json.load(open("firebase_ios_response.json", "r", encoding="utf-8"))
+
+          # Support both possible DTO names
+          b64 = (
+              data.get("base64Content")
+              or data.get("contentBase64")
+              or data.get("content")
+              or ""
+          )
+
+          filename = (
+              data.get("fileName")
+              or data.get("filename")
+              or "GoogleService-Info.plist"
+          )
+
+          if not b64:
+              print("❌ Firebase response does not contain base64Content/contentBase64/content")
+              print(json.dumps(data, indent=2))
+              sys.exit(1)
+
+          content = base64.b64decode(b64)
+
+          out = pathlib.Path("ios/Runner/GoogleService-Info.plist")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_bytes(content)
+
+          print(f"✅ Firebase iOS config written: {out}")
+          print(f"✅ Backend filename: {filename}")
+          PY
+
+          test -s ios/Runner/GoogleService-Info.plist
+          echo "✅ GoogleService-Info.plist exists and is not empty"
+
       - name: 🔧 Sync menuType (BRANDING -> THEME) so drawer doesn't flip to bottom
         shell: bash
         run: |
@@ -765,6 +842,37 @@ jobs:
           except Exception as e:
               print(f"⚠️ Beta review detail error (non-fatal): {e}")
           PYEOF
+      - name: Ensure App ID exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
+          fastlane run produce \
+            app_identifier:"$BUNDLE_ID" \
+            team_id:"${IOS_TEAM_ID}" \
+            api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
+            skip_itc:false \
+            language:"${APPLE_PRIMARY_LOCALE:-en-US}" \
+            app_name:"${APPLE_APP_NAME:-Runner}" \
+            sku:"${APPLE_SKU:-$BUNDLE_ID}" || true
+
+      - name: 🔔 Ensure Push Notifications capability
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
+
+          echo "🔔 Enabling Push Notifications for $BUNDLE_ID"
+
+          fastlane run produce \
+            app_identifier:"$BUNDLE_ID" \
+            team_id:"${IOS_TEAM_ID}" \
+            api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
+            enable_services:'{"push_notification": "on"}' \
+            skip_itc:true || true
+
+          echo "✅ Push Notifications capability checked"          
 
       - name: Invite App Store Connect user (scoped to this app only)
         shell: bash
@@ -931,19 +1039,7 @@ jobs:
           print(f"Existing user {email} corrected: allAppsVisible=false, +visibleApps[{bundle_id}]")
           PY
 
-      - name: Ensure App ID exists
-        shell: bash
-        run: |
-          set -euo pipefail
-          BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
-          fastlane run produce \
-            app_identifier:"$BUNDLE_ID" \
-            team_id:"${IOS_TEAM_ID}" \
-            api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
-            skip_itc:false \
-            language:"${APPLE_PRIMARY_LOCALE:-en-US}" \
-            app_name:"${APPLE_APP_NAME:-Runner}" \
-            sku:"${APPLE_SKU:-$BUNDLE_ID}" || true
+
 
       - name: Grant existing App Store Connect user access to this app
         shell: bash
