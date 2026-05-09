@@ -313,7 +313,113 @@ jobs:
           for k in ["THEME_JSON_B64","NAV_JSON_B64","HOME_JSON_B64","ENABLED_FEATURES_JSON_B64","BRANDING_JSON_B64"]:
               print(k, "=", "YES" if env.get(k) else "NO")
           PY
+      - name: 🔥 Fetch Firebase Android config from backend
+        shell: bash
+        run: |
+          set -euo pipefail
 
+          API_BASE="$(tr -d '\r\n' < ci_api_base.txt)"
+          LINK_ID="$(tr -d '\r\n' < ci_link_id.txt)"
+
+          if [ -z "$API_BASE" ]; then
+            echo "❌ API_BASE is empty"
+            exit 1
+          fi
+
+          if [ -z "$LINK_ID" ]; then
+            echo "❌ LINK_ID is empty"
+            exit 1
+          fi
+
+          if [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
+            echo "❌ CI_CALLBACK_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "🔥 Fetching Firebase Android config for linkId=$LINK_ID"
+
+          HTTP_CODE="$(curl -sS -w "%{http_code}" \
+            -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+            -H "Accept: application/json" \
+            "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}" \
+            -o firebase_android_response.json)"
+
+          echo "HTTP_CODE=$HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to fetch Android Firebase config"
+            cat firebase_android_response.json || true
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json, base64, pathlib, sys
+
+          data = json.load(open("firebase_android_response.json", "r", encoding="utf-8"))
+
+          b64 = (
+              data.get("base64Content")
+              or data.get("contentBase64")
+              or data.get("content")
+              or ""
+          )
+
+          filename = (
+              data.get("fileName")
+              or data.get("filename")
+              or "google-services.json"
+          )
+
+          if not b64:
+              print("❌ Firebase response does not contain base64Content/contentBase64/content")
+              print(json.dumps(data, indent=2))
+              sys.exit(1)
+
+          content = base64.b64decode(b64)
+
+          out = pathlib.Path("android/app/google-services.json")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_bytes(content)
+
+          print(f"✅ Firebase Android config written: {out}")
+          print(f"✅ Backend filename: {filename}")
+          PY
+
+          test -s android/app/google-services.json
+          echo "✅ google-services.json exists and is not empty"
+          
+      - name: ✅ Verify Firebase Android package matches ci_package_name
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_PKG="$(tr -d '\r\n' < ci_package_name.txt)"
+
+          ACTUAL_PKG="$(python3 - <<'PY'
+          import json
+          data = json.load(open("android/app/google-services.json", "r", encoding="utf-8"))
+          clients = data.get("client", [])
+          pkg = ""
+          if clients:
+              pkg = (
+                  clients[0]
+                  .get("client_info", {})
+                  .get("android_client_info", {})
+                  .get("package_name", "")
+              )
+          print(pkg)
+          PY
+          )"
+
+          echo "EXPECTED_PKG=$EXPECTED_PKG"
+          echo "ACTUAL_PKG=$ACTUAL_PKG"
+
+          if [ "$EXPECTED_PKG" != "$ACTUAL_PKG" ]; then
+            echo "❌ Firebase google-services.json package_name does not match PACKAGE_NAME"
+            exit 1
+          fi
+
+          echo "✅ Firebase package matches"          
       # ════════════════════════════════════════════════════════════════════
       # 🔧 FIX: Sync menuType (BRANDING -> THEME) so hamburger stays hamburger
       # ════════════════════════════════════════════════════════════════════
