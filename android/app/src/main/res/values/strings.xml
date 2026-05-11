@@ -1,30 +1,5 @@
-﻿<resources>
-    <string name="app_name">MyHobbySphereApp</string>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Build4All</string>
+    <string name="default_notification_channel_id">default_channel</string>
 </resources>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
