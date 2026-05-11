@@ -735,6 +735,7 @@ jobs:
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<resources>\n'
             f'  <string name="app_name">{app_name_xml}</string>\n'
+            '  <string name="default_notification_channel_id">default_channel</string>\n'
             '</resources>\n'
           )
           (values_dir/"strings.xml").write_text(strings_xml, encoding="utf-8")
