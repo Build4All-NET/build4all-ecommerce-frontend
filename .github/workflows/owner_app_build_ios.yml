@@ -316,12 +316,25 @@ jobs:
           echo "LINK_ID=$LINK_ID"
           echo "BUILD_ID=$BUILD_ID"
 
-          curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/running" \
+          RESPONSE="$(curl -sS -w "\n%{http_code}" -X PUT "${API_BASE}/api/ci/build-jobs/running" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{"buildId":"${BUILD_ID}","linkId":"${LINK_ID}","platform":"IOS"}" || true
-
+            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}")"
+          
+          HTTP_CODE="$(echo "$RESPONSE" | tail -n1)"
+          BODY="$(echo "$RESPONSE" | sed '$d')"
+          
+          echo "$BODY"
+          echo "HTTP_CODE=$HTTP_CODE"
+          
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+            echo "❌ Failed to mark iOS build as RUNNING"
+            exit 1
+          fi
+          
           echo "✅ iOS build marked as RUNNING"
+
+          
 
       - name: 🔥 Fetch Firebase iOS config from backend
         shell: bash
