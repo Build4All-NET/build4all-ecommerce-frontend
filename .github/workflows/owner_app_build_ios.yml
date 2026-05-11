@@ -389,7 +389,47 @@ jobs:
       
           test -s ios/Runner/GoogleService-Info.plist
           echo "✅ GoogleService-Info.plist exists and is not empty"
-    
+
+      - name: ✅ Verify Firebase iOS bundle matches ci_ios_bundle_id
+        shell: bash
+        run: |
+          set -euo pipefail
+      
+          EXPECTED_BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
+          PLIST_PATH="ios/Runner/GoogleService-Info.plist"
+      
+          if [ -z "$EXPECTED_BUNDLE_ID" ]; then
+            echo "❌ EXPECTED_BUNDLE_ID is empty"
+            exit 1
+          fi
+      
+          if [ ! -s "$PLIST_PATH" ]; then
+            echo "❌ GoogleService-Info.plist is missing or empty at $PLIST_PATH"
+            exit 1
+          fi
+      
+          ACTUAL_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :BUNDLE_ID' "$PLIST_PATH" 2>/dev/null || true)"
+      
+          echo "EXPECTED_BUNDLE_ID=$EXPECTED_BUNDLE_ID"
+          echo "ACTUAL_BUNDLE_ID=$ACTUAL_BUNDLE_ID"
+      
+          if [ -z "$ACTUAL_BUNDLE_ID" ]; then
+            echo "❌ BUNDLE_ID key is missing inside GoogleService-Info.plist"
+            echo "----- plist keys -----"
+            /usr/libexec/PlistBuddy -c "Print" "$PLIST_PATH" || true
+            exit 1
+          fi
+      
+          if [ "$EXPECTED_BUNDLE_ID" != "$ACTUAL_BUNDLE_ID" ]; then
+            echo "❌ Firebase GoogleService-Info.plist BUNDLE_ID does not match IOS_BUNDLE_ID"
+            exit 1
+          fi
+      
+          GOOGLE_APP_ID="$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' "$PLIST_PATH" 2>/dev/null || true)"
+      
+          echo "✅ Firebase iOS bundle matches"
+          echo "GOOGLE_APP_ID=$GOOGLE_APP_ID"
+      
       - name: 🔧 Sync menuType (BRANDING -> THEME) so drawer doesn't flip to bottom
         shell: bash
         run: |
