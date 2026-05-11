@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CI_AUTH_TOKEN: ${{ secrets.CI_AUTH_TOKEN }}
       CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
       CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
 
@@ -313,97 +314,102 @@ jobs:
           for k in ["THEME_JSON_B64","NAV_JSON_B64","HOME_JSON_B64","ENABLED_FEATURES_JSON_B64","BRANDING_JSON_B64"]:
               print(k, "=", "YES" if env.get(k) else "NO")
           PY
+          
       - name: 🔥 Fetch Firebase Android config from backend
         shell: bash
         run: |
           set -euo pipefail
-
+      
           API_BASE="$(tr -d '\r\n' < ci_api_base.txt)"
           LINK_ID="$(tr -d '\r\n' < ci_link_id.txt)"
-
+      
           if [ -z "$API_BASE" ]; then
             echo "❌ API_BASE is empty"
             exit 1
           fi
-
+      
           if [ -z "$LINK_ID" ]; then
             echo "❌ LINK_ID is empty"
             exit 1
           fi
-
-          if [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
-            echo "❌ CI_CALLBACK_TOKEN is missing"
+      
+          if [ -z "${CI_AUTH_TOKEN:-}" ]; then
+            echo "❌ CI_AUTH_TOKEN is missing"
             exit 1
           fi
-
+      
           echo "🔥 Fetching Firebase Android config for linkId=$LINK_ID"
           echo "Backend: $API_BASE"
-
-          # Firebase provisioning may still be IN_PROGRESS when CI starts.
-          # Do not fail immediately on 409; wait and retry.
+      
           MAX_ATTEMPTS=18
           SLEEP_SECONDS=10
           HTTP_CODE="000"
-
+      
           for ATTEMPT in $(seq 1 "$MAX_ATTEMPTS"); do
             echo "Attempt $ATTEMPT/$MAX_ATTEMPTS"
-
+      
             HTTP_CODE="$(curl -sS -w "%{http_code}" \
-              -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+              -H "X-Auth-Token: ${CI_AUTH_TOKEN}" \
               -H "Accept: application/json" \
               "${API_BASE}/api/ci/firebase-config/android?linkId=${LINK_ID}" \
               -o firebase_android_response.json || echo "000")"
-
+      
             echo "HTTP_CODE=$HTTP_CODE"
-
+      
             if [ "$HTTP_CODE" = "200" ]; then
               break
             fi
-
+      
+            if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+              echo "❌ CI auth failed. Check CI_AUTH_TOKEN secret vs backend app.ci.auth-token"
+              cat firebase_android_response.json || true
+              exit 1
+            fi
+      
             echo "⚠️ Android Firebase config not ready yet"
             cat firebase_android_response.json || true
-
+      
             if [ "$ATTEMPT" = "$MAX_ATTEMPTS" ]; then
               echo "❌ Failed to fetch Android Firebase config after retries"
               exit 1
             fi
-
+      
             sleep "$SLEEP_SECONDS"
           done
-
+      
           python3 - <<'PY'
           import json, base64, pathlib, sys
-
+      
           data = json.load(open("firebase_android_response.json", "r", encoding="utf-8"))
-
+      
           b64 = (
               data.get("base64Content")
               or data.get("contentBase64")
               or data.get("content")
               or ""
           )
-
+      
           filename = (
               data.get("fileName")
               or data.get("filename")
               or "google-services.json"
           )
-
+      
           if not b64:
               print("❌ Firebase response does not contain base64Content/contentBase64/content")
               print(json.dumps(data, indent=2))
               sys.exit(1)
-
+      
           content = base64.b64decode(b64)
-
+      
           out = pathlib.Path("android/app/google-services.json")
           out.parent.mkdir(parents=True, exist_ok=True)
           out.write_bytes(content)
-
+      
           print(f"✅ Firebase Android config written: {out}")
           print(f"✅ Backend filename: {filename}")
           PY
-
+      
           test -s android/app/google-services.json
           echo "✅ google-services.json exists and is not empty"
           
