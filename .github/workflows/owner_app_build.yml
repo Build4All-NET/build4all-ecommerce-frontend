@@ -417,34 +417,60 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
+      
           EXPECTED_PKG="$(tr -d '\r\n' < ci_package_name.txt)"
-
-          ACTUAL_PKG="$(python3 - <<'PY'
+      
+          python3 - <<'PY'
           import json
-          data = json.load(open("android/app/google-services.json", "r", encoding="utf-8"))
+          import sys
+          from pathlib import Path
+      
+          expected = Path("ci_package_name.txt").read_text(encoding="utf-8").strip()
+      
+          with open("android/app/google-services.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+      
           clients = data.get("client", [])
-          pkg = ""
-          if clients:
+      
+          packages = []
+          matched_client = None
+      
+          for client in clients:
               pkg = (
-                  clients[0]
+                  client
                   .get("client_info", {})
                   .get("android_client_info", {})
                   .get("package_name", "")
-              )
-          print(pkg)
+              ).strip()
+      
+              if pkg:
+                  packages.append(pkg)
+      
+              if pkg == expected:
+                  matched_client = client
+      
+          print("EXPECTED_PKG=" + expected)
+          print("FOUND_PACKAGES=" + ", ".join(packages))
+      
+          if matched_client is None:
+              print("❌ Firebase google-services.json does not contain expected PACKAGE_NAME")
+              print("Expected:", expected)
+              print("Found:")
+              for pkg in packages:
+                  print(" -", pkg)
+              sys.exit(1)
+      
+          app_id = (
+              matched_client
+              .get("client_info", {})
+              .get("mobilesdk_app_id", "")
+          )
+      
+          print("✅ Firebase package exists in google-services.json")
+          print("MATCHED_PKG=" + expected)
+          print("MOBILESDK_APP_ID=" + app_id)
           PY
-          )"
-
-          echo "EXPECTED_PKG=$EXPECTED_PKG"
-          echo "ACTUAL_PKG=$ACTUAL_PKG"
-
-          if [ "$EXPECTED_PKG" != "$ACTUAL_PKG" ]; then
-            echo "❌ Firebase google-services.json package_name does not match PACKAGE_NAME"
-            exit 1
-          fi
-
-          echo "✅ Firebase package matches"          
+          
       # ════════════════════════════════════════════════════════════════════
       # 🔧 FIX: Sync menuType (BRANDING -> THEME) so hamburger stays hamburger
       # ════════════════════════════════════════════════════════════════════
