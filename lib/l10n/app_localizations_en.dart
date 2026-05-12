@@ -3346,4 +3346,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String paymentMissingRequiredField(Object field) {
     return 'Missing required field: $field';
   }
+
+  @override
+  String get subscriptionExpiredRenewRequired => 'Your subscription has expired. Please renew it to continue managing your app.';
+
+  @override
+  String get loginLabel => 'Login';
+
+  @override
+  String get adminAnnouncementsTitle => 'Announcements';
+
+  @override
+  String get adminAnnouncementsSubtitle => 'Notify all users in this app';
+
+  @override
+  String get adminAnnouncementsNotifyAllTitle => 'Notify all users';
+
+  @override
+  String get adminAnnouncementsNotifyAllDescription => 'Send a message to all users who have active devices in this app.';
+
+  @override
+  String get adminAnnouncementsTitleLabel => 'Title';
+
+  @override
+  String get adminAnnouncementsTitleHint => 'Example: New product available';
+
+  @override
+  String get adminAnnouncementsMessageLabel => 'Message';
+
+  @override
+  String get adminAnnouncementsMessageHint => 'Write the announcement message...';
+
+  @override
+  String get adminAnnouncementsMessageRequired => 'Message is required';
+
+  @override
+  String get adminAnnouncementsTypeLabel => 'Announcement type';
+
+  @override
+  String get adminAnnouncementsTargetIdLabel => 'Target ID optional';
+
+  @override
+  String get adminAnnouncementsTargetIdHint => 'Product ID, service ID, etc.';
+
+  @override
+  String get adminAnnouncementsTargetIdInvalid => 'Target ID must be a number';
+
+  @override
+  String get adminAnnouncementsSendButton => 'Send announcement';
+
+  @override
+  String get adminAnnouncementsSendingButton => 'Sending...';
+
+  @override
+  String adminAnnouncementsSentSuccess(int count) {
+    return 'Announcement sent to $count users';
+  }
+
+  @override
+  String get adminAnnouncementsGenericError => 'Failed to send announcement';
+
+  @override
+  String get adminAnnouncementsTypeGeneral => 'General';
+
+  @override
+  String get adminAnnouncementsTypeProduct => 'Product';
+
+  @override
+  String get adminAnnouncementsTypeDiscount => 'Discount';
+
+  @override
+  String get adminAnnouncementsTypeService => 'Service';
+
+  @override
+  String get adminAnnouncementsTypeMaintenance => 'Maintenance';
+
+  @override
+  String get adminAnnouncementsCreatedSuccess => 'Announcement sent successfully';
+
+  @override
+  String get adminAnnouncementsDeletedSuccess => 'Announcement deleted successfully';
+
+  @override
+  String get adminAnnouncementsEmptyTitle => 'No announcements yet';
+
+  @override
+  String get adminAnnouncementsEmptyMessage => 'Create your first announcement to notify your users.';
+
+  @override
+  String get adminAnnouncementsDeleteTitle => 'Delete announcement?';
+
+  @override
+  String get adminAnnouncementsDeleteMessage => 'This announcement will be hidden from users.';
+
+  @override
+  String get adminAnnouncementsCancel => 'Cancel';
+
+  @override
+  String get adminAnnouncementsDelete => 'Delete';
+
+  @override
+  String adminAnnouncementsSentToUsers(int count) {
+    return 'Sent to $count users';
+  }
+
+  @override
+  String get chooseImage => 'Choose image';
+
+  @override
+  String get removeImage => 'Remove image';
 }

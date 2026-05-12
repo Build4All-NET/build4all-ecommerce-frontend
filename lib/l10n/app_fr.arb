@@ -1229,5 +1229,55 @@
   "placeholders": {
     "field": {}
   }
-}
+},
+"subscriptionExpiredRenewRequired": "Votre abonnement a expiré. Veuillez le renouveler pour continuer à gérer votre application.",
+"loginLabel": "Connexion",
+  "adminAnnouncementsTitle": "Annonces",
+  "adminAnnouncementsSubtitle": "Notifier tous les utilisateurs de cette application",
+  "adminAnnouncementsNotifyAllTitle": "Notifier tous les utilisateurs",
+  "adminAnnouncementsNotifyAllDescription": "Envoyez un message à tous les utilisateurs ayant des appareils actifs dans cette application.",
+  "adminAnnouncementsTitleLabel": "Titre",
+  "adminAnnouncementsTitleHint": "Exemple : Nouveau produit disponible",
+  "adminAnnouncementsMessageLabel": "Message",
+  "adminAnnouncementsMessageHint": "Écrivez le message de l’annonce...",
+  "adminAnnouncementsMessageRequired": "Le message est obligatoire",
+  "adminAnnouncementsTypeLabel": "Type d’annonce",
+  "adminAnnouncementsTargetIdLabel": "ID cible optionnel",
+  "adminAnnouncementsTargetIdHint": "ID du produit, service, etc.",
+  "adminAnnouncementsTargetIdInvalid": "L’ID cible doit être un nombre",
+  "adminAnnouncementsSendButton": "Envoyer l’annonce",
+  "adminAnnouncementsSendingButton": "Envoi...",
+  "adminAnnouncementsSentSuccess": "Annonce envoyée à {count} utilisateurs",
+  "@adminAnnouncementsSentSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAnnouncementsGenericError": "Échec de l’envoi de l’annonce",
+  "adminAnnouncementsTypeGeneral": "Général",
+  "adminAnnouncementsTypeProduct": "Produit",
+  "adminAnnouncementsTypeDiscount": "Réduction",
+  "adminAnnouncementsTypeService": "Service",
+  "adminAnnouncementsTypeMaintenance": "Maintenance",
+  "adminAnnouncementsCreatedSuccess": "Annonce envoyée avec succès",
+"adminAnnouncementsDeletedSuccess": "Annonce supprimée avec succès",
+"adminAnnouncementsEmptyTitle": "Aucune annonce pour le moment",
+"adminAnnouncementsEmptyMessage": "Créez votre première annonce pour notifier vos utilisateurs.",
+"adminAnnouncementsDeleteTitle": "Supprimer l’annonce ?",
+"adminAnnouncementsDeleteMessage": "Cette annonce sera masquée pour les utilisateurs.",
+"adminAnnouncementsCancel": "Annuler",
+"adminAnnouncementsDelete": "Supprimer",
+"adminAnnouncementsSentToUsers": "Envoyée à {count} utilisateurs",
+"@adminAnnouncementsSentToUsers": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"chooseImage": "Choisir une image",
+"removeImage": "Supprimer l’image"
+
 }

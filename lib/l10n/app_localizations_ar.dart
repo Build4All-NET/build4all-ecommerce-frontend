@@ -3346,4 +3346,113 @@ class AppLocalizationsAr extends AppLocalizations {
   String paymentMissingRequiredField(Object field) {
     return 'حقل مطلوب مفقود: $field';
   }
+
+  @override
+  String get subscriptionExpiredRenewRequired => 'انتهى اشتراكك. يرجى تجديد الاشتراك لمتابعة إدارة التطبيق.';
+
+  @override
+  String get loginLabel => 'تسجيل الدخول';
+
+  @override
+  String get adminAnnouncementsTitle => 'الإعلانات';
+
+  @override
+  String get adminAnnouncementsSubtitle => 'إرسال إشعار لكل مستخدمي هذا التطبيق';
+
+  @override
+  String get adminAnnouncementsNotifyAllTitle => 'إشعار كل المستخدمين';
+
+  @override
+  String get adminAnnouncementsNotifyAllDescription => 'أرسل رسالة لكل المستخدمين الذين لديهم أجهزة فعّالة داخل هذا التطبيق.';
+
+  @override
+  String get adminAnnouncementsTitleLabel => 'العنوان';
+
+  @override
+  String get adminAnnouncementsTitleHint => 'مثال: منتج جديد متوفر';
+
+  @override
+  String get adminAnnouncementsMessageLabel => 'الرسالة';
+
+  @override
+  String get adminAnnouncementsMessageHint => 'اكتب رسالة الإعلان...';
+
+  @override
+  String get adminAnnouncementsMessageRequired => 'الرسالة مطلوبة';
+
+  @override
+  String get adminAnnouncementsTypeLabel => 'نوع الإعلان';
+
+  @override
+  String get adminAnnouncementsTargetIdLabel => 'رقم الهدف اختياري';
+
+  @override
+  String get adminAnnouncementsTargetIdHint => 'رقم المنتج أو الخدمة...';
+
+  @override
+  String get adminAnnouncementsTargetIdInvalid => 'رقم الهدف يجب أن يكون رقماً';
+
+  @override
+  String get adminAnnouncementsSendButton => 'إرسال الإعلان';
+
+  @override
+  String get adminAnnouncementsSendingButton => 'جاري الإرسال...';
+
+  @override
+  String adminAnnouncementsSentSuccess(int count) {
+    return 'تم إرسال الإعلان إلى $count مستخدم';
+  }
+
+  @override
+  String get adminAnnouncementsGenericError => 'فشل إرسال الإعلان';
+
+  @override
+  String get adminAnnouncementsTypeGeneral => 'عام';
+
+  @override
+  String get adminAnnouncementsTypeProduct => 'منتج';
+
+  @override
+  String get adminAnnouncementsTypeDiscount => 'خصم';
+
+  @override
+  String get adminAnnouncementsTypeService => 'خدمة';
+
+  @override
+  String get adminAnnouncementsTypeMaintenance => 'صيانة';
+
+  @override
+  String get adminAnnouncementsCreatedSuccess => 'تم إرسال الإعلان بنجاح';
+
+  @override
+  String get adminAnnouncementsDeletedSuccess => 'تم حذف الإعلان بنجاح';
+
+  @override
+  String get adminAnnouncementsEmptyTitle => 'لا توجد إعلانات بعد';
+
+  @override
+  String get adminAnnouncementsEmptyMessage => 'أنشئ أول إعلان لإشعار المستخدمين.';
+
+  @override
+  String get adminAnnouncementsDeleteTitle => 'حذف الإعلان؟';
+
+  @override
+  String get adminAnnouncementsDeleteMessage => 'سيتم إخفاء هذا الإعلان عن المستخدمين.';
+
+  @override
+  String get adminAnnouncementsCancel => 'إلغاء';
+
+  @override
+  String get adminAnnouncementsDelete => 'حذف';
+
+  @override
+  String adminAnnouncementsSentToUsers(int count) {
+    return 'تم الإرسال إلى $count مستخدم';
+  }
+
+  @override
+  String get chooseImage => 'اختيار صورة';
+
+  @override
+  String get removeImage => 'إزالة الصورة';
 }

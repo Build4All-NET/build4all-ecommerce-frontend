@@ -6564,6 +6564,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Missing required field: {field}'**
   String paymentMissingRequiredField(Object field);
+
+  /// No description provided for @subscriptionExpiredRenewRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription has expired. Please renew it to continue managing your app.'**
+  String get subscriptionExpiredRenewRequired;
+
+  /// No description provided for @loginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginLabel;
+
+  /// No description provided for @adminAnnouncementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements'**
+  String get adminAnnouncementsTitle;
+
+  /// No description provided for @adminAnnouncementsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify all users in this app'**
+  String get adminAnnouncementsSubtitle;
+
+  /// No description provided for @adminAnnouncementsNotifyAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify all users'**
+  String get adminAnnouncementsNotifyAllTitle;
+
+  /// No description provided for @adminAnnouncementsNotifyAllDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message to all users who have active devices in this app.'**
+  String get adminAnnouncementsNotifyAllDescription;
+
+  /// No description provided for @adminAnnouncementsTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get adminAnnouncementsTitleLabel;
+
+  /// No description provided for @adminAnnouncementsTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: New product available'**
+  String get adminAnnouncementsTitleHint;
+
+  /// No description provided for @adminAnnouncementsMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get adminAnnouncementsMessageLabel;
+
+  /// No description provided for @adminAnnouncementsMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the announcement message...'**
+  String get adminAnnouncementsMessageHint;
+
+  /// No description provided for @adminAnnouncementsMessageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Message is required'**
+  String get adminAnnouncementsMessageRequired;
+
+  /// No description provided for @adminAnnouncementsTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement type'**
+  String get adminAnnouncementsTypeLabel;
+
+  /// No description provided for @adminAnnouncementsTargetIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target ID optional'**
+  String get adminAnnouncementsTargetIdLabel;
+
+  /// No description provided for @adminAnnouncementsTargetIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Product ID, service ID, etc.'**
+  String get adminAnnouncementsTargetIdHint;
+
+  /// No description provided for @adminAnnouncementsTargetIdInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Target ID must be a number'**
+  String get adminAnnouncementsTargetIdInvalid;
+
+  /// No description provided for @adminAnnouncementsSendButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send announcement'**
+  String get adminAnnouncementsSendButton;
+
+  /// No description provided for @adminAnnouncementsSendingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get adminAnnouncementsSendingButton;
+
+  /// No description provided for @adminAnnouncementsSentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement sent to {count} users'**
+  String adminAnnouncementsSentSuccess(int count);
+
+  /// No description provided for @adminAnnouncementsGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send announcement'**
+  String get adminAnnouncementsGenericError;
+
+  /// No description provided for @adminAnnouncementsTypeGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get adminAnnouncementsTypeGeneral;
+
+  /// No description provided for @adminAnnouncementsTypeProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get adminAnnouncementsTypeProduct;
+
+  /// No description provided for @adminAnnouncementsTypeDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get adminAnnouncementsTypeDiscount;
+
+  /// No description provided for @adminAnnouncementsTypeService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get adminAnnouncementsTypeService;
+
+  /// No description provided for @adminAnnouncementsTypeMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get adminAnnouncementsTypeMaintenance;
+
+  /// No description provided for @adminAnnouncementsCreatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement sent successfully'**
+  String get adminAnnouncementsCreatedSuccess;
+
+  /// No description provided for @adminAnnouncementsDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement deleted successfully'**
+  String get adminAnnouncementsDeletedSuccess;
+
+  /// No description provided for @adminAnnouncementsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No announcements yet'**
+  String get adminAnnouncementsEmptyTitle;
+
+  /// No description provided for @adminAnnouncementsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first announcement to notify your users.'**
+  String get adminAnnouncementsEmptyMessage;
+
+  /// No description provided for @adminAnnouncementsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete announcement?'**
+  String get adminAnnouncementsDeleteTitle;
+
+  /// No description provided for @adminAnnouncementsDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This announcement will be hidden from users.'**
+  String get adminAnnouncementsDeleteMessage;
+
+  /// No description provided for @adminAnnouncementsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get adminAnnouncementsCancel;
+
+  /// No description provided for @adminAnnouncementsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get adminAnnouncementsDelete;
+
+  /// No description provided for @adminAnnouncementsSentToUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {count} users'**
+  String adminAnnouncementsSentToUsers(int count);
+
+  /// No description provided for @chooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get chooseImage;
+
+  /// No description provided for @removeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get removeImage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

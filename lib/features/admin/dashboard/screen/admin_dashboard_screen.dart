@@ -3,6 +3,11 @@ import 'dart:convert';
 import 'package:build4front/app/app_router.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/notifications/front_firebase_push_service.dart';
+import 'package:build4front/features/admin/announcements/data/repositories/owner_announcement_repository_impl.dart';
+import 'package:build4front/features/admin/announcements/domain/usecases/create_owner_announcement.dart';
+import 'package:build4front/features/admin/announcements/domain/usecases/delete_owner_announcement.dart';
+import 'package:build4front/features/admin/announcements/domain/usecases/get_owner_announcements.dart';
+import 'package:build4front/features/admin/announcements/presentation/bloc/owner_announcement_bloc.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/data/repositories/licensing_repository_impl.dart';
@@ -33,6 +38,10 @@ import 'package:build4front/features/admin/home_banner/presentation/screens/admi
 import 'package:build4front/features/admin/payment_config/presentation/screens/owner_payment_config_screen.dart';
 import 'package:build4front/features/admin/shipping/prensentation/screens/admin_shipping_methods_screen.dart';
 import 'package:build4front/features/admin/tax/presentation/screens/admin_tax_rules_screen.dart';
+
+// ✅ Announcements
+import 'package:build4front/features/admin/announcements/data/services/owner_announcement_api_service.dart';
+import 'package:build4front/features/admin/announcements/presentation/screens/owner_announcements_screen.dart';
 
 // 🔹 Coupons
 import 'package:build4front/features/admin/coupons/presentations/screens/admin_coupons_screen.dart';
@@ -140,6 +149,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _licenseLoading = true;
   String? _licenseError;
 
+  int _ownerUnreadNotifications = 0;
+  bool _ownerUnreadLoading = false;
+
   late final LicensingApiService _licensingApi =
       LicensingApiService(getToken: () => _store.getToken());
 
@@ -163,34 +175,97 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     super.dispose();
   }
 
-Future<void> _init() async {
-  await Future.wait([
-    _loadRole(),
-    _loadLicense(),
-    _profileCubit.load(),
-   // _syncOwnerFrontPushIfNeeded(),
-  ]);
-}
-
-/*   Future<void> _syncOwnerFrontPushIfNeeded() async {
-  try {
-    final role = (await _store.getRole())?.toUpperCase() ?? '';
-    final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-
-    if (role != 'OWNER' || ownerProjectLinkId <= 0) return;
-
-    await FrontFirebasePushService().initAndSyncToken(
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
-  } catch (e) {
-    debugPrint('Admin dashboard front push sync failed => $e');
+  Future<void> _init() async {
+    await Future.wait([
+      _loadRole(),
+      _loadLicense(),
+      _profileCubit.load(),
+      _loadOwnerNotificationCount(),
+      // _syncOwnerFrontPushIfNeeded(),
+    ]);
   }
-} */
+
+  /* Future<void> _syncOwnerFrontPushIfNeeded() async {
+    try {
+      final role = (await _store.getRole())?.toUpperCase() ?? '';
+      final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+
+      if (role != 'OWNER' || ownerProjectLinkId <= 0) return;
+
+      await FrontFirebasePushService().initAndSyncToken(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+    } catch (e) {
+      debugPrint('Admin dashboard front push sync failed => $e');
+    }
+  } */
 
   Future<void> _loadRole() async {
     final role = await _store.getRole();
     if (!mounted) return;
     setState(() => _role = role?.toUpperCase());
+  }
+
+  Future<void> _loadOwnerNotificationCount() async {
+    try {
+      if (_ownerUnreadLoading) return;
+
+      if (mounted) {
+        setState(() => _ownerUnreadLoading = true);
+      }
+
+      final token = (await _store.getToken())?.trim() ?? '';
+      final dio = g.appDio!;
+
+      final response = await dio.get(
+        '/api/front/notifications/unread-count',
+        options: Options(
+          headers: {
+            if (token.isNotEmpty)
+              'Authorization': token.toLowerCase().startsWith('bearer ')
+                  ? token
+                  : 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      final data = response.data;
+      int count = 0;
+
+      if (data is int) {
+        count = data;
+      } else if (data is num) {
+        count = data.toInt();
+      } else if (data is Map<String, dynamic>) {
+        final value = data['unreadCount'] ?? data['count'] ?? data['data'];
+        if (value is int) {
+          count = value;
+        } else if (value is num) {
+          count = value.toInt();
+        } else {
+          count = int.tryParse((value ?? '0').toString()) ?? 0;
+        }
+      } else if (data != null) {
+        count = int.tryParse(data.toString()) ?? 0;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _ownerUnreadNotifications = count;
+        _ownerUnreadLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _ownerUnreadLoading = false);
+    }
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).pushNamed(AppRouter.notifications);
+    if (!mounted) return;
+    await _loadOwnerNotificationCount();
   }
 
   Future<void> _loadLicense() async {
@@ -227,36 +302,35 @@ Future<void> _init() async {
     }
   }
 
- Future<void> _logout() async {
-  final token = (await _store.getToken())?.trim() ?? '';
-  final refresh = (await _store.getRefreshToken())?.trim() ?? '';
+  Future<void> _logout() async {
+    final token = (await _store.getToken())?.trim() ?? '';
+    final refresh = (await _store.getRefreshToken())?.trim() ?? '';
 
-  try {
-    final dio = g.appDio!;
+    try {
+      final dio = g.appDio!;
 
-    await dio.post(
-      '/api/auth/logout',
-      data: {'refreshToken': refresh},
-      options: Options(
-        headers: {
-          if (token.isNotEmpty)
-            'Authorization': token.toLowerCase().startsWith('bearer ')
-                ? token
-                : 'Bearer $token',
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
-  } catch (_) {
-    // ignore backend logout failure; local logout still happens
+      await dio.post(
+        '/api/auth/logout',
+        data: {'refreshToken': refresh},
+        options: Options(
+          headers: {
+            if (token.isNotEmpty)
+              'Authorization': token.toLowerCase().startsWith('bearer ')
+                  ? token
+                  : 'Bearer $token',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+    } catch (_) {
+      // ignore backend logout failure; local logout still happens
+    }
+
+    await _store.clear();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
   }
-
-  await _store.clear();
-  if (!mounted) return;
-  Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
-}
-  
 
   Future<void> _openProfilePopup() async {
     if (_profileCubit.state is! AdminProfileLoaded) {
@@ -324,8 +398,7 @@ Future<void> _init() async {
     }
 
     final current = access.planCode;
-    final canRequest = current == PlanCode.FREE ||
-        current == PlanCode.PRO_HOSTEDB;
+    final canRequest = current == PlanCode.FREE || current == PlanCode.PRO_HOSTEDB;
 
     if (!canRequest) {
       AppToast.error(context, l10n.noUpgradeAvailable);
@@ -354,23 +427,47 @@ Future<void> _init() async {
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final colors = tokens.colors;
     final card = tokens.card;
+final blockingReason = (_license?.blockingReason ?? '').trim().toUpperCase();
 
-    final blockingReason = (_license?.blockingReason ?? '').trim();
-    final bool isBlockedByLicense = _license != null &&
-        ((_license!.canAccessDashboard == false) || blockingReason.isNotEmpty);
+final DateTime? licenseEndDate = _tryParseDate(_license?.periodEnd);
+final DateTime today = DateTime.now();
 
-    final bool lockActions =
-        _licenseLoading || _licenseError != null || isBlockedByLicense;
+final bool isExpiredByDate = licenseEndDate != null &&
+    DateTime(
+      licenseEndDate.year,
+      licenseEndDate.month,
+      licenseEndDate.day,
+    ).isBefore(
+      DateTime(today.year, today.month, today.day),
+    );
 
-    final bool isLimit = blockingReason == 'USER_LIMIT_REACHED';
+final bool isExpiredReason =
+    blockingReason == 'APP_EXPIRED' ||
+    blockingReason == 'SUBSCRIPTION_EXPIRED' ||
+    blockingReason == 'LICENSE_EXPIRED';
 
-    final String lockMsg = _licenseLoading
-        ? l10n.adminDashboardStatusChecking
-        : (_licenseError != null
-            ? l10n.adminDashboardStatusLicenseFailed
-            : (isLimit
-                ? l10n.adminDashboardStatusLimitReached
-                : l10n.adminDashboardStatusAccessBlocked));
+final bool isLimit = blockingReason == 'USER_LIMIT_REACHED';
+
+final bool isBlockedByLicense = _license != null &&
+    (
+      _license!.canAccessDashboard == false ||
+      blockingReason.isNotEmpty ||
+      isExpiredByDate ||
+      isExpiredReason
+    );
+
+final bool lockActions =
+    _licenseLoading || _licenseError != null || isBlockedByLicense;
+
+   final String lockMsg = _licenseLoading
+    ? l10n.adminDashboardStatusChecking
+    : (_licenseError != null
+        ? l10n.adminDashboardStatusLicenseFailed
+        : (isLimit
+            ? l10n.adminDashboardStatusLimitReached
+            : ((isExpiredByDate || isExpiredReason)
+                ? l10n.subscriptionExpiredRenewRequired
+                : l10n.adminDashboardStatusAccessBlocked)));
 
     VoidCallback guarded(VoidCallback realAction) {
       return () {
@@ -404,8 +501,7 @@ Future<void> _init() async {
         onTap: guarded(() {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) =>
-                  AdminShippingMethodsScreen(ownerProjectId: ownerId),
+              builder: (_) => AdminShippingMethodsScreen(ownerProjectId: ownerId),
             ),
           );
         }),
@@ -448,6 +544,31 @@ Future<void> _init() async {
           );
         }),
       ),
+     _DashAction(
+  icon: Icons.campaign_outlined,
+  title: l10n.adminAnnouncementsTitle,
+  subtitle: l10n.adminAnnouncementsSubtitle,
+  onTap: guarded(() {
+    final api = OwnerAnnouncementApiService(
+      getToken: () => _store.getToken(),
+    );
+
+    final repo = OwnerAnnouncementRepositoryImpl(api: api);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider<OwnerAnnouncementBloc>(
+          create: (_) => OwnerAnnouncementBloc(
+            getAnnouncementsUc: GetOwnerAnnouncements(repo),
+            createAnnouncementUc: CreateOwnerAnnouncement(repo),
+            deleteAnnouncementUc: DeleteOwnerAnnouncement(repo),
+          ),
+          child: const OwnerAnnouncementsScreen(),
+        ),
+      ),
+    );
+  }),
+),
       _DashAction(
         icon: Icons.card_giftcard_outlined,
         title: l10n.adminCouponsTitle,
@@ -483,8 +604,7 @@ Future<void> _init() async {
         icon: Icons.upload_file_outlined,
         title: l10n.adminExcelImportTitle,
         subtitle: l10n.adminActionExcelSubtitle,
-        onTap:
-            guarded(() => Navigator.of(context).pushNamed('/admin/excel-import')),
+        onTap: guarded(() => Navigator.of(context).pushNamed('/admin/excel-import')),
       ),
     ];
 
@@ -512,15 +632,57 @@ Future<void> _init() async {
                   tooltip: l10n.profileLabel,
                 ),
                 IconButton(
-  onPressed: () {
-    Navigator.of(context).pushNamed(AppRouter.notifications);
-  },
-  icon: Icon(Icons.notifications_none_rounded, color: colors.body),
-  tooltip: l10n.adminDashboardNotificationsTooltip,
-),
+                  onPressed: _openNotifications,
+                  tooltip: l10n.adminDashboardNotificationsTooltip,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(Icons.notifications_none_rounded, color: colors.body),
+                      if (_ownerUnreadNotifications > 0)
+                        Positioned(
+                          right: -6,
+                          top: -6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.error,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: colors.surface,
+                                width: 1.4,
+                              ),
+                            ),
+                            child: Text(
+                              _ownerUnreadNotifications > 99
+                                  ? '99+'
+                                  : '$_ownerUnreadNotifications',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onError,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 10,
+                                    height: 1.0,
+                                  ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 IconButton(
                   onPressed: () async {
-                    await Future.wait([_loadLicense(), _profileCubit.load()]);
+                    await Future.wait([
+                      _loadLicense(),
+                      _profileCubit.load(),
+                      _loadOwnerNotificationCount(),
+                    ]);
                   },
                   icon: Icon(Icons.refresh, color: colors.body),
                   tooltip: l10n.refreshLabel,
@@ -770,7 +932,6 @@ class _ProfileBottomSheet extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
         _ProfileRow(
           label: l10n.adminIdLabel,
           value: adminId,
@@ -996,7 +1157,6 @@ class _ProfileBottomSheet extends StatelessWidget {
   }
 }
 
-
 class _ProfileRow extends StatelessWidget {
   final String label;
   final String value;
@@ -1052,8 +1212,8 @@ class _ProfileRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   value.trim().isEmpty ? '—' : value,
-                 maxLines: 3,
-overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: t.bodyMedium?.copyWith(
                     color: colors.label,
                     fontWeight: FontWeight.w700,
@@ -1449,8 +1609,7 @@ class _LicenseDetailsSheet extends StatelessWidget {
     final remaining = access.usersRemaining;
 
     final canRequestUpgrade =
-        access.planCode != PlanCode.DEDICATED &&
-            !access.hasPendingUpgradeRequest;
+        access.planCode != PlanCode.DEDICATED && !access.hasPendingUpgradeRequest;
 
     final upStatus = _upgradeStatusNice(l10n, access.upgradeRequestStatus);
     final upPlan = _planCodeToString(access.upgradeRequestedPlan);
@@ -1674,4 +1833,3 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-

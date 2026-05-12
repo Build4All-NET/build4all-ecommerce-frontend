@@ -3346,4 +3346,113 @@ class AppLocalizationsFr extends AppLocalizations {
   String paymentMissingRequiredField(Object field) {
     return 'Champ requis manquant : $field';
   }
+
+  @override
+  String get subscriptionExpiredRenewRequired => 'Votre abonnement a expiré. Veuillez le renouveler pour continuer à gérer votre application.';
+
+  @override
+  String get loginLabel => 'Connexion';
+
+  @override
+  String get adminAnnouncementsTitle => 'Annonces';
+
+  @override
+  String get adminAnnouncementsSubtitle => 'Notifier tous les utilisateurs de cette application';
+
+  @override
+  String get adminAnnouncementsNotifyAllTitle => 'Notifier tous les utilisateurs';
+
+  @override
+  String get adminAnnouncementsNotifyAllDescription => 'Envoyez un message à tous les utilisateurs ayant des appareils actifs dans cette application.';
+
+  @override
+  String get adminAnnouncementsTitleLabel => 'Titre';
+
+  @override
+  String get adminAnnouncementsTitleHint => 'Exemple : Nouveau produit disponible';
+
+  @override
+  String get adminAnnouncementsMessageLabel => 'Message';
+
+  @override
+  String get adminAnnouncementsMessageHint => 'Écrivez le message de l’annonce...';
+
+  @override
+  String get adminAnnouncementsMessageRequired => 'Le message est obligatoire';
+
+  @override
+  String get adminAnnouncementsTypeLabel => 'Type d’annonce';
+
+  @override
+  String get adminAnnouncementsTargetIdLabel => 'ID cible optionnel';
+
+  @override
+  String get adminAnnouncementsTargetIdHint => 'ID du produit, service, etc.';
+
+  @override
+  String get adminAnnouncementsTargetIdInvalid => 'L’ID cible doit être un nombre';
+
+  @override
+  String get adminAnnouncementsSendButton => 'Envoyer l’annonce';
+
+  @override
+  String get adminAnnouncementsSendingButton => 'Envoi...';
+
+  @override
+  String adminAnnouncementsSentSuccess(int count) {
+    return 'Annonce envoyée à $count utilisateurs';
+  }
+
+  @override
+  String get adminAnnouncementsGenericError => 'Échec de l’envoi de l’annonce';
+
+  @override
+  String get adminAnnouncementsTypeGeneral => 'Général';
+
+  @override
+  String get adminAnnouncementsTypeProduct => 'Produit';
+
+  @override
+  String get adminAnnouncementsTypeDiscount => 'Réduction';
+
+  @override
+  String get adminAnnouncementsTypeService => 'Service';
+
+  @override
+  String get adminAnnouncementsTypeMaintenance => 'Maintenance';
+
+  @override
+  String get adminAnnouncementsCreatedSuccess => 'Annonce envoyée avec succès';
+
+  @override
+  String get adminAnnouncementsDeletedSuccess => 'Annonce supprimée avec succès';
+
+  @override
+  String get adminAnnouncementsEmptyTitle => 'Aucune annonce pour le moment';
+
+  @override
+  String get adminAnnouncementsEmptyMessage => 'Créez votre première annonce pour notifier vos utilisateurs.';
+
+  @override
+  String get adminAnnouncementsDeleteTitle => 'Supprimer l’annonce ?';
+
+  @override
+  String get adminAnnouncementsDeleteMessage => 'Cette annonce sera masquée pour les utilisateurs.';
+
+  @override
+  String get adminAnnouncementsCancel => 'Annuler';
+
+  @override
+  String get adminAnnouncementsDelete => 'Supprimer';
+
+  @override
+  String adminAnnouncementsSentToUsers(int count) {
+    return 'Envoyée à $count utilisateurs';
+  }
+
+  @override
+  String get chooseImage => 'Choisir une image';
+
+  @override
+  String get removeImage => 'Supprimer l’image';
 }

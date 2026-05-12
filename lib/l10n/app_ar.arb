@@ -1168,5 +1168,55 @@
   "placeholders": {
     "field": {}
   }
-}
+},
+"subscriptionExpiredRenewRequired": "انتهى اشتراكك. يرجى تجديد الاشتراك لمتابعة إدارة التطبيق.",
+"loginLabel": "تسجيل الدخول",
+  "adminAnnouncementsTitle": "الإعلانات",
+  "adminAnnouncementsSubtitle": "إرسال إشعار لكل مستخدمي هذا التطبيق",
+  "adminAnnouncementsNotifyAllTitle": "إشعار كل المستخدمين",
+  "adminAnnouncementsNotifyAllDescription": "أرسل رسالة لكل المستخدمين الذين لديهم أجهزة فعّالة داخل هذا التطبيق.",
+  "adminAnnouncementsTitleLabel": "العنوان",
+  "adminAnnouncementsTitleHint": "مثال: منتج جديد متوفر",
+  "adminAnnouncementsMessageLabel": "الرسالة",
+  "adminAnnouncementsMessageHint": "اكتب رسالة الإعلان...",
+  "adminAnnouncementsMessageRequired": "الرسالة مطلوبة",
+  "adminAnnouncementsTypeLabel": "نوع الإعلان",
+  "adminAnnouncementsTargetIdLabel": "رقم الهدف اختياري",
+  "adminAnnouncementsTargetIdHint": "رقم المنتج أو الخدمة...",
+  "adminAnnouncementsTargetIdInvalid": "رقم الهدف يجب أن يكون رقماً",
+  "adminAnnouncementsSendButton": "إرسال الإعلان",
+  "adminAnnouncementsSendingButton": "جاري الإرسال...",
+  "adminAnnouncementsSentSuccess": "تم إرسال الإعلان إلى {count} مستخدم",
+  "@adminAnnouncementsSentSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAnnouncementsGenericError": "فشل إرسال الإعلان",
+  "adminAnnouncementsTypeGeneral": "عام",
+  "adminAnnouncementsTypeProduct": "منتج",
+  "adminAnnouncementsTypeDiscount": "خصم",
+  "adminAnnouncementsTypeService": "خدمة",
+  "adminAnnouncementsTypeMaintenance": "صيانة",
+  "adminAnnouncementsCreatedSuccess": "تم إرسال الإعلان بنجاح",
+"adminAnnouncementsDeletedSuccess": "تم حذف الإعلان بنجاح",
+"adminAnnouncementsEmptyTitle": "لا توجد إعلانات بعد",
+"adminAnnouncementsEmptyMessage": "أنشئ أول إعلان لإشعار المستخدمين.",
+"adminAnnouncementsDeleteTitle": "حذف الإعلان؟",
+"adminAnnouncementsDeleteMessage": "سيتم إخفاء هذا الإعلان عن المستخدمين.",
+"adminAnnouncementsCancel": "إلغاء",
+"adminAnnouncementsDelete": "حذف",
+"adminAnnouncementsSentToUsers": "تم الإرسال إلى {count} مستخدم",
+"@adminAnnouncementsSentToUsers": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"chooseImage": "اختيار صورة",
+"removeImage": "إزالة الصورة"
+
 }

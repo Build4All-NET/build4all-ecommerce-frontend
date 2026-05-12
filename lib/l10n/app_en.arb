@@ -1474,5 +1474,55 @@
   "placeholders": {
     "field": {}
   }
-}
+},
+"subscriptionExpiredRenewRequired": "Your subscription has expired. Please renew it to continue managing your app.",
+"loginLabel": "Login",
+  "adminAnnouncementsTitle": "Announcements",
+  "adminAnnouncementsSubtitle": "Notify all users in this app",
+  "adminAnnouncementsNotifyAllTitle": "Notify all users",
+  "adminAnnouncementsNotifyAllDescription": "Send a message to all users who have active devices in this app.",
+  "adminAnnouncementsTitleLabel": "Title",
+  "adminAnnouncementsTitleHint": "Example: New product available",
+  "adminAnnouncementsMessageLabel": "Message",
+  "adminAnnouncementsMessageHint": "Write the announcement message...",
+  "adminAnnouncementsMessageRequired": "Message is required",
+  "adminAnnouncementsTypeLabel": "Announcement type",
+  "adminAnnouncementsTargetIdLabel": "Target ID optional",
+  "adminAnnouncementsTargetIdHint": "Product ID, service ID, etc.",
+  "adminAnnouncementsTargetIdInvalid": "Target ID must be a number",
+  "adminAnnouncementsSendButton": "Send announcement",
+  "adminAnnouncementsSendingButton": "Sending...",
+  "adminAnnouncementsSentSuccess": "Announcement sent to {count} users",
+  "@adminAnnouncementsSentSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAnnouncementsGenericError": "Failed to send announcement",
+  "adminAnnouncementsTypeGeneral": "General",
+  "adminAnnouncementsTypeProduct": "Product",
+  "adminAnnouncementsTypeDiscount": "Discount",
+  "adminAnnouncementsTypeService": "Service",
+  "adminAnnouncementsTypeMaintenance": "Maintenance",
+  "adminAnnouncementsCreatedSuccess": "Announcement sent successfully",
+"adminAnnouncementsDeletedSuccess": "Announcement deleted successfully",
+"adminAnnouncementsEmptyTitle": "No announcements yet",
+"adminAnnouncementsEmptyMessage": "Create your first announcement to notify your users.",
+"adminAnnouncementsDeleteTitle": "Delete announcement?",
+"adminAnnouncementsDeleteMessage": "This announcement will be hidden from users.",
+"adminAnnouncementsCancel": "Cancel",
+"adminAnnouncementsDelete": "Delete",
+"adminAnnouncementsSentToUsers": "Sent to {count} users",
+"@adminAnnouncementsSentToUsers": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"chooseImage": "Choose image",
+"removeImage": "Remove image"
+
 }

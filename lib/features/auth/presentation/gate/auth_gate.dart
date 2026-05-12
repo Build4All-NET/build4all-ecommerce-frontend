@@ -27,7 +27,11 @@ import 'package:build4front/l10n/app_localizations.dart';
 
 class AuthGate extends StatefulWidget {
   final AppConfig appConfig;
-  const AuthGate({super.key, required this.appConfig});
+
+  const AuthGate({
+    super.key,
+    required this.appConfig,
+  });
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -55,14 +59,19 @@ class _AuthGateState extends State<AuthGate> {
 
   String _stripBearer(String? t) {
     final v = (t ?? '').trim();
-    if (v.toLowerCase().startsWith('bearer ')) return v.substring(7).trim();
+    if (v.toLowerCase().startsWith('bearer ')) {
+      return v.substring(7).trim();
+    }
     return v;
   }
 
   String _currentTenantIdString() {
-    // prefer runtime config, fallback env
     final fromConfig = widget.appConfig.ownerProjectId?.toString().trim();
-    if (fromConfig != null && fromConfig.isNotEmpty) return fromConfig;
+
+    if (fromConfig != null && fromConfig.isNotEmpty) {
+      return fromConfig;
+    }
+
     return (Env.ownerProjectLinkId ?? '').toString().trim();
   }
 
@@ -76,12 +85,12 @@ class _AuthGateState extends State<AuthGate> {
     final token = rawJwt.trim();
     final tenant = _currentTenantIdInt();
 
-    debugPrint('[RT] AuthGate startRealtime(admin) tokenEmpty=${token.isEmpty} tenant=$tenant');
+    debugPrint(
+      '[RT] AuthGate startRealtime(admin) tokenEmpty=${token.isEmpty} tenant=$tenant',
+    );
 
-    // Admin is logged in => token exists, but still guard
     if (token.isEmpty || tenant <= 0) return;
 
-    // ✅ MATCH MainShell signature
     context.read<RealtimeCubit>().bind(
           tokenMaybeBearerOrRaw: token,
           tenantId: tenant,
@@ -90,8 +99,8 @@ class _AuthGateState extends State<AuthGate> {
 
   void _stopRealtime() {
     if (!mounted) return;
+
     try {
-      // ✅ disconnect
       context.read<RealtimeCubit>().bind(
             tokenMaybeBearerOrRaw: '',
             tenantId: 0,
@@ -103,18 +112,19 @@ class _AuthGateState extends State<AuthGate> {
     await _userStore.clear();
     await _adminStore.clear();
     await _roleStore.clear();
+
     g.setAuthToken('');
     _stopRealtime();
   }
 
   Future<void> _enforceTenantMatchOrLogout() async {
     final current = _currentTenantIdString();
-    if (current.isEmpty) return; // fail-open
+
+    if (current.isEmpty) return;
 
     final savedUser = (await _userStore.getTenantId())?.trim() ?? '';
     final savedAdmin = (await _adminStore.getTenantId())?.trim() ?? '';
 
-    // ✅ only treat as mismatch if saved value exists
     final mismatchUser = savedUser.isNotEmpty && savedUser != current;
     final mismatchAdmin = savedAdmin.isNotEmpty && savedAdmin != current;
 
@@ -127,40 +137,72 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<bool> _checkPublicAppAccess() async {
     final linkId = widget.appConfig.ownerProjectId;
-    if (linkId == null) return true;
+
+    if (linkId == null) {
+      return true;
+    }
 
     try {
       final res = await g.dio().get('/api/public/app-access/$linkId');
+
       final data = (res.data is Map)
           ? Map<String, dynamic>.from(res.data as Map)
           : <String, dynamic>{};
 
-      if (data['allowed'] == true) return true;
+      if (data['allowed'] == true) {
+        return true;
+      }
+
+      final reason = (data['reason'] ?? '').toString();
+
+      /*
+       * Do NOT show expired screen.
+       * If backend says APP_EXPIRED, frontend continues normally.
+       */
+      if (reason == 'APP_EXPIRED') {
+        return true;
+      }
 
       if (!mounted) return false;
+
       setState(() {
         _appBlocked = true;
-        _blockReason = (data['reason'] ?? '').toString();
+        _blockReason = reason;
         _serverBlockMessage = (data['message'] ?? '').toString();
         _loading = false;
       });
+
       return false;
     } on DioException catch (e) {
       if (e.response?.statusCode == 410) {
         final raw = e.response?.data;
+
         final data = (raw is Map)
             ? Map<String, dynamic>.from(raw)
             : <String, dynamic>{};
 
+        final reason = (data['reason'] ?? 'APP_NOT_AVAILABLE').toString();
+
+        /*
+         * Do NOT show expired screen.
+         * Backend can return 410 for APP_EXPIRED, but app continues.
+         */
+        if (reason == 'APP_EXPIRED') {
+          return true;
+        }
+
         if (!mounted) return false;
+
         setState(() {
           _appBlocked = true;
-          _blockReason = (data['reason'] ?? 'APP_NOT_AVAILABLE').toString();
+          _blockReason = reason;
           _serverBlockMessage = (data['message'] ?? '').toString();
           _loading = false;
         });
+
         return false;
       }
+
       return true;
     } catch (_) {
       return true;
@@ -169,22 +211,25 @@ class _AuthGateState extends State<AuthGate> {
 
   // ------------------- refresh -------------------
 
- Future<String?> _tryRefreshUserIfNeeded({
-  required String? tokenStored,
-  required bool userWasInactive,
-}) async {
-  return _refreshCoordinator.refreshUserIfNeeded(
-    tokenStored: tokenStored,
-    userWasInactive: userWasInactive,
-    tenantId: _currentTenantIdString(),
-  );
-}
-Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
-  return _refreshCoordinator.refreshAdminIfNeeded(
-    tokenStored: tokenStored,
-    tenantId: _currentTenantIdString(),
-  );
-}
+  Future<String?> _tryRefreshUserIfNeeded({
+    required String? tokenStored,
+    required bool userWasInactive,
+  }) async {
+    return _refreshCoordinator.refreshUserIfNeeded(
+      tokenStored: tokenStored,
+      userWasInactive: userWasInactive,
+      tenantId: _currentTenantIdString(),
+    );
+  }
+
+  Future<String?> _tryRefreshAdminIfNeeded({
+    required String? tokenStored,
+  }) async {
+    return _refreshCoordinator.refreshAdminIfNeeded(
+      tokenStored: tokenStored,
+      tenantId: _currentTenantIdString(),
+    );
+  }
 
   // ------------------- boot -------------------
 
@@ -193,7 +238,10 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
 
     try {
       final canOpen = await _checkPublicAppAccess();
-      if (!canOpen) return;
+
+      if (!canOpen) {
+        return;
+      }
 
       await _enforceTenantMatchOrLogout();
 
@@ -203,52 +251,66 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
       final userStored = (await _userStore.getToken())?.trim();
       final userWasInactive = await _userStore.getWasInactive();
 
-      final adminToken = await _tryRefreshAdminIfNeeded(tokenStored: adminStored);
+      final adminToken = await _tryRefreshAdminIfNeeded(
+        tokenStored: adminStored,
+      );
+
       final userToken = await _tryRefreshUserIfNeeded(
         tokenStored: userStored,
         userWasInactive: userWasInactive,
       );
 
-      final adminValid =
-          adminToken != null && adminToken.isNotEmpty && !JwtUtils.isExpired(adminToken);
-      final userValid =
-          userToken != null && userToken.isNotEmpty && !JwtUtils.isExpired(userToken);
+      final adminValid = adminToken != null &&
+          adminToken.isNotEmpty &&
+          !JwtUtils.isExpired(adminToken);
+
+      final userValid = userToken != null &&
+          userToken.isNotEmpty &&
+          !JwtUtils.isExpired(userToken);
+
       final userAutoValid = userValid && !userWasInactive;
 
-      if (!adminValid) await _adminStore.clear();
-      if (!userValid) await _userStore.clear();
+      if (!adminValid) {
+        await _adminStore.clear();
+      }
+
+      if (!userValid) {
+        await _userStore.clear();
+      }
 
       if (!mounted) return;
 
-      // ✅ IMPORTANT: apply token before navigating
       if (lastRole == 'admin' && adminValid) {
-        _goAdminWithToken(adminToken!);
-        return;
-      }
-      if (lastRole == 'user' && userAutoValid) {
-        _hydrateUserAndGo(userToken!);
+        _goAdminWithToken(
+          adminToken,
+          adminRole: (await const AdminTokenStore().getRole()) ?? '',
+        );
         return;
       }
 
-      // if both valid but no lastRole -> ask
+      if (lastRole == 'user' && userAutoValid) {
+        _hydrateUserAndGo(userToken);
+        return;
+      }
+
       if (adminValid &&
           userAutoValid &&
           (lastRole == null || lastRole.trim().isEmpty)) {
         setState(() => _loading = false);
-        await _askRoleAndGo(adminToken!, userToken!);
+        await _askRoleAndGo(adminToken, userToken);
         return;
       }
 
-      // fallback priority
       if (adminValid) {
-  _goAdminWithToken(
-    adminToken!,
-    adminRole: (await const AdminTokenStore().getRole()) ?? '',
-  );
-  return;
-}
+        _goAdminWithToken(
+          adminToken,
+          adminRole: (await const AdminTokenStore().getRole()) ?? '',
+        );
+        return;
+      }
+
       if (userAutoValid) {
-        _hydrateUserAndGo(userToken!);
+        _hydrateUserAndGo(userToken);
         return;
       }
 
@@ -265,10 +327,13 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
     final choice = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(16),
+        ),
       ),
       builder: (ctx) {
         final bl10n = AppLocalizations.of(ctx)!;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
@@ -277,7 +342,10 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
               const SizedBox(height: 6),
               Text(
                 bl10n.authGateContinueAs,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 12),
               ListTile(
@@ -300,13 +368,16 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
     if (!mounted) return;
 
     if (choice == 'admin') {
-  await _roleStore.saveRole('admin');
-  _goAdminWithToken(
-    adminToken,
-    adminRole: (await const AdminTokenStore().getRole()) ?? '',
-  );
-  return;
-}
+      await _roleStore.saveRole('admin');
+
+      _goAdminWithToken(
+        adminToken,
+        adminRole: (await const AdminTokenStore().getRole()) ?? '',
+      );
+
+      return;
+    }
+
     if (choice == 'user') {
       await _roleStore.saveRole('user');
       _hydrateUserAndGo(userToken);
@@ -317,53 +388,62 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
   }
 
   void _hydrateUserAndGo(String rawJwt) {
-  g.setAuthToken(rawJwt);
+    g.setAuthToken(rawJwt);
 
-  final ownerProjectLinkId =
-      widget.appConfig.ownerProjectId ??
-      int.tryParse(Env.ownerProjectLinkId) ??
-      0;
+    final ownerProjectLinkId = widget.appConfig.ownerProjectId ??
+        int.tryParse(Env.ownerProjectLinkId) ??
+        0;
 
-  if (ownerProjectLinkId > 0) {
-    FrontFirebasePushService().initAndSyncToken(
-      ownerProjectLinkId: ownerProjectLinkId,
+    if (ownerProjectLinkId > 0) {
+      FrontFirebasePushService().initAndSyncToken(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+    }
+
+    context.read<AuthBloc>().add(
+          AuthLoginHydrated(
+            user: null,
+            token: rawJwt,
+            wasInactive: false,
+          ),
+        );
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MainShell(appConfig: widget.appConfig),
+      ),
     );
   }
-
-  context.read<AuthBloc>().add(
-        AuthLoginHydrated(user: null, token: rawJwt, wasInactive: false),
-      );
-
-  Navigator.of(context).pushReplacement(
-    MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
-  );
-}
 
   void _goAdminWithToken(String rawJwt, {String adminRole = ''}) {
-  g.setAuthToken(rawJwt);
+    g.setAuthToken(rawJwt);
 
-  final ownerProjectLinkId =
-      widget.appConfig.ownerProjectId ??
-      int.tryParse(Env.ownerProjectLinkId) ??
-      0;
+    final ownerProjectLinkId = widget.appConfig.ownerProjectId ??
+        int.tryParse(Env.ownerProjectLinkId) ??
+        0;
 
-  if (adminRole.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
-    FrontFirebasePushService().initAndSyncToken(
-      ownerProjectLinkId: ownerProjectLinkId,
+    if (adminRole.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
+      FrontFirebasePushService().initAndSyncToken(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+    }
+
+    _startRealtimeForAdmin(rawJwt);
+
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/admin',
+      (_) => false,
     );
   }
-
-  _startRealtimeForAdmin(rawJwt);
-
-  Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
-}
 
   void _goLogin() {
     g.setAuthToken('');
     _stopRealtime();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => UserLoginScreen(appConfig: widget.appConfig)),
+      MaterialPageRoute(
+        builder: (_) => UserLoginScreen(appConfig: widget.appConfig),
+      ),
     );
   }
 
@@ -426,18 +506,30 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(radius: 34, child: Icon(icon, size: 34)),
+                    CircleAvatar(
+                      radius: 34,
+                      child: Icon(icon, size: 34),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       title,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    Text(message, textAlign: TextAlign.center),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                    ),
                     if (_serverBlockMessage.trim().isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Text(_serverBlockMessage, textAlign: TextAlign.center),
+                      Text(
+                        _serverBlockMessage,
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                     const SizedBox(height: 18),
                     SizedBox(
@@ -445,12 +537,14 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
                       child: ElevatedButton.icon(
                         onPressed: () async {
                           if (!mounted) return;
+
                           setState(() {
                             _loading = true;
                             _appBlocked = false;
                             _blockReason = '';
                             _serverBlockMessage = '';
                           });
+
                           await _boot();
                         },
                         icon: const Icon(Icons.refresh_rounded),
@@ -469,8 +563,20 @@ Future<String?> _tryRefreshAdminIfNeeded({required String? tokenStored}) async {
 
   @override
   Widget build(BuildContext context) {
-    if (_appBlocked) return _buildBlockedFullScreen();
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    return const Scaffold(body: SizedBox.shrink());
+    if (_appBlocked) {
+      return _buildBlockedFullScreen();
+    }
+
+    if (_loading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return const Scaffold(
+      body: SizedBox.shrink(),
+    );
   }
 }
