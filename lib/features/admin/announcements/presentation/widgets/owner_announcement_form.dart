@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
+import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,18 +33,28 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _messageCtrl = TextEditingController();
-  final _targetIdCtrl = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
+  final AdminTokenStore _tokenStore = const AdminTokenStore();
 
   String _type = 'GENERAL';
   File? _imageFile;
+
+  bool _loadingTargets = false;
+  String? _targetError;
+
+  int? _selectedTargetId;
+  List<_TargetOption> _targetOptions = [];
+
+  bool get _needsProductTarget {
+    final cleanType = _type.trim().toUpperCase();
+    return cleanType == 'PRODUCT' || cleanType == 'DISCOUNT';
+  }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _messageCtrl.dispose();
-    _targetIdCtrl.dispose();
     super.dispose();
   }
 
@@ -51,8 +64,155 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
       _AnnouncementTypeOption('PRODUCT', l10n.adminAnnouncementsTypeProduct),
       _AnnouncementTypeOption('DISCOUNT', l10n.adminAnnouncementsTypeDiscount),
       _AnnouncementTypeOption('SERVICE', l10n.adminAnnouncementsTypeService),
-      _AnnouncementTypeOption('MAINTENANCE', l10n.adminAnnouncementsTypeMaintenance),
+      _AnnouncementTypeOption(
+        'MAINTENANCE',
+        l10n.adminAnnouncementsTypeMaintenance,
+      ),
     ];
+  }
+
+  int _readOwnerProjectId() {
+    final fromProject = int.tryParse((g.projectId ?? '').trim());
+    if (fromProject != null && fromProject > 0) {
+      return fromProject;
+    }
+
+    final fromLink = int.tryParse((g.ownerProjectLinkId ?? '').trim());
+    if (fromLink != null && fromLink > 0) {
+      return fromLink;
+    }
+
+    return 0;
+  }
+
+  String _asString(dynamic value) {
+    if (value == null) return '';
+    return value.toString().trim();
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse('$value') ?? 0;
+  }
+
+  double? _asDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse('$value');
+  }
+
+  String _productLabel(Map<String, dynamic> json) {
+    final name = _asString(json['name']);
+    if (name.isNotEmpty) return name;
+
+    final title = _asString(json['title']);
+    if (title.isNotEmpty) return title;
+
+    return 'Product #${_asInt(json['id'])}';
+  }
+
+  String? _productSubtitle(Map<String, dynamic> json) {
+    final sku = _asString(json['sku']);
+    final price = _asDouble(json['effectivePrice'] ?? json['price']);
+
+    if (sku.isNotEmpty && price != null) {
+      return 'SKU: $sku • $price';
+    }
+
+    if (sku.isNotEmpty) {
+      return 'SKU: $sku';
+    }
+
+    if (price != null) {
+      return '$price';
+    }
+
+    return null;
+  }
+
+  Future<void> _loadTargetsForType(String type) async {
+    final cleanType = type.trim().toUpperCase();
+
+    if (cleanType != 'PRODUCT' && cleanType != 'DISCOUNT') {
+      setState(() {
+        _selectedTargetId = null;
+        _targetOptions = [];
+        _targetError = null;
+        _loadingTargets = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _loadingTargets = true;
+      _targetError = null;
+      _selectedTargetId = null;
+      _targetOptions = [];
+    });
+
+    try {
+      final token = await _tokenStore.getToken();
+
+      if (token == null || token.trim().isEmpty) {
+        throw Exception('Missing owner token');
+      }
+
+      final ownerProjectId = _readOwnerProjectId();
+
+      if (ownerProjectId <= 0) {
+        throw Exception('Missing ownerProjectId');
+      }
+
+      final api = ProductApiService();
+
+      final List<dynamic> rawList;
+
+      if (cleanType == 'DISCOUNT') {
+        rawList = await api.getDiscounted(
+          authToken: token,
+        );
+      } else {
+        rawList = await api.getProducts(
+          ownerProjectId: ownerProjectId,
+          authToken: token,
+        );
+      }
+
+      final options = <_TargetOption>[];
+
+      for (final item in rawList) {
+        if (item is! Map) continue;
+
+        final json = Map<String, dynamic>.from(item);
+        final id = _asInt(json['id']);
+
+        if (id <= 0) continue;
+
+        options.add(
+          _TargetOption(
+            id: id,
+            label: _productLabel(json),
+            subtitle: _productSubtitle(json),
+          ),
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _targetOptions = options;
+        _loadingTargets = false;
+        _targetError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _targetOptions = [];
+        _loadingTargets = false;
+        _targetError = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
   Future<void> _pickImage() async {
@@ -71,24 +231,24 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
   void _submit(AppLocalizations l10n) {
     if (!_formKey.currentState!.validate()) return;
 
-    final rawTarget = _targetIdCtrl.text.trim();
-    final targetId = rawTarget.isEmpty ? null : int.tryParse(rawTarget);
-
     widget.onSubmit(
       title: _titleCtrl.text.trim(),
       message: _messageCtrl.text.trim(),
       announcementType: _type,
-      targetId: targetId,
+      targetId: _needsProductTarget ? _selectedTargetId : null,
       imagePath: _imageFile?.path,
     );
 
     _titleCtrl.clear();
     _messageCtrl.clear();
-    _targetIdCtrl.clear();
 
     setState(() {
       _type = 'GENERAL';
       _imageFile = null;
+      _selectedTargetId = null;
+      _targetOptions = [];
+      _targetError = null;
+      _loadingTargets = false;
     });
   }
 
@@ -180,6 +340,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
                 if ((value ?? '').trim().isEmpty) {
                   return l10n.adminAnnouncementsMessageRequired;
                 }
+
                 return null;
               },
             ),
@@ -203,32 +364,122 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
                   ? null
                   : (value) {
                       if (value == null) return;
-                      setState(() => _type = value);
+
+                      setState(() {
+                        _type = value;
+                        _selectedTargetId = null;
+                        _targetOptions = [];
+                        _targetError = null;
+                      });
+
+                      _loadTargetsForType(value);
                     },
             ),
-            SizedBox(height: spacing.md),
 
-            TextFormField(
-              controller: _targetIdCtrl,
-              enabled: !widget.submitting,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.adminAnnouncementsTargetIdLabel,
-                hintText: l10n.adminAnnouncementsTargetIdHint,
-                border: const OutlineInputBorder(),
-              ),
-              validator: (value) {
-                final raw = (value ?? '').trim();
+            if (_needsProductTarget) ...[
+              SizedBox(height: spacing.md),
 
-                if (raw.isEmpty) return null;
+              if (_loadingTargets)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colors.border.withOpacity(.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Loading targets...',
+                        style: text.bodyMedium?.copyWith(
+                          color: colors.body,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                DropdownButtonFormField<int>(
+                  value: _selectedTargetId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: _type == 'DISCOUNT'
+                        ? 'Select discounted product'
+                        : 'Select product',
+                    border: const OutlineInputBorder(),
+                    errorText: _targetError,
+                  ),
+                  items: _targetOptions.map((item) {
+                    return DropdownMenuItem<int>(
+                      value: item.id,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if ((item.subtitle ?? '').trim().isNotEmpty)
+                            Text(
+                              item.subtitle!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodySmall?.copyWith(
+                                color: colors.body,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: widget.submitting
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedTargetId = value;
+                          });
+                        },
+                  validator: (value) {
+                    if (_needsProductTarget && value == null) {
+                      return _type == 'DISCOUNT'
+                          ? 'Please select a discounted product'
+                          : 'Please select a product';
+                    }
 
-                if (int.tryParse(raw) == null) {
-                  return l10n.adminAnnouncementsTargetIdInvalid;
-                }
+                    return null;
+                  },
+                ),
 
-                return null;
-              },
-            ),
+              if (!_loadingTargets &&
+                  _targetError == null &&
+                  _targetOptions.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _type == 'DISCOUNT'
+                        ? 'No discounted products found.'
+                        : 'No products found.',
+                    style: text.bodySmall?.copyWith(
+                      color: colors.body,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+
             SizedBox(height: spacing.md),
 
             OutlinedButton.icon(
@@ -291,4 +542,16 @@ class _AnnouncementTypeOption {
   final String label;
 
   const _AnnouncementTypeOption(this.value, this.label);
+}
+
+class _TargetOption {
+  final int id;
+  final String label;
+  final String? subtitle;
+
+  const _TargetOption({
+    required this.id,
+    required this.label,
+    this.subtitle,
+  });
 }

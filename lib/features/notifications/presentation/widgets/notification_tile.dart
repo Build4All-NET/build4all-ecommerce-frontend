@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:build4front/core/network/globals.dart' as net;
 import 'package:build4front/core/theme/theme_cubit.dart';
 
 import '../../domain/entities/app_notification.dart';
@@ -31,6 +33,7 @@ class NotificationTile extends StatelessWidget {
     final y = local.year.toString().padLeft(4, '0');
     final m = local.month.toString().padLeft(2, '0');
     final d = local.day.toString().padLeft(2, '0');
+
     return '$d/$m/$y';
   }
 
@@ -49,9 +52,23 @@ class NotificationTile extends StatelessWidget {
       case 'LOW_STOCK':
       case 'OUT_OF_STOCK':
         return Icons.inventory_2_outlined;
+      case 'ANNOUNCEMENT':
+      case 'OWNER_ANNOUNCEMENT':
+      case 'USER_ANNOUNCEMENT':
+        return Icons.campaign_outlined;
       default:
         return Icons.notifications_rounded;
     }
+  }
+
+  String _announcementFullImageUrl() {
+    final raw = (notif.announcementImageUrl ?? '').trim();
+
+    if (raw.isEmpty) {
+      return '';
+    }
+
+    return net.resolveUrl(raw);
   }
 
   @override
@@ -61,8 +78,11 @@ class NotificationTile extends StatelessWidget {
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
 
     final unread = !notif.isRead;
-    final title = notif.title.trim().isEmpty ? 'Notification' : notif.title.trim();
+    final title =
+        notif.title.trim().isEmpty ? 'Notification' : notif.title.trim();
     final body = notif.body.trim();
+
+    final imageUrl = _announcementFullImageUrl();
 
     return Container(
       margin: EdgeInsets.only(bottom: spacing.sm),
@@ -92,21 +112,28 @@ class NotificationTile extends StatelessWidget {
                   size: 20,
                 ),
               ),
+
               SizedBox(width: spacing.md),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: t.bodyMedium?.copyWith(
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight:
+                            unread ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                     if (body.isNotEmpty) ...[
                       SizedBox(height: spacing.xs),
                       Text(
                         body,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: t.bodySmall?.copyWith(
                           color: c.onSurface.withOpacity(0.78),
                         ),
@@ -122,7 +149,38 @@ class NotificationTile extends StatelessWidget {
                   ],
                 ),
               ),
+
+              if (imageUrl.isNotEmpty) ...[
+                SizedBox(width: spacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl,
+                    width: 68,
+                    height: 68,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 68,
+                        height: 68,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: c.outline.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 22,
+                          color: c.onSurface.withOpacity(0.55),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+
               SizedBox(width: spacing.sm),
+
               Column(
                 children: [
                   if (unread)

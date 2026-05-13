@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:build4front/features/ai_feature/ai_feature_bootstrap.dart';
+import 'package:build4front/features/announcements/data/services/public_announcement_popup_service.dart';
+import 'package:build4front/features/announcements/presentation/widgets/public_announcement_popup_dialog.dart';
 import 'package:build4front/features/support/data/services/support_api_service.dart';
 import 'package:build4front/features/support/domain/support_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:build4front/core/network/globals.dart' as authState;
 import 'package:build4front/core/config/app_config.dart';
@@ -43,11 +46,12 @@ import 'package:build4front/features/catalog/cubit/money.dart';
 import 'package:build4front/features/catalog/domain/entities/category.dart';
 import 'package:build4front/core/config/env.dart';
 
+
+
 class HomeScreen extends StatefulWidget {
   final AppConfig appConfig;
   final List<HomeSectionConfig> sections;
   final VoidCallback? onOpenProfileTab;
-  
 
   const HomeScreen({
     super.key,
@@ -68,10 +72,16 @@ class _HomeScreenState extends State<HomeScreen>
 
   int _filterVersion = 0;
 
+  final PublicAnnouncementPopupService _announcementPopupService =
+      PublicAnnouncementPopupService();
+
+  bool _announcementPopupChecked = false;
+
   @override
   bool get wantKeepAlive => true;
 
   final OwnerSupportService _supportService = OwnerSupportService();
+
   SupportInfo? _supportInfo;
   bool _supportLoading = false;
   String? _supportError;
@@ -103,7 +113,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (v == null) return false;
     if (v is bool) return v;
     if (v is num) return v != 0;
+
     final s = v.toString().trim().toLowerCase();
+
     return s == 'true' || s == '1' || s == 'yes';
   }
 
@@ -120,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen>
       final bool fromGetter = _safeBool((item as dynamic).isExternalProduct);
       if (fromGetter) return true;
     } catch (_) {}
+
     return _itemProductType(item) == 'EXTERNAL';
   }
 
@@ -163,14 +176,17 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  bool _hasExternalUrl(ItemSummary item) =>
-      (_externalUrl(item) ?? '').trim().isNotEmpty;
+  bool _hasExternalUrl(ItemSummary item) {
+    return (_externalUrl(item) ?? '').trim().isNotEmpty;
+  }
 
-  bool _hasDownloadUrl(ItemSummary item) =>
-      (_downloadUrl(item) ?? '').trim().isNotEmpty;
+  bool _hasDownloadUrl(ItemSummary item) {
+    return (_downloadUrl(item) ?? '').trim().isNotEmpty;
+  }
 
-  bool _isDownloadReady(ItemSummary item) =>
-      _isDownloadable(item) && _canDownloadNow(item) && _hasDownloadUrl(item);
+  bool _isDownloadReady(ItemSummary item) {
+    return _isDownloadable(item) && _canDownloadNow(item) && _hasDownloadUrl(item);
+  }
 
   void _ensureHomeDataLoaded() {
     final homeBloc = context.read<HomeBloc>();
@@ -184,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen>
     _log(
       'Dispatch HomeStarted (initial load) | token=${token == null ? "null" : "yes"}',
     );
+
     homeBloc.add(HomeStarted(token: token));
   }
 
@@ -213,6 +230,63 @@ class _HomeScreenState extends State<HomeScreen>
     return 0;
   }
 
+  Future<void> _checkAndShowAnnouncementPopup() async {
+    if (_announcementPopupChecked) return;
+
+    _announcementPopupChecked = true;
+
+    try {
+      final ownerProjectLinkId = _resolvedOwnerProjectLinkId;
+
+      if (ownerProjectLinkId <= 0) {
+        debugPrint(
+          '[HomeScreen] Announcement popup skipped: invalid ownerProjectLinkId',
+        );
+        return;
+      }
+
+      final announcements =
+          await _announcementPopupService.getPublicAnnouncements(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+
+      if (!mounted || announcements.isEmpty) {
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final seenKey = 'seen_home_announcement_ids_$ownerProjectLinkId';
+      final seenIds = prefs.getStringList(seenKey) ?? <String>[];
+
+      final unseen = announcements.where((item) {
+        return !seenIds.contains(item.id.toString());
+      }).toList();
+
+      if (!mounted || unseen.isEmpty) {
+        return;
+      }
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) {
+          return PublicAnnouncementPopupDialog(
+            announcements: unseen,
+          );
+        },
+      );
+
+      final updatedSeenIds = <String>{
+        ...seenIds,
+        ...unseen.map((item) => item.id.toString()),
+      }.toList();
+
+      await prefs.setStringList(seenKey, updatedSeenIds);
+    } catch (e, st) {
+      _logErr('Announcement popup check failed', e, st);
+    }
+  }
 
   Future<void> _loadSupportInfo({
     bool silent = true,
@@ -232,6 +306,7 @@ class _HomeScreenState extends State<HomeScreen>
       final info = await _supportService.fetchSupportInfo(token: token);
 
       if (!mounted) return;
+
       setState(() {
         _supportInfo = info;
         _supportError = null;
@@ -240,12 +315,14 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e, st) {
       if (!mounted) return;
+
       setState(() {
         _supportInfo = null;
         _supportError = '$e';
         _supportLoading = false;
         _supportLoadedAt = null;
       });
+
       _logErr('SupportInfo FAIL', e, st);
     }
   }
@@ -255,14 +332,21 @@ class _HomeScreenState extends State<HomeScreen>
   String? _fallbackOwnerPhoneFromConfig(AppConfig cfg) {
     String? clean(dynamic v) {
       final s = (v ?? '').toString().trim();
+
       if (s.isEmpty) return null;
+
       final low = s.toLowerCase();
-      if (low == 'null' || low == 'n/a' || low == 'none') return null;
+
+      if (low == 'null' || low == 'n/a' || low == 'none') {
+        return null;
+      }
+
       return s;
     }
 
     try {
       final d = cfg as dynamic;
+
       final direct =
           clean(d.ownerPhoneNumber) ??
           clean(d.ownerPhone) ??
@@ -275,10 +359,12 @@ class _HomeScreenState extends State<HomeScreen>
           clean(d.whatsAppNumber) ??
           clean(d.ownerWhatsappNumber) ??
           clean(d.supportWhatsappNumber);
+
       if (direct != null) return direct;
     } catch (_) {}
 
     Map<String, dynamic>? m;
+
     try {
       final x = (cfg as dynamic).toJson();
       if (x is Map<String, dynamic>) m = x;
@@ -352,9 +438,13 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _ensureHomeDataLoaded();
       _loadSupportInfo(silent: true, reason: 'init');
+
+      await _checkAndShowAnnouncementPopup();
+
       await AiFeatureBootstrap().refresh(minInterval: Duration.zero);
     });
   }
@@ -367,8 +457,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onSearchChangedDebounced(String value) {
     _searchDebounce?.cancel();
+
     _searchDebounce = Timer(const Duration(milliseconds: 280), () {
       if (!mounted) return;
+
       setState(() {
         _searchQuery = value.trim();
         _resetPaging();
@@ -401,12 +493,14 @@ class _HomeScreenState extends State<HomeScreen>
       case 'URL':
       case 'EXTERNAL_URL':
         final rawUrl = (banner.targetUrl ?? '').trim();
+
         if (rawUrl.isEmpty) {
           AppToast.error(context, l10n.missingExternalUrlLabel);
           return;
         }
 
         final uri = Uri.tryParse(rawUrl);
+
         if (uri == null) {
           AppToast.error(context, l10n.invalidExternalUrlLabel);
           return;
@@ -422,6 +516,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (!opened) {
           AppToast.error(context, l10n.couldNotOpenLinkLabel);
         }
+
         return;
 
       default:
@@ -542,12 +637,13 @@ class _HomeScreenState extends State<HomeScreen>
                         final token = raw.isEmpty ? null : raw;
 
                         context.read<HomeBloc>().add(
-                          HomeRefreshRequested(token: token),
-                        );
+                              HomeRefreshRequested(token: token),
+                            );
 
                         await AiFeatureBootstrap().refresh(
                           minInterval: Duration.zero,
                         );
+
                         await _loadSupportInfo(
                           silent: false,
                           reason: 'pull-to-refresh',
@@ -568,12 +664,18 @@ class _HomeScreenState extends State<HomeScreen>
                               constraints:
                                   BoxConstraints(maxWidth: contentMaxWidth),
                               child: ListView.builder(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding:
-                                    EdgeInsets.fromLTRB(hp, top, hp, bottom),
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  hp,
+                                  top,
+                                  hp,
+                                  bottom,
+                                ),
                                 itemCount: visibleSections.length,
                                 itemBuilder: (context, index) {
                                   final section = visibleSections[index];
+
                                   return _buildSection(
                                     context,
                                     theme,
@@ -650,6 +752,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (!_hasAnyItems(homeState)) return const SizedBox.shrink();
 
         final availableIds = _availableCategoryIds(homeState);
+
         final cats = homeState.categoryEntities
             .where((c) => availableIds.contains(c.id))
             .toList();
@@ -662,6 +765,7 @@ class _HomeScreenState extends State<HomeScreen>
                 for (final cat in cats) {
                   if (cat.id == _selectedCategoryId) return cat.name;
                 }
+
                 return l10n.explore_category_all;
               }();
 
@@ -687,6 +791,7 @@ class _HomeScreenState extends State<HomeScreen>
               }
 
               int? foundId;
+
               for (final cat in cats) {
                 if (cat.name == selected) {
                   foundId = cat.id;
@@ -719,6 +824,7 @@ class _HomeScreenState extends State<HomeScreen>
         );
 
         final itemsForHome = _applyFilters(rawItems);
+
         if (itemsForHome.isEmpty) return const SizedBox.shrink();
 
         final sectionTitle =
@@ -726,27 +832,26 @@ class _HomeScreenState extends State<HomeScreen>
             (section.id == 'recommended'
                 ? l10n.home_recommended_title
                 : section.id == 'popular'
-                ? l10n.home_popular_title
-                : section.id == 'flash_sale'
-                ? l10n.home_flash_sale_title
-                : section.id == 'new_arrivals'
-                ? l10n.home_new_arrivals_title
-                : section.id == 'best_sellers'
-                ? l10n.home_best_sellers_title
-                : section.id == 'top_rated'
-                ? l10n.home_top_rated_title
-                : l10n.home_items_default_title);
+                    ? l10n.home_popular_title
+                    : section.id == 'flash_sale'
+                        ? l10n.home_flash_sale_title
+                        : section.id == 'new_arrivals'
+                            ? l10n.home_new_arrivals_title
+                            : section.id == 'best_sellers'
+                                ? l10n.home_best_sellers_title
+                                : section.id == 'top_rated'
+                                    ? l10n.home_top_rated_title
+                                    : l10n.home_items_default_title);
 
         final icon = _iconForSection(section);
         final trailing = _trailingForSection(section, l10n);
-        final layout = _HomePagerLayout.rowPages2;
 
         return Padding(
           padding: EdgeInsets.only(bottom: spacing.xs),
           child: _HomeItemsPagerSection(
             key: ValueKey('${section.id}::$_filterVersion'),
             storageId: section.id,
-            layout: layout,
+            layout: _HomePagerLayout.rowPages2,
             title: sectionTitle,
             icon: icon,
             trailingText: trailing.text,
@@ -781,6 +886,7 @@ class _HomeScreenState extends State<HomeScreen>
         final linkId = _resolvedOwnerProjectLinkId;
 
         final phoneFromApi = (_supportInfo?.phoneNumber ?? '').trim();
+
         final phoneFallback =
             (_fallbackOwnerPhoneFromConfig(widget.appConfig) ?? '').trim();
 
@@ -795,6 +901,7 @@ class _HomeScreenState extends State<HomeScreen>
             'envLink=${_asInt(Env.ownerProjectLinkId)} cfgOwner=${_asInt(widget.appConfig.ownerProjectId)} envOwner=${_asInt(Env.ownerProjectLinkId)}';
 
         final h = logLine.hashCode;
+
         if (h != _lastBottomLogHash) {
           _lastBottomLogHash = h;
           debugPrint(logLine);
@@ -824,11 +931,15 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
+
       result = result.where((item) {
         final title = item.title.toLowerCase();
         final subtitle = (item.subtitle ?? '').toLowerCase();
         final location = (item.location ?? '').toLowerCase();
-        return title.contains(q) || subtitle.contains(q) || location.contains(q);
+
+        return title.contains(q) ||
+            subtitle.contains(q) ||
+            location.contains(q);
       }).toList();
     }
 
@@ -844,15 +955,15 @@ class _HomeScreenState extends State<HomeScreen>
         return homeState.recommendedItems.isNotEmpty
             ? homeState.recommendedItems
             : homeState.popularItems.isNotEmpty
-            ? homeState.popularItems
-            : homeState.newArrivalsItems;
+                ? homeState.popularItems
+                : homeState.newArrivalsItems;
 
       case 'popular':
         return homeState.popularItems.isNotEmpty
             ? homeState.popularItems
             : homeState.recommendedItems.isNotEmpty
-            ? homeState.recommendedItems
-            : homeState.newArrivalsItems;
+                ? homeState.recommendedItems
+                : homeState.newArrivalsItems;
 
       case 'flash_sale':
         return homeState.flashSaleItems;
@@ -861,24 +972,24 @@ class _HomeScreenState extends State<HomeScreen>
         return homeState.newArrivalsItems.isNotEmpty
             ? homeState.newArrivalsItems
             : homeState.popularItems.isNotEmpty
-            ? homeState.popularItems
-            : homeState.recommendedItems;
+                ? homeState.popularItems
+                : homeState.recommendedItems;
 
       case 'best_sellers':
         return homeState.bestSellersItems.isNotEmpty
             ? homeState.bestSellersItems
             : homeState.popularItems.isNotEmpty
-            ? homeState.popularItems
-            : homeState.recommendedItems;
+                ? homeState.popularItems
+                : homeState.recommendedItems;
 
       case 'top_rated':
         return homeState.topRatedItems.isNotEmpty
             ? homeState.topRatedItems
             : homeState.bestSellersItems.isNotEmpty
-            ? homeState.bestSellersItems
-            : homeState.popularItems.isNotEmpty
-            ? homeState.popularItems
-            : homeState.recommendedItems;
+                ? homeState.bestSellersItems
+                : homeState.popularItems.isNotEmpty
+                    ? homeState.popularItems
+                    : homeState.recommendedItems;
 
       default:
         return const <ItemSummary>[];
@@ -901,15 +1012,20 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _openDetails(BuildContext context, int itemId) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => ItemDetailsPage(itemId: itemId)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ItemDetailsPage(itemId: itemId),
+      ),
+    );
   }
 
   bool _isOutOfStock(ItemSummary item) {
     if (item.kind != ItemKind.product) return false;
+
     final s = item.stock;
+
     if (s == null) return false;
+
     return s <= 0;
   }
 
@@ -928,6 +1044,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (_isComingSoon(item)) return l10n.home_coming_soon_button;
         if (_isOutOfStock(item)) return l10n.outOfStock;
+
         return l10n.cart_add_button;
 
       case ItemKind.activity:
@@ -955,12 +1072,14 @@ class _HomeScreenState extends State<HomeScreen>
     switch (item.kind) {
       case ItemKind.activity:
         if (item.start == null) return null;
+
         final dt = item.start!.toLocal();
         final y = dt.year.toString().padLeft(4, '0');
         final m = dt.month.toString().padLeft(2, '0');
         final d = dt.day.toString().padLeft(2, '0');
         final hh = dt.hour.toString().padLeft(2, '0');
         final mm = dt.minute.toString().padLeft(2, '0');
+
         return '$d/$m/$y  $hh:$mm';
 
       case ItemKind.product:
@@ -993,45 +1112,53 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (item.kind == ItemKind.product && _isExternalProduct(item)) {
       final rawUrl = (_externalUrl(item) ?? '').trim();
+
       if (rawUrl.isEmpty) {
         AppToast.error(context, l10n.missingExternalUrlLabel);
         return;
       }
 
       final uri = Uri.tryParse(rawUrl);
+
       if (uri == null) {
         AppToast.error(context, l10n.invalidExternalUrlLabel);
         return;
       }
 
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
       if (!context.mounted) return;
 
       if (!ok) {
         AppToast.error(context, l10n.couldNotOpenLinkLabel);
       }
+
       return;
     }
 
     if (item.kind == ItemKind.product && _isDownloadReady(item)) {
       final rawUrl = (_downloadUrl(item) ?? '').trim();
+
       if (rawUrl.isEmpty) {
         AppToast.error(context, l10n.missingDownloadUrlLabel);
         return;
       }
 
       final uri = Uri.tryParse(rawUrl);
+
       if (uri == null) {
         AppToast.error(context, l10n.invalidDownloadUrlLabel);
         return;
       }
 
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
       if (!context.mounted) return;
 
       if (!ok) {
         AppToast.error(context, l10n.couldNotStartDownloadLabel);
       }
+
       return;
     }
 
@@ -1052,9 +1179,11 @@ class _HomeScreenState extends State<HomeScreen>
       }
 
       context.read<CartBloc>().add(
-        CartAddItemRequested(itemId: item.id, quantity: 1),
-      );
+            CartAddItemRequested(itemId: item.id, quantity: 1),
+          );
+
       AppToast.info(context, l10n.cart_item_added_snackbar);
+
       return;
     }
 
@@ -1069,11 +1198,13 @@ class _HomeScreenState extends State<HomeScreen>
     if (start == null && end == null) return item.onSale;
     if (start != null && end == null) return !now.isBefore(start);
     if (start == null && end != null) return !now.isAfter(end);
+
     return !now.isBefore(start!) && !now.isAfter(end!);
   }
 
   num? _currentPrice(ItemSummary item) {
     final saleActive = item.onSale && _isSaleActiveNow(item);
+
     return saleActive
         ? (item.effectivePrice ?? item.salePrice ?? item.price)
         : item.price;
@@ -1088,16 +1219,20 @@ class _HomeScreenState extends State<HomeScreen>
         current != null ? money(context, current.toDouble()) : null;
 
     String? oldLabel;
+
     if (saleActive && item.price != null && current != null) {
       final base = item.price!.toDouble();
       final cur = current.toDouble();
+
       if (base > cur) oldLabel = money(context, base);
     }
 
     String? tagLabel;
+
     if (saleActive && item.price != null && current != null) {
       final base = item.price!.toDouble();
       final cur = current.toDouble();
+
       if (base > 0) {
         final percent = ((1 - (cur / base)) * 100).round();
         tagLabel = percent > 0 ? '-$percent%' : l10n.home_sale_tag;
@@ -1118,6 +1253,7 @@ class _HomeScreenState extends State<HomeScreen>
     switch (section.id) {
       case 'flash_sale':
         return _TrailingData(text: l10n.home_trailing_limited_time);
+
       case 'new_arrivals':
       case 'best_sellers':
       case 'top_rated':
@@ -1125,10 +1261,21 @@ class _HomeScreenState extends State<HomeScreen>
           text: l10n.home_trailing_see_all,
           icon: Icons.chevron_right_rounded,
         );
+
       default:
         return const _TrailingData();
     }
   }
+}
+
+class _TrailingData {
+  final String? text;
+  final IconData? icon;
+
+  const _TrailingData({
+    this.text,
+    this.icon,
+  });
 }
 
 enum _HomePagerLayout { rowPages2 }
@@ -1209,6 +1356,7 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
 
   void _jumpTo(int p) {
     if (!_pc.hasClients) return;
+
     _pc.animateToPage(
       p,
       duration: const Duration(milliseconds: 260),
@@ -1223,6 +1371,7 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
 
     final items = widget.items;
+
     if (items.isEmpty) return const SizedBox.shrink();
 
     final header = Row(
@@ -1275,10 +1424,10 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
         LayoutBuilder(
           builder: (context, constraints) {
             final w = constraints.maxWidth;
-
             final hasProducts = _hasProducts(items);
 
             var aspect = _aspect(w, hasProducts: hasProducts);
+
             if (widget.storageId == 'flash_sale' && hasProducts) {
               aspect = math.max(0.48, aspect - 0.02);
             }
@@ -1292,15 +1441,18 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
             if (safePage != _page) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
+
                 _page = safePage;
-                if (_pc.hasClients) _pc.jumpToPage(safePage);
+
+                if (_pc.hasClients) {
+                  _pc.jumpToPage(safePage);
+                }
               });
             }
 
             final cardW = (w - ((cols - 1) * spacing.md)) / cols;
             final cardH = cardW / aspect;
-            final extraH =
-                widget.storageId == 'flash_sale' ? spacing.sm : 0.0;
+            final extraH = widget.storageId == 'flash_sale' ? spacing.sm : 0.0;
 
             Widget card(ItemSummary item) {
               return Builder(
@@ -1347,6 +1499,7 @@ class _HomeItemsPagerSectionState extends State<_HomeItemsPagerSection> {
                     itemBuilder: (context, pageIndex) {
                       final start = pageIndex * perPage;
                       final end = math.min(start + perPage, items.length);
+
                       final pageItems = start >= items.length
                           ? <ItemSummary>[]
                           : items.sublist(start, end);
@@ -1404,8 +1557,10 @@ class _ProPagerBar extends StatelessWidget {
 
   List<int> _windowDots(int total, int current) {
     if (total <= 7) return List.generate(total, (i) => i);
+
     final set = <int>{0, total - 1, current - 1, current, current + 1};
     final list = set.where((p) => p >= 0 && p < total).toList()..sort();
+
     return list;
   }
 
@@ -1421,6 +1576,7 @@ class _ProPagerBar extends StatelessWidget {
 
     Widget dot(int p0) {
       final selected = p0 == currentPage0;
+
       return GestureDetector(
         onTap: () => onDotTap?.call(p0),
         child: AnimatedContainer(
@@ -1469,6 +1625,7 @@ class _ProPagerBar extends StatelessWidget {
     double gap,
   ) {
     final widgets = <Widget>[];
+
     for (var i = 0; i < dots.length; i++) {
       widgets.add(
         Padding(
@@ -1479,6 +1636,7 @@ class _ProPagerBar extends StatelessWidget {
 
       if (i < dots.length - 1) {
         final diff = dots[i + 1] - dots[i];
+
         if (diff > 1) {
           widgets.add(
             Padding(
@@ -1489,6 +1647,7 @@ class _ProPagerBar extends StatelessWidget {
         }
       }
     }
+
     return widgets;
   }
 }
@@ -1503,13 +1662,6 @@ class _PricingView {
     required this.oldLabel,
     required this.tagLabel,
   });
-}
-
-class _TrailingData {
-  final String? text;
-  final IconData? icon;
-
-  const _TrailingData({this.text, this.icon});
 }
 
 class _BookingSection extends StatelessWidget {
@@ -1548,7 +1700,12 @@ class _BookingSection extends StatelessWidget {
               children: [
                 const Icon(Icons.info_outline, size: 18),
                 SizedBox(width: spacing.sm),
-                Expanded(child: Text(placeholderText, style: t.bodySmall)),
+                Expanded(
+                  child: Text(
+                    placeholderText,
+                    style: t.bodySmall,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1603,6 +1760,7 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
   @override
   void initState() {
     super.initState();
+
     _q = widget.initialQuery;
     _catId = widget.initialCategoryId;
     _searchController = TextEditingController(text: _q);
@@ -1621,9 +1779,11 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
 
   Map<int, String> _catNameMap() {
     final map = <int, String>{};
+
     for (final c in widget.categories) {
       map[c.id] = c.name;
     }
+
     return map;
   }
 
@@ -1632,11 +1792,16 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
 
     for (final it in widget.items) {
       if (!_isVisibleForUser(it)) continue;
+
       final cid = it.categoryId;
-      if (cid != null) set.add(cid);
+
+      if (cid != null) {
+        set.add(cid);
+      }
     }
 
     final list = set.toList()..sort();
+
     return list;
   }
 
@@ -1648,11 +1813,13 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
     }
 
     final q = _q.trim().toLowerCase();
+
     if (q.isNotEmpty) {
       res = res.where((e) {
         final t = e.title.toLowerCase();
         final s = (e.subtitle ?? '').toLowerCase();
         final loc = (e.location ?? '').toLowerCase();
+
         return t.contains(q) || s.contains(q) || loc.contains(q);
       }).toList();
     }
@@ -1699,6 +1866,7 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                     itemBuilder: (_, i) {
                       if (i == 0) {
                         final selected = _catId == null;
+
                         return ChoiceChip(
                           label: Text(l10n.explore_category_all),
                           selected: selected,
@@ -1708,9 +1876,11 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                       }
 
                       final id = catIds[i - 1];
+
                       final label = (nameById[id] ?? '').trim().isEmpty
                           ? 'Category $id'
                           : nameById[id]!;
+
                       final selected = _catId == id;
 
                       return ChoiceChip(
@@ -1729,21 +1899,22 @@ class _HomeSectionSeeAllScreenState extends State<HomeSectionSeeAllScreen> {
                   builder: (ctx, constraints) {
                     final w = constraints.maxWidth;
                     final cols = w < 520 ? 2 : (w < 900 ? 3 : 4);
+
                     final hasProducts = filtered.any(
                       (e) => e.kind == ItemKind.product,
                     );
 
                     final aspect = hasProducts
                         ? (w < 360
-                              ? 0.50
-                              : (w < 520
-                                    ? 0.54
-                                    : (w < 900 ? 0.62 : 0.70)))
+                            ? 0.50
+                            : (w < 520
+                                ? 0.54
+                                : (w < 900 ? 0.62 : 0.70)))
                         : (w < 360
-                              ? 0.72
-                              : (w < 520
-                                    ? 0.76
-                                    : (w < 900 ? 0.82 : 0.88)));
+                            ? 0.72
+                            : (w < 520
+                                ? 0.76
+                                : (w < 900 ? 0.82 : 0.88)));
 
                     return GridView.builder(
                       itemCount: filtered.length,

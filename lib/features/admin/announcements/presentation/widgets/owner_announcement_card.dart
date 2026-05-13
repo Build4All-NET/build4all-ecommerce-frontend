@@ -1,3 +1,4 @@
+import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/admin/announcements/domain/entities/owner_announcement.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -26,6 +27,27 @@ class OwnerAnnouncementCard extends StatelessWidget {
     final minute = date.minute.toString().padLeft(2, '0');
 
     return '$year-$month-$day $hour:$minute';
+  }
+
+  String _buildFullImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.trim().isEmpty) {
+      return '';
+    }
+
+    final cleanImageUrl = imageUrl.trim();
+
+    if (cleanImageUrl.startsWith('http://') ||
+        cleanImageUrl.startsWith('https://')) {
+      return cleanImageUrl;
+    }
+
+    final baseUrl = Env.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '');
+
+    if (cleanImageUrl.startsWith('/')) {
+      return '$baseUrl$cleanImageUrl';
+    }
+
+    return '$baseUrl/$cleanImageUrl';
   }
 
   IconData _iconForType(String type) {
@@ -68,6 +90,9 @@ class OwnerAnnouncementCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     final typeLabel = _labelForType(l10n, announcement.announcementType);
+    final fullImageUrl = _buildFullImageUrl(announcement.imageUrl);
+
+    debugPrint('Announcement image url => $fullImageUrl');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -77,94 +102,131 @@ class OwnerAnnouncementCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colors.border.withOpacity(.18)),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 42,
-            width: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colors.primary.withOpacity(.10),
-              shape: BoxShape.circle,
-              border: Border.all(color: colors.primary.withOpacity(.16)),
+          if (fullImageUrl.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                fullImageUrl,
+                width: double.infinity,
+                height: 170,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: double.infinity,
+                    height: 170,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.background,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: colors.border.withOpacity(.18),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: colors.body,
+                      size: 34,
+                    ),
+                  );
+                },
+              ),
             ),
-            child: Icon(
-              _iconForType(announcement.announcementType),
-              color: colors.primary,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(height: 12),
+          ],
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  announcement.title.trim().isEmpty
-                      ? l10n.adminAnnouncementsTitle
-                      : announcement.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyLarge?.copyWith(
-                    color: colors.label,
-                    fontWeight: FontWeight.w900,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 42,
+                width: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.primary.withOpacity(.10),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.primary.withOpacity(.16)),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  announcement.message,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyMedium?.copyWith(
-                    color: colors.body,
-                    fontWeight: FontWeight.w600,
-                    height: 1.25,
-                  ),
+                child: Icon(
+                  _iconForType(announcement.announcementType),
+                  color: colors.primary,
+                  size: 22,
                 ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Chip(
-                      label: typeLabel,
-                      colors: colors,
-                    ),
-                    _Chip(
-                      label: l10n.adminAnnouncementsSentToUsers(
-                        announcement.sentCount,
+                    Text(
+                      announcement.title.trim().isEmpty
+                          ? l10n.adminAnnouncementsTitle
+                          : announcement.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodyLarge?.copyWith(
+                        color: colors.label,
+                        fontWeight: FontWeight.w900,
                       ),
-                      colors: colors,
                     ),
-                    if (announcement.targetId != null)
-                      _Chip(
-                        label: '#${announcement.targetId}',
-                        colors: colors,
+                    const SizedBox(height: 6),
+                    Text(
+                      announcement.message,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodyMedium?.copyWith(
+                        color: colors.body,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
                       ),
-                    _Chip(
-                      label: _formatDate(announcement.createdAt),
-                      colors: colors,
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _Chip(
+                          label: typeLabel,
+                          colors: colors,
+                        ),
+                        _Chip(
+                          label: l10n.adminAnnouncementsSentToUsers(
+                            announcement.sentCount,
+                          ),
+                          colors: colors,
+                        ),
+                        if (announcement.targetId != null)
+                          _Chip(
+                            label: '#${announcement.targetId}',
+                            colors: colors,
+                          ),
+                        _Chip(
+                          label: _formatDate(announcement.createdAt),
+                          colors: colors,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-          IconButton(
-            onPressed: deleting ? null : onDelete,
-            icon: deleting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.delete_outline_rounded, color: colors.error),
-            tooltip: l10n.adminAnnouncementsDelete,
+              IconButton(
+                onPressed: deleting ? null : onDelete,
+                icon: deleting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(Icons.delete_outline_rounded, color: colors.error),
+                tooltip: l10n.adminAnnouncementsDelete,
+              ),
+            ],
           ),
         ],
       ),

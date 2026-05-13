@@ -1,5 +1,7 @@
 // lib/features/notifications/domain/entities/app_notification.dart
 
+import 'dart:convert';
+
 class AppNotification {
   final int id;
   final String title;
@@ -25,6 +27,82 @@ class AppNotification {
     if (title.trim().isEmpty) return body;
     if (body.trim().isEmpty) return title;
     return '$title\n$body';
+  }
+
+  Map<String, dynamic> get payloadMap {
+    final raw = (payloadJson ?? '').trim();
+
+    if (raw.isEmpty || raw.toLowerCase() == 'null') {
+      return <String, dynamic>{};
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+
+      return <String, dynamic>{};
+    } catch (_) {
+      return <String, dynamic>{};
+    }
+  }
+
+  bool get isAnnouncement {
+    final type = notificationType.trim().toUpperCase();
+
+    final event = (payloadMap['event'] ?? '').toString().trim().toUpperCase();
+
+    return type == 'ANNOUNCEMENT' ||
+        type == 'OWNER_ANNOUNCEMENT' ||
+        type == 'USER_ANNOUNCEMENT' ||
+        type.contains('ANNOUNCEMENT') ||
+        event == 'ANNOUNCEMENT';
+  }
+
+  String? get announcementImageUrl {
+    if (!isAnnouncement) {
+      return null;
+    }
+
+    final map = payloadMap;
+
+    final possibleValues = [
+      map['imageUrl'],
+      map['image_url'],
+      map['announcementImageUrl'],
+      map['notificationImageUrl'],
+      map['thumbnailUrl'],
+    ];
+
+    for (final value in possibleValues) {
+      final clean = (value ?? '').toString().trim();
+
+      if (clean.isNotEmpty && clean.toLowerCase() != 'null') {
+        return clean;
+      }
+    }
+
+    return null;
+  }
+
+  int? get announcementId {
+    final value = payloadMap['announcementId'] ?? payloadMap['announcement_id'];
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse((value ?? '').toString());
   }
 
   AppNotification copyWith({

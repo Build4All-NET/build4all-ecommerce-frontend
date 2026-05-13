@@ -25,22 +25,30 @@ class RefreshTokenInterceptor extends Interceptor {
 
   String _rawTokenFromAuthHeader(String auth) {
     final t = auth.trim();
-    if (t.toLowerCase().startsWith('bearer ')) return t.substring(7).trim();
+    if (t.toLowerCase().startsWith('bearer ')) {
+      return t.substring(7).trim();
+    }
     return t;
   }
 
   String? _roleFromJwt(String rawJwt) {
     try {
-      if (rawJwt.trim().isEmpty) return null;
+      if (rawJwt.trim().isEmpty) {
+        return null;
+      }
 
       final parts = rawJwt.split('.');
-      if (parts.length < 2) return null;
+      if (parts.length < 2) {
+        return null;
+      }
 
       final payload = base64Url.normalize(parts[1]);
       final decoded = utf8.decode(base64Url.decode(payload));
       final map = jsonDecode(decoded);
 
-      if (map is! Map) return null;
+      if (map is! Map) {
+        return null;
+      }
 
       final role = map['role']?.toString();
       return role?.toUpperCase().trim();
@@ -50,7 +58,10 @@ class RefreshTokenInterceptor extends Interceptor {
   }
 
   bool _isAdminRole(String? role) {
-    if (role == null) return false;
+    if (role == null) {
+      return false;
+    }
+
     return role == 'OWNER' ||
         role == 'SUPER_ADMIN' ||
         role == 'MANAGER' ||
@@ -62,17 +73,14 @@ class RefreshTokenInterceptor extends Interceptor {
     final status = err.response?.statusCode ?? 0;
     final req = err.requestOptions;
 
-    // ✅ refresh ONLY on 401
     if (status != 401 || _isAuthCall(req)) {
       return handler.next(err);
     }
 
-    // ✅ avoid infinite loop
     if (req.extra['__retried'] == true) {
       return handler.next(err);
     }
 
-    // ✅ if request had no auth token, don't try refresh
     final authHeader = (req.headers['Authorization'] ?? '').toString().trim();
     final globalAuth = g.readAuthToken().trim();
 
@@ -84,6 +92,7 @@ class RefreshTokenInterceptor extends Interceptor {
     final raw = _rawTokenFromAuthHeader(
       authHeader.isNotEmpty ? authHeader : globalAuth,
     );
+
     final role = _roleFromJwt(raw);
     final isAdmin = _isAdminRole(role);
 
@@ -96,12 +105,32 @@ class RefreshTokenInterceptor extends Interceptor {
         newToken = await _refresh.refreshUser();
       }
 
-      req.headers['Authorization'] =
-          newToken.toLowerCase().startsWith('bearer ')
-              ? newToken
-              : 'Bearer $newToken';
+      final cleanToken = newToken.toLowerCase().startsWith('bearer ')
+          ? newToken
+          : 'Bearer $newToken';
 
+      req.headers['Authorization'] = cleanToken;
       req.extra['__retried'] = true;
+
+      final retryRequest = req.extra['retryRequest'];
+
+      if (retryRequest is Future<Response<dynamic>> Function(String)) {
+        final response = await retryRequest(cleanToken);
+        return handler.resolve(response);
+      }
+
+      if (req.data is FormData) {
+        return handler.next(
+          DioException(
+            requestOptions: req,
+            response: err.response,
+            type: DioExceptionType.unknown,
+            error:
+                'Cannot retry multipart FormData request without retryRequest callback.',
+          ),
+        );
+      }
+
       final response = await g.dio().fetch(req);
       return handler.resolve(response);
     } catch (e) {
@@ -113,6 +142,7 @@ class RefreshTokenInterceptor extends Interceptor {
         } else {
           await _userStore.clear();
         }
+
         g.setAuthToken('');
       }
 

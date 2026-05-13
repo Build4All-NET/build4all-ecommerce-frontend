@@ -61,46 +61,82 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     super.dispose();
   }
 
-  // ✅ CRITICAL: ensure admin session is persisted + token is applied to Dio
   Future<void> _enterAdminFlow() async {
     final store = const AdminTokenStore();
     final adminToken = (await store.getToken())?.trim() ?? '';
 
     if (adminToken.isNotEmpty) {
-      // make sure dio uses it immediately
       g.setAuthToken(adminToken);
     }
 
     await _roleStore.saveRole('admin');
   }
 
-  void _goToUserHome(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MainShell(appConfig: widget.appConfig)),
-    );
-  }
-
- Future<void> _goToAdmin(BuildContext context,
-    {required String role, required Map<String, dynamic> admin}) async {
-  await _enterAdminFlow();
-
-/*   final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-  if (role.toUpperCase() == 'OWNER' && ownerProjectLinkId > 0) {
+  Future<void> _syncFrontPushTokenForUser() async {
     try {
+      final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+
+      if (ownerProjectLinkId <= 0) {
+        debugPrint('USER FCM sync skipped: invalid ownerProjectLinkId');
+        return;
+      }
+
       await FrontFirebasePushService().initAndSyncToken(
         ownerProjectLinkId: ownerProjectLinkId,
       );
-    } catch (e) {
-      debugPrint('Owner front push sync failed => $e');
-    }
-  } */
 
-  if (!context.mounted) return;
-  Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
-}
+      debugPrint('USER FCM token registered successfully');
+    } catch (e) {
+      debugPrint('USER FCM sync failed => $e');
+    }
+  }
+
+  Future<void> _syncFrontPushTokenForOwner() async {
+    try {
+      final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
+
+      if (ownerProjectLinkId <= 0) {
+        debugPrint('OWNER FCM sync skipped: invalid ownerProjectLinkId');
+        return;
+      }
+
+      await FrontFirebasePushService().initAndSyncToken(
+        ownerProjectLinkId: ownerProjectLinkId,
+      );
+
+      debugPrint('OWNER FCM token registered successfully');
+    } catch (e) {
+      debugPrint('OWNER FCM sync failed => $e');
+    }
+  }
+
+  void _goToUserHome(BuildContext context) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MainShell(appConfig: widget.appConfig),
+      ),
+    );
+  }
+
+  Future<void> _goToAdmin(
+    BuildContext context, {
+    required String role,
+    required Map<String, dynamic> admin,
+  }) async {
+    await _enterAdminFlow();
+
+    if (role.toUpperCase() == 'OWNER') {
+      await _syncFrontPushTokenForOwner();
+    }
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).pushNamedAndRemoveUntil('/admin', (_) => false);
+  }
 
   Future<void> _onLoginPressed(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+
     if (!_formKey.currentState!.validate()) return;
 
     final identifier = _method == LoginMethod.email
@@ -134,112 +170,148 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         ownerProjectLinkId: int.tryParse(Env.ownerProjectLinkId) ?? 0,
       );
 
-      if (mounted) Navigator.of(context).pop();
-
- if (result.none) {
-  final msg = (result.error ?? '').trim();
-  AppToast.error(
-    context,
-    msg.isEmpty ? l10n.authErrorGeneric : msg,
-  );
-  return;
-}
-
-      Future<void> _hydrateUserAuth(bool wasInactiveFlag) async {
-  final user = result.userEntity;
-  if (user == null) return;
-
-  final token = await authApi.getSavedToken();
-  if (!mounted) return;
-  if (token == null || token.isEmpty) return;
-
-  // IMPORTANT: make Dio use the fresh user token immediately
-  g.setAuthToken(token);
-
-  context.read<AuthBloc>().add(
-        AuthLoginHydrated(
-          user: user,
-          token: token,
-          wasInactive: wasInactiveFlag,
-        ),
-      );
-
-
-     
-}
-
-/*  Future<void> _syncFrontPushToken() async {
-  try {
-    final ownerProjectLinkId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
-    if (ownerProjectLinkId <= 0) return;
-
-    await FrontFirebasePushService().initAndSyncToken(
-      ownerProjectLinkId: ownerProjectLinkId,
-    );
-  } catch (e) {
-    debugPrint('Front push sync failed => $e');
-  }
-} */
-      Future<void> _enterUserFlow(bool wasInactiveUser) async {
-        final user = result.userEntity;
-        if (user == null) return;
-
-        // ✅ deleted restore flow first
-        if (result.wasDeletedUser == true) {
-          final confirm = await _showRestoreDeletedSheet(context, l10n);
-          if (confirm != true) {
-            await authApi.clearAuth();
-            return;
-          }
-
-          try {
-            await authApi.reactivateUser();
-            if (!mounted) return;
-
-           AppToast.success(context, l10n.accountRestoredSuccessfully);
-await _hydrateUserAuth(false);
-await _roleStore.saveRole('user');
-_goToUserHome(context);
-            _goToUserHome(context);
-          } catch (e) {
-            if (!mounted) return;
-            AppToast.error(context, ExceptionMapper.toMessage(e));
-          }
-          return;
-        }
-
-        // inactive flow
-        if (wasInactiveUser) {
-          final confirm = await _showReactivateSheet(context);
-          if (confirm != true) {
-            await authApi.clearAuth();
-            return;
-          }
-
-          try {
-            await authApi.reactivateUser();
-            if (!mounted) return;
-
-           AppToast.success(context, l10n.loginInactiveSuccess);
-await _hydrateUserAuth(true);
-await _roleStore.saveRole('user');
-
-_goToUserHome(context);
-            _goToUserHome(context);
-          } catch (e) {
-            if (!mounted) return;
-            AppToast.error(context, ExceptionMapper.toMessage(e));
-          }
-          return;
-        }
-
-       await _hydrateUserAuth(false);
-await _roleStore.saveRole('user');
-
-_goToUserHome(context);
+      if (mounted) {
+        Navigator.of(context).pop();
       }
 
-      // ✅ BOTH (admin + user)
+      if (result.none) {
+        final msg = (result.error ?? '').trim();
+
+        AppToast.error(
+          context,
+          msg.isEmpty ? l10n.authErrorGeneric : msg,
+        );
+
+        return;
+      }
+
+      Future<void> hydrateUserAuth(bool wasInactiveFlag) async {
+        final user = result.userEntity;
+
+        if (user == null) {
+          return;
+        }
+
+        final token = await authApi.getSavedToken();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (token == null || token.isEmpty) {
+          return;
+        }
+
+        // 1. Apply USER token first.
+        // This is important because /api/front/device-token needs Authorization.
+        g.setAuthToken(token);
+
+        // 2. Register FCM token as USER in app_device_tokens.
+        await _syncFrontPushTokenForUser();
+
+        if (!mounted) {
+          return;
+        }
+
+        // 3. Hydrate auth state.
+        context.read<AuthBloc>().add(
+              AuthLoginHydrated(
+                user: user,
+                token: token,
+                wasInactive: wasInactiveFlag,
+              ),
+            );
+      }
+
+      Future<void> enterUserFlow(bool wasInactiveUser) async {
+        final user = result.userEntity;
+
+        if (user == null) {
+          return;
+        }
+
+        if (result.wasDeletedUser == true) {
+          final confirm = await _showRestoreDeletedSheet(context, l10n);
+
+          if (confirm != true) {
+            await authApi.clearAuth();
+            return;
+          }
+
+          try {
+            await authApi.reactivateUser();
+
+            if (!mounted) {
+              return;
+            }
+
+            AppToast.success(context, l10n.accountRestoredSuccessfully);
+
+            await hydrateUserAuth(false);
+            await _roleStore.saveRole('user');
+
+            if (!mounted) {
+              return;
+            }
+
+            _goToUserHome(context);
+          } catch (e) {
+            if (!mounted) {
+              return;
+            }
+
+            AppToast.error(context, ExceptionMapper.toMessage(e));
+          }
+
+          return;
+        }
+
+        if (wasInactiveUser) {
+          final confirm = await _showReactivateSheet(context);
+
+          if (confirm != true) {
+            await authApi.clearAuth();
+            return;
+          }
+
+          try {
+            await authApi.reactivateUser();
+
+            if (!mounted) {
+              return;
+            }
+
+            AppToast.success(context, l10n.loginInactiveSuccess);
+
+            await hydrateUserAuth(true);
+            await _roleStore.saveRole('user');
+
+            if (!mounted) {
+              return;
+            }
+
+            _goToUserHome(context);
+          } catch (e) {
+            if (!mounted) {
+              return;
+            }
+
+            AppToast.error(context, ExceptionMapper.toMessage(e));
+          }
+
+          return;
+        }
+
+        await hydrateUserAuth(false);
+        await _roleStore.saveRole('user');
+
+        if (!mounted) {
+          return;
+        }
+
+        _goToUserHome(context);
+      }
+
       if (result.both) {
         final choice = await showModalBottomSheet<String>(
           context: context,
@@ -274,10 +346,14 @@ _goToUserHome(context);
                   ),
                   const SizedBox(height: 12),
                   ListTile(
-                    leading: Icon(Icons.verified_user_outlined,
-                        color: colors.primary),
-                    title: Text(l10n.loginEnterAsOwner,
-                        style: t.bodyLarge?.copyWith(color: colors.label)),
+                    leading: Icon(
+                      Icons.verified_user_outlined,
+                      color: colors.primary,
+                    ),
+                    title: Text(
+                      l10n.loginEnterAsOwner,
+                      style: t.bodyLarge?.copyWith(color: colors.label),
+                    ),
                     subtitle: Text(
                       '${l10n.loginRoleLabel}: ${result.adminRole}',
                       style: t.bodySmall?.copyWith(color: colors.body),
@@ -286,9 +362,14 @@ _goToUserHome(context);
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(Icons.person_outline, color: colors.label),
-                    title: Text(l10n.loginEnterAsUser,
-                        style: t.bodyLarge?.copyWith(color: colors.label)),
+                    leading: Icon(
+                      Icons.person_outline,
+                      color: colors.label,
+                    ),
+                    title: Text(
+                      l10n.loginEnterAsUser,
+                      style: t.bodyLarge?.copyWith(color: colors.label),
+                    ),
                     subtitle: Text(
                       result.userEntity?.email ??
                           result.userEntity?.username ??
@@ -304,27 +385,33 @@ _goToUserHome(context);
         );
 
         if (choice == 'admin') {
-          await _goToAdmin(context,
-              role: result.adminRole!, admin: result.adminData!);
+          await _goToAdmin(
+            context,
+            role: result.adminRole!,
+            admin: result.adminData!,
+          );
           return;
-        } else if (choice == 'user') {
-          await _enterUserFlow(result.wasInactiveUser);
+        }
+
+        if (choice == 'user') {
+          await enterUserFlow(result.wasInactiveUser);
           return;
         }
 
         return;
       }
 
-      // ✅ ONLY ADMIN
       if (result.adminOk && !result.userOk) {
-        await _goToAdmin(context,
-            role: result.adminRole!, admin: result.adminData!);
+        await _goToAdmin(
+          context,
+          role: result.adminRole!,
+          admin: result.adminData!,
+        );
         return;
       }
 
-      // ✅ ONLY USER
       if (result.userOk && !result.adminOk) {
-        await _enterUserFlow(result.wasInactiveUser);
+        await enterUserFlow(result.wasInactiveUser);
         return;
       }
 
@@ -333,11 +420,15 @@ _goToUserHome(context);
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
+
       AppToast.error(context, ExceptionMapper.toMessage(e));
     }
   }
 
-  Future<bool?> _showRestoreDeletedSheet(BuildContext context, AppLocalizations l10n) {
+  Future<bool?> _showRestoreDeletedSheet(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     final themeState = context.read<ThemeCubit>().state;
     final colors = themeState.tokens.colors;
     final t = Theme.of(context).textTheme;
@@ -349,6 +440,7 @@ _goToUserHome(context);
       ),
       builder: (ctx) {
         final tt = Theme.of(ctx).textTheme;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
@@ -385,7 +477,9 @@ _goToUserHome(context);
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(ctx, false),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: colors.border.withOpacity(0.6)),
+                        side: BorderSide(
+                          color: colors.border.withOpacity(0.6),
+                        ),
                       ),
                       child: Text(
                         l10n.commonCancel,
@@ -431,6 +525,7 @@ _goToUserHome(context);
       ),
       builder: (ctx) {
         final tt = Theme.of(ctx).textTheme;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
@@ -467,7 +562,9 @@ _goToUserHome(context);
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(ctx, false),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: colors.border.withOpacity(0.6)),
+                        side: BorderSide(
+                          color: colors.border.withOpacity(0.6),
+                        ),
                       ),
                       child: Text(
                         l10n.loginInactiveCancel,
@@ -518,8 +615,10 @@ _goToUserHome(context);
             child: BlocConsumer<AuthBloc, AuthState>(
               listener: (context, state) {
                 if (state.error != null) {
-                  AppToast.error(context, ExceptionMapper.toMessage(state.error!),
-                      );
+                  AppToast.error(
+                    context,
+                    ExceptionMapper.toMessage(state.error!),
+                  );
                 }
               },
               builder: (context, state) {
@@ -529,8 +628,11 @@ _goToUserHome(context);
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: colors.primary.withOpacity(0.1),
-                      child: Icon(Icons.person_outline,
-                          color: colors.primary, size: 28),
+                      child: Icon(
+                        Icons.person_outline,
+                        color: colors.primary,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -555,15 +657,16 @@ _goToUserHome(context);
                         color: colors.surface,
                         borderRadius: BorderRadius.circular(card.radius),
                         border: card.showBorder
-                            ? Border.all(color: colors.border.withOpacity(0.15))
+                            ? Border.all(
+                                color: colors.border.withOpacity(0.15),
+                              )
                             : null,
                         boxShadow: card.showShadow
                             ? [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.04),
                                   blurRadius: card.elevation * 2,
-                                  offset:
-                                      Offset(0, card.elevation * 0.6),
+                                  offset: Offset(0, card.elevation * 0.6),
                                 ),
                               ]
                             : null,
@@ -585,6 +688,7 @@ _goToUserHome(context);
                               method: _method,
                               onChanged: (m) {
                                 if (_method == m) return;
+
                                 setState(() {
                                   _method = m;
                                   _emailCtrl.clear();
@@ -601,19 +705,23 @@ _goToUserHome(context);
                                 label: l10n.emailLabel,
                                 controller: _emailCtrl,
                                 keyboardType: TextInputType.emailAddress,
-                                
-                            validator: (value) {
-  final v = value?.trim() ?? '';
-  if (v.isEmpty) return l10n.fieldRequired;
+                                validator: (value) {
+                                  final v = value?.trim() ?? '';
 
-  final emailRegex = RegExp(
-    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
-  );
+                                  if (v.isEmpty) {
+                                    return l10n.fieldRequired;
+                                  }
 
-  if (!emailRegex.hasMatch(v)) return l10n.invalidEmail;
+                                  final emailRegex = RegExp(
+                                    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+                                  );
 
-  return null;
-},
+                                  if (!emailRegex.hasMatch(v)) {
+                                    return l10n.invalidEmail;
+                                  }
+
+                                  return null;
+                                },
                               )
                             else
                               _PhoneFieldIntl(
@@ -621,7 +729,9 @@ _goToUserHome(context);
                                 card: card,
                                 textTheme: t,
                                 l10n: l10n,
-                                onChanged: (fullPhone) => _fullPhone = fullPhone,
+                                onChanged: (fullPhone) {
+                                  _fullPhone = fullPhone;
+                                },
                               ),
                             const SizedBox(height: 16),
                             AppTextField(
@@ -629,8 +739,14 @@ _goToUserHome(context);
                               controller: _passwordCtrl,
                               obscureText: true,
                               validator: (value) {
-                                if (value == null || value.isEmpty) return l10n.fieldRequired;
-                                if (value.length < 6) return l10n.passwordTooShort;
+                                if (value == null || value.isEmpty) {
+                                  return l10n.fieldRequired;
+                                }
+
+                                if (value.length < 6) {
+                                  return l10n.passwordTooShort;
+                                }
+
                                 return null;
                               },
                             ),
@@ -647,14 +763,19 @@ _goToUserHome(context);
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (ctx) {
-                                        final repo = ctx.read<ForgotPasswordRepository>();
+                                        final repo =
+                                            ctx.read<ForgotPasswordRepository>();
+
                                         return BlocProvider(
                                           create: (_) => ForgotPasswordBloc(
                                             sendResetCode: SendResetCode(repo),
-                                            verifyResetCode: VerifyResetCode(repo),
-                                            updatePassword: UpdatePassword(repo),
+                                            verifyResetCode:
+                                                VerifyResetCode(repo),
+                                            updatePassword:
+                                                UpdatePassword(repo),
                                           ),
-                                          child: const ForgotPasswordEmailScreen(),
+                                          child:
+                                              const ForgotPasswordEmailScreen(),
                                         );
                                       },
                                     ),
@@ -678,19 +799,25 @@ _goToUserHome(context);
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(l10n.noAccountText,
-                            style: t.bodyMedium?.copyWith(color: colors.body)),
+                        Text(
+                          l10n.noAccountText,
+                          style: t.bodyMedium?.copyWith(color: colors.body),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (ctx) {
                                   final repo = ctx.read<AuthRepositoryImpl>();
+
                                   return BlocProvider(
                                     create: (_) => RegisterBloc(
-                                      sendVerificationCode: SendVerificationCode(repo),
+                                      sendVerificationCode:
+                                          SendVerificationCode(repo),
                                     ),
-                                    child: UserRegisterScreen(appConfig: widget.appConfig),
+                                    child: UserRegisterScreen(
+                                      appConfig: widget.appConfig,
+                                    ),
                                   );
                                 },
                               ),
@@ -717,7 +844,6 @@ _goToUserHome(context);
   }
 }
 
-// --- UI helpers ---
 class _LoginMethodToggle extends StatelessWidget {
   final LoginMethod method;
   final ValueChanged<LoginMethod> onChanged;
@@ -737,7 +863,6 @@ class _LoginMethodToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEmail = method == LoginMethod.email;
     final isPhone = method == LoginMethod.phone;
-    
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -834,10 +959,8 @@ class _PhoneFieldIntl extends StatelessWidget {
   String _normalizeLbNumber(String input) {
     String v = input.trim().replaceAll(RegExp(r'\s+'), '');
 
-    // remove anything not digit
     v = v.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // if user entered 03xxxxxx => remove leading 0 => 3xxxxxx
     if (v.startsWith('0')) {
       v = v.substring(1);
     }
@@ -848,12 +971,10 @@ class _PhoneFieldIntl extends StatelessWidget {
   bool _isValidLebaneseMobile(String raw) {
     final v = _normalizeLbNumber(raw);
 
-    // 03xxxxxx => after normalize => 3xxxxxx (7 digits)
     if (v.startsWith('3') && v.length == 7) {
       return true;
     }
 
-    // Other common Lebanese mobile prefixes
     const validTwoDigitPrefixes = ['70', '71', '76', '78', '79', '81'];
 
     if (v.length == 8 &&
@@ -910,10 +1031,10 @@ class _PhoneFieldIntl extends StatelessWidget {
           if (!_isValidLebaneseMobile(raw)) {
             return l10n.invalidPhone;
           }
+
           return null;
         }
 
-        // fallback for non-Lebanese numbers
         if (raw.length < 6) {
           return l10n.invalidPhone;
         }
@@ -922,5 +1043,4 @@ class _PhoneFieldIntl extends StatelessWidget {
       },
     );
   }
-
 }

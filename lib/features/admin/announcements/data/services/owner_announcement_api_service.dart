@@ -32,30 +32,90 @@ class OwnerAnnouncementApiService {
       throw Exception('Message is required');
     }
 
-    final formData = FormData.fromMap({
-      'ownerProjectLinkId': ownerProjectLinkId,
+    final response = await _sendCreateAnnouncementRequest(
+      ownerProjectLinkId: ownerProjectLinkId,
+      title: title,
+      message: message,
+      announcementType: announcementType,
+      targetId: targetId,
+      imagePath: imagePath,
+      tokenOverride: null,
+    );
+
+    return _asMap(response.data);
+  }
+
+  Future<Response<dynamic>> _sendCreateAnnouncementRequest({
+    required int ownerProjectLinkId,
+    required String title,
+    required String message,
+    required String announcementType,
+    required int? targetId,
+    required String? imagePath,
+    required String? tokenOverride,
+  }) async {
+    final formData = await _buildCreateAnnouncementFormData(
+      ownerProjectLinkId: ownerProjectLinkId,
+      title: title,
+      message: message,
+      announcementType: announcementType,
+      targetId: targetId,
+      imagePath: imagePath,
+    );
+
+    return _dio.post(
+      '/api/front/owner/announcements',
+      data: formData,
+      options: Options(
+        headers: await _headers(tokenOverride: tokenOverride),
+        extra: {
+          'retryRequest': (String newToken) {
+            return _sendCreateAnnouncementRequest(
+              ownerProjectLinkId: ownerProjectLinkId,
+              title: title,
+              message: message,
+              announcementType: announcementType,
+              targetId: targetId,
+              imagePath: imagePath,
+              tokenOverride: newToken,
+            );
+          },
+        },
+      ),
+    );
+  }
+
+  Future<FormData> _buildCreateAnnouncementFormData({
+    required int ownerProjectLinkId,
+    required String title,
+    required String message,
+    required String announcementType,
+    required int? targetId,
+    required String? imagePath,
+  }) async {
+    final Map<String, dynamic> body = {
+      'ownerProjectLinkId': ownerProjectLinkId.toString(),
       'title': title.trim().isEmpty ? 'Announcement' : title.trim(),
       'message': message.trim(),
       'announcementType': announcementType.trim().isEmpty
           ? 'GENERAL'
           : announcementType.trim().toUpperCase(),
-      if (targetId != null) 'targetId': targetId,
-      if (imagePath != null && imagePath.trim().isNotEmpty)
-        'image': await MultipartFile.fromFile(imagePath),
-    });
+    };
 
-    final response = await _dio.post(
-      '/api/front/owner/announcements',
-      data: formData,
-      options: Options(
-        headers: {
-          ...await _headers(),
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
-    );
+    if (targetId != null) {
+      body['targetId'] = targetId.toString();
+    }
 
-    return _asMap(response.data);
+    if (imagePath != null && imagePath.trim().isNotEmpty) {
+      final cleanPath = imagePath.trim();
+
+      body['image'] = await MultipartFile.fromFile(
+        cleanPath,
+        filename: cleanPath.split('/').last,
+      );
+    }
+
+    return FormData.fromMap(body);
   }
 
   Future<List<Map<String, dynamic>>> getAnnouncements() async {
@@ -102,8 +162,10 @@ class OwnerAnnouncementApiService {
     );
   }
 
-  Future<Map<String, String>> _headers() async {
-    final token = (await getToken())?.trim() ?? '';
+  Future<Map<String, String>> _headers({
+    String? tokenOverride,
+  }) async {
+    final token = (tokenOverride ?? await getToken())?.trim() ?? '';
 
     return {
       if (token.isNotEmpty)
@@ -114,8 +176,14 @@ class OwnerAnnouncementApiService {
   }
 
   Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+
     return <String, dynamic>{};
   }
 }
