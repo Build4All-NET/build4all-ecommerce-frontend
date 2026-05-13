@@ -7,8 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PublicAnnouncementPopupDialog extends StatefulWidget {
   final List<PublicAnnouncementPopupItem> announcements;
-
-  /// Called when announcement has targetId and user taps View product/details.
   final void Function(PublicAnnouncementPopupItem item)? onOpenTarget;
 
   const PublicAnnouncementPopupDialog({
@@ -43,42 +41,28 @@ class _PublicAnnouncementPopupDialogState
     return net.resolveUrl(raw);
   }
 
-  String _typeLabel(String type) {
-    final clean = type.trim().toUpperCase();
+  String _mainActionLabel(PublicAnnouncementPopupItem item) {
+    final type = item.announcementType.trim().toUpperCase();
 
-    switch (clean) {
-      case 'PRODUCT':
-        return 'Product update';
-      case 'DISCOUNT':
-        return 'Special offer';
-      case 'SERVICE':
-        return 'Service update';
-      case 'MAINTENANCE':
-        return 'Maintenance';
-      case 'GENERAL':
-      default:
-        return 'Announcement';
+    if (type == 'PRODUCT' || type == 'DISCOUNT') {
+      return 'Shop Now!';
     }
+
+    if (item.targetId != null && item.targetId! > 0) {
+      return 'View Details';
+    }
+
+    return 'Got It';
   }
 
-  IconData _typeIcon(String type) {
-    switch (type.trim().toUpperCase()) {
-      case 'PRODUCT':
-        return Icons.shopping_bag_outlined;
-      case 'DISCOUNT':
-        return Icons.local_offer_outlined;
-      case 'SERVICE':
-        return Icons.miscellaneous_services_outlined;
-      case 'MAINTENANCE':
-        return Icons.build_outlined;
-      case 'GENERAL':
-      default:
-        return Icons.campaign_outlined;
-    }
+  bool _hasTarget(PublicAnnouncementPopupItem item) {
+    return item.targetId != null && item.targetId! > 0;
   }
 
-  void _goNext() {
-    if (_page < widget.announcements.length - 1) {
+  void _nextOrClose() {
+    final total = widget.announcements.length;
+
+    if (_page < total - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
@@ -89,19 +73,17 @@ class _PublicAnnouncementPopupDialogState
     Navigator.pop(context);
   }
 
-  void _goPrevious() {
-    if (_page <= 0) return;
+  void _openTargetOrClose(PublicAnnouncementPopupItem item) {
+    if (_hasTarget(item) && widget.onOpenTarget != null) {
+      widget.onOpenTarget!(item);
+      return;
+    }
 
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
+    _nextOrClose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
-    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
     final items = widget.announcements;
 
     if (items.isEmpty) {
@@ -109,411 +91,227 @@ class _PublicAnnouncementPopupDialogState
     }
 
     final current = items[_page];
-    final total = items.length;
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxWidth: 440,
-          maxHeight: 680,
+          maxWidth: 390,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: c.surface,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: c.outline.withOpacity(0.12),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.18),
-                blurRadius: 30,
-                offset: const Offset(0, 16),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _TopBar(
-                  title: _typeLabel(current.announcementType),
-                  icon: _typeIcon(current.announcementType),
-                  page: _page,
-                  total: total,
-                  onClose: () => Navigator.pop(context),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
                 ),
-
-                Flexible(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: items.length,
-                    onPageChanged: (value) {
-                      setState(() {
-                        _page = value;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-
-                      return _AnnouncementPage(
-                        item: item,
-                        imageUrl: _fullImageUrl(item.imageUrl),
-                        typeLabel: _typeLabel(item.announcementType),
-                        typeIcon: _typeIcon(item.announcementType),
-                        onOpenTarget: widget.onOpenTarget,
-                      );
-                    },
-                  ),
-                ),
-
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    spacing.md,
-                    spacing.sm,
-                    spacing.md,
-                    spacing.md,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (total > 1) ...[
-                        _DotsIndicator(
-                          current: _page,
-                          total: total,
-                        ),
-                        SizedBox(height: spacing.md),
-                      ],
-
-                      Row(
-                        children: [
-                          if (total > 1)
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _page <= 0 ? null : _goPrevious,
-                                icon: const Icon(Icons.chevron_left_rounded),
-                                label: const Text('Previous'),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 13,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          if (total > 1) SizedBox(width: spacing.sm),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _goNext,
-                              icon: Icon(
-                                _page < total - 1
-                                    ? Icons.chevron_right_rounded
-                                    : Icons.check_rounded,
-                              ),
-                              label: Text(
-                                _page < total - 1 ? 'Next' : 'Got it',
-                              ),
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 13,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final int page;
-  final int total;
-  final VoidCallback onClose;
-
-  const _TopBar({
-    required this.title,
-    required this.icon,
-    required this.page,
-    required this.total,
-    required this.onClose,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
-    final t = Theme.of(context).textTheme;
-    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        spacing.md,
-        spacing.md,
-        spacing.sm,
-        spacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: c.primary.withOpacity(0.055),
-        border: Border(
-          bottom: BorderSide(
-            color: c.outline.withOpacity(0.08),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: c.primary.withOpacity(0.13),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              icon,
-              color: c.primary,
-              size: 22,
-            ),
-          ),
-          SizedBox(width: spacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: t.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: c.onSurface,
-                  ),
-                ),
-                if (total > 1)
-                  Text(
-                    '${page + 1} of $total',
-                    style: t.bodySmall?.copyWith(
-                      color: c.onSurface.withOpacity(0.62),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: c.surface.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnnouncementPage extends StatelessWidget {
-  final PublicAnnouncementPopupItem item;
-  final String imageUrl;
-  final String typeLabel;
-  final IconData typeIcon;
-  final void Function(PublicAnnouncementPopupItem item)? onOpenTarget;
-
-  const _AnnouncementPage({
-    required this.item,
-    required this.imageUrl,
-    required this.typeLabel,
-    required this.typeIcon,
-    this.onOpenTarget,
-  });
-
-  bool get _hasTarget {
-    return item.targetId != null && item.targetId! > 0;
-  }
-
-  String get _targetButtonLabel {
-    final type = item.announcementType.trim().toUpperCase();
-
-    if (type == 'PRODUCT' || type == 'DISCOUNT') {
-      return 'View product';
-    }
-
-    return 'View details';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
-    final t = Theme.of(context).textTheme;
-    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        spacing.md,
-        spacing.md,
-        spacing.md,
-        spacing.sm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (imageUrl.isNotEmpty) ...[
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: Stack(
-                  fit: StackFit.expand,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _ImageFallback(icon: typeIcon);
-                      },
-                    ),
+                    SizedBox(
+                      height: 290,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: items.length,
+                        onPageChanged: (value) {
+                          setState(() {
+                            _page = value;
+                          });
+                        },
+                        itemBuilder: (context, index) {
+                          final item = items[index];
 
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.38),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
+                          return _PromoVisualPage(
+                            item: item,
+                            imageUrl: _fullImageUrl(item.imageUrl),
+                          );
+                        },
                       ),
                     ),
 
-                    Positioned(
-                      left: 12,
-                      bottom: 12,
-                      child: _TypeChip(
-                        label: typeLabel,
-                        icon: typeIcon,
-                      ),
+                    _BottomActions(
+                      primaryLabel: _mainActionLabel(current),
+                      secondaryLabel:
+                          items.length > 1 && _page < items.length - 1
+                              ? 'Next'
+                              : 'Remind Me Later',
+                      onPrimary: () => _openTargetOrClose(current),
+                      onSecondary: _nextOrClose,
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: spacing.md),
-          ] else ...[
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(spacing.lg),
-              decoration: BoxDecoration(
-                color: c.primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: c.primary.withOpacity(0.12),
+
+            Positioned(
+              top: -14,
+              right: -14,
+              child: _CloseButton(
+                onTap: () => Navigator.pop(context),
+              ),
+            ),
+
+            if (items.length > 1)
+              Positioned(
+                bottom: 58,
+                left: 0,
+                right: 0,
+                child: _DotsIndicator(
+                  current: _page,
+                  total: items.length,
                 ),
               ),
-              child: Column(
-                children: [
-                  Icon(
-                    typeIcon,
-                    size: 44,
-                    color: c.primary,
-                  ),
-                  SizedBox(height: spacing.sm),
-                  _TypeChip(
-                    label: typeLabel,
-                    icon: typeIcon,
-                    dark: false,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: spacing.md),
           ],
-
-          Text(
-            item.title.trim().isEmpty ? 'Announcement' : item.title.trim(),
-            style: t.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: c.onSurface,
-              height: 1.15,
-            ),
-          ),
-
-          SizedBox(height: spacing.sm),
-
-          Text(
-            item.message.trim(),
-            style: t.bodyMedium?.copyWith(
-              color: c.onSurface.withOpacity(0.78),
-              height: 1.42,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          if (_hasTarget) ...[
-            SizedBox(height: spacing.lg),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onOpenTarget == null
-                    ? null
-                    : () {
-                        onOpenTarget!(item);
-                      },
-                icon: const Icon(Icons.open_in_new_rounded),
-                label: Text(_targetButtonLabel),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 13,
-                    horizontal: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  side: BorderSide(
-                    color: c.primary.withOpacity(0.35),
-                  ),
-                  foregroundColor: c.primary,
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _TypeChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool dark;
+class _PromoVisualPage extends StatelessWidget {
+  final PublicAnnouncementPopupItem item;
+  final String imageUrl;
 
-  const _TypeChip({
-    required this.label,
-    required this.icon,
-    this.dark = true,
+  const _PromoVisualPage({
+    required this.item,
+    required this.imageUrl,
+  });
+
+  String _safeTitle() {
+    final title = item.title.trim();
+
+    if (title.isEmpty) {
+      return 'Special Announcement';
+    }
+
+    return title;
+  }
+
+  String _safeMessage() {
+    return item.message.trim();
+  }
+
+  bool _hasImage() {
+    return imageUrl.trim().isNotEmpty;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    final spacing = context.read<ThemeCubit>().state.tokens.spacing;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_hasImage())
+          Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _FallbackPromoBackground();
+            },
+          )
+        else
+          _FallbackPromoBackground(),
+
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.24),
+                  Colors.black.withOpacity(0.08),
+                  Colors.black.withOpacity(0.62),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: spacing.md,
+          right: spacing.md,
+          top: spacing.md,
+          child: Column(
+            children: [
+              Text(
+                _safeTitle().toUpperCase(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: t.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                  height: 1.08,
+                ),
+              ),
+              if (_safeMessage().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _safeMessage(),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.bodySmall?.copyWith(
+                    color: Colors.white.withOpacity(0.94),
+                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        Positioned(
+          left: spacing.md,
+          bottom: spacing.md + 6,
+          child: _MiniChip(
+            label: _typeLabel(item.announcementType),
+            color: c.primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _typeLabel(String type) {
+    final clean = type.trim().toUpperCase();
+
+    switch (clean) {
+      case 'PRODUCT':
+        return 'Product';
+      case 'DISCOUNT':
+        return 'Offer';
+      case 'SERVICE':
+        return 'Service';
+      case 'MAINTENANCE':
+        return 'Update';
+      default:
+        return 'Announcement';
+    }
+  }
+}
+
+class _BottomActions extends StatelessWidget {
+  final String primaryLabel;
+  final String secondaryLabel;
+  final VoidCallback onPrimary;
+  final VoidCallback onSecondary;
+
+  const _BottomActions({
+    required this.primaryLabel,
+    required this.secondaryLabel,
+    required this.onPrimary,
+    required this.onSecondary,
   });
 
   @override
@@ -521,32 +319,74 @@ class _TypeChip extends StatelessWidget {
     final c = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
-    final bg = dark ? Colors.black.withOpacity(0.52) : c.surface;
-    final fg = dark ? Colors.white : c.primary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color:
-              dark ? Colors.white.withOpacity(0.18) : c.primary.withOpacity(0.18),
-        ),
-      ),
+    return SizedBox(
+      height: 56,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: fg),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: t.bodySmall?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w900,
+          Expanded(
+            child: Material(
+              color: c.primary,
+              child: InkWell(
+                onTap: onPrimary,
+                child: Center(
+                  child: Text(
+                    primaryLabel,
+                    style: t.bodyMedium?.copyWith(
+                      color: c.onPrimary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Material(
+              color: c.surfaceVariant.withOpacity(0.65),
+              child: InkWell(
+                onTap: onSecondary,
+                child: Center(
+                  child: Text(
+                    secondaryLabel,
+                    style: t.bodyMedium?.copyWith(
+                      color: c.onSurface,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CloseButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CloseButton({
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withOpacity(0.54),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: const SizedBox(
+          width: 34,
+          height: 34,
+          child: Icon(
+            Icons.close_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
       ),
     );
   }
@@ -563,8 +403,6 @@ class _DotsIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(total, (index) {
@@ -573,10 +411,10 @@ class _DotsIndicator extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           margin: const EdgeInsets.symmetric(horizontal: 3),
-          width: selected ? 22 : 8,
-          height: 8,
+          width: selected ? 18 : 7,
+          height: 7,
           decoration: BoxDecoration(
-            color: selected ? c.primary : c.outline.withOpacity(0.32),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.42),
             borderRadius: BorderRadius.circular(999),
           ),
         );
@@ -585,26 +423,62 @@ class _DotsIndicator extends StatelessWidget {
   }
 }
 
-class _ImageFallback extends StatelessWidget {
-  final IconData icon;
+class _MiniChip extends StatelessWidget {
+  final String label;
+  final Color color;
 
-  const _ImageFallback({
-    required this.icon,
+  const _MiniChip({
+    required this.label,
+    required this.color,
   });
 
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.45),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.18),
+        ),
+      ),
+      child: Text(
+        label,
+        style: t.bodySmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _FallbackPromoBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme;
 
     return Container(
-      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: c.outline.withOpacity(0.10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            c.primary.withOpacity(0.92),
+            c.primary.withOpacity(0.46),
+            c.secondary.withOpacity(0.38),
+          ],
+        ),
       ),
-      child: Icon(
-        icon,
-        size: 42,
-        color: c.onSurface.withOpacity(0.42),
+      child: Center(
+        child: Icon(
+          Icons.campaign_outlined,
+          color: Colors.white.withOpacity(0.7),
+          size: 74,
+        ),
       ),
     );
   }
