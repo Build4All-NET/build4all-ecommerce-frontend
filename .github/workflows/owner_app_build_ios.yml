@@ -1004,7 +1004,7 @@ jobs:
           # 1) Look up the app_id (Ensure App ID exists ran before this step).
           r = requests.get(
               f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle_id}",
-              headers=h(), timeout=30
+              headers=h(), timeout=60
           )
           r.raise_for_status()
           apps = r.json().get("data", [])
