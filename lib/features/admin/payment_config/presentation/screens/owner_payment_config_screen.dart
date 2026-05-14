@@ -1,3 +1,13 @@
+// ============================================================================
+// FIX: Display MPGS as "Credit/Debit Card" in Owner Payment Config Screen
+// ============================================================================
+// File: lib/features/admin/payment_config/presentation/screens/owner_payment_config_screen.dart
+//
+// Changes:
+// 1. Add a helper function to map payment method names for display
+// 2. Use the mapped name in the tile display
+// ============================================================================
+
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +43,7 @@ class OwnerPaymentConfigScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = OwnerPaymentConfigRepositoryImpl(
-      api:OwnerPaymentConfigApiService(dio: g.appDio!, baseUrl: Env.apiBaseUrl),
+      api: OwnerPaymentConfigApiService(dio: g.appDio!, baseUrl: Env.apiBaseUrl),
       tokenProvider: () async {
         final t = await (getToken?.call());
         return (t ?? '').trim();
@@ -61,6 +71,22 @@ class _OwnerPaymentConfigView extends StatefulWidget {
 class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
   String _q = '';
   final TextEditingController _searchCtrl = TextEditingController();
+
+  // ✅ Helper function to map payment method names for display
+  String _getDisplayName(String methodName) {
+    final upperName = methodName.toUpperCase().trim();
+    
+    // Map internal names to display names
+    const nameMapping = {
+      'MPGS': 'Credit/Debit Card',  // ← MPGS shows as Credit/Debit Card
+      'STRIPE': 'Stripe',
+      'PAYPAL': 'PayPal',
+      'CASH': 'Cash Payment',
+      // Add more mappings as needed
+    };
+    
+    return nameMapping[upperName] ?? methodName;
+  }
 
   @override
   void dispose() {
@@ -103,12 +129,14 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
             if (q.isEmpty) return true;
 
             final nameMatch = it.name.toLowerCase().contains(q);
+            final displayName = _getDisplayName(it.name);
             final titleMatch = (it.configSchema['title'] ?? '')
                 .toString()
                 .toLowerCase()
                 .contains(q);
+            final displayNameMatch = displayName.toLowerCase().contains(q);
 
-            return nameMatch || titleMatch;
+            return nameMatch || titleMatch || displayNameMatch;
           }).toList();
 
           return Padding(
@@ -149,10 +177,12 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                         final it = items[i];
                         final code = it.name.toUpperCase();
                         final saving = state.savingCodes.contains(code);
+                        final displayName = _getDisplayName(it.name); // ✅ Get display name
 
                         return _PaymentMethodTile(
                           methodName: it.name,
-                          title: (it.configSchema['title'] ?? it.name).toString(),
+                          displayName: displayName, // ✅ Pass display name
+                          title: (it.configSchema['title'] ?? displayName).toString(), // ✅ Use display name
                           enabled: it.projectEnabled,
                           saving: saving,
                           incomplete: _isIncomplete(
@@ -166,7 +196,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
                             if (val == false) {
                               context.read<OwnerPaymentConfigBloc>().add(
                                     OwnerPaymentConfigSave(
-                                      methodName: it.name,
+                                      methodName: it.name, // ← Send actual name
                                       enabled: false,
                                       configValues: const {},
                                     ),
@@ -200,7 +230,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
 
                             context.read<OwnerPaymentConfigBloc>().add(
                                   OwnerPaymentConfigSave(
-                                    methodName: it.name,
+                                    methodName: it.name, // ← Send actual name
                                     enabled: true,
                                     configValues: result,
                                   ),
@@ -236,7 +266,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
 
                             context.read<OwnerPaymentConfigBloc>().add(
                                   OwnerPaymentConfigSave(
-                                    methodName: it.name,
+                                    methodName: it.name, // ← Send actual name
                                     enabled: true,
                                     configValues: result,
                                   ),
@@ -275,6 +305,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
 
 class _PaymentMethodTile extends StatelessWidget {
   final String methodName;
+  final String displayName; // ✅ New parameter
   final String title;
   final bool enabled;
   final bool saving;
@@ -284,6 +315,7 @@ class _PaymentMethodTile extends StatelessWidget {
 
   const _PaymentMethodTile({
     required this.methodName,
+    required this.displayName, // ✅ Add to constructor
     required this.title,
     required this.enabled,
     required this.saving,
@@ -335,8 +367,9 @@ class _PaymentMethodTile extends StatelessWidget {
                         ),
                   )
                 else
+                  // ✅ Show display name instead of actual method name
                   Text(
-                    methodName.toUpperCase(),
+                    displayName.toUpperCase(),
                     style: Theme.of(context)
                         .textTheme
                         .bodySmall
