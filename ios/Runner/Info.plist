@@ -46,6 +46,15 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UIStatusBarHidden</key>
+		<!-- PUSH NOTIFICATIONS CONFIGURATION -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+			<string>fetch</string>
+		</array>
+		<key>NSUserNotificationAlertStyle</key>
+		<string>banner</string>
+		<!-- END OF PUSH NOTIFICATIONS CONFIGURATION -->
 		<false/>
 		<!--
 		  Stripe redirect-back deep link for redirect-style payment

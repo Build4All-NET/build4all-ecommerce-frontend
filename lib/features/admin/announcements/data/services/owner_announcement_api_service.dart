@@ -118,7 +118,9 @@ class OwnerAnnouncementApiService {
     return FormData.fromMap(body);
   }
 
-  Future<List<Map<String, dynamic>>> getAnnouncements() async {
+  Future<List<Map<String, dynamic>>> getAnnouncements({
+    String? tokenOverride,
+  }) async {
     final ownerProjectLinkId = _ownerProjectLinkId;
 
     if (ownerProjectLinkId <= 0) {
@@ -130,7 +132,14 @@ class OwnerAnnouncementApiService {
       queryParameters: {
         'ownerProjectLinkId': ownerProjectLinkId,
       },
-      options: Options(headers: await _headers()),
+      options: Options(
+        headers: await _headers(tokenOverride: tokenOverride),
+        extra: {
+          'retryRequest': (String newToken) {
+            return getAnnouncements(tokenOverride: newToken);
+          },
+        },
+      ),
     );
 
     final data = _asMap(response.data);
@@ -146,7 +155,10 @@ class OwnerAnnouncementApiService {
     return [];
   }
 
-  Future<void> deleteAnnouncement(int announcementId) async {
+  Future<void> deleteAnnouncement(
+    int announcementId, {
+    String? tokenOverride,
+  }) async {
     final ownerProjectLinkId = _ownerProjectLinkId;
 
     if (ownerProjectLinkId <= 0) {
@@ -158,7 +170,17 @@ class OwnerAnnouncementApiService {
       queryParameters: {
         'ownerProjectLinkId': ownerProjectLinkId,
       },
-      options: Options(headers: await _headers()),
+      options: Options(
+        headers: await _headers(tokenOverride: tokenOverride),
+        extra: {
+          'retryRequest': (String newToken) {
+            return deleteAnnouncement(
+              announcementId,
+              tokenOverride: newToken,
+            );
+          },
+        },
+      ),
     );
   }
 
@@ -167,10 +189,17 @@ class OwnerAnnouncementApiService {
   }) async {
     final token = (tokenOverride ?? await getToken())?.trim() ?? '';
 
+    print(
+      'ANNOUNCEMENT TOKEN => ${token.isEmpty ? "EMPTY" : "len=${token.length}"}',
+    );
+
+    if (token.isEmpty) {
+      throw Exception('Owner token is missing. Please login again.');
+    }
+
     return {
-      if (token.isNotEmpty)
-        'Authorization':
-            token.toLowerCase().startsWith('bearer ') ? token : 'Bearer $token',
+      'Authorization':
+          token.toLowerCase().startsWith('bearer ') ? token : 'Bearer $token',
       'Accept': 'application/json',
     };
   }
