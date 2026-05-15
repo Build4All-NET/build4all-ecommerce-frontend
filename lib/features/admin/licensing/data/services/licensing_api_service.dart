@@ -1,4 +1,4 @@
-import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/features/admin/licensing/data/models/available_payment_method_model.dart';
 import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/data/models/upgrade_payment_confirmation_model.dart';
@@ -9,33 +9,22 @@ import 'package:dio/dio.dart';
 
 /// Frontend gateway for every licensing / upgrade / subscription endpoint.
 ///
-/// Error handling convention (matches every other *_api_service.dart in
-/// the project): methods return typed models on success and rely on Dio
-/// to throw on non-2xx responses. Callers (repositories / BLoCs) map the
-/// raised exception to a user-facing message through `ExceptionMapper`.
+/// IMPORTANT:
+/// This service uses the shared application Dio (`g.appDio`) so every request
+/// goes through `RefreshTokenInterceptor`. When the access token expires the
+/// interceptor will refresh it and retry the request transparently — without
+/// kicking the admin back to the login screen.
+///
+/// Previously this service built its own private Dio, which bypassed the
+/// interceptor and caused the dashboard to fail with "session expired" while
+/// the admin was just waiting on `getCurrentLicensePlan()` to load.
 class LicensingApiService {
   final Future<String?> Function() getToken;
-  late final Dio _dio;
 
-  LicensingApiService({required this.getToken}) {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: _normalizeBaseUrl(Env.apiBaseUrl),
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-      ),
-    );
-  }
+  LicensingApiService({required this.getToken});
 
-  /// Ensures:
-  /// - no trailing slash
-  /// - baseUrl ends with /api
-  static String _normalizeBaseUrl(String raw) {
-    var base = raw.trim();
-    if (base.endsWith('/')) base = base.substring(0, base.length - 1);
-    if (base.endsWith('/api')) return base;
-    return '$base/api';
-  }
+  /// Shared Dio with interceptors (refresh + owner injector).
+  Dio get _dio => g.appDio ?? g.dio();
 
   Future<String> _requireBearer() async {
     final token = (await getToken())?.trim() ?? '';
@@ -46,9 +35,18 @@ class LicensingApiService {
     return 'Bearer $token';
   }
 
-  Future<Options> _authOptions() async {
+  /// Builds Options with:
+  /// - fresh Authorization header (read at call time)
+  /// - a `retryRequest` callback so the refresh interceptor can transparently
+  ///   retry with the new token (works for both JSON and FormData payloads).
+  Future<Options> _authOptions(
+    Future<Response<dynamic>> Function(String newBearer) retry,
+  ) async {
     final auth = await _requireBearer();
-    return Options(headers: {'Authorization': auth});
+    return Options(
+      headers: {'Authorization': auth},
+      extra: {'retryRequest': retry},
+    );
   }
 
   // =======================================================================
@@ -59,9 +57,16 @@ class LicensingApiService {
   ///
   /// Endpoint: `GET /api/licensing/apps/me/access`
   Future<OwnerAppAccessResponse> getCurrentLicensePlan() async {
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.get(
+        '/api/licensing/apps/me/access',
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.get(
-      '/licensing/apps/me/access',
-      options: await _authOptions(),
+      '/api/licensing/apps/me/access',
+      options: await _authOptions(doCall),
     );
     return OwnerAppAccessResponse.fromJson(
       Map<String, dynamic>.from(res.data),
@@ -81,9 +86,16 @@ class LicensingApiService {
   ///
   /// Endpoint: `GET /api/licensing/apps/me/upgrade-plans`
   Future<List<UpgradePlanModel>> getAvailableUpgradePlans() async {
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.get(
+        '/api/licensing/apps/me/upgrade-plans',
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.get(
-      '/licensing/apps/me/upgrade-plans',
-      options: await _authOptions(),
+      '/api/licensing/apps/me/upgrade-plans',
+      options: await _authOptions(doCall),
     );
 
     final data = res.data;
@@ -108,9 +120,16 @@ class LicensingApiService {
   ///
   /// Endpoint: `GET /api/licensing/apps/me/payment-methods`
   Future<List<AvailablePaymentMethodModel>> getAvailablePaymentMethods() async {
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.get(
+        '/api/licensing/apps/me/payment-methods',
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.get(
-      '/licensing/apps/me/payment-methods',
-      options: await _authOptions(),
+      '/api/licensing/apps/me/payment-methods',
+      options: await _authOptions(doCall),
     );
 
     final data = res.data;
@@ -126,11 +145,6 @@ class LicensingApiService {
   }
 
   /// Creates a server-side payment intent for the chosen plan + billing cycle.
-  /// The returned intent carries everything the client needs to present the
-  /// provider's payment sheet (publishable key, client secret for Stripe, or
-  /// `checkoutUrl` for redirect-based providers). For non-Stripe methods,
-  /// `clientSecret`/`publishableKey` are null and `provider` reflects the
-  /// chosen method (e.g. "cash").
   ///
   /// Endpoint: `POST /api/licensing/apps/me/upgrade/payment-intent`
   Future<UpgradePaymentIntentModel> initiateUpgradePayment({
@@ -139,15 +153,25 @@ class LicensingApiService {
     required String paymentMethodCode,
     int? usersAllowedOverride,
   }) async {
+    final body = {
+      'planCode': planCode,
+      'billingCycle': billingCycle,
+      'paymentMethodCode': paymentMethodCode,
+      'usersAllowedOverride': usersAllowedOverride,
+    };
+
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.post(
+        '/api/licensing/apps/me/upgrade/payment-intent',
+        data: body,
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.post(
-      '/licensing/apps/me/upgrade/payment-intent',
-      data: {
-        'planCode': planCode,
-        'billingCycle': billingCycle,
-        'paymentMethodCode': paymentMethodCode,
-        'usersAllowedOverride': usersAllowedOverride,
-      },
-      options: await _authOptions(),
+      '/api/licensing/apps/me/upgrade/payment-intent',
+      data: body,
+      options: await _authOptions(doCall),
     );
     return UpgradePaymentIntentModel.fromJson(
       Map<String, dynamic>.from(res.data),
@@ -155,18 +179,25 @@ class LicensingApiService {
   }
 
   /// Notifies the backend that the client-side payment step has succeeded.
-  /// The backend verifies the intent with the provider before activating
-  /// the plan and returns the refreshed subscription state alongside
-  /// receipt metadata.
   ///
   /// Endpoint: `POST /api/licensing/apps/me/upgrade/payment-confirm`
   Future<UpgradePaymentConfirmationModel> confirmUpgradePayment({
     required String paymentIntentId,
   }) async {
+    final body = {'paymentIntentId': paymentIntentId};
+
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.post(
+        '/api/licensing/apps/me/upgrade/payment-confirm',
+        data: body,
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.post(
-      '/licensing/apps/me/upgrade/payment-confirm',
-      data: {'paymentIntentId': paymentIntentId},
-      options: await _authOptions(),
+      '/api/licensing/apps/me/upgrade/payment-confirm',
+      data: body,
+      options: await _authOptions(doCall),
     );
     return UpgradePaymentConfirmationModel.fromJson(
       Map<String, dynamic>.from(res.data),
@@ -183,14 +214,24 @@ class LicensingApiService {
     int? usersAllowedOverride,
     String? billingCycle, // MONTHLY / YEARLY
   }) async {
+    final body = {
+      'planCode': planCode,
+      'usersAllowedOverride': usersAllowedOverride,
+      if (billingCycle != null) 'billingCycle': billingCycle,
+    };
+
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.post(
+        '/api/licensing/apps/me/upgrade-request',
+        data: body,
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     await _dio.post(
-      '/licensing/apps/me/upgrade-request',
-      data: {
-        'planCode': planCode,
-        'usersAllowedOverride': usersAllowedOverride,
-        if (billingCycle != null) 'billingCycle': billingCycle,
-      },
-      options: await _authOptions(),
+      '/api/licensing/apps/me/upgrade-request',
+      data: body,
+      options: await _authOptions(doCall),
     );
   }
 
@@ -198,9 +239,16 @@ class LicensingApiService {
   ///
   /// Endpoint: `GET /api/licensing/apps/me/upgrade-requests`
   Future<List<UpgradeRequestModel>> listUpgradeRequests() async {
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.get(
+        '/api/licensing/apps/me/upgrade-requests',
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.get(
-      '/licensing/apps/me/upgrade-requests',
-      options: await _authOptions(),
+      '/api/licensing/apps/me/upgrade-requests',
+      options: await _authOptions(doCall),
     );
 
     final data = res.data;
@@ -228,9 +276,16 @@ class LicensingApiService {
   ///
   /// Endpoint: `GET /api/licensing/apps/{aupId}/access`
   Future<OwnerAppAccessResponse> getAccessAsSuperAdmin(int aupId) async {
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.get(
+        '/api/licensing/apps/$aupId/access',
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     final res = await _dio.get(
-      '/licensing/apps/$aupId/access',
-      options: await _authOptions(),
+      '/api/licensing/apps/$aupId/access',
+      options: await _authOptions(doCall),
     );
     return OwnerAppAccessResponse.fromJson(
       Map<String, dynamic>.from(res.data),
@@ -246,14 +301,24 @@ class LicensingApiService {
     int? usersAllowedOverride,
     String? billingCycle,
   }) async {
+    final body = {
+      'planCode': planCode,
+      'usersAllowedOverride': usersAllowedOverride,
+      if (billingCycle != null) 'billingCycle': billingCycle,
+    };
+
+    Future<Response<dynamic>> doCall(String bearer) {
+      return _dio.post(
+        '/api/licensing/apps/$aupId/upgrade-request',
+        data: body,
+        options: Options(headers: {'Authorization': bearer}),
+      );
+    }
+
     await _dio.post(
-      '/licensing/apps/$aupId/upgrade-request',
-      data: {
-        'planCode': planCode,
-        'usersAllowedOverride': usersAllowedOverride,
-        if (billingCycle != null) 'billingCycle': billingCycle,
-      },
-      options: await _authOptions(),
+      '/api/licensing/apps/$aupId/upgrade-request',
+      data: body,
+      options: await _authOptions(doCall),
     );
   }
 
