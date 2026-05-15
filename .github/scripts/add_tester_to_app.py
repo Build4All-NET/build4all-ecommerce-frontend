@@ -283,6 +283,40 @@ def resolve_beta_tester(app_id=None):
                 if groups:
                     rel = {"betaGroups": {"data": [{"type": "betaGroups", "id": groups[0]["id"]}]}}
                     print(f"   ℹ️  Using external group {groups[0]['id']} as creation relationship")
+        if rel is None:
+            # No build, no external group — create an external group now.
+            print("   ℹ️  No build/external group found — creating 'External Testers' group...")
+            rc = requests.post(
+                f"{BASE}/v1/betaGroups",
+                headers=h(),
+                json={"data": {
+                    "type": "betaGroups",
+                    "attributes": {
+                        "name": "External Testers",
+                        "isInternalGroup": False,
+                        "publicLinkEnabled": True,
+                        "publicLinkLimitEnabled": False,
+                    },
+                    "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                }},
+            )
+            if rc.status_code in (200, 201):
+                gid = rc.json()["data"]["id"]
+                rel = {"betaGroups": {"data": [{"type": "betaGroups", "id": gid}]}}
+                print(f"   ✅ Created external group {gid}")
+            elif rc.status_code == 409:
+                # Race: someone else created it between our GET and POST — re-fetch.
+                rg2 = requests.get(
+                    f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
+                    headers=h(),
+                )
+                if rg2.status_code == 200:
+                    groups = rg2.json().get("data", [])
+                    if groups:
+                        rel = {"betaGroups": {"data": [{"type": "betaGroups", "id": groups[0]["id"]}]}}
+                        print(f"   ✅ External group surfaced after 409: {groups[0]['id']}")
+            else:
+                print(f"   ⚠️  Could not create external group (HTTP {rc.status_code}): {rc.text[:200]}")
         if rel is not None:
             body["data"]["relationships"] = rel
 
