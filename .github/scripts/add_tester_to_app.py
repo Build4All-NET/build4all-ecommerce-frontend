@@ -231,8 +231,15 @@ def ensure_internal_group(app_id):
     return None
 
 
-def resolve_beta_tester():
-    """Return the betaTesters id for `email`, creating it if needed."""
+def resolve_beta_tester(app_id=None):
+    """Return the betaTesters id for `email`, creating it if needed.
+
+    Apple's POST /v1/betaTesters now requires a `betaGroups` or `builds`
+    relationship — sending the bare attributes payload returns
+    409 ENTITY_ERROR ("Either betaGroups or builds relationship is required").
+    We prefer a build relationship (no team-member restriction); fall back to
+    an external group if no build exists yet.
+    """
     r = requests.get(
         f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
     )
@@ -244,19 +251,45 @@ def resolve_beta_tester():
             print(f"   ✅ betaTester found: {tid} (inviteType={invite_type})")
             return tid
 
+    body = {
+        "data": {
+            "type": "betaTesters",
+            "attributes": {
+                "email": email,
+                "firstName": first_name,
+                "lastName": last_name,
+            },
+        }
+    }
+
+    if app_id:
+        rel = None
+        rb = requests.get(
+            f"{BASE}/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=1",
+            headers=h(),
+        )
+        if rb.status_code == 200:
+            builds = rb.json().get("data", [])
+            if builds:
+                rel = {"builds": {"data": [{"type": "builds", "id": builds[0]["id"]}]}}
+                print(f"   ℹ️  Using build {builds[0]['id']} as creation relationship")
+        if rel is None:
+            rg = requests.get(
+                f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
+                headers=h(),
+            )
+            if rg.status_code == 200:
+                groups = rg.json().get("data", [])
+                if groups:
+                    rel = {"betaGroups": {"data": [{"type": "betaGroups", "id": groups[0]["id"]}]}}
+                    print(f"   ℹ️  Using external group {groups[0]['id']} as creation relationship")
+        if rel is not None:
+            body["data"]["relationships"] = rel
+
     r = requests.post(
         f"{BASE}/v1/betaTesters",
         headers=h(),
-        json={
-            "data": {
-                "type": "betaTesters",
-                "attributes": {
-                    "email": email,
-                    "firstName": first_name,
-                    "lastName": last_name,
-                },
-            }
-        },
+        json=body,
     )
     if r.status_code in (200, 201):
         tid = r.json()["data"]["id"]
@@ -462,7 +495,7 @@ def add_to_internal_group(user_id, app_id, app_name):
     # Last resort: EMAIL-type betaTester (existing or newly created).
     # The retry loop's STATE_ERROR handler will delete it and retry with TEAM_MEMBER.
     if not tester_id:
-        tester_id = resolve_beta_tester()
+        tester_id = resolve_beta_tester(app_id)
 
     if not tester_id:
         msg = "Could not resolve or create any betaTester record"
