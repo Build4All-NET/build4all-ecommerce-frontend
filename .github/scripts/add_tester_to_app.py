@@ -135,32 +135,23 @@ def find_active_user():
 
 
 def find_team_member_tester():
-    """Return TEAM_MEMBER betaTester id for `email`, or None.
+    """Return the betaTester id for `email` with inviteType=TEAM_MEMBER, or None.
 
-    IMPORTANT FIX:
-    Apple can reject `filter[inviteType]=TEAM_MEMBER` with
-    PARAMETER_ERROR.INVALID, so we filter only by email and then check
-    inviteType locally in Python.
+    TEAM_MEMBER betaTesters are the ones linked to actual App Store Connect team
+    members. Only TEAM_MEMBER type can be added to internal TestFlight groups.
+    EMAIL type betaTesters (created via POST /v1/betaTesters) give STATE_ERROR
+    when added to internal groups.
     """
     r = requests.get(
-        f"{BASE}/v1/betaTesters?filter[email]={email}",
+        f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=TEAM_MEMBER",
         headers=h(),
     )
-
-    if r.status_code != 200:
-        print(f"   ⚠️  betaTester lookup HTTP {r.status_code} | {r.text[:300]}")
-        return None
-
-    for tester in r.json().get("data", []):
-        tid = tester.get("id", "")
-        invite_type = tester.get("attributes", {}).get("inviteType", "")
-        print(f"   ℹ️  betaTester found: {tid} inviteType={invite_type!r}")
-
-        if invite_type == "TEAM_MEMBER":
+    if r.status_code == 200:
+        data = r.json().get("data", [])
+        if data:
+            tid = data[0]["id"]
             print(f"   ✅ TEAM_MEMBER betaTester found: {tid}")
             return tid
-
-    print("   ℹ️  TEAM_MEMBER betaTester not found yet")
     return None
 
 
@@ -488,7 +479,7 @@ def add_to_internal_group(user_id, app_id, app_name):
     # ── Phase 2: Add to internal group (retry loop) ───────────────────────────
     print("📦 Adding tester to INTERNAL group...")
     added = False
-    for attempt in range(10):
+    for attempt in range(5):
         r = requests.post(
             f"{BASE}/v1/betaGroups/{internal_group_id}/relationships/betaTesters",
             headers=h(),
@@ -524,19 +515,17 @@ def add_to_internal_group(user_id, app_id, app_name):
                 # EMAIL type — delete all EMAIL records and try to surface a TEAM_MEMBER.
                 print("   🗑️  EMAIL betaTester blocked — deleting all EMAIL records...")
                 r_em = requests.get(
-                    f"{BASE}/v1/betaTesters?filter[email]={email}",
+                    f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=EMAIL",
                     headers=h(),
                 )
                 if r_em.status_code == 200:
                     for bt in r_em.json().get("data", []):
                         btid = bt["id"]
-                        bt_type = bt.get("attributes", {}).get("inviteType", "")
-                        if bt_type == "EMAIL":
-                            print(f"   🗑️  Deleting EMAIL betaTester {btid}...")
-                            rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
-                            print(f"       DELETE HTTP {rd.status_code}")
-                print("   ⏳ Waiting 20 s for Apple sync...")
-                time.sleep(20)
+                        print(f"   🗑️  Deleting {btid}...")
+                        rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
+                        print(f"       DELETE HTTP {rd.status_code}")
+                print("   ⏳ Waiting 10 s...")
+                time.sleep(10)
 
                 # Re-resolve — TEAM_MEMBER only, no EMAIL fallback.
                 new_tid = find_tester_in_group(internal_group_id) or find_team_member_tester()
@@ -557,11 +546,9 @@ def add_to_internal_group(user_id, app_id, app_name):
                     tester_id = new_tid
                     print(f"   ✅ Re-resolved: {tester_id}")
                 else:
-                    print("   ⏳ No TEAM_MEMBER betaTester obtainable yet — Apple may still be syncing.")
-                    if attempt < 9:
-                        print("      Waiting 20 s and retrying...")
-                        time.sleep(20)
-                        continue
+                    print("   ❌ No TEAM_MEMBER betaTester obtainable after EMAIL deletion.")
+                    print("      Add this team member to the internal group once via the")
+                    print("      App Store Connect portal; subsequent runs will succeed.")
                     break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
@@ -569,11 +556,11 @@ def add_to_internal_group(user_id, app_id, app_name):
                 break
 
         elif r.status_code in (403, 422):
-            if attempt < 9:
-                print(f"   ⏳ HTTP {r.status_code} — retrying in 20 s...")
-                time.sleep(20)
+            if attempt < 4:
+                print(f"   ⏳ HTTP {r.status_code} — retrying in 15 s...")
+                time.sleep(15)
             else:
-                print("   ⏳ Apple still has not allowed assignment after retries")
+                print("   ❌ Apple rejected assignment after retries")
         else:
             print(f"   ❌ Unexpected HTTP {r.status_code}")
             break
@@ -589,19 +576,18 @@ def add_to_internal_group(user_id, app_id, app_name):
             app_id=app_id,
         )
     else:
-        # This is NOT a real failure. Apple sometimes needs time to expose the
-        # TEAM_MEMBER betaTester record after the user becomes an active
-        # App Store Connect team member. Backend must keep this pending and retry.
         write_result(
-            "PENDING_APPLE_SYNC",
-            f"{email} is an active App Store Connect team member, but Apple has not exposed "
-            f"the TEAM_MEMBER TestFlight tester record yet. Retry the workflow later.",
+            "ERROR",
+            f"{email} is an active App Store Connect team member but has no TestFlight "
+            f"tester record yet. Please add them to the Internal Testers group once manually "
+            f"via App Store Connect → TestFlight → Internal Testing → [group] → '+', "
+            f"then re-run this workflow and it will succeed automatically.",
             apple_user_id=user_id,
             apple_beta_tester_id=tester_id or "",
             internal_group_id=internal_group_id,
             app_id=app_id,
         )
-    sys.exit(0)
+    sys.exit(0 if added else 1)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
