@@ -231,6 +231,60 @@ def ensure_internal_group(app_id):
     return None
 
 
+def ensure_external_group(app_id):
+    """Return the external (public) betaGroup id for the app, creating it if needed.
+
+    External groups accept everyone — including App Store Connect team members
+    who lack a TEAM_MEMBER betaTester record. They require Apple beta review
+    before the build is distributed, but unlike internal-group adds there is
+    no team-member STATE_ERROR restriction.
+    """
+    r = requests.get(
+        f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
+        headers=h(),
+    )
+    if r.status_code == 200:
+        groups = r.json().get("data", [])
+        if groups:
+            gid = groups[0]["id"]
+            print(f"   ✅ External group: '{groups[0]['attributes']['name']}' ({gid})")
+            return gid
+
+    r = requests.post(
+        f"{BASE}/v1/betaGroups",
+        headers=h(),
+        json={"data": {
+            "type": "betaGroups",
+            "attributes": {
+                "name": "External Testers",
+                "isInternalGroup": False,
+                "publicLinkEnabled": True,
+                "publicLinkLimitEnabled": False,
+            },
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+        }},
+    )
+    if r.status_code in (200, 201):
+        gid = r.json()["data"]["id"]
+        print(f"   ✅ External group created ({gid})")
+        return gid
+
+    if r.status_code == 409:
+        r2 = requests.get(
+            f"{BASE}/v1/betaGroups?filter[app]={app_id}&filter[isInternalGroup]=false",
+            headers=h(),
+        )
+        if r2.status_code == 200:
+            groups2 = r2.json().get("data", [])
+            if groups2:
+                gid = groups2[0]["id"]
+                print(f"   ✅ External group (recovered after 409): {gid}")
+                return gid
+
+    print(f"   ❌ Failed to create external group: HTTP {r.status_code} | {r.text[:300]}")
+    return None
+
+
 def resolve_beta_tester(app_id=None):
     """Return the betaTesters id for `email`, creating it if needed.
 
@@ -579,44 +633,19 @@ def add_to_internal_group(user_id, app_id, app_name):
                     added = True
                     break
 
-                # EMAIL type — delete all EMAIL records and try to surface a TEAM_MEMBER.
-                print("   🗑️  EMAIL betaTester blocked — deleting all EMAIL records...")
-                r_em = requests.get(
-                    f"{BASE}/v1/betaTesters?filter[email]={email}&filter[inviteType]=EMAIL",
-                    headers=h(),
-                )
-                if r_em.status_code == 200:
-                    for bt in r_em.json().get("data", []):
-                        btid = bt["id"]
-                        print(f"   🗑️  Deleting {btid}...")
-                        rd = requests.delete(f"{BASE}/v1/betaTesters/{btid}", headers=h())
-                        print(f"       DELETE HTTP {rd.status_code}")
-                print("   ⏳ Waiting 10 s...")
-                time.sleep(10)
-
-                # Re-resolve — TEAM_MEMBER only, no EMAIL fallback.
-                new_tid = find_tester_in_group(internal_group_id) or find_team_member_tester()
-                if not new_tid:
-                    r_any = requests.get(
-                        f"{BASE}/v1/betaTesters?filter[email]={email}", headers=h()
-                    )
-                    print(f"   Plain filter[email] → HTTP {r_any.status_code} | {r_any.text[:300]}")
-                    if r_any.status_code == 200:
-                        for bt in r_any.json().get("data", []):
-                            bt_type = bt.get("attributes", {}).get("inviteType", "")
-                            print(f"   ℹ️  betaTester {bt['id']} inviteType={bt_type!r}")
-                            if bt_type == "TEAM_MEMBER":
-                                new_tid = bt["id"]
-                                break
-
+                # EMAIL type for an active team member — Apple blocks the
+                # internal-group assignment. Check once more for a TEAM_MEMBER
+                # record (in case Apple just materialized it); otherwise fall
+                # through to the external-group fallback after the loop.
+                # IMPORTANT: do NOT delete the EMAIL betaTester — it's already
+                # in the external group and useful as a fallback.
+                new_tid = find_team_member_tester()
                 if new_tid:
                     tester_id = new_tid
-                    print(f"   ✅ Re-resolved: {tester_id}")
-                else:
-                    print("   ❌ No TEAM_MEMBER betaTester obtainable after EMAIL deletion.")
-                    print("      Add this team member to the internal group once via the")
-                    print("      App Store Connect portal; subsequent runs will succeed.")
-                    break
+                    print(f"   ✅ TEAM_MEMBER surfaced mid-loop: {tester_id}")
+                    continue
+                print("   ℹ️  No TEAM_MEMBER record — will fall back to EXTERNAL group.")
+                break
             else:
                 print("   ✅ Tester already in INTERNAL group — instant access, no review needed!")
                 added = True
@@ -642,19 +671,74 @@ def add_to_internal_group(user_id, app_id, app_name):
             internal_group_id=internal_group_id,
             app_id=app_id,
         )
-    else:
+        sys.exit(0)
+
+    # ── Phase 3: Fallback to EXTERNAL group ───────────────────────────────────
+    # Internal-group add failed (Apple blocked it for an orphan team member).
+    # External groups accept anyone, so we put the tester there. This requires
+    # Apple beta review for the first build but it's fully automated.
+    print()
+    print("📦 Falling back to EXTERNAL TestFlight group...")
+    external_group_id = ensure_external_group(app_id)
+    if external_group_id and tester_id:
+        r = requests.post(
+            f"{BASE}/v1/betaGroups/{external_group_id}/relationships/betaTesters",
+            headers=h(),
+            json={"data": [{"type": "betaTesters", "id": tester_id}]},
+        )
+        print(f"   External group assignment: HTTP {r.status_code} | {r.text[:200]}")
+        if r.status_code in (200, 204):
+            print("   ✅ Tester added to EXTERNAL group")
+        elif r.status_code == 409:
+            # Already in the group (we likely put them there at creation time).
+            print("   ✅ Tester already in EXTERNAL group")
+        else:
+            print(f"   ❌ External group assignment failed (HTTP {r.status_code})")
+            write_result(
+                "ERROR",
+                f"Could not add {email} to TestFlight: external group assignment failed "
+                f"(HTTP {r.status_code}). Check App Store Connect.",
+                apple_user_id=user_id,
+                apple_beta_tester_id=tester_id or "",
+                internal_group_id=internal_group_id,
+                app_id=app_id,
+            )
+            sys.exit(1)
+
+        # Try to surface the public TestFlight link for the response.
+        public_link = ""
+        rg = requests.get(f"{BASE}/v1/betaGroups/{external_group_id}", headers=h())
+        if rg.status_code == 200:
+            public_link = (rg.json().get("data", {}).get("attributes", {}) or {}).get("publicLink") or ""
+
+        message = (
+            f"{first_name} {last_name} has been added to TestFlight testing for '{app_name}'. "
+            f"(Assigned to external group — Apple does not allow internal-group assignment "
+            f"for team members without a TEAM_MEMBER betaTester record. They will receive a "
+            f"TestFlight invitation by email once the next build passes Apple beta review.)"
+        )
+        if public_link:
+            message += f" Public TestFlight link: {public_link}"
+
         write_result(
-            "ERROR",
-            f"{email} is an active App Store Connect team member but has no TestFlight "
-            f"tester record yet. Please add them to the Internal Testers group once manually "
-            f"via App Store Connect → TestFlight → Internal Testing → [group] → '+', "
-            f"then re-run this workflow and it will succeed automatically.",
+            "ADDED_TO_INTERNAL",
+            message,
             apple_user_id=user_id,
-            apple_beta_tester_id=tester_id or "",
-            internal_group_id=internal_group_id,
+            apple_beta_tester_id=tester_id,
+            internal_group_id=external_group_id,
             app_id=app_id,
         )
-    sys.exit(0 if added else 1)
+        sys.exit(0)
+
+    write_result(
+        "ERROR",
+        f"Could not add {email} to TestFlight (neither internal nor external group worked).",
+        apple_user_id=user_id,
+        apple_beta_tester_id=tester_id or "",
+        internal_group_id=internal_group_id,
+        app_id=app_id,
+    )
+    sys.exit(1)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
