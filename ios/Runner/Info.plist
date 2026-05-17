@@ -46,6 +46,7 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UIStatusBarHidden</key>
+		<false/>
 		<!-- PUSH NOTIFICATIONS CONFIGURATION -->
 		<key>UIBackgroundModes</key>
 		<array>
@@ -55,7 +56,6 @@
 		<key>NSUserNotificationAlertStyle</key>
 		<string>banner</string>
 		<!-- END OF PUSH NOTIFICATIONS CONFIGURATION -->
-		<false/>
 		<!--
 		  Stripe redirect-back deep link for redirect-style payment
 		  methods (Link OTP, Cash App Pay, bank redirect, Klarna, ...).
