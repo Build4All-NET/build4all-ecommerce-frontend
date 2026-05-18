@@ -287,6 +287,12 @@ jobs:
               v = clean_b64(pick_any(env_key, alt_key))
               if v:
                   env[env_key] = v
+
+          # Pick GOOGLE_PLAY_TRACK if provided
+          gplay_track = pick_any("GOOGLE_PLAY_TRACK", "googlePlayTrack", default="")
+          if gplay_track and str(gplay_track).strip() in ("internal", "alpha", "beta", "production"):
+              env["GOOGLE_PLAY_TRACK"] = str(gplay_track).strip()
+
           logo_url = (pick("LOGO_URL") or pick("LOGO_PATH") or "").strip()
           if not logo_url:
               logo_url = (runtime.get("logoUrl") or cfg.get("logoUrl") or payload.get("logoUrl") or "").strip()
@@ -309,6 +315,7 @@ jobs:
           print("ANDROID_VERSION_CODE =", env["ANDROID_VERSION_CODE"])
           print("ANDROID_VERSION_NAME =", env["ANDROID_VERSION_NAME"])
           print("CURRENCY_ID =", env.get("CURRENCY_ID"))
+          print("GOOGLE_PLAY_TRACK =", env.get("GOOGLE_PLAY_TRACK", "(not set, will default to alpha)"))
           print("CONFIG_SOURCE =", source)
 
           for k in ["THEME_JSON_B64","NAV_JSON_B64","HOME_JSON_B64","ENABLED_FEATURES_JSON_B64","BRANDING_JSON_B64"]:
@@ -541,6 +548,7 @@ jobs:
           print("ANDROID_VERSION_CODE =", cfg.get("ANDROID_VERSION_CODE"))
           print("ANDROID_VERSION_NAME =", cfg.get("ANDROID_VERSION_NAME"))
           print("CURRENCY_ID =", cfg.get("CURRENCY_ID"))
+          print("GOOGLE_PLAY_TRACK =", cfg.get("GOOGLE_PLAY_TRACK", "(not set, will default to alpha)"))
           print("CONFIG_SOURCE =", cfg.get("CONFIG_SOURCE"))
           PY
 
@@ -804,13 +812,57 @@ jobs:
           echo "✅ signing files:"
           ls -la android/app
           echo "✅ key.properties:"
-          cat android/key.properties | sed 's/storePassword=.*/storePassword=***/; s/keyPassword=.*/keyPassword=***/'
+          cat android/key.properties | sed 's/storePassword=.*/storePassword=***/; s/keyPassword=.*/keyPassword=***/' 
 
       - name: Build APK
         run: flutter build apk --release --dart-define-from-file=lib/env/ci_env.json
 
       - name: Build AAB
         run: flutter build appbundle --release --dart-define-from-file=lib/env/ci_env.json
+
+      # ════════════════════════════════════════════════════════════════════
+      # UPLOAD TO GOOGLE PLAY CLOSED TESTING
+      # Requires GOOGLE_PLAY_JSON_KEY_B64 secret (base64 service account JSON)
+      # Track defaults to 'alpha' (Closed Testing); override via GOOGLE_PLAY_TRACK
+      # in the runtime config (values: internal | alpha | beta | production)
+      # ════════════════════════════════════════════════════════════════════
+      - name: Export ANDROID_PACKAGE_NAME + ANDROID_PLAY_TRACK
+        run: |
+          PKG="$(cat ci_package_name.txt | tr -d '\r\n')"
+          TRACK=$(python3 -c "
+          import json
+          cfg=json.load(open('lib/env/ci_env.json'))
+          t=str(cfg.get('GOOGLE_PLAY_TRACK','') or 'alpha').strip()
+          print(t if t in ('internal','alpha','beta','production') else 'alpha')
+          ")
+          echo "ANDROID_PACKAGE_NAME=$PKG" >> $GITHUB_ENV
+          echo "ANDROID_PLAY_TRACK=$TRACK" >> $GITHUB_ENV
+          echo "Package=$PKG  Track=$TRACK"
+
+      - name: Decode Google Play service account key
+        id: decode_gplay
+        env:
+          GOOGLE_PLAY_JSON_KEY_B64: ${{ secrets.GOOGLE_PLAY_JSON_KEY_B64 }}
+        run: |
+          if [ -z "${GOOGLE_PLAY_JSON_KEY_B64:-}" ]; then
+            echo "⚠️ GOOGLE_PLAY_JSON_KEY_B64 not configured – skipping Google Play upload"
+            echo "available=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "$GOOGLE_PLAY_JSON_KEY_B64" | base64 --decode > /tmp/play-key.json
+          echo "available=true" >> $GITHUB_OUTPUT
+          echo "✅ Google Play service account key decoded"
+
+      - name: 🚀 Upload AAB to Google Play Closed Testing
+        if: steps.decode_gplay.outputs.available == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: /tmp/play-key.json
+          packageName: ${{ env.ANDROID_PACKAGE_NAME }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ env.ANDROID_PLAY_TRACK }}
+          status: completed
+          inAppUpdatePriority: 2
 
       - name: Rename artifacts (copy) + export names
         run: |
