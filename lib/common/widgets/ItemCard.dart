@@ -332,6 +332,71 @@ class _ProductCardBody extends StatelessWidget {
                       ),
                     ],
                     const Spacer(),
+                    // AI button for product cards — shown when AI is enabled
+                    if (itemId != null && !ultraCompact)
+                      ValueListenableBuilder<bool>(
+                        valueListenable: net.aiEnabledNotifier,
+                        builder: (_, enabled, __) {
+                          if (!enabled) return const SizedBox.shrink();
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: hasCta ? 8.0 : 0,
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: compact ? 34.0 : 36.0,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (_) {
+                                      final remote = AiChatRemoteDataSource();
+                                      final repo =
+                                          AiChatRepositoryImpl(remote);
+                                      final usecase = ChatItemUseCase(repo);
+                                      return BlocProvider(
+                                        create: (_) =>
+                                            AiChatBloc(useCase: usecase),
+                                        child: AiItemChatSheet(
+                                          itemId: itemId!,
+                                          title: title,
+                                          imageUrl: resolvedImageUrl,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  side: BorderSide(
+                                    color: c.primary.withOpacity(0.35),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      cardTokens.radius / 1.4,
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.auto_awesome,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  'Ask AI',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: t.labelMedium?.copyWith(
+                                    fontSize: 12.2,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     if (hasCta)
                       SizedBox(
                         width: double.infinity,

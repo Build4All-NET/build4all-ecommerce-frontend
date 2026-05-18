@@ -16,45 +16,57 @@ class AiFeatureBootstrap {
 
   static DateTime? _lastRefreshAt;
 
-  /// ✅ Refresh from server (does NOT override with cached)
+  /// Refresh AI status from server.
   Future<void> refresh({Duration minInterval = const Duration(seconds: 15)}) async {
     final now = DateTime.now();
     final last = _lastRefreshAt;
-    if (last != null && now.difference(last) < minInterval) return;
+    if (last != null && now.difference(last) < minInterval) {
+      debugPrint('[AI-DEBUG] refresh skipped (throttled: last=${last.toIso8601String()}, minInterval=$minInterval)');
+      return;
+    }
     _lastRefreshAt = now;
 
     final linkIdStr = Env.ownerProjectLinkId.trim();
     final linkId = int.tryParse(linkIdStr);
     if (linkId == null) {
-      debugPrint('AI refresh: invalid OWNER_PROJECT_LINK_ID=$linkIdStr');
+      debugPrint('[AI-DEBUG] refresh: invalid OWNER_PROJECT_LINK_ID=$linkIdStr — AI disabled');
       g.aiEnabled = false;
       return;
     }
 
+    debugPrint('[AI-DEBUG] refresh: OWNER_PROJECT_LINK_ID=$linkIdStr (linkId=$linkId), current g.aiEnabled=${g.aiEnabled}');
+
     final fresh = await _api.fetchAiEnabled(linkId: linkId);
     if (fresh == null) {
-      debugPrint('AI refresh: status endpoint failed (keep current=${g.aiEnabled})');
+      debugPrint('[AI-DEBUG] refresh: API returned null — keeping current g.aiEnabled=${g.aiEnabled}');
       return;
     }
 
+    debugPrint('[AI-DEBUG] refresh: API returned aiEnabled=$fresh → updating g.aiEnabled');
     g.aiEnabled = fresh;
     await _store.saveAiEnabled(linkId: linkIdStr, enabled: fresh);
+    debugPrint('[AI-DEBUG] refresh: done, g.aiEnabled=${g.aiEnabled}');
   }
 
   Future<void> init() async {
     final linkIdStr = Env.ownerProjectLinkId.trim();
     final linkId = int.tryParse(linkIdStr);
+
+    debugPrint('[AI-DEBUG] init: OWNER_PROJECT_LINK_ID=$linkIdStr (parsed linkId=$linkId)');
+
     if (linkId == null) {
-      debugPrint('AI bootstrap: invalid OWNER_PROJECT_LINK_ID=$linkIdStr');
+      debugPrint('[AI-DEBUG] init: invalid OWNER_PROJECT_LINK_ID — AI disabled');
       g.aiEnabled = false;
       return;
     }
 
-    // 1) cached value
+    // 1) Apply cached value immediately
     final cached = await _store.readAiEnabled(linkId: linkIdStr);
+    debugPrint('[AI-DEBUG] init: cached aiEnabled=$cached → g.aiEnabled set to ${cached ?? false}');
     g.aiEnabled = cached ?? false;
 
-    // 2) server refresh (force now)
+    // 2) Fresh server check (force, bypass throttle)
     await refresh(minInterval: Duration.zero);
+    debugPrint('[AI-DEBUG] init: completed, final g.aiEnabled=${g.aiEnabled}');
   }
 }
