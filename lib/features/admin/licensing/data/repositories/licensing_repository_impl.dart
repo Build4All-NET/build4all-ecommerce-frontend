@@ -1,12 +1,8 @@
 import 'package:build4front/core/config/env.dart';
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
-import 'package:build4front/features/admin/licensing/data/models/plan_pricing_model.dart';
-import 'package:build4front/features/admin/licensing/data/models/upgrade_plan_model.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
@@ -47,40 +43,12 @@ class LicensingRepositoryImpl implements ILicensingRepository {
 
   @override
   Future<List<UpgradePlan>> getAvailableUpgradePlans() async {
-    List<UpgradePlanModel> models = const [];
-    try {
-      models = await api.getAvailableUpgradePlans();
-    } catch (_) {
-      // Backend endpoint may not be deployed yet — fall back to built-in plans
-      // with default pricing so the UI still works.
-      models = const [];
-    }
-
-    final access = await _loadAccess();
-    final current = access.planCode ?? PlanCode.FREE;
-
-    final allowed = <PlanCode>[];
-    if (current == PlanCode.FREE) {
-      allowed.addAll([PlanCode.PRO_HOSTEDB, PlanCode.DEDICATED]);
-    } else if (current == PlanCode.PRO_HOSTEDB) {
-      allowed.add(PlanCode.DEDICATED);
-    }
-
-    return allowed.map((code) {
-      final codeStr = _planCodeToApiString(code);
-      final match = models.where((m) => m.code.toUpperCase() == codeStr);
-      final model = match.isNotEmpty
-          ? match.first
-          : UpgradePlanModel(
-              code: codeStr,
-              title: null,
-              description: null,
-              available: true,
-              unavailableReason: null,
-              pricing: PlanPricingModel.defaults(),
-            );
-      return model.toEntity(code);
-    }).toList();
+    // The backend already filters out the owner's current plan and returns
+    // every other plan from `plan_catalog` with active pricing from
+    // `license_plan_pricing`. We pass it through verbatim — no client-side
+    // allowlist, no default-pricing fallback.
+    final models = await api.getAvailableUpgradePlans();
+    return models.map((m) => m.toEntity()).toList();
   }
 
   @override
@@ -91,13 +59,13 @@ class LicensingRepositoryImpl implements ILicensingRepository {
 
   @override
   Future<UpgradePaymentIntent> initiateUpgradePayment({
-    required PlanCode planCode,
+    required String planCode,
     required BillingCycle billingCycle,
     required String paymentMethodCode,
     int? usersAllowedOverride,
   }) async {
     final model = await api.initiateUpgradePayment(
-      planCode: _planCodeToApiString(planCode),
+      planCode: planCode,
       billingCycle: billingCycleToString(billingCycle),
       paymentMethodCode: paymentMethodCode,
       usersAllowedOverride: usersAllowedOverride,
@@ -122,40 +90,28 @@ class LicensingRepositoryImpl implements ILicensingRepository {
 
   @override
   Future<void> requestUpgrade({
-    required PlanCode planCode,
+    required String planCode,
     required BillingCycle billingCycle,
     int? usersAllowedOverride,
   }) async {
     final role = await _role();
-    final codeStr = _planCodeToApiString(planCode);
     final cycleStr = billingCycleToString(billingCycle);
 
     if (role == 'OWNER') {
       await api.requestUpgradeMe(
-        planCode: codeStr,
+        planCode: planCode,
         usersAllowedOverride: usersAllowedOverride,
         billingCycle: cycleStr,
       );
     } else if (role == 'SUPER_ADMIN') {
       await api.requestUpgradeAsSuperAdmin(
         aupId: _aupIdFromEnv(),
-        planCode: codeStr,
+        planCode: planCode,
         usersAllowedOverride: usersAllowedOverride,
         billingCycle: cycleStr,
       );
     } else {
       throw Exception('Unsupported role for upgrade request: $role');
-    }
-  }
-
-  static String _planCodeToApiString(PlanCode code) {
-    switch (code) {
-      case PlanCode.FREE:
-        return 'FREE';
-      case PlanCode.PRO_HOSTEDB:
-        return 'PRO_HOSTEDB';
-      case PlanCode.DEDICATED:
-        return 'DEDICATED';
     }
   }
 }

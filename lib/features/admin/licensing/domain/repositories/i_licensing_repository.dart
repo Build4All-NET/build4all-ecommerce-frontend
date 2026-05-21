@@ -1,7 +1,6 @@
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_intent.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
@@ -18,8 +17,10 @@ abstract class ILicensingRepository {
   Future<List<AvailablePaymentMethod>> getAvailablePaymentMethods();
 
   /// Creates a server-side payment intent for the selected upgrade.
+  /// [planCode] is the raw catalog code returned by the backend (e.g. one
+  /// of the rows in `plan_catalog`).
   Future<UpgradePaymentIntent> initiateUpgradePayment({
-    required PlanCode planCode,
+    required String planCode,
     required BillingCycle billingCycle,
     required String paymentMethodCode,
     int? usersAllowedOverride,
@@ -41,7 +42,7 @@ abstract class ILicensingRepository {
   /// Legacy "request upgrade" (no payment) — kept for backward compatibility
   /// with the pre-existing SUPER_ADMIN approval flow.
   Future<void> requestUpgrade({
-    required PlanCode planCode,
+    required String planCode,
     required BillingCycle billingCycle,
     int? usersAllowedOverride,
   });

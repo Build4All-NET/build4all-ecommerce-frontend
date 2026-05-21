@@ -1,4 +1,3 @@
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:equatable/equatable.dart';
 
@@ -14,7 +13,7 @@ class UpgradePlansRequested extends UpgradeFlowEvent {
 }
 
 class UpgradePlanSelected extends UpgradeFlowEvent {
-  final PlanCode planCode;
+  final String planCode;
   const UpgradePlanSelected(this.planCode);
 
   @override
