@@ -1,8 +1,6 @@
 import 'package:build4front/core/theme/theme_cubit.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
-import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,47 +23,24 @@ class PlanSelectionCard extends StatelessWidget {
     return n.toStringAsFixed(2);
   }
 
-  String _titleFor(AppLocalizations l10n, PlanCode code) {
-    switch (code) {
-      case PlanCode.FREE:
-        return l10n.planFree;
-      case PlanCode.PRO_HOSTEDB:
-        return l10n.planProHostedDb;
-      case PlanCode.DEDICATED:
-        return l10n.planDedicated;
-    }
-  }
-
-  String _descFor(AppLocalizations l10n, PlanCode code) {
-    switch (code) {
-      case PlanCode.FREE:
-        return '';
-      case PlanCode.PRO_HOSTEDB:
-        return l10n.planProHostedDbDesc;
-      case PlanCode.DEDICATED:
-        return l10n.planDedicatedDesc;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final colors = tokens.colors;
     final textTheme = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context)!;
 
-    final title = (plan.title?.isNotEmpty ?? false)
-        ? plan.title!
-        : _titleFor(l10n, plan.code);
-    final description = (plan.description?.isNotEmpty ?? false)
-        ? plan.description!
-        : _descFor(l10n, plan.code);
+    // Title and description are owned by the backend (PlanCatalog row).
+    // Fall back to the raw plan code only when the catalog row has none —
+    // that way any plan added in the database shows up automatically.
+    final title = (plan.title?.isNotEmpty ?? false) ? plan.title! : plan.code;
+    final description = plan.description ?? '';
 
     final pricing = plan.pricing;
     final isYearly = cycle == BillingCycle.YEARLY;
     final price =
         isYearly ? pricing.effectiveYearlyPrice : pricing.monthlyPrice;
     final currency = pricing.currency;
+    final priceLabel = price != null ? '${_fmt(price)} $currency' : '—';
     final disabled = !plan.available || onTap == null;
 
     return Opacity(
@@ -130,15 +105,17 @@ class PlanSelectionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${_fmt(price)} $currency',
+                    priceLabel,
                     style: textTheme.bodyLarge?.copyWith(
                       color: colors.label,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  if (isYearly && pricing.hasYearlyDiscount)
+                  if (isYearly &&
+                      pricing.hasYearlyDiscount &&
+                      pricing.yearlyPrice != null)
                     Text(
-                      '${_fmt(pricing.yearlyPrice)} $currency',
+                      '${_fmt(pricing.yearlyPrice!)} $currency',
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.body,
                         decoration: TextDecoration.lineThrough,

@@ -1,4 +1,3 @@
-import 'package:build4front/features/admin/licensing/data/models/owner_app_access_response.dart';
 import 'package:build4front/features/admin/licensing/data/models/plan_pricing_model.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_plan.dart';
 
@@ -42,9 +41,9 @@ class UpgradePlanModel {
     );
   }
 
-  UpgradePlan toEntity(PlanCode resolvedCode) {
+  UpgradePlan toEntity() {
     return UpgradePlan(
-      code: resolvedCode,
+      code: code,
       title: (title != null && title!.trim().isNotEmpty) ? title : null,
       description:
           (description != null && description!.trim().isNotEmpty) ? description : null,

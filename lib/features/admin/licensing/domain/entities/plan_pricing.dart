@@ -1,6 +1,12 @@
 class PlanPricing {
-  final double monthlyPrice;
-  final double yearlyPrice;
+  /// Monthly price in [currency] units. `null` when the backend has no
+  /// active `license_plan_pricing` row for (planCode, MONTHLY).
+  final double? monthlyPrice;
+
+  /// Yearly list price. `null` when no active YEARLY pricing row exists.
+  final double? yearlyPrice;
+
+  /// Discounted yearly price (overrides [yearlyPrice] when present).
   final double? yearlyDiscountedPrice;
   final String currency;
   final int? discountPercent;
@@ -16,10 +22,13 @@ class PlanPricing {
   });
 
   bool get hasYearlyDiscount =>
-      yearlyDiscountedPrice != null && yearlyDiscountedPrice! < yearlyPrice;
+      yearlyDiscountedPrice != null &&
+      yearlyPrice != null &&
+      yearlyDiscountedPrice! < yearlyPrice!;
 
-  double get effectiveYearlyPrice =>
-      yearlyDiscountedPrice ?? yearlyPrice;
+  /// Yearly price the user actually pays. `null` if neither a discounted
+  /// nor a list yearly price is configured.
+  double? get effectiveYearlyPrice => yearlyDiscountedPrice ?? yearlyPrice;
 
   PlanPricing copyWith({
     double? monthlyPrice,

@@ -1,5 +1,4 @@
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/upgrade_payment_confirmation.dart';
@@ -22,7 +21,7 @@ enum UpgradeFlowStatus {
 class UpgradeFlowState extends Equatable {
   final UpgradeFlowStatus status;
   final List<UpgradePlan> plans;
-  final PlanCode? selectedPlan;
+  final String? selectedPlan;
   final BillingCycle billingCycle;
   final List<AvailablePaymentMethod> availablePaymentMethods;
   final String? selectedPaymentMethodCode;
@@ -82,11 +81,11 @@ class UpgradeFlowState extends Equatable {
   }
 
   double? get displayedAmount {
-    final details = selectedPlanDetails;
-    if (details == null) return null;
+    final pricing = selectedPlanDetails?.pricing;
+    if (pricing == null) return null;
     return billingCycle == BillingCycle.YEARLY
-        ? details.pricing.effectiveYearlyPrice
-        : details.pricing.monthlyPrice;
+        ? pricing.effectiveYearlyPrice
+        : pricing.monthlyPrice;
   }
 
   String? get displayedCurrency => selectedPlanDetails?.pricing.currency;
@@ -94,7 +93,7 @@ class UpgradeFlowState extends Equatable {
   UpgradeFlowState copyWith({
     UpgradeFlowStatus? status,
     List<UpgradePlan>? plans,
-    PlanCode? selectedPlan,
+    String? selectedPlan,
     bool clearSelectedPlan = false,
     BillingCycle? billingCycle,
     List<AvailablePaymentMethod>? availablePaymentMethods,

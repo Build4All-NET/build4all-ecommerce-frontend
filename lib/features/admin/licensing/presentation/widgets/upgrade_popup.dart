@@ -1,6 +1,5 @@
 import 'package:build4front/common/widgets/primary_button.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/available_payment_method.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/plan_pricing.dart';
@@ -22,14 +21,14 @@ Future<T?> showUpgradePopup<T>({
   required List<UpgradePlan> plans,
   bool isLoading = false,
   bool isProcessing = false,
-  PlanCode? initialSelectedPlan,
+  String? initialSelectedPlan,
   BillingCycle initialBillingCycle = BillingCycle.MONTHLY,
   List<AvailablePaymentMethod> paymentMethods = const [],
   String? selectedPaymentMethodCode,
   String? errorMessage,
-  void Function(PlanCode? plan, BillingCycle cycle)? onSelectionChanged,
+  void Function(String? planCode, BillingCycle cycle)? onSelectionChanged,
   ValueChanged<String>? onPaymentMethodSelected,
-  void Function(PlanCode plan, BillingCycle cycle)? onPayNow,
+  void Function(String planCode, BillingCycle cycle)? onPayNow,
   VoidCallback? onClose,
 }) {
   return showModalBottomSheet<T>(
@@ -72,8 +71,9 @@ class UpgradePopup extends StatefulWidget {
   /// Plans the owner can upgrade to. Empty list renders an empty state.
   final List<UpgradePlan> plans;
 
-  /// Pre-selected plan (optional). When null, no plan is selected on open.
-  final PlanCode? initialSelectedPlan;
+  /// Pre-selected plan code (optional). When null, no plan is selected on
+  /// open. Matched against [UpgradePlan.code] (a raw catalog string).
+  final String? initialSelectedPlan;
 
   /// Starting billing cycle; defaults to monthly.
   final BillingCycle initialBillingCycle;
@@ -90,14 +90,14 @@ class UpgradePopup extends StatefulWidget {
   final String? errorMessage;
 
   /// Called whenever the plan or billing cycle changes.
-  /// `plan` may be null if selection was cleared.
-  final void Function(PlanCode? plan, BillingCycle cycle)? onSelectionChanged;
+  /// `planCode` may be null if selection was cleared.
+  final void Function(String? planCode, BillingCycle cycle)? onSelectionChanged;
 
   /// Called when the user picks a payment method.
   final ValueChanged<String>? onPaymentMethodSelected;
 
   /// Called when the user taps the CTA after selecting a plan.
-  final void Function(PlanCode plan, BillingCycle cycle)? onPayNow;
+  final void Function(String planCode, BillingCycle cycle)? onPayNow;
 
   /// Called when the user dismisses the popup (cancel button / drag down).
   /// The caller is responsible for actually popping the route if needed.
@@ -124,7 +124,7 @@ class UpgradePopup extends StatefulWidget {
 }
 
 class _UpgradePopupState extends State<UpgradePopup> {
-  late PlanCode? _selectedPlan;
+  late String? _selectedPlan;
   late BillingCycle _cycle;
   String? _selectedMethodCode;
 
@@ -163,7 +163,7 @@ class _UpgradePopupState extends State<UpgradePopup> {
     return keyboard > 0 ? keyboard : safe;
   }
 
-  void _selectPlan(PlanCode code) {
+  void _selectPlan(String code) {
     if (widget.isProcessing) return;
     final next = code == _selectedPlan ? null : code;
     setState(() => _selectedPlan = next);
@@ -547,6 +547,7 @@ class _PricePreview extends StatelessWidget {
     final isYearly = cycle == BillingCycle.YEARLY;
     final currency = pricing.currency;
     final amount = isYearly ? pricing.effectiveYearlyPrice : pricing.monthlyPrice;
+    final amountLabel = amount != null ? '${_fmt(amount)} $currency' : '—';
     final period = isYearly ? l10n.perYearSuffix : l10n.perMonthSuffix;
 
     return Container(
@@ -573,7 +574,7 @@ class _PricePreview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${_fmt(amount)} $currency',
+                amountLabel,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: colors.label,
@@ -589,12 +590,14 @@ class _PricePreview extends StatelessWidget {
               ),
             ],
           ),
-          if (isYearly && pricing.hasYearlyDiscount) ...[
+          if (isYearly &&
+              pricing.hasYearlyDiscount &&
+              pricing.yearlyPrice != null) ...[
             const SizedBox(height: 6),
             Row(
               children: [
                 Text(
-                  '${_fmt(pricing.yearlyPrice)} $currency',
+                  '${_fmt(pricing.yearlyPrice!)} $currency',
                   style: textTheme.bodyMedium?.copyWith(
                     color: colors.body,
                     decoration: TextDecoration.lineThrough,
