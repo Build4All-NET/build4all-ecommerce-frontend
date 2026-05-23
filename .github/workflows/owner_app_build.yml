@@ -341,8 +341,8 @@ jobs:
           echo "🔥 Fetching Firebase Android config for linkId=$LINK_ID"
           echo "Backend: $API_BASE"
       
-          MAX_ATTEMPTS=18
-          SLEEP_SECONDS=10
+          MAX_ATTEMPTS=100
+          SLEEP_SECONDS=20
           HTTP_CODE="000"
       
           for ATTEMPT in $(seq 1 "$MAX_ATTEMPTS"); do
