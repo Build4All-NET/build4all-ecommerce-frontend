@@ -47,6 +47,13 @@ jobs:
           
           api_base = ((cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")).strip()
           
+          require_firebase = str(
+              cfg.get("REQUIRE_FIREBASE")
+              or payload.get("REQUIRE_FIREBASE")
+              or "false"
+          ).strip().lower()
+          require_firebase = "true" if require_firebase == "true" else "false"
+          
           open("ci_build_id.txt","w",encoding="utf-8").write(build_id)
           open("ci_link_id.txt","w",encoding="utf-8").write(link_id)
           open("ci_api_base.txt","w",encoding="utf-8").write(api_base)
@@ -54,12 +61,14 @@ jobs:
           print("BUILD_ID =", build_id if build_id else "(empty)")
           print("LINK_ID =", link_id if link_id else "(empty)")
           print("API_BASE =", api_base if api_base else "(empty)")
+          print("REQUIRE_FIREBASE =", require_firebase)
           
           # Export to GITHUB_ENV for all steps
           with open(os.environ["GITHUB_ENV"], "a") as f:
               f.write(f"BUILD_ID={build_id}\n")
               f.write(f"LINK_ID={link_id}\n")
               f.write(f"API_BASE={api_base}\n")
+              f.write(f"REQUIRE_FIREBASE={require_firebase}\n")
           PY
 
       # ════════════════════════════════════════════════════════════════════
@@ -316,6 +325,7 @@ jobs:
           PY
           
       - name: 🔥 Fetch Firebase Android config from backend
+        if: env.REQUIRE_FIREBASE == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -412,8 +422,41 @@ jobs:
       
           test -s android/app/google-services.json
           echo "✅ google-services.json exists and is not empty"
+
+      - name: 📦 Write stub Firebase config (test build - no push notifications)
+        if: env.REQUIRE_FIREBASE != 'true'
+        shell: bash
+        run: |
+          PKG="$(tr -d '\r\n' < ci_package_name.txt)"
+          mkdir -p android/app
+          python3 - "$PKG" <<'PY'
+          import sys, json, pathlib
+          pkg = sys.argv[1]
+          stub = {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "build4all-stub",
+              "storage_bucket": "build4all-stub.appspot.com"
+            },
+            "client": [{
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": {"package_name": pkg}
+              },
+              "oauth_client": [],
+              "api_key": [{"current_key": "stub-api-key-test-build"}],
+              "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+            }],
+            "configuration_version": "1"
+          }
+          pathlib.Path("android/app/google-services.json").write_text(
+              json.dumps(stub, indent=2), encoding="utf-8"
+          )
+          print(f"✅ Stub google-services.json written for package: {pkg}")
+          PY
           
       - name: ✅ Verify Firebase Android package matches ci_package_name
+        if: env.REQUIRE_FIREBASE == 'true'
         shell: bash
         run: |
           set -euo pipefail
