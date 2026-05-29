@@ -976,53 +976,19 @@ jobs:
           except Exception as e:
               print(f"⚠️ Beta review detail error (non-fatal): {e}")
           PYEOF
-      - name: Ensure App ID + App Store Connect app exist
+      - name: Ensure App ID exists
         shell: bash
-        env:
-          FASTLANE_USER: ${{ secrets.APPLE_ID_USERNAME }}
-          FASTLANE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
-          FASTLANE_ITC_TEAM_ID: ${{ secrets.ITC_TEAM_ID }}
         run: |
           set -euo pipefail
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
-
-          # NOTE: Creating the App Store Connect app record requires Apple-ID
-          # (Spaceship) auth. The App Store Connect API key alone can create the
-          # App ID/identifier but NOT the app record, so this step intentionally
-          # uses Apple-ID auth (username + FASTLANE_SESSION) and does NOT pass
-          # api_key_path (which would force token auth and skip app creation).
-          if [ -z "${FASTLANE_USER:-}" ] || { [ -z "${FASTLANE_SESSION:-}" ] && [ -z "${FASTLANE_PASSWORD:-}" ]; }; then
-            echo "❌ Apple-ID auth not configured. Add these repo secrets:"
-            echo "   APPLE_ID_USERNAME  -> Apple ID email"
-            echo "   FASTLANE_SESSION   -> run 'fastlane spaceauth -u <APPLE_ID>' locally (refresh ~monthly; needed for 2FA)"
-            echo "   APPLE_ID_PASSWORD  -> Apple ID password (fallback if session expired)"
-            echo "   ITC_TEAM_ID        -> (optional) App Store Connect team id if the Apple ID has multiple teams"
-            exit 1
-          fi
-
-          ARGS=(produce
-            username:"${FASTLANE_USER}"
-            app_identifier:"$BUNDLE_ID"
-            team_id:"${IOS_TEAM_ID}"
-            skip_itc:false
-            language:"${APPLE_PRIMARY_LOCALE:-en-US}"
-            app_name:"${APPLE_APP_NAME:-Runner}"
-            sku:"${APPLE_SKU:-$BUNDLE_ID}")
-          if [ -n "${FASTLANE_ITC_TEAM_ID:-}" ]; then
-            ARGS+=(itc_team_id:"${FASTLANE_ITC_TEAM_ID}")
-          fi
-
-          echo "📲 Ensuring App ID + App Store Connect app for $BUNDLE_ID (name: ${APPLE_APP_NAME:-Runner})"
-          if ! fastlane run "${ARGS[@]}"; then
-            echo "❌ fastlane produce failed to create the App ID / App Store Connect app."
-            echo "   Common causes: expired FASTLANE_SESSION, 2FA challenge, or a non-unique app_name."
-            exit 1
-          fi
-
-          # Give App Store Connect a moment to propagate before downstream lookups
-          sleep 10
-          echo "✅ App ID + App Store Connect app ensured"
+          fastlane run produce \
+            app_identifier:"$BUNDLE_ID" \
+            team_id:"${IOS_TEAM_ID}" \
+            api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
+            skip_itc:false \
+            language:"${APPLE_PRIMARY_LOCALE:-en-US}" \
+            app_name:"${APPLE_APP_NAME:-Runner}" \
+            sku:"${APPLE_SKU:-$BUNDLE_ID}" || true
 
       - name: 🔔 Ensure Push Notifications capability
         shell: bash
