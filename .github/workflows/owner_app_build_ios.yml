@@ -1388,6 +1388,54 @@ jobs:
           EOF
           /usr/bin/plutil -lint ios/ExportOptions.plist
 
+      - name: 📎 Register GoogleService-Info.plist into Runner target (Copy Bundle Resources)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PLIST="ios/Runner/GoogleService-Info.plist"
+          if [ ! -s "$PLIST" ]; then
+            echo "❌ $PLIST is missing or empty — cannot register"
+            exit 1
+          fi
+
+          cat > register_plist.rb <<'RUBY'
+          require "xcodeproj"
+
+          project_path = "ios/Runner.xcodeproj"
+          project = Xcodeproj::Project.open(project_path)
+
+          target = project.targets.find { |t| t.name == "Runner" }
+          raise "Runner target not found" unless target
+
+          group = project.main_group["Runner"] ||
+                  project.main_group.groups.find { |g| g.display_name == "Runner" }
+          raise "Runner group not found" unless group
+
+          file_name = "GoogleService-Info.plist"
+
+          ref = group.files.find { |f| f.display_name == file_name }
+          ref ||= group.new_reference(file_name)
+
+          already = target.resources_build_phase.files.any? do |bf|
+            bf.file_ref && bf.file_ref.display_name == file_name
+          end
+
+          if already
+            puts "ℹ️ #{file_name} already in Copy Bundle Resources — skipping"
+          else
+            target.resources_build_phase.add_file_reference(ref, true)
+            puts "✅ Added #{file_name} to Runner Copy Bundle Resources"
+          end
+
+          project.save
+          RUBY
+
+          ruby register_plist.rb
+
+          echo "----- GoogleService-Info.plist references in project.pbxproj -----"
+          grep -c "GoogleService-Info.plist" ios/Runner.xcodeproj/project.pbxproj || true
+
       - name: Patch Runner signing
         shell: bash
         run: |
