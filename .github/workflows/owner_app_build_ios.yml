@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: ios-${{ github.event.client_payload.CONFIG.OWNER_PROJECT_LINK_ID || github.event.client_payload.OWNER_PROJECT_LINK_ID || github.event.client_payload.ownerProjectLinkId || github.event.client_payload.CONFIG.ownerProjectLinkId || 'unknown' }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
