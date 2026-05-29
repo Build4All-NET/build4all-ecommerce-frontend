@@ -328,7 +328,7 @@ jobs:
           RESPONSE="$(curl -sS -w "\n%{http_code}" -X PUT "${API_BASE}/api/ci/build-jobs/running" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}")")
+            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}"
           
           HTTP_CODE="$(echo "$RESPONSE" | tail -n1)"
           BODY="$(echo "$RESPONSE" | sed '$d')"
