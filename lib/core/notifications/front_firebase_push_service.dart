@@ -6,10 +6,14 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:convert';
 
+import 'package:build4front/core/config/env.dart';
 import 'package:build4front/features/notifications/data/services/notifications_api_service.dart';
 
 class FrontFirebasePushService {
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Lazy: accessing FirebaseMessaging.instance requires Firebase to be
+  // initialized. Using `late` defers that until first use, so simply
+  // constructing this service on a stub build (Firebase disabled) is safe.
+  late final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final NotificationsApiService _api = NotificationsApiService();
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -17,6 +21,12 @@ class FrontFirebasePushService {
   Future<void> initAndSyncToken({
     required int ownerProjectLinkId,
   }) async {
+    // No Firebase on stub/test builds — bail out before touching messaging.
+    if (!Env.requireFirebase) {
+      debugPrint('Push disabled (REQUIRE_FIREBASE=false) — skipping FCM setup');
+      return;
+    }
+
     await _messaging.requestPermission(
       alert: true,
       badge: true,

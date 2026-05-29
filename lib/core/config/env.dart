@@ -4,6 +4,17 @@ class Env {
     defaultValue: 'http://10.0.2.2:8080',
   );
 
+  /// Whether this build ships with real Firebase config.
+  /// "true"  -> app initializes Firebase + push messaging.
+  /// "false"/absent -> Firebase is fully disabled (no init, no push).
+  /// Defaults to false so a missing flag can never crash a stub build.
+  static const _requireFirebaseRaw = String.fromEnvironment(
+    'REQUIRE_FIREBASE',
+    defaultValue: 'false',
+  );
+  static bool get requireFirebase =>
+      _requireFirebaseRaw.trim().toLowerCase() == 'true';
+
   static const wsPath = String.fromEnvironment(
     'WS_PATH',
     defaultValue: '/api/ws',

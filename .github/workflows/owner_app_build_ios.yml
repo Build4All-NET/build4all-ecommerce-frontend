@@ -240,7 +240,15 @@ jobs:
 
           vn_str = (str(vn).strip() if vn not in (None, "", []) else "")
 
+          require_firebase = str(
+              cfg.get("REQUIRE_FIREBASE")
+              or payload.get("REQUIRE_FIREBASE")
+              or "false"
+          ).strip().lower()
+          require_firebase = "true" if require_firebase == "true" else "false"
+
           env = {
+              "REQUIRE_FIREBASE": require_firebase,
               "API_BASE_URL": api_base,
               "APP_NAME": app_name,
               "APP_TYPE": app_type,

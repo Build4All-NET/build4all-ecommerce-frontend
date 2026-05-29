@@ -54,6 +54,14 @@ Future<void> _bootstrapApp() async {
 }
 
 Future<void> _initFirebase() async {
+  // Stub/test builds ship without real Firebase config. Initializing the
+  // native Firebase SDK with a stub plist crashes on iOS (a native crash that
+  // a Dart try/catch cannot catch), so skip Firebase entirely unless this
+  // build was produced with real Firebase config (REQUIRE_FIREBASE=true).
+  if (!Env.requireFirebase) {
+    debugPrint('Firebase disabled (REQUIRE_FIREBASE=false) — skipping init');
+    return;
+  }
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized');
