@@ -450,45 +450,19 @@ jobs:
           test -s ios/Runner/GoogleService-Info.plist
           echo "✅ GoogleService-Info.plist exists and is not empty"
 
-      - name: 📦 Write stub Firebase iOS config (test build - no push notifications)
+      - name: 📦 Remove Firebase config (test build - no push, no Firebase)
         if: env.REQUIRE_FIREBASE != 'true'
         shell: bash
         run: |
-          BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
-          mkdir -p ios/Runner
-          cat > ios/Runner/GoogleService-Info.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>API_KEY</key>
-            <string>stub-api-key-test-build</string>
-            <key>GCM_SENDER_ID</key>
-            <string>000000000000</string>
-            <key>PLIST_VERSION</key>
-            <string>1</string>
-            <key>BUNDLE_ID</key>
-            <string>${BUNDLE_ID}</string>
-            <key>PROJECT_ID</key>
-            <string>build4all-stub</string>
-            <key>STORAGE_BUCKET</key>
-            <string>build4all-stub.appspot.com</string>
-            <key>IS_ADS_ENABLED</key>
-            <false/>
-            <key>IS_ANALYTICS_ENABLED</key>
-            <false/>
-            <key>IS_APPINVITE_ENABLED</key>
-            <true/>
-            <key>IS_GCM_ENABLED</key>
-            <true/>
-            <key>IS_SIGNIN_ENABLED</key>
-            <true/>
-            <key>GOOGLE_APP_ID</key>
-            <string>1:000000000000:ios:0000000000000000</string>
-          </dict>
-          </plist>
-          EOF
-          echo "✅ Stub GoogleService-Info.plist written for bundle: ${BUNDLE_ID}"
+          # IMPORTANT: do NOT ship a stub GoogleService-Info.plist. If a plist
+          # is present in the app bundle, the Firebase iOS SDK auto-initializes
+          # at launch (didFinishLaunchingWithOptions) and crashes on the fake
+          # API key (FIRInstallations validateAPIKey -> NSException -> SIGABRT).
+          # For stub/test builds we remove the plist entirely so Firebase has
+          # nothing to configure. The registration step is also gated to real
+          # builds, so the plist is never added to the Runner target here.
+          rm -f ios/Runner/GoogleService-Info.plist
+          echo "✅ Removed GoogleService-Info.plist (Firebase disabled for this build)"
 
       - name: ✅ Verify Firebase iOS bundle matches ci_ios_bundle_id
         if: env.REQUIRE_FIREBASE == 'true'
@@ -1397,6 +1371,7 @@ jobs:
           /usr/bin/plutil -lint ios/ExportOptions.plist
 
       - name: 📎 Register GoogleService-Info.plist into Runner target (Copy Bundle Resources)
+        if: env.REQUIRE_FIREBASE == 'true'
         shell: bash
         run: |
           set -euo pipefail
