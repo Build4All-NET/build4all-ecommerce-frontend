@@ -99,11 +99,6 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
     UpgradePaymentRequested event,
     Emitter<UpgradeFlowState> emit,
   ) async {
-    print('[UpgradeFlowBloc] UpgradePaymentRequested received. '
-        'state.selectedPlan=${state.selectedPlan} '
-        'state.methodCode=${state.selectedPaymentMethodCode} '
-        'state.billingCycle=${state.billingCycle}');
-
     final plan = state.selectedPlan;
     if (plan == null) {
       emit(state.copyWith(
@@ -141,9 +136,6 @@ class UpgradeFlowBloc extends Bloc<UpgradeFlowEvent, UpgradeFlowState> {
           paymentMethodCode: methodCode,
         ),
       );
-
-      print('[UpgradeFlowBloc] initiatePaymentUc OK: '
-          'provider=${intent.provider} id=${intent.paymentIntentId}');
 
       // ✅ Unified flow:
       // Stripe and manual providers both move to awaitingPayment.
