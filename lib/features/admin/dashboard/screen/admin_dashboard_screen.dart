@@ -1473,6 +1473,11 @@ class _LicenseBanner extends StatelessWidget {
         ? _nicePlanNameL10n(l10n, planCodeStr)
         : access!.planName!.trim();
 
+    // At-a-glance validity so the owner can see, without opening details,
+    // the date their current plan runs until and how long is left.
+    final endStr = _fmtDate(_tryParseDate(access!.periodEnd));
+    final hasEnd = endStr != '—';
+
     final subtitle = hasPending
         ? l10n.upgradeRequestPending
         : (isOk
@@ -1549,6 +1554,19 @@ class _LicenseBanner extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: t.bodySmall?.copyWith(color: colors.body),
                     ),
+                    if (hasEnd) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '${l10n.licensePeriodEndLabel}: $endStr · '
+                        '${l10n.licenseDaysLeftLabel}: ${access!.daysLeft}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.bodySmall?.copyWith(
+                          color: colors.body,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
