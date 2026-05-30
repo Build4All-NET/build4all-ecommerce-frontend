@@ -1,5 +1,6 @@
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/core/payments/stripe_payment_sheet.dart';
+import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
 import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_bloc.dart';
 import 'package:build4front/features/admin/licensing/presentation/bloc/upgrade_flow_event.dart';
@@ -247,13 +248,79 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     }
   }
 
-  Future<void> _handleManualSuccess() async {
+  Future<void> _handleManualSuccess(UpgradeFlowState state) async {
     if (_manualRequestHandled) return;
     _manualRequestHandled = true;
 
     final l10n = AppLocalizations.of(context)!;
+
+    // Cash / bank-transfer payments cannot be confirmed by the owner — a
+    // super-admin verifies the money was received and then marks the request
+    // paid. Show an explicit pending-confirmation screen so the owner knows
+    // their plan is NOT active yet and what happens next, instead of a bare
+    // "request sent" toast.
+    await _showManualPendingDialog(state);
+    if (!mounted) return;
+
     await _closeWithRefresh(
       toastMessage: l10n.upgradeRequestSent,
+    );
+  }
+
+  Future<void> _showManualPendingDialog(UpgradeFlowState state) async {
+    final intent = state.paymentIntent;
+    final plan = state.selectedPlanDetails;
+    final planLabel = plan?.title ?? plan?.code ?? state.selectedPlan ?? '';
+    final cycleLabel =
+        state.billingCycle == BillingCycle.YEARLY ? 'yearly' : 'monthly';
+
+    final provider = (intent?.provider ?? '').toLowerCase();
+    final methodLabel =
+        provider.contains('cash') ? 'cash payment' : 'bank transfer';
+    final amountText = intent != null && intent.amount > 0
+        ? '${intent.currency} ${intent.amount.toStringAsFixed(2)}'
+        : null;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          icon: const Icon(Icons.hourglass_top_rounded),
+          title: const Text('Payment pending confirmation'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                planLabel.isEmpty
+                    ? 'Your upgrade request has been submitted.'
+                    : 'Your request to upgrade to $planLabel ($cycleLabel) '
+                        'has been submitted.',
+              ),
+              if (amountText != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Amount due: $amountText',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                'Please complete your $methodLabel. Your subscription will be '
+                'activated automatically once an administrator confirms the '
+                'payment has been received.',
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Got it'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -312,7 +379,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             provider != 'stripe' &&
             provider != 'paypal' &&
             provider != 'mpgs') {
-          await _handleManualSuccess();
+          await _handleManualSuccess(state);
           return;
         }
 
@@ -323,7 +390,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             provider != 'paypal' &&
             provider != 'mpgs' &&
             state.confirmedAccess == null) {
-          await _handleManualSuccess();
+          await _handleManualSuccess(state);
           return;
         }
 
