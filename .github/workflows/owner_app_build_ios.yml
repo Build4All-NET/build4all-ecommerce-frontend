@@ -1536,7 +1536,7 @@ jobs:
             --ipa "$IPA_PATH" \
             --api_key_path "$API_KEY_JSON" \
             --app_identifier "$BUNDLE_ID" \
-            --skip_waiting_for_build_processing false \
+            --skip_waiting_for_build_processing true \
             --distribute_external false \
             --skip_submission true \
             --changelog "Hybrid internal + external test build"
