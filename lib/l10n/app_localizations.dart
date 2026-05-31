@@ -5365,6 +5365,12 @@ abstract class AppLocalizations {
   /// **'Starts on'**
   String get licenseUpcomingStartLabel;
 
+  /// No description provided for @licenseUpcomingPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming plans'**
+  String get licenseUpcomingPlansTitle;
+
   /// No description provided for @upgradeRequestPending.
   ///
   /// In en, this message translates to:

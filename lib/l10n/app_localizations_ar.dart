@@ -2734,6 +2734,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get licenseUpcomingStartLabel => 'تبدأ في';
 
   @override
+  String get licenseUpcomingPlansTitle => 'الخطط القادمة';
+
+  @override
   String get upgradeRequestPending => 'طلب الترقية قيد الانتظار للموافقة';
 
   @override

@@ -101,6 +101,24 @@ String _fmtDate(DateTime? d) {
   return '$y-$m-$day';
 }
 
+/// Display name for a queued upcoming plan: prefer the server-provided name,
+/// fall back to a nicely-localized name derived from the plan code.
+String _upcomingPlanLabel(AppLocalizations l10n, UpcomingPlan up) {
+  final name = (up.planName ?? '').trim();
+  if (name.isNotEmpty) return name;
+  final code = _planCodeToString(up.planCode);
+  return code.isEmpty ? l10n.planGeneric : _nicePlanNameL10n(l10n, code);
+}
+
+/// "2026-07-30 → 2026-08-30" for a queued plan's period, with graceful
+/// fallbacks when only one bound is known.
+String _upcomingPeriodText(AppLocalizations l10n, UpcomingPlan up) {
+  final start = _fmtDate(_tryParseDate(up.periodStart));
+  final end = _fmtDate(_tryParseDate(up.periodEnd));
+  if (start == '—' && end == '—') return '—';
+  return '$start → $end';
+}
+
 String _statusToString(dynamic v) {
   if (v == null) return '—';
   if (v is String) return v;
@@ -1622,25 +1640,10 @@ class _LicenseDetailsSheet extends StatelessWidget {
     final endStr = _fmtDate(_tryParseDate(access.periodEnd));
     final daysLeft = access.daysLeft;
 
-    final allowed = access.usersAllowed;
-    final active = access.activeUsers;
-    final remaining = access.usersRemaining;
-
     final canRequestUpgrade =
         access.planCode != PlanCode.DEDICATED && !access.hasPendingUpgradeRequest;
 
-    final upStatus = _upgradeStatusNice(l10n, access.upgradeRequestStatus);
-    final upPlan = _planCodeToString(access.upgradeRequestedPlan);
-    final upAt = _fmtDate(_tryParseDate(access.upgradeRequestedAt));
-    final upNote = _reasonToString(access.upgradeDecisionNote);
-
-    final upcomingPlanCodeStr = _planCodeToString(access.upcomingPlanCode);
-    final upcomingPlanName = (access.upcomingPlanName ?? '').trim().isEmpty
-        ? (upcomingPlanCodeStr.isEmpty
-            ? ''
-            : _nicePlanNameL10n(l10n, upcomingPlanCodeStr))
-        : access.upcomingPlanName!.trim();
-    final upcomingStartStr = _fmtDate(_tryParseDate(access.upcomingPlanStart));
+    final upcomingPlans = access.upcomingPlans;
 
     final maxHeight = media.size.height * 0.85;
 
@@ -1694,15 +1697,11 @@ class _LicenseDetailsSheet extends StatelessWidget {
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _DetailRow(
                               label: l10n.licensePlanLabel,
                               value: planName,
-                              colors: colors,
-                            ),
-                            _DetailRow(
-                              label: l10n.licensePlanCodeLabel,
-                              value: planCodeStr.isEmpty ? '—' : planCodeStr,
                               colors: colors,
                             ),
                             _DetailRow(
@@ -1720,78 +1719,25 @@ class _LicenseDetailsSheet extends StatelessWidget {
                               value: '$daysLeft',
                               colors: colors,
                             ),
-                            _DetailRow(
-                              label: l10n.licenseUsersLabel,
-                              value:
-                                  allowed == null ? '$active / ∞' : '$active / $allowed',
-                              colors: colors,
-                            ),
-                            if (allowed != null)
-                              _DetailRow(
-                                label: l10n.licenseUsersRemainingLabel,
-                                value: remaining == null ? '—' : '$remaining',
-                                colors: colors,
+                            // Queue of purchased plans that start after the
+                            // current period (e.g. Basic now -> Smart next).
+                            if (upcomingPlans.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.licenseUpcomingPlansTitle,
+                                style: t.titleSmall?.copyWith(
+                                  color: colors.label,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            _DetailRow(
-                              label: l10n.licenseRequiresDedicatedLabel,
-                              value: access.requiresDedicatedServer
-                                  ? l10n.yesLabel
-                                  : l10n.noLabel,
-                              colors: colors,
-                            ),
-                            if (access.requiresDedicatedServer)
-                              _DetailRow(
-                                label: l10n.licenseDedicatedInfraReadyLabel,
-                                value: access.dedicatedInfraReady
-                                    ? l10n.yesLabel
-                                    : l10n.noLabel,
-                                colors: colors,
-                              ),
-                            _DetailRow(
-                              label: l10n.licenseBlockingReasonLabel,
-                              value: _reasonToString(access.blockingReason),
-                              colors: colors,
-                            ),
-                            // Stacked plan queued to start when the current
-                            // period ends (e.g. Basic now -> Smart next month).
-                            if (access.hasUpcomingPlan) ...[
                               const SizedBox(height: 8),
-                              _DetailRow(
-                                label: l10n.licenseUpcomingPlanLabel,
-                                value: upcomingPlanName.isEmpty
-                                    ? (upcomingPlanCodeStr.isEmpty
-                                        ? '—'
-                                        : upcomingPlanCodeStr)
-                                    : upcomingPlanName,
-                                colors: colors,
-                              ),
-                              _DetailRow(
-                                label: l10n.licenseUpcomingStartLabel,
-                                value: upcomingStartStr,
-                                colors: colors,
-                              ),
+                              for (final up in upcomingPlans)
+                                _UpcomingPlanCard(
+                                  name: _upcomingPlanLabel(l10n, up),
+                                  periodText: _upcomingPeriodText(l10n, up),
+                                  colors: colors,
+                                ),
                             ],
-                            const SizedBox(height: 8),
-                            _DetailRow(
-                              label: l10n.upgradeRequestStatusLabel,
-                              value: upStatus,
-                              colors: colors,
-                            ),
-                            _DetailRow(
-                              label: l10n.upgradeRequestPlanLabel,
-                              value: upPlan.isEmpty ? '—' : upPlan,
-                              colors: colors,
-                            ),
-                            _DetailRow(
-                              label: l10n.upgradeRequestAtLabel,
-                              value: upAt,
-                              colors: colors,
-                            ),
-                            _DetailRow(
-                              label: l10n.upgradeRequestNoteLabel,
-                              value: upNote,
-                              colors: colors,
-                            ),
                             const SizedBox(height: 12),
                           ],
                         ),
@@ -1871,6 +1817,68 @@ class _DetailRow extends StatelessWidget {
                 color: colors.label,
                 fontWeight: FontWeight.w800,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A card for one queued (upcoming) paid plan: plan name on top, its active
+/// period below. Used to render the list of stacked plans on the License sheet.
+class _UpcomingPlanCard extends StatelessWidget {
+  final String name;
+  final String periodText;
+  final dynamic colors;
+
+  const _UpcomingPlanCard({
+    required this.name,
+    required this.periodText,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border.withOpacity(.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: colors.primary.withOpacity(.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.schedule_rounded, size: 20, color: colors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: t.bodyMedium?.copyWith(
+                    color: colors.label,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  periodText,
+                  style: t.bodySmall?.copyWith(color: colors.body),
+                ),
+              ],
             ),
           ),
         ],

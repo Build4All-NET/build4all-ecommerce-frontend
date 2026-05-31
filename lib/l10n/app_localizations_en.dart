@@ -2734,6 +2734,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseUpcomingStartLabel => 'Starts on';
 
   @override
+  String get licenseUpcomingPlansTitle => 'Upcoming plans';
+
+  @override
   String get upgradeRequestPending => 'Upgrade request is pending approval';
 
   @override

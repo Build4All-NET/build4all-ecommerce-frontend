@@ -1005,6 +1005,7 @@
   "licenseBlockingReasonLabel": "Raison du blocage",
   "licenseUpcomingPlanLabel": "Forfait à venir",
   "licenseUpcomingStartLabel": "Commence le",
+  "licenseUpcomingPlansTitle": "Forfaits à venir",
   "upgradeRequestPending": "La demande de mise à niveau est en attente d’approbation",
   "payNowLabel": "Payer maintenant",
   "billingCycleMonthly": "Mensuel",

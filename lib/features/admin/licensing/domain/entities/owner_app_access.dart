@@ -1,6 +1,22 @@
 import 'plan_code.dart';
 import 'subscription_status.dart';
 
+/// One purchased-but-not-yet-started paid plan in the owner's queue. Multiple
+/// stacked upgrades (e.g. Basic then Smart) are listed soonest first.
+class UpcomingPlan {
+  final PlanCode? planCode;
+  final String? planName;
+  final String? periodStart;
+  final String? periodEnd;
+
+  const UpcomingPlan({
+    this.planCode,
+    this.planName,
+    this.periodStart,
+    this.periodEnd,
+  });
+}
+
 /// Pure domain entity describing an owner's current license / access
 /// snapshot. JSON parsing lives in the data layer —
 /// see `data/models/owner_app_access_response.dart`.
@@ -29,11 +45,14 @@ class OwnerAppAccess {
   final String? upgradeDecisionNote;
 
   // Upcoming (stacked) plan scheduled to start when the current period ends.
-  // Null when no plan is queued.
+  // Null when no plan is queued. (Legacy singular fields — first queued plan.)
   final PlanCode? upcomingPlanCode;
   final String? upcomingPlanName;
   final String? upcomingPlanStart;
   final String? upcomingPeriodEnd;
+
+  // Full queue of purchased-but-not-yet-started paid plans, soonest first.
+  final List<UpcomingPlan> upcomingPlans;
 
   const OwnerAppAccess({
     required this.canAccessDashboard,
@@ -56,12 +75,14 @@ class OwnerAppAccess {
     this.upcomingPlanName,
     this.upcomingPlanStart,
     this.upcomingPeriodEnd,
+    this.upcomingPlans = const [],
   });
 
   bool get hasPendingUpgradeRequest =>
       (upgradeRequestStatus ?? '').toUpperCase() == 'PENDING';
 
   bool get hasUpcomingPlan =>
+      upcomingPlans.isNotEmpty ||
       upcomingPlanCode != null ||
       (upcomingPlanName ?? '').trim().isNotEmpty;
 }

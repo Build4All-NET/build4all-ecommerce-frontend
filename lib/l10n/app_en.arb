@@ -1074,6 +1074,7 @@
   "licenseBlockingReasonLabel": "Blocking reason",
   "licenseUpcomingPlanLabel": "Upcoming plan",
   "licenseUpcomingStartLabel": "Starts on",
+  "licenseUpcomingPlansTitle": "Upcoming plans",
   "upgradeRequestPending": "Upgrade request is pending approval",
   "payNowLabel": "Pay now",
   "billingCycleMonthly": "Monthly",

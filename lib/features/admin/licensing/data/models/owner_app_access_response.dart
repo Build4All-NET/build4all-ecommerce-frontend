@@ -34,11 +34,31 @@ class OwnerAppAccessResponse extends OwnerAppAccess {
     super.upcomingPlanName,
     super.upcomingPlanStart,
     super.upcomingPeriodEnd,
+    super.upcomingPlans,
   });
 
   factory OwnerAppAccessResponse.fromJson(Map<String, dynamic> j) {
     final upPlanRaw = j['upgradeRequestedPlan']?.toString();
     final upcomingPlanRaw = j['upcomingPlanCode']?.toString();
+
+    final rawUpcoming = j['upcomingPlans'];
+    final upcomingPlans = <UpcomingPlan>[];
+    if (rawUpcoming is List) {
+      for (final e in rawUpcoming) {
+        if (e is Map) {
+          final codeRaw = e['planCode']?.toString();
+          upcomingPlans.add(UpcomingPlan(
+            planCode: (codeRaw == null || codeRaw.isEmpty)
+                ? null
+                : planCodeFromString(codeRaw),
+            planName: e['planName']?.toString(),
+            periodStart: e['periodStart']?.toString(),
+            periodEnd: e['periodEnd']?.toString(),
+          ));
+        }
+      }
+    }
+
     return OwnerAppAccessResponse(
       canAccessDashboard: j['canAccessDashboard'] == true,
       blockingReason: j['blockingReason'] as String?,
@@ -74,6 +94,7 @@ class OwnerAppAccessResponse extends OwnerAppAccess {
       upcomingPlanName: j['upcomingPlanName']?.toString(),
       upcomingPlanStart: j['upcomingPlanStart']?.toString(),
       upcomingPeriodEnd: j['upcomingPeriodEnd']?.toString(),
+      upcomingPlans: upcomingPlans,
     );
   }
 }
