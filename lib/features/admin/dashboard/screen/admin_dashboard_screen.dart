@@ -1634,6 +1634,14 @@ class _LicenseDetailsSheet extends StatelessWidget {
     final upAt = _fmtDate(_tryParseDate(access.upgradeRequestedAt));
     final upNote = _reasonToString(access.upgradeDecisionNote);
 
+    final upcomingPlanCodeStr = _planCodeToString(access.upcomingPlanCode);
+    final upcomingPlanName = (access.upcomingPlanName ?? '').trim().isEmpty
+        ? (upcomingPlanCodeStr.isEmpty
+            ? ''
+            : _nicePlanNameL10n(l10n, upcomingPlanCodeStr))
+        : access.upcomingPlanName!.trim();
+    final upcomingStartStr = _fmtDate(_tryParseDate(access.upcomingPlanStart));
+
     final maxHeight = media.size.height * 0.85;
 
     return Material(
@@ -1744,6 +1752,25 @@ class _LicenseDetailsSheet extends StatelessWidget {
                               value: _reasonToString(access.blockingReason),
                               colors: colors,
                             ),
+                            // Stacked plan queued to start when the current
+                            // period ends (e.g. Basic now -> Smart next month).
+                            if (access.hasUpcomingPlan) ...[
+                              const SizedBox(height: 8),
+                              _DetailRow(
+                                label: l10n.licenseUpcomingPlanLabel,
+                                value: upcomingPlanName.isEmpty
+                                    ? (upcomingPlanCodeStr.isEmpty
+                                        ? '—'
+                                        : upcomingPlanCodeStr)
+                                    : upcomingPlanName,
+                                colors: colors,
+                              ),
+                              _DetailRow(
+                                label: l10n.licenseUpcomingStartLabel,
+                                value: upcomingStartStr,
+                                colors: colors,
+                              ),
+                            ],
                             const SizedBox(height: 8),
                             _DetailRow(
                               label: l10n.upgradeRequestStatusLabel,

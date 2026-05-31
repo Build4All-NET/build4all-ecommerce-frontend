@@ -1072,6 +1072,8 @@
   "licenseRequiresDedicatedLabel": "Requires dedicated",
   "licenseDedicatedInfraReadyLabel": "Dedicated infra ready",
   "licenseBlockingReasonLabel": "Blocking reason",
+  "licenseUpcomingPlanLabel": "Upcoming plan",
+  "licenseUpcomingStartLabel": "Starts on",
   "upgradeRequestPending": "Upgrade request is pending approval",
   "payNowLabel": "Pay now",
   "billingCycleMonthly": "Monthly",

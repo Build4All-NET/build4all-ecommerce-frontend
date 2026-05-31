@@ -942,6 +942,8 @@
   "licenseRequiresDedicatedLabel": "يتطلب خادمًا مخصصًا",
   "licenseDedicatedInfraReadyLabel": "البنية التحتية المخصصة جاهزة",
   "licenseBlockingReasonLabel": "سبب الحظر",
+  "licenseUpcomingPlanLabel": "الخطة القادمة",
+  "licenseUpcomingStartLabel": "تبدأ في",
   "upgradeRequestPending": "طلب الترقية قيد الانتظار للموافقة",
   "payNowLabel": "ادفع الآن",
   "billingCycleMonthly": "شهري",

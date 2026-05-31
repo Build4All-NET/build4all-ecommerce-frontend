@@ -2728,6 +2728,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get licenseBlockingReasonLabel => 'سبب الحظر';
 
   @override
+  String get licenseUpcomingPlanLabel => 'الخطة القادمة';
+
+  @override
+  String get licenseUpcomingStartLabel => 'تبدأ في';
+
+  @override
   String get upgradeRequestPending => 'طلب الترقية قيد الانتظار للموافقة';
 
   @override

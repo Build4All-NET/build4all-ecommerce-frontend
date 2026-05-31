@@ -28,6 +28,13 @@ class OwnerAppAccess {
   final String? upgradeRequestedAt;
   final String? upgradeDecisionNote;
 
+  // Upcoming (stacked) plan scheduled to start when the current period ends.
+  // Null when no plan is queued.
+  final PlanCode? upcomingPlanCode;
+  final String? upcomingPlanName;
+  final String? upcomingPlanStart;
+  final String? upcomingPeriodEnd;
+
   const OwnerAppAccess({
     required this.canAccessDashboard,
     required this.blockingReason,
@@ -45,8 +52,16 @@ class OwnerAppAccess {
     required this.upgradeRequestedPlan,
     required this.upgradeRequestedAt,
     required this.upgradeDecisionNote,
+    this.upcomingPlanCode,
+    this.upcomingPlanName,
+    this.upcomingPlanStart,
+    this.upcomingPeriodEnd,
   });
 
   bool get hasPendingUpgradeRequest =>
       (upgradeRequestStatus ?? '').toUpperCase() == 'PENDING';
+
+  bool get hasUpcomingPlan =>
+      upcomingPlanCode != null ||
+      (upcomingPlanName ?? '').trim().isNotEmpty;
 }

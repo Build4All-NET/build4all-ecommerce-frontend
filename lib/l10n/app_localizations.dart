@@ -5353,6 +5353,18 @@ abstract class AppLocalizations {
   /// **'Blocking reason'**
   String get licenseBlockingReasonLabel;
 
+  /// No description provided for @licenseUpcomingPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming plan'**
+  String get licenseUpcomingPlanLabel;
+
+  /// No description provided for @licenseUpcomingStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts on'**
+  String get licenseUpcomingStartLabel;
+
   /// No description provided for @upgradeRequestPending.
   ///
   /// In en, this message translates to:

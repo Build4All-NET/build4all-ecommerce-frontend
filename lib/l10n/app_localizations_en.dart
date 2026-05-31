@@ -2728,6 +2728,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseBlockingReasonLabel => 'Blocking reason';
 
   @override
+  String get licenseUpcomingPlanLabel => 'Upcoming plan';
+
+  @override
+  String get licenseUpcomingStartLabel => 'Starts on';
+
+  @override
   String get upgradeRequestPending => 'Upgrade request is pending approval';
 
   @override
