@@ -9,7 +9,6 @@ import 'package:build4front/features/admin/announcements/domain/usecases/delete_
 import 'package:build4front/features/admin/announcements/domain/usecases/get_owner_announcements.dart';
 import 'package:build4front/features/admin/announcements/presentation/bloc/owner_announcement_bloc.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
-import 'package:build4front/features/admin/licensing/domain/entities/plan_code.dart';
 import 'package:build4front/features/admin/licensing/data/repositories/licensing_repository_impl.dart';
 import 'package:build4front/features/admin/licensing/data/services/licensing_api_service.dart';
 import 'package:build4front/features/admin/licensing/domain/usecases/confirm_upgrade_payment.dart';
@@ -418,15 +417,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return;
     }
 
-    final current = access.planCode;
-    final canRequest = access.isLicenseBlocked ||
-        current == PlanCode.FREE ||
-        current == PlanCode.PRO_HOSTEDB;
-
-    if (current == PlanCode.DEDICATED || !canRequest) {
-      AppToast.error(context, l10n.noUpgradeAvailable);
-      return;
-    }
+    // No client-side plan-code gating: the upgrade sheet loads the plans the
+    // backend actually offers for this app. (The old FREE/PRO_HOSTEDB/DEDICATED
+    // checks referenced plan codes that no longer exist.)
 
     final bloc = _buildUpgradeFlowBloc();
     OwnerAppAccess? updated;
@@ -1516,8 +1509,7 @@ class _LicenseBanner extends StatelessWidget {
     // stays enabled even if a stale request is still PENDING — otherwise they
     // could never renew and resume.
     final isBlocked = access!.isLicenseBlocked;
-    final canRequestUpgrade =
-        access!.planCode != PlanCode.DEDICATED && (!hasPending || isBlocked);
+    final canRequestUpgrade = !hasPending || isBlocked;
 
     final bg = isOk
         ? colors.surface
@@ -1600,17 +1592,15 @@ class _LicenseBanner extends StatelessWidget {
                   ],
                 ),
               ),
-              if (access!.planCode != PlanCode.DEDICATED) ...[
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: canRequestUpgrade ? onRequestUpgrade : null,
-                  child: Text(
-                    (hasPending && !isBlocked)
-                        ? l10n.requestUpgradePendingLabel
-                        : l10n.requestUpgradeLabel,
-                  ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: canRequestUpgrade ? onRequestUpgrade : null,
+                child: Text(
+                  (hasPending && !isBlocked)
+                      ? l10n.requestUpgradePendingLabel
+                      : l10n.requestUpgradeLabel,
                 ),
-              ],
+              ),
               Icon(
                 Icons.chevron_right_rounded,
                 color: colors.body.withOpacity(.6),
@@ -1654,8 +1644,7 @@ class _LicenseDetailsSheet extends StatelessWidget {
 
     // Locked-out owners may pay to resume even with a stale PENDING request.
     final isBlocked = access.isLicenseBlocked;
-    final canRequestUpgrade = access.planCode != PlanCode.DEDICATED &&
-        (!access.hasPendingUpgradeRequest || isBlocked);
+    final canRequestUpgrade = !access.hasPendingUpgradeRequest || isBlocked;
 
     final upcomingPlans = access.upcomingPlans;
 
