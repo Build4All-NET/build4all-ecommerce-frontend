@@ -81,6 +81,19 @@ class OwnerAppAccess {
   bool get hasPendingUpgradeRequest =>
       (upgradeRequestStatus ?? '').toUpperCase() == 'PENDING';
 
+  /// The owner is locked out of the dashboard because they have no usable
+  /// license (e.g. every license was canceled, or it expired). In this state
+  /// the owner MUST be able to (re)start the pay/upgrade flow to resume — even
+  /// if a stale upgrade request is still marked PENDING.
+  ///
+  /// Excludes "soft" blocks that paying a new plan doesn't resolve
+  /// (user-limit reached, dedicated infra not yet assigned).
+  bool get isLicenseBlocked {
+    if (canAccessDashboard != false) return false;
+    final r = (blockingReason ?? '').trim().toUpperCase();
+    return r != 'USER_LIMIT_REACHED' && r != 'DEDICATED_SERVER_NOT_ASSIGNED';
+  }
+
   bool get hasUpcomingPlan =>
       upcomingPlans.isNotEmpty ||
       upcomingPlanCode != null ||
