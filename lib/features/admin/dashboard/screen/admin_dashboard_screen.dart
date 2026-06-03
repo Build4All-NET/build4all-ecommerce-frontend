@@ -410,15 +410,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _showUpgradeSheet(OwnerAppAccess access) async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (access.hasPendingUpgradeRequest) {
+    // A pending request normally blocks a second one — unless the owner is
+    // currently locked out (no usable license), in which case they must be
+    // able to pay to resume even with a stale PENDING request.
+    if (access.hasPendingUpgradeRequest && !access.isLicenseBlocked) {
       AppToast.error(context, l10n.upgradeRequestPending);
       return;
     }
 
     final current = access.planCode;
-    final canRequest = current == PlanCode.FREE || current == PlanCode.PRO_HOSTEDB;
+    final canRequest = access.isLicenseBlocked ||
+        current == PlanCode.FREE ||
+        current == PlanCode.PRO_HOSTEDB;
 
-    if (!canRequest) {
+    if (current == PlanCode.DEDICATED || !canRequest) {
       AppToast.error(context, l10n.noUpgradeAvailable);
       return;
     }
@@ -726,7 +731,10 @@ final bool lockActions =
                       onRequestUpgrade: () {
                         if (_license == null) return;
 
-                        if (_license!.hasPendingUpgradeRequest) {
+                        // Blocked owners may pay to resume even with a stale
+                        // PENDING request; _showUpgradeSheet enforces the rest.
+                        if (_license!.hasPendingUpgradeRequest &&
+                            !_license!.isLicenseBlocked) {
                           AppToast.error(context, l10n.upgradeRequestPending);
                           return;
                         }
@@ -1504,8 +1512,12 @@ class _LicenseBanner extends StatelessWidget {
                 ? l10n.adminDashboardStatusLimitReached
                 : l10n.licenseAccessBlocked));
 
+    // When the owner is locked out (no usable license) the pay/upgrade flow
+    // stays enabled even if a stale request is still PENDING — otherwise they
+    // could never renew and resume.
+    final isBlocked = access!.isLicenseBlocked;
     final canRequestUpgrade =
-        access!.planCode != PlanCode.DEDICATED && !hasPending;
+        access!.planCode != PlanCode.DEDICATED && (!hasPending || isBlocked);
 
     final bg = isOk
         ? colors.surface
@@ -1593,7 +1605,7 @@ class _LicenseBanner extends StatelessWidget {
                 TextButton(
                   onPressed: canRequestUpgrade ? onRequestUpgrade : null,
                   child: Text(
-                    hasPending
+                    (hasPending && !isBlocked)
                         ? l10n.requestUpgradePendingLabel
                         : l10n.requestUpgradeLabel,
                   ),
@@ -1640,8 +1652,10 @@ class _LicenseDetailsSheet extends StatelessWidget {
     final endStr = _fmtDate(_tryParseDate(access.periodEnd));
     final daysLeft = access.daysLeft;
 
-    final canRequestUpgrade =
-        access.planCode != PlanCode.DEDICATED && !access.hasPendingUpgradeRequest;
+    // Locked-out owners may pay to resume even with a stale PENDING request.
+    final isBlocked = access.isLicenseBlocked;
+    final canRequestUpgrade = access.planCode != PlanCode.DEDICATED &&
+        (!access.hasPendingUpgradeRequest || isBlocked);
 
     final upcomingPlans = access.upcomingPlans;
 
@@ -1743,7 +1757,7 @@ class _LicenseDetailsSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (access.hasPendingUpgradeRequest)
+                    if (access.hasPendingUpgradeRequest && !isBlocked)
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
