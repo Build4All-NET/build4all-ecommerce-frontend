@@ -915,8 +915,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_VERSION_NAME'])""
-          BN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_BUILD_NUMBER'])""
+          VN=$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_VERSION_NAME'])")
+          BN=$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_BUILD_NUMBER'])")
           echo "IOS_VERSION_NAME=$VN" >> "$GITHUB_ENV"
           echo "IOS_BUILD_NUMBER=$BN" >> "$GITHUB_ENV"
           python3 - <<PY
