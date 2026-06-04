@@ -79,6 +79,52 @@ jobs:
           print("✅ Saved /tmp/client_payload.json")
           PY
 
+      - name: "📡 Mark build RUNNING (early)"
+        shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          import json, os
+
+          payload = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8")) or {}
+          cfg = payload.get("CONFIG") or {}
+
+          api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
+          link_id = str(
+              cfg.get("OWNER_PROJECT_LINK_ID")
+              or payload.get("OWNER_PROJECT_LINK_ID")
+              or payload.get("ownerProjectLinkId")
+              or cfg.get("ownerProjectLinkId")
+              or ""
+          ).strip()
+          build_id = (
+              (payload.get("BUILD_ID") or "")
+              or (payload.get("buildId") or "")
+              or ""
+          ).strip()
+
+          if api_base:
+              open("ci_api_base.txt", "w", encoding="utf-8").write(api_base)
+          if link_id:
+              open("ci_link_id.txt", "w", encoding="utf-8").write(link_id)
+          if build_id:
+              open("ci_build_id.txt", "w", encoding="utf-8").write(build_id)
+              with open(os.environ["GITHUB_ENV"], "a") as f:
+                  f.write(f"BUILD_ID={build_id}\n")
+          PY
+
+          API_BASE="$(cat ci_api_base.txt 2>/dev/null | tr -d '\r\n')"
+          LINK_ID="$(cat ci_link_id.txt 2>/dev/null | tr -d '\r\n')"
+          BUILD_ID_VAL="$(cat ci_build_id.txt 2>/dev/null | tr -d '\r\n')"
+
+          [ -n "$API_BASE" ] && [ -n "$LINK_ID" ] && [ -n "${CI_CALLBACK_TOKEN:-}" ] && [ -n "$BUILD_ID_VAL" ] || { echo "⚠️ Missing fields, skipping early RUNNING"; exit 0; }
+
+          curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/running" \
+            -H "Content-Type: application/json" \
+            -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+            -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}" || true
+          echo "✅ Early RUNNING status sent"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -869,8 +915,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_VERSION_NAME'])")"
-          BN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_BUILD_NUMBER'])")"
+          VN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_VERSION_NAME'])""
+          BN="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['IOS_BUILD_NUMBER'])""
           echo "IOS_VERSION_NAME=$VN" >> "$GITHUB_ENV"
           echo "IOS_BUILD_NUMBER=$BN" >> "$GITHUB_ENV"
           python3 - <<PY
@@ -1548,7 +1594,7 @@ jobs:
 
           API_KEY_JSON="$GITHUB_WORKSPACE/.private/api_key.json"
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
-          APP_NAME="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['APP_NAME'])")"
+          APP_NAME="$(python3 -c "import json; print(json.load(open('lib/env/ci_env.json'))['APP_NAME'])""
 
           python3 - <<'PY' > /tmp/owner_env.sh
           import json, shlex
