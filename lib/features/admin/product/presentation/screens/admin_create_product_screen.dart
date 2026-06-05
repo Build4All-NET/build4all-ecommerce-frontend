@@ -2074,13 +2074,13 @@ class AdminProductImageSection extends StatelessWidget {
           ),
           SizedBox(height: spacing.sm),
           Text(
-            '${existingImages.length + pickedImages.length} image(s)',
+            l.adminProductImageCount(existingImages.length + pickedImages.length),
             style: text.bodySmall.copyWith(color: c.muted),
           ),
           if (hasExistingImages) ...[
             SizedBox(height: spacing.md),
             Text(
-              'Current gallery',
+              l.adminProductCurrentGallery,
               style: text.titleMedium,
             ),
             SizedBox(height: spacing.sm),
@@ -2108,7 +2108,7 @@ class AdminProductImageSection extends StatelessWidget {
                           )
                         : Center(child: placeholderImage()),
                     isMain: isMain,
-                    footerLabel: 'Existing',
+                    footerLabel: l.adminProductExistingLabel,
                     onSetMain: image.id == null
                         ? null
                         : () => onSetExistingMainImage(image),
@@ -2123,7 +2123,7 @@ class AdminProductImageSection extends StatelessWidget {
           if (hasPickedImages) ...[
             SizedBox(height: spacing.md),
             Text(
-              'New uploads',
+              l.adminProductNewUploads,
               style: text.titleMedium,
             ),
             SizedBox(height: spacing.sm),

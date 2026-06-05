@@ -669,6 +669,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "Paid revenue (last 7 days)",
+  "adminDashboardRevenueNote": "Profit needs cost/COGS — for now this dashboard shows revenue + paid ledger amounts.",
   "adminNoOrders": "No orders",
   "adminNoOrdersHint": "Try changing the status filter, date range, or pull to refresh.",
   "adminFilterAll": "All",
@@ -1559,6 +1560,16 @@
   }
 },
 "upgradeCashPayment": "cash payment",
-"upgradeBankTransfer": "bank transfer"
+"upgradeBankTransfer": "bank transfer",
+"adminStatusBreakdown": "Status breakdown",
+"adminProductCurrentGallery": "Current gallery",
+"adminProductNewUploads": "New uploads",
+"adminProductExistingLabel": "Existing",
+"adminProductImageCount": "{count} image(s)",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }

@@ -667,6 +667,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "Revenu payé (7 derniers jours)",
+  "adminDashboardRevenueNote": "Le bénéfice nécessite les coûts/COGS — ce tableau de bord affiche les revenus et les montants payés.",
   "adminNoOrders": "Aucune commande",
   "adminNoOrdersHint": "Essayez de changer le statut, la période, ou tirez pour actualiser.",
   "adminFilterAll": "Tout",
@@ -1314,6 +1315,16 @@
   }
 },
 "upgradeCashPayment": "paiement en espèces",
-"upgradeBankTransfer": "virement bancaire"
+"upgradeBankTransfer": "virement bancaire",
+"adminStatusBreakdown": "Répartition des statuts",
+"adminProductCurrentGallery": "Galerie actuelle",
+"adminProductNewUploads": "Nouveaux téléchargements",
+"adminProductExistingLabel": "Existant",
+"adminProductImageCount": "{count} image(s)",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }

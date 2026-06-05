@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// If you have ThemeCubit/tokens like your other screens, keep this import.
-// Otherwise, remove ThemeCubit usage and replace with Theme.of(context).
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/l10n/app_localizations.dart';
 
 class OwnerOrdersStats {
   final int ordersCount;
@@ -176,6 +175,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final colors = tokens.colors;
     final spacing = tokens.spacing;
+    final l10n = AppLocalizations.of(context)!;
 
     final stats = computeOwnerOrdersStats(orders, range: range);
 
@@ -229,7 +229,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Dashboard',
+                  l10n.adminDashboard,
                   style: tokens.typography.titleMedium.copyWith(
                     color: colors.label,
                     fontWeight: FontWeight.w900,
@@ -242,7 +242,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
                   icon: Icon(Icons.date_range, size: 18, color: colors.muted),
                   label: Text(
                     range == null
-                        ? 'Last 30 days'
+                        ? l10n.adminLast30Days
                         : '${range!.start.year}-${range!.start.month.toString().padLeft(2, '0')}-${range!.start.day.toString().padLeft(2, '0')} → '
                               '${range!.end.year}-${range!.end.month.toString().padLeft(2, '0')}-${range!.end.day.toString().padLeft(2, '0')}',
                     style: tokens.typography.bodySmall.copyWith(
@@ -259,28 +259,28 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                kpi('Orders', '${stats.ordersCount}', Icons.receipt_long),
+                kpi(l10n.adminKpiOrders, '${stats.ordersCount}', Icons.receipt_long),
                 SizedBox(width: spacing.sm),
                 kpi(
-                  'Gross Sales',
+                  l10n.adminKpiGrossSales,
                   stats.grossSales.toStringAsFixed(2),
                   Icons.trending_up,
                 ),
                 SizedBox(width: spacing.sm),
                 kpi(
-                  'Paid',
+                  l10n.adminKpiPaid,
                   stats.paidRevenue.toStringAsFixed(2),
                   Icons.payments,
                 ),
                 SizedBox(width: spacing.sm),
                 kpi(
-                  'Outstanding',
+                  l10n.adminKpiOutstanding,
                   stats.outstanding.toStringAsFixed(2),
                   Icons.hourglass_bottom,
                 ),
                 SizedBox(width: spacing.sm),
                 kpi(
-                  'Avg Order',
+                  l10n.adminKpiAvgOrder,
                   stats.avgOrderValue.toStringAsFixed(2),
                   Icons.calculate,
                 ),
@@ -294,7 +294,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Fully paid: ${(stats.fullyPaidRate * 100).toStringAsFixed(0)}%',
+                l10n.adminFullyPaidPercent((stats.fullyPaidRate * 100).toStringAsFixed(0)),
                 style: tokens.typography.bodySmall.copyWith(
                   color: colors.muted,
                   fontWeight: FontWeight.w700,
@@ -324,7 +324,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
 
           // Status breakdown chips
           Text(
-            'Status breakdown',
+            l10n.adminStatusBreakdown,
             style: tokens.typography.bodyMedium.copyWith(
               color: colors.label,
               fontWeight: FontWeight.w800,
@@ -360,7 +360,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
 
           // Revenue last 7 days (mini bars)
           Text(
-            'Paid revenue (last 7 days)',
+            l10n.adminPaidRevenueLast7Days,
             style: tokens.typography.bodyMedium.copyWith(
               color: colors.label,
               fontWeight: FontWeight.w800,
@@ -406,7 +406,7 @@ class OwnerOrdersAnalyticsHeader extends StatelessWidget {
 
           SizedBox(height: spacing.sm),
           Text(
-            'Profit needs cost/COGS — for now this dashboard shows revenue + paid ledger amounts  😅',
+            l10n.adminDashboardRevenueNote,
             style: tokens.typography.bodySmall.copyWith(color: colors.muted),
           ),
         ],

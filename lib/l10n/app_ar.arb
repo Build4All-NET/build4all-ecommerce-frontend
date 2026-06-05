@@ -606,6 +606,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "الإيراد المدفوع (آخر 7 أيام)",
+  "adminDashboardRevenueNote": "الربح يتطلب التكاليف/COGS — هذه اللوحة تعرض الإيرادات والمبالغ المدفوعة فقط.",
   "adminNoOrders": "لا توجد طلبات",
   "adminNoOrdersHint": "جرّب تغيير الحالة أو الفترة أو اسحب للتحديث.",
   "adminFilterAll": "الكل",
@@ -1253,6 +1254,16 @@
   }
 },
 "upgradeCashPayment": "الدفع النقدي",
-"upgradeBankTransfer": "التحويل البنكي"
+"upgradeBankTransfer": "التحويل البنكي",
+"adminStatusBreakdown": "توزيع الحالات",
+"adminProductCurrentGallery": "المعرض الحالي",
+"adminProductNewUploads": "تحميلات جديدة",
+"adminProductExistingLabel": "موجود",
+"adminProductImageCount": "{count} صورة",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }
