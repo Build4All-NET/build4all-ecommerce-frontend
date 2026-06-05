@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/api_client.dart';
 import 'package:build4front/core/config/env.dart';
@@ -15,28 +17,41 @@ class TaxApiService {
     return Options(headers: {'Authorization': value});
   }
 
-  /// Extracts a clean backend message from:
-  /// {error: "..."} or {message: "..."} or plain string.
   String _friendlyDioError(DioException e) {
+    final isSocket = e.error is SocketException;
+
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError ||
+        (e.type == DioExceptionType.unknown && isSocket)) {
+      return isSocket
+          ? ‘No internet connection.’
+          : "Can’t reach the server. Check your internet and try again.";
+    }
+
+    if (e.type == DioExceptionType.cancel) return ‘Request cancelled.’;
+
     final status = e.response?.statusCode;
     final data = e.response?.data;
 
+    if (status != null && status >= 500) return ‘Server error. Please try later.’;
+
     if (data is Map) {
-      final err = data['error'] ?? data['message'];
-      if (err != null) return err.toString();
+      final err = data[‘error’] ?? data[‘message’];
+      if (err != null && err.toString().trim().isNotEmpty) return err.toString().trim();
     }
 
-    if (data is String && data.trim().isNotEmpty) {
+    if (data is String && data.trim().isNotEmpty && status != null && status < 500) {
       return data.trim();
     }
 
-    if (status == 401) return 'Session expired. Please login again.';
-    if (status == 403) return 'You don’t have permission to do this.';
-    if (status == 404) return 'Not found.';
-    if (status != null) return 'Request failed ($status).';
+    if (status == 401) return ‘Session expired. Please login again.’;
+    if (status == 403) return ‘You don\’t have permission to do this.’;
+    if (status == 404) return ‘Not found.’;
+    if (status != null) return ‘Request failed.’;
 
-    // Network / timeout / etc
-    return e.message ?? 'Network error. Please try again.';
+    return "Can’t reach the server. Check your internet and try again.";
   }
 
   Future<List<dynamic>> listRules({required String authToken}) async {
