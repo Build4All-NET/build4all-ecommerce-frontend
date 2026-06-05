@@ -211,8 +211,8 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
     }
 
     // Fallback: show error and keep current step
-    AppToast.error(context, msg.isEmpty ? 'Something went wrong' : msg,
-        );
+    final l10n = AppLocalizations.of(context)!;
+    AppToast.error(context, msg.isEmpty ? l10n.commonSomethingWentWrong : msg);
   }
 
   Future<void> _submitProfile(BuildContext context) async {
@@ -237,7 +237,7 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
       if (!mounted) return;
 
       if (result == null) {
-        AppToast.error(context, 'Failed to complete profile');
+        AppToast.error(context, l10n.completeProfileFailed);
         return;
       }
 
