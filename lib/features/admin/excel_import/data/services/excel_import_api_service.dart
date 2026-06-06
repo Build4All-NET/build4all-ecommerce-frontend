@@ -101,14 +101,36 @@ class ExcelImportApiService {
   }
 
   Map<String, dynamic> _fromDioError(DioException e, {String? fallbackMessage}) {
+    final isSocket = e.error is SocketException;
+
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError ||
+        (e.type == DioExceptionType.unknown && isSocket)) {
+      return _fail(
+        isSocket
+            ? 'No internet connection.'
+            : "Can't reach the server. Check your internet and try again.",
+      );
+    }
+
+    if (e.type == DioExceptionType.cancel) {
+      return _fail('Request cancelled.');
+    }
+
     final res = e.response;
     if (res != null) {
+      final status = res.statusCode;
+      if (status != null && status >= 500) {
+        return _fail('Server error. Please try later.', statusCode: status);
+      }
       return _normalizeResponse(res);
     }
 
-    final msg = fallbackMessage ??
-        (e.message?.isNotEmpty == true ? e.message! : 'Network error. Please try again.');
-    return _fail(msg, statusCode: null);
+    return _fail(
+      fallbackMessage ?? "Can't reach the server. Check your internet and try again.",
+    );
   }
 
   Future<Map<String, dynamic>> validateExcel(File file) async {
@@ -130,7 +152,7 @@ class ExcelImportApiService {
     } on DioException catch (e) {
       return _fromDioError(e, fallbackMessage: 'Validation request failed.');
     } catch (e) {
-      return _fail('Unexpected error during validation: $e');
+      return _fail('Something went wrong. Please try again.');
     }
   }
 
@@ -161,7 +183,7 @@ class ExcelImportApiService {
     } on DioException catch (e) {
       return _fromDioError(e, fallbackMessage: 'Import request failed.');
     } catch (e) {
-      return _fail('Unexpected error during import: $e');
+      return _fail('Something went wrong. Please try again.');
     }
   }
 }

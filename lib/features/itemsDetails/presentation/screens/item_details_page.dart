@@ -110,13 +110,13 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     final url = rawUrl.trim();
 
     if (url.isEmpty) {
-      AppToast.error(context, 'Missing external URL');
+      AppToast.error(context, l10n.missingExternalUrlLabel);
       return;
     }
 
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      AppToast.error(context, 'Invalid external URL');
+      AppToast.error(context, l10n.invalidExternalUrlLabel);
       return;
     }
 
@@ -124,7 +124,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     if (!mounted) return;
 
     if (!ok) {
-      AppToast.error(context, 'Could not open link');
+      AppToast.error(context, l10n.couldNotOpenLinkLabel);
     }
   }
 
@@ -146,13 +146,13 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       final url = (res['downloadUrl'] ?? '').toString().trim();
 
       if (url.isEmpty) {
-        AppToast.error(context, 'Missing download URL');
+        AppToast.error(context, l10n.missingDownloadUrlLabel);
         return;
       }
 
       final uri = Uri.tryParse(url);
       if (uri == null) {
-        AppToast.error(context, 'Invalid download URL');
+        AppToast.error(context, l10n.invalidDownloadUrlLabel);
         return;
       }
 
@@ -160,7 +160,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       if (!mounted) return;
 
       if (!ok) {
-        AppToast.error(context, 'Could not start download');
+        AppToast.error(context, l10n.couldNotStartDownloadLabel);
       }
     } catch (e) {
       if (!mounted) return;
@@ -300,9 +300,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           final String ctaText = isExternal
               ? (((d.buttonText ?? '').trim().isNotEmpty)
                     ? d.buttonText!.trim()
-                    : 'Open')
+                    : l10n.openLabel)
               : canDownloadNow
-                  ? 'Download'
+                  ? l10n.downloadLabel
                   : isUpcoming
                       ? l10n.home_coming_soon_button
                       : outOfStock
@@ -418,7 +418,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                       ),
                                       SizedBox(width: spacing.xs),
                                       Text(
-                                        'Tap to zoom',
+                                        l10n.tapToZoomLabel,
                                         style: t.labelSmall?.copyWith(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w700,
@@ -526,7 +526,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                         SizedBox(width: spacing.sm),
                         Expanded(
                           child: Text(
-                            'External product',
+                            l10n.externalProductLabel,
                             style: t.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: c.primary,
@@ -563,7 +563,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                           child: Text(
                             (_downloadAccessMessage ?? '').trim().isNotEmpty
                                 ? _downloadAccessMessage!
-                                : 'Available after purchase',
+                                : l10n.availableAfterPurchaseLabel,
                             style: t.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: c.secondary,
@@ -598,7 +598,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                         SizedBox(width: spacing.sm),
                         Expanded(
                           child: Text(
-                            'Download ready',
+                            l10n.downloadReadyLabel,
                             style: t.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: c.secondary,
@@ -763,16 +763,16 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 if (isExternal)
                   _infoRow(
                     context,
-                    label: 'Product type',
-                    value: 'External product',
+                    label: l10n.productTypeLabel,
+                    value: l10n.externalProductLabel,
                   ),
                 if (isDownloadable)
                   _infoRow(
                     context,
-                    label: 'Download',
+                    label: l10n.downloadLabel,
                     value: canDownloadNow
-                        ? 'Download ready'
-                        : 'Available after purchase',
+                        ? l10n.downloadReadyLabel
+                        : l10n.availableAfterPurchaseLabel,
                   ),
                 SizedBox(height: spacing.lg),
                 Text(

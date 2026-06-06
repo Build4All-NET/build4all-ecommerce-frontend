@@ -667,6 +667,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "Revenu payé (7 derniers jours)",
+  "adminDashboardRevenueNote": "Le bénéfice nécessite les coûts/COGS — ce tableau de bord affiche les revenus et les montants payés.",
   "adminNoOrders": "Aucune commande",
   "adminNoOrdersHint": "Essayez de changer le statut, la période, ou tirez pour actualiser.",
   "adminFilterAll": "Tout",
@@ -1281,6 +1282,49 @@
   }
 },
 "chooseImage": "Choisir une image",
-"removeImage": "Supprimer l’image"
+"removeImage": "Supprimer l’image",
+"availableAfterPurchaseLabel": "Disponible après l’achat",
+"tapToZoomLabel": "Appuyer pour agrandir",
+"openLabel": "Ouvrir",
+"completeProfileFailed": "Échec de la complétion du profil",
+"upgradeCompletePaypalTitle": "Finaliser le paiement PayPal",
+"upgradeCompletePaypalContent": "Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
+"upgradeCompleteCardTitle": "Finaliser le paiement par carte",
+"upgradeCompleteCardContent": "Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
+"upgradePendingConfirmationTitle": "Paiement en attente de confirmation",
+"upgradeIvePaidButton": "J’ai payé",
+"upgradeGotItButton": "Compris",
+"upgradePendingSubmitted": "Votre demande de mise à niveau a été soumise.",
+"upgradePendingSubmittedWithPlan": "Votre demande de mise à niveau vers {planName} ({cycle}) a été soumise.",
+"@upgradePendingSubmittedWithPlan": {
+  "placeholders": {
+    "planName": { "type": "String" },
+    "cycle": { "type": "String" }
+  }
+},
+"upgradeAmountDue": "Montant dû : {amount}",
+"@upgradeAmountDue": {
+  "placeholders": {
+    "amount": { "type": "String" }
+  }
+},
+"upgradePendingInstructions": "Veuillez effectuer votre {method}. Votre abonnement sera activé automatiquement dès qu’un administrateur aura confirmé la réception du paiement.",
+"@upgradePendingInstructions": {
+  "placeholders": {
+    "method": { "type": "String" }
+  }
+},
+"upgradeCashPayment": "paiement en espèces",
+"upgradeBankTransfer": "virement bancaire",
+"adminStatusBreakdown": "Répartition des statuts",
+"adminProductCurrentGallery": "Galerie actuelle",
+"adminProductNewUploads": "Nouveaux téléchargements",
+"adminProductExistingLabel": "Existant",
+"adminProductImageCount": "{count} image(s)",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }

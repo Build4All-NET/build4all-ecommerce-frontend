@@ -606,6 +606,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "الإيراد المدفوع (آخر 7 أيام)",
+  "adminDashboardRevenueNote": "الربح يتطلب التكاليف/COGS — هذه اللوحة تعرض الإيرادات والمبالغ المدفوعة فقط.",
   "adminNoOrders": "لا توجد طلبات",
   "adminNoOrdersHint": "جرّب تغيير الحالة أو الفترة أو اسحب للتحديث.",
   "adminFilterAll": "الكل",
@@ -1220,6 +1221,49 @@
   }
 },
 "chooseImage": "اختيار صورة",
-"removeImage": "إزالة الصورة"
+"removeImage": "إزالة الصورة",
+"availableAfterPurchaseLabel": "متاح بعد الشراء",
+"tapToZoomLabel": "اضغط للتكبير",
+"openLabel": "فتح",
+"completeProfileFailed": "فشل إكمال الملف الشخصي",
+"upgradeCompletePaypalTitle": "إتمام الدفع عبر PayPal",
+"upgradeCompletePaypalContent": "لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
+"upgradeCompleteCardTitle": "إتمام الدفع بالبطاقة",
+"upgradeCompleteCardContent": "لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
+"upgradePendingConfirmationTitle": "الدفع في انتظار التأكيد",
+"upgradeIvePaidButton": "لقد دفعت",
+"upgradeGotItButton": "حسناً",
+"upgradePendingSubmitted": "تم تقديم طلب الترقية.",
+"upgradePendingSubmittedWithPlan": "تم تقديم طلبك للترقية إلى {planName} ({cycle}).",
+"@upgradePendingSubmittedWithPlan": {
+  "placeholders": {
+    "planName": { "type": "String" },
+    "cycle": { "type": "String" }
+  }
+},
+"upgradeAmountDue": "المبلغ المستحق: {amount}",
+"@upgradeAmountDue": {
+  "placeholders": {
+    "amount": { "type": "String" }
+  }
+},
+"upgradePendingInstructions": "يرجى إكمال {method}. سيتم تفعيل اشتراكك تلقائياً بمجرد تأكيد أحد المسؤولين استلام الدفعة.",
+"@upgradePendingInstructions": {
+  "placeholders": {
+    "method": { "type": "String" }
+  }
+},
+"upgradeCashPayment": "الدفع النقدي",
+"upgradeBankTransfer": "التحويل البنكي",
+"adminStatusBreakdown": "توزيع الحالات",
+"adminProductCurrentGallery": "المعرض الحالي",
+"adminProductNewUploads": "تحميلات جديدة",
+"adminProductExistingLabel": "موجود",
+"adminProductImageCount": "{count} صورة",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }

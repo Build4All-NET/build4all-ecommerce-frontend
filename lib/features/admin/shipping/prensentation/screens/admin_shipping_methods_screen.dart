@@ -164,7 +164,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.success(context, l.adminCreated ?? 'Created');
+    AppToast.success(context, l.adminCreated);
   }
 
   Future<void> _openEditSheet(ShippingMethod method) async {
@@ -193,7 +193,7 @@ class _AdminShippingMethodsViewState extends State<_AdminShippingMethodsView> {
         );
 
     final l = AppLocalizations.of(context)!;
-    AppToast.success(context, l.adminUpdated ?? 'Updated');
+    AppToast.success(context, l.adminUpdated);
   }
 
   Future<void> _confirmAndDisable(ShippingMethod method) async {

@@ -156,20 +156,18 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
+        final dl = AppLocalizations.of(ctx)!;
         return AlertDialog(
-          title: const Text('Complete PayPal payment'),
-          content: const Text(
-              "We've opened PayPal in your browser. "
-              'After you finish paying, come back here and tap '
-              '"I\'ve paid" so we can activate your plan.'),
+          title: Text(dl.upgradeCompletePaypalTitle),
+          content: Text(dl.upgradeCompletePaypalContent),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dl.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text("I've paid"),
+              child: Text(dl.upgradeIvePaidButton),
             ),
           ],
         );
@@ -219,20 +217,18 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
+        final dl = AppLocalizations.of(ctx)!;
         return AlertDialog(
-          title: const Text('Complete card payment'),
-          content: const Text(
-              "We've opened the secure card payment page in your browser. "
-              'After you finish paying, come back here and tap '
-              '"I\'ve paid" so we can activate your plan.'),
+          title: Text(dl.upgradeCompleteCardTitle),
+          content: Text(dl.upgradeCompleteCardContent),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dl.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text("I've paid"),
+              child: Text(dl.upgradeIvePaidButton),
             ),
           ],
         );
@@ -268,15 +264,18 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   }
 
   Future<void> _showManualPendingDialog(UpgradeFlowState state) async {
+    final l10n = AppLocalizations.of(context)!;
     final intent = state.paymentIntent;
     final plan = state.selectedPlanDetails;
     final planLabel = plan?.title ?? plan?.code ?? state.selectedPlan ?? '';
-    final cycleLabel =
-        state.billingCycle == BillingCycle.YEARLY ? 'yearly' : 'monthly';
+    final cycleLabel = state.billingCycle == BillingCycle.YEARLY
+        ? l10n.billingCycleYearly.toLowerCase()
+        : l10n.billingCycleMonthly.toLowerCase();
 
     final provider = (intent?.provider ?? '').toLowerCase();
-    final methodLabel =
-        provider.contains('cash') ? 'cash payment' : 'bank transfer';
+    final methodLabel = provider.contains('cash')
+        ? l10n.upgradeCashPayment
+        : l10n.upgradeBankTransfer;
     final amountText = intent != null && intent.amount > 0
         ? '${intent.currency} ${intent.amount.toStringAsFixed(2)}'
         : null;
@@ -285,38 +284,34 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
+        final dl = AppLocalizations.of(ctx)!;
         return AlertDialog(
           icon: const Icon(Icons.hourglass_top_rounded),
-          title: const Text('Payment pending confirmation'),
+          title: Text(dl.upgradePendingConfirmationTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 planLabel.isEmpty
-                    ? 'Your upgrade request has been submitted.'
-                    : 'Your request to upgrade to $planLabel ($cycleLabel) '
-                        'has been submitted.',
+                    ? dl.upgradePendingSubmitted
+                    : dl.upgradePendingSubmittedWithPlan(planLabel, cycleLabel),
               ),
               if (amountText != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  'Amount due: $amountText',
+                  dl.upgradeAmountDue(amountText),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
               const SizedBox(height: 12),
-              Text(
-                'Please complete your $methodLabel. Your subscription will be '
-                'activated automatically once an administrator confirms the '
-                'payment has been received.',
-              ),
+              Text(dl.upgradePendingInstructions(methodLabel)),
             ],
           ),
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Got it'),
+              child: Text(dl.upgradeGotItButton),
             ),
           ],
         );

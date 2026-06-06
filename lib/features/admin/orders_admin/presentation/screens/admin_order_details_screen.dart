@@ -2,6 +2,7 @@ import 'package:build4front/features/checkout/data/models/checkout_summary_model
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -98,7 +99,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       AppToast.error(
         context,
         AppLocalizations.of(context)!
-            .adminOrderInvoiceDownloadFailed(e.toString()),
+            .adminOrderInvoiceDownloadFailed(ExceptionMapper.toMessage(e)),
       );
     } finally {
       if (mounted) {
@@ -190,7 +191,9 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                 ),
               ),
               content: SizedBox(
-                width: 520,
+                width: MediaQuery.of(context).size.width > 560
+                    ? 520
+                    : MediaQuery.of(context).size.width - 48,
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

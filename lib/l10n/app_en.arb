@@ -669,6 +669,7 @@
     }
   },
   "adminPaidRevenueLast7Days": "Paid revenue (last 7 days)",
+  "adminDashboardRevenueNote": "Profit needs cost/COGS — for now this dashboard shows revenue + paid ledger amounts.",
   "adminNoOrders": "No orders",
   "adminNoOrdersHint": "Try changing the status filter, date range, or pull to refresh.",
   "adminFilterAll": "All",
@@ -1526,6 +1527,49 @@
   }
 },
 "chooseImage": "Choose image",
-"removeImage": "Remove image"
+"removeImage": "Remove image",
+"availableAfterPurchaseLabel": "Available after purchase",
+"tapToZoomLabel": "Tap to zoom",
+"openLabel": "Open",
+"completeProfileFailed": "Failed to complete profile",
+"upgradeCompletePaypalTitle": "Complete PayPal payment",
+"upgradeCompletePaypalContent": "We've opened PayPal in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
+"upgradeCompleteCardTitle": "Complete card payment",
+"upgradeCompleteCardContent": "We've opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
+"upgradePendingConfirmationTitle": "Payment pending confirmation",
+"upgradeIvePaidButton": "I've paid",
+"upgradeGotItButton": "Got it",
+"upgradePendingSubmitted": "Your upgrade request has been submitted.",
+"upgradePendingSubmittedWithPlan": "Your request to upgrade to {planName} ({cycle}) has been submitted.",
+"@upgradePendingSubmittedWithPlan": {
+  "placeholders": {
+    "planName": { "type": "String" },
+    "cycle": { "type": "String" }
+  }
+},
+"upgradeAmountDue": "Amount due: {amount}",
+"@upgradeAmountDue": {
+  "placeholders": {
+    "amount": { "type": "String" }
+  }
+},
+"upgradePendingInstructions": "Please complete your {method}. Your subscription will be activated automatically once an administrator confirms the payment has been received.",
+"@upgradePendingInstructions": {
+  "placeholders": {
+    "method": { "type": "String" }
+  }
+},
+"upgradeCashPayment": "cash payment",
+"upgradeBankTransfer": "bank transfer",
+"adminStatusBreakdown": "Status breakdown",
+"adminProductCurrentGallery": "Current gallery",
+"adminProductNewUploads": "New uploads",
+"adminProductExistingLabel": "Existing",
+"adminProductImageCount": "{count} image(s)",
+"@adminProductImageCount": {
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+}
 
 }
