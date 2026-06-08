@@ -38,6 +38,7 @@ jobs:
       FASTLANE_OPT_OUT_USAGE: "true"
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
+      BUNDLE_GEMFILE: ${{ github.workspace }}/ios/Gemfile
 
     steps:
       - name: Checkout
@@ -812,18 +813,17 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: ios
 
       - name: Install fastlane + CocoaPods
         shell: bash
         run: |
           set -euo pipefail
-          gem install fastlane -N --force
-          gem install cocoapods -N
-          gem install xcodeproj -N
           rm -rf ios/Pods
           rm -f ios/Podfile.lock
           cd ios
-          pod install || { pod repo update; pod install; }
+          bundle exec pod install || { pod repo update; bundle exec pod install; }
 
       - name: Create App Store Connect api_key.json
         shell: bash
@@ -1009,7 +1009,7 @@ jobs:
         run: |
           set -euo pipefail
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
-          fastlane run produce \
+          bundle exec fastlane run produce \
             app_identifier:"$BUNDLE_ID" \
             team_id:"${IOS_TEAM_ID}" \
             api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
@@ -1027,7 +1027,7 @@ jobs:
 
           echo "🔔 Enabling Push Notifications for $BUNDLE_ID"
 
-          fastlane run produce \
+          bundle exec fastlane run produce \
             app_identifier:"$BUNDLE_ID" \
             team_id:"${IOS_TEAM_ID}" \
             api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
@@ -1345,7 +1345,7 @@ jobs:
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_DIR"
-          fastlane run sigh \
+          bundle exec fastlane run sigh \
             app_identifier:"$BUNDLE_ID" \
             team_id:"${IOS_TEAM_ID}" \
             api_key_path:"$GITHUB_WORKSPACE/.private/api_key.json" \
@@ -1460,7 +1460,7 @@ jobs:
           project.save
           RUBY
 
-          ruby register_plist.rb
+          bundle exec ruby register_plist.rb
 
           echo "----- GoogleService-Info.plist references in project.pbxproj -----"
           grep -c "GoogleService-Info.plist" ios/Runner.xcodeproj/project.pbxproj || true
@@ -1494,7 +1494,7 @@ jobs:
           end
           project.save
           RUBY
-          BUNDLE_ID="$BUNDLE_ID" PROFILE_NAME="$PROFILE_NAME" TEAM_ID="$TEAM_ID" ruby patch_runner_signing.rb
+          BUNDLE_ID="$BUNDLE_ID" PROFILE_NAME="$PROFILE_NAME" TEAM_ID="$TEAM_ID" bundle exec ruby patch_runner_signing.rb
 
       - name: Build iOS
         shell: bash
@@ -1578,7 +1578,7 @@ jobs:
           API_KEY_JSON="$GITHUB_WORKSPACE/.private/api_key.json"
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
           IPA_PATH="$(find "$GITHUB_WORKSPACE/build/ios/ipa" -type f -name "*.ipa" | head -n 1)"
-          fastlane pilot upload \
+          bundle exec fastlane pilot upload \
             --ipa "$IPA_PATH" \
             --api_key_path "$API_KEY_JSON" \
             --app_identifier "$BUNDLE_ID" \

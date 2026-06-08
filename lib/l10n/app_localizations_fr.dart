@@ -3464,4 +3464,79 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get removeImage => 'Supprimer l’image';
+
+  @override
+  String get availableAfterPurchaseLabel => 'Disponible après l’achat';
+
+  @override
+  String get tapToZoomLabel => 'Appuyer pour agrandir';
+
+  @override
+  String get openLabel => 'Ouvrir';
+
+  @override
+  String get completeProfileFailed => 'Échec de la complétion du profil';
+
+  @override
+  String get upgradeCompletePaypalTitle => 'Finaliser le paiement PayPal';
+
+  @override
+  String get upgradeCompletePaypalContent => 'Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur "J’ai payé" pour activer votre abonnement.';
+
+  @override
+  String get upgradeCompleteCardTitle => 'Finaliser le paiement par carte';
+
+  @override
+  String get upgradeCompleteCardContent => 'Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur "J’ai payé" pour activer votre abonnement.';
+
+  @override
+  String get upgradePendingConfirmationTitle => 'Paiement en attente de confirmation';
+
+  @override
+  String get upgradeIvePaidButton => 'J’ai payé';
+
+  @override
+  String get upgradeGotItButton => 'Compris';
+
+  @override
+  String get upgradePendingSubmitted => 'Votre demande de mise à niveau a été soumise.';
+
+  @override
+  String upgradePendingSubmittedWithPlan(String planName, String cycle) {
+    return 'Votre demande de mise à niveau vers $planName ($cycle) a été soumise.';
+  }
+
+  @override
+  String upgradeAmountDue(String amount) {
+    return 'Montant dû : $amount';
+  }
+
+  @override
+  String upgradePendingInstructions(String method) {
+    return 'Veuillez effectuer votre $method. Votre abonnement sera activé automatiquement dès qu’un administrateur aura confirmé la réception du paiement.';
+  }
+
+  @override
+  String get upgradeCashPayment => 'paiement en espèces';
+
+  @override
+  String get upgradeBankTransfer => 'virement bancaire';
+
+  @override
+  String get adminStatusBreakdown => 'Répartition des statuts';
+
+  @override
+  String get adminProductCurrentGallery => 'Galerie actuelle';
+
+  @override
+  String get adminProductNewUploads => 'Nouveaux téléchargements';
+
+  @override
+  String get adminProductExistingLabel => 'Existant';
+
+  @override
+  String adminProductImageCount(int count) {
+    return '$count image(s)';
+  }
+
 }

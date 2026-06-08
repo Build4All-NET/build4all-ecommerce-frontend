@@ -3464,4 +3464,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeImage => 'Remove image';
+
+  @override
+  String get availableAfterPurchaseLabel => 'Available after purchase';
+
+  @override
+  String get tapToZoomLabel => 'Tap to zoom';
+
+  @override
+  String get openLabel => 'Open';
+
+  @override
+  String get completeProfileFailed => 'Failed to complete profile';
+
+  @override
+  String get upgradeCompletePaypalTitle => 'Complete PayPal payment';
+
+  @override
+  String get upgradeCompletePaypalContent => "We've opened PayPal in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.";
+
+  @override
+  String get upgradeCompleteCardTitle => 'Complete card payment';
+
+  @override
+  String get upgradeCompleteCardContent => "We've opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.";
+
+  @override
+  String get upgradePendingConfirmationTitle => 'Payment pending confirmation';
+
+  @override
+  String get upgradeIvePaidButton => "I've paid";
+
+  @override
+  String get upgradeGotItButton => 'Got it';
+
+  @override
+  String get upgradePendingSubmitted => 'Your upgrade request has been submitted.';
+
+  @override
+  String upgradePendingSubmittedWithPlan(String planName, String cycle) {
+    return 'Your request to upgrade to $planName ($cycle) has been submitted.';
+  }
+
+  @override
+  String upgradeAmountDue(String amount) {
+    return 'Amount due: $amount';
+  }
+
+  @override
+  String upgradePendingInstructions(String method) {
+    return 'Please complete your $method. Your subscription will be activated automatically once an administrator confirms the payment has been received.';
+  }
+
+  @override
+  String get upgradeCashPayment => 'cash payment';
+
+  @override
+  String get upgradeBankTransfer => 'bank transfer';
+
+  @override
+  String get adminStatusBreakdown => 'Status breakdown';
+
+  @override
+  String get adminProductCurrentGallery => 'Current gallery';
+
+  @override
+  String get adminProductNewUploads => 'New uploads';
+
+  @override
+  String get adminProductExistingLabel => 'Existing';
+
+  @override
+  String adminProductImageCount(int count) {
+    return '$count image(s)';
+  }
+
 }

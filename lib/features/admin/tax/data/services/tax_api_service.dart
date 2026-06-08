@@ -26,19 +26,19 @@ class TaxApiService {
         e.type == DioExceptionType.connectionError ||
         (e.type == DioExceptionType.unknown && isSocket)) {
       return isSocket
-          ? ‘No internet connection.’
-          : "Can’t reach the server. Check your internet and try again.";
+          ? 'No internet connection.'
+          : "Can't reach the server. Check your internet and try again.";
     }
 
-    if (e.type == DioExceptionType.cancel) return ‘Request cancelled.’;
+    if (e.type == DioExceptionType.cancel) return 'Request cancelled.';
 
     final status = e.response?.statusCode;
     final data = e.response?.data;
 
-    if (status != null && status >= 500) return ‘Server error. Please try later.’;
+    if (status != null && status >= 500) return 'Server error. Please try later.';
 
     if (data is Map) {
-      final err = data[‘error’] ?? data[‘message’];
+      final err = data['error'] ?? data['message'];
       if (err != null && err.toString().trim().isNotEmpty) return err.toString().trim();
     }
 
@@ -46,12 +46,12 @@ class TaxApiService {
       return data.trim();
     }
 
-    if (status == 401) return ‘Session expired. Please login again.’;
-    if (status == 403) return ‘You don\’t have permission to do this.’;
-    if (status == 404) return ‘Not found.’;
-    if (status != null) return ‘Request failed.’;
+    if (status == 401) return 'Session expired. Please login again.';
+    if (status == 403) return 'You don\'t have permission to do this.';
+    if (status == 404) return 'Not found.';
+    if (status != null) return 'Request failed.';
 
-    return "Can’t reach the server. Check your internet and try again.";
+    return "Can't reach the server. Check your internet and try again.";
   }
 
   Future<List<dynamic>> listRules({required String authToken}) async {
