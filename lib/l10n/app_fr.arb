@@ -1325,6 +1325,14 @@
   "placeholders": {
     "count": { "type": "int" }
   }
-}
+},
+"navLabelHome": "Accueil",
+"navLabelExplore": "Explorer",
+"navLabelCart": "Panier",
+"navLabelOrders": "Commandes",
+"navLabelProfile": "Profil",
+"navLabelNotifications": "Notifications",
+"navLabelBookings": "Réservations",
+"excelImportConstraintViolation": "Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées."
 
 }

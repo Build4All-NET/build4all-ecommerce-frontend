@@ -44,11 +44,22 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
 
     final m = ExcelImportResultModel.fromJson(raw);
 
+    if (!m.success) {
+      final statusCode = raw['statusCode'] as int?;
+      if (statusCode == 409) {
+        throw Exception(
+          "Your data is currently in use (linked to orders or carts) and can't be replaced.",
+        );
+      }
+      throw Exception(
+        m.message.isNotEmpty ? m.message : 'Import failed. Please try again.',
+      );
+    }
+
     return ExcelImportResult(
       success: m.success,
       message: m.message,
       projectId: m.projectId,
-      
       slug: m.slug,
       insertedCategories: m.insertedCategories,
       insertedItemTypes: m.insertedItemTypes,

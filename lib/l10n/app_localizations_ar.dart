@@ -3539,4 +3539,30 @@ class AppLocalizationsAr extends AppLocalizations {
     return '$count صورة';
   }
 
+
+  @override
+  String get navLabelHome => 'الرئيسية';
+
+  @override
+  String get navLabelExplore => 'استكشاف';
+
+  @override
+  String get navLabelCart => 'السلة';
+
+  @override
+  String get navLabelOrders => 'طلباتي';
+
+  @override
+  String get navLabelProfile => 'الملف الشخصي';
+
+  @override
+  String get navLabelNotifications => 'الإشعارات';
+
+  @override
+  String get navLabelBookings => 'الحجوزات';
+
+  @override
+  String get excelImportConstraintViolation =>
+      'بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها.';
+
 }

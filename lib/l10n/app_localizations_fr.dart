@@ -3539,4 +3539,30 @@ class AppLocalizationsFr extends AppLocalizations {
     return '$count image(s)';
   }
 
+
+  @override
+  String get navLabelHome => 'Accueil';
+
+  @override
+  String get navLabelExplore => 'Explorer';
+
+  @override
+  String get navLabelCart => 'Panier';
+
+  @override
+  String get navLabelOrders => 'Commandes';
+
+  @override
+  String get navLabelProfile => 'Profil';
+
+  @override
+  String get navLabelNotifications => 'Notifications';
+
+  @override
+  String get navLabelBookings => 'Réservations';
+
+  @override
+  String get excelImportConstraintViolation =>
+      'Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées.';
+
 }
