@@ -3464,4 +3464,79 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get removeImage => 'إزالة الصورة';
+
+  @override
+  String get availableAfterPurchaseLabel => 'متاح بعد الشراء';
+
+  @override
+  String get tapToZoomLabel => 'اضغط للتكبير';
+
+  @override
+  String get openLabel => 'فتح';
+
+  @override
+  String get completeProfileFailed => 'فشل إكمال الملف الشخصي';
+
+  @override
+  String get upgradeCompletePaypalTitle => 'إتمام الدفع عبر PayPal';
+
+  @override
+  String get upgradeCompletePaypalContent => 'لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على "لقد دفعت" لتفعيل خطتك.';
+
+  @override
+  String get upgradeCompleteCardTitle => 'إتمام الدفع بالبطاقة';
+
+  @override
+  String get upgradeCompleteCardContent => 'لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على "لقد دفعت" لتفعيل خطتك.';
+
+  @override
+  String get upgradePendingConfirmationTitle => 'الدفع في انتظار التأكيد';
+
+  @override
+  String get upgradeIvePaidButton => 'لقد دفعت';
+
+  @override
+  String get upgradeGotItButton => 'حسناً';
+
+  @override
+  String get upgradePendingSubmitted => 'تم تقديم طلب الترقية.';
+
+  @override
+  String upgradePendingSubmittedWithPlan(String planName, String cycle) {
+    return 'تم تقديم طلبك للترقية إلى $planName ($cycle).';
+  }
+
+  @override
+  String upgradeAmountDue(String amount) {
+    return 'المبلغ المستحق: $amount';
+  }
+
+  @override
+  String upgradePendingInstructions(String method) {
+    return 'يرجى إكمال $method. سيتم تفعيل اشتراكك تلقائياً بمجرد تأكيد أحد المسؤولين استلام الدفعة.';
+  }
+
+  @override
+  String get upgradeCashPayment => 'الدفع النقدي';
+
+  @override
+  String get upgradeBankTransfer => 'التحويل البنكي';
+
+  @override
+  String get adminStatusBreakdown => 'توزيع الحالات';
+
+  @override
+  String get adminProductCurrentGallery => 'المعرض الحالي';
+
+  @override
+  String get adminProductNewUploads => 'تحميلات جديدة';
+
+  @override
+  String get adminProductExistingLabel => 'موجود';
+
+  @override
+  String adminProductImageCount(int count) {
+    return '$count صورة';
+  }
+
 }

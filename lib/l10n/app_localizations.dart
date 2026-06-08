@@ -6792,6 +6792,139 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove image'**
   String get removeImage;
+
+  /// No description provided for @availableAfterPurchaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Available after purchase'**
+  String get availableAfterPurchaseLabel;
+
+  /// No description provided for @tapToZoomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to zoom'**
+  String get tapToZoomLabel;
+
+  /// No description provided for @openLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openLabel;
+
+  /// No description provided for @completeProfileFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to complete profile'**
+  String get completeProfileFailed;
+
+  /// No description provided for @upgradeCompletePaypalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete PayPal payment'**
+  String get upgradeCompletePaypalTitle;
+
+  /// No description provided for @upgradeCompletePaypalContent.
+  ///
+  /// In en, this message translates to:
+  /// **"We've opened PayPal in your browser."**
+  String get upgradeCompletePaypalContent;
+
+  /// No description provided for @upgradeCompleteCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete card payment'**
+  String get upgradeCompleteCardTitle;
+
+  /// No description provided for @upgradeCompleteCardContent.
+  ///
+  /// In en, this message translates to:
+  /// **"We've opened the secure card payment page in your browser."**
+  String get upgradeCompleteCardContent;
+
+  /// No description provided for @upgradePendingConfirmationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment pending confirmation'**
+  String get upgradePendingConfirmationTitle;
+
+  /// No description provided for @upgradeIvePaidButton.
+  ///
+  /// In en, this message translates to:
+  /// **"I've paid"**
+  String get upgradeIvePaidButton;
+
+  /// No description provided for @upgradeGotItButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get upgradeGotItButton;
+
+  /// No description provided for @upgradePendingSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your upgrade request has been submitted.'**
+  String get upgradePendingSubmitted;
+
+  /// No description provided for @upgradePendingSubmittedWithPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to upgrade to {planName} ({cycle}) has been submitted.'**
+  String upgradePendingSubmittedWithPlan(String planName, String cycle);
+
+  /// No description provided for @upgradeAmountDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount due: {amount}'**
+  String upgradeAmountDue(String amount);
+
+  /// No description provided for @upgradePendingInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete your {method}.'**
+  String upgradePendingInstructions(String method);
+
+  /// No description provided for @upgradeCashPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'cash payment'**
+  String get upgradeCashPayment;
+
+  /// No description provided for @upgradeBankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'bank transfer'**
+  String get upgradeBankTransfer;
+
+  /// No description provided for @adminStatusBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Status breakdown'**
+  String get adminStatusBreakdown;
+
+  /// No description provided for @adminProductCurrentGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Current gallery'**
+  String get adminProductCurrentGallery;
+
+  /// No description provided for @adminProductNewUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'New uploads'**
+  String get adminProductNewUploads;
+
+  /// No description provided for @adminProductExistingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing'**
+  String get adminProductExistingLabel;
+
+  /// No description provided for @adminProductImageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} image(s)'**
+  String adminProductImageCount(int count);
+
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
