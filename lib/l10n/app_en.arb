@@ -1570,6 +1570,14 @@
   "placeholders": {
     "count": { "type": "int" }
   }
-}
+},
+"navLabelHome": "Home",
+"navLabelExplore": "Explore",
+"navLabelCart": "Cart",
+"navLabelOrders": "Orders",
+"navLabelProfile": "Profile",
+"navLabelNotifications": "Notifications",
+"navLabelBookings": "Bookings",
+"excelImportConstraintViolation": "Your data is currently in use (linked to orders or carts) and can't be replaced."
 
 }

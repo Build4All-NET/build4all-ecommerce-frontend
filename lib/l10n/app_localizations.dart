@@ -6925,6 +6925,30 @@ abstract class AppLocalizations {
   /// **'{count} image(s)'**
   String adminProductImageCount(int count);
 
+  /// No description provided for @navLabelHome.
+  String get navLabelHome;
+
+  /// No description provided for @navLabelExplore.
+  String get navLabelExplore;
+
+  /// No description provided for @navLabelCart.
+  String get navLabelCart;
+
+  /// No description provided for @navLabelOrders.
+  String get navLabelOrders;
+
+  /// No description provided for @navLabelProfile.
+  String get navLabelProfile;
+
+  /// No description provided for @navLabelNotifications.
+  String get navLabelNotifications;
+
+  /// No description provided for @navLabelBookings.
+  String get navLabelBookings;
+
+  /// No description provided for @excelImportConstraintViolation.
+  String get excelImportConstraintViolation;
+
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1264,6 +1264,14 @@
   "placeholders": {
     "count": { "type": "int" }
   }
-}
+},
+"navLabelHome": "الرئيسية",
+"navLabelExplore": "استكشاف",
+"navLabelCart": "السلة",
+"navLabelOrders": "طلباتي",
+"navLabelProfile": "الملف الشخصي",
+"navLabelNotifications": "الإشعارات",
+"navLabelBookings": "الحجوزات",
+"excelImportConstraintViolation": "بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها."
 
 }

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/l10n/locale_cubit.dart';
+import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/core/realtime/realtime_cubit.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/home/presentation/bloc/home_bloc.dart';
@@ -207,6 +208,31 @@ class _MainShellState extends State<MainShell> {
     super.dispose();
   }
 
+  String _localizedLabel(BuildContext context, NavItemView tab) {
+    final l = AppLocalizations.of(context)!;
+    switch (tab.id.trim().toLowerCase()) {
+      case 'home':
+        return l.navLabelHome;
+      case 'explore':
+        return l.navLabelExplore;
+      case 'cart':
+        return l.navLabelCart;
+      case 'orders':
+        return l.navLabelOrders;
+      case 'profile':
+      case 'user':
+      case 'account':
+      case 'me':
+        return l.navLabelProfile;
+      case 'notifications':
+        return l.navLabelNotifications;
+      case 'bookings':
+        return l.navLabelBookings;
+      default:
+        return tab.label;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme;
@@ -283,7 +309,7 @@ class _MainShellState extends State<MainShell> {
                 : AppBar(
                     backgroundColor: c.surface,
                     title: Text(
-                      _tabs[_currentIndex].label,
+                      _localizedLabel(context, _tabs[_currentIndex]),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(color: c.onSurface),
                     ),
                     leading: isBottom
@@ -314,7 +340,7 @@ class _MainShellState extends State<MainShell> {
                               color: selected ? c.primary : c.onSurface.withOpacity(0.7),
                             ),
                             title: Text(
-                              t.label,
+                              _localizedLabel(context, t),
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: selected ? c.primary : c.onSurface.withOpacity(0.9),
                                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -347,7 +373,7 @@ class _MainShellState extends State<MainShell> {
                         .map(
                           (t) => BottomNavigationBarItem(
                             icon: Icon(t.icon),
-                            label: t.label,
+                            label: _localizedLabel(context, t),
                           ),
                         )
                         .toList(),
