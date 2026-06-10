@@ -987,14 +987,39 @@ jobs:
         if: always()
         run: |
           set +e
-          
-          if [ -z "${API_BASE:-}" ] || [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
+
+          API_BASE="${API_BASE:-$(cat ci_api_base.txt 2>/dev/null | tr -d '\r\n')}"
+          LINK_ID="${LINK_ID:-$(cat ci_link_id.txt 2>/dev/null | tr -d '\r\n')}"
+          BUILD_ID="${BUILD_ID:-$(cat ci_build_id.txt 2>/dev/null | tr -d '\r\n')}"
+
+          if [ -z "$API_BASE" ] || [ -z "$LINK_ID" ]; then
+            python3 - <<'PY' || true
+          import json, os
+          try:
+              event = json.load(open(os.environ["GITHUB_EVENT_PATH"], "r", encoding="utf-8"))
+              payload = event.get("client_payload") or {}
+              cfg = payload.get("CONFIG") or {}
+              api_base = (cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").strip().rstrip("/")
+              link_id = str(cfg.get("OWNER_PROJECT_LINK_ID") or payload.get("OWNER_PROJECT_LINK_ID") or payload.get("ownerProjectLinkId") or cfg.get("ownerProjectLinkId") or "").strip()
+              build_id = ((payload.get("BUILD_ID") or "") or (payload.get("buildId") or "")).strip()
+              if api_base: open("ci_api_base.txt", "w").write(api_base)
+              if link_id: open("ci_link_id.txt", "w").write(link_id)
+              if build_id: open("ci_build_id.txt", "w").write(build_id)
+          except Exception as e:
+              print("Fallback read from event failed:", e)
+          PY
+            API_BASE="$(cat ci_api_base.txt 2>/dev/null | tr -d '\r\n')"
+            LINK_ID="$(cat ci_link_id.txt 2>/dev/null | tr -d '\r\n')"
+            BUILD_ID="$(cat ci_build_id.txt 2>/dev/null | tr -d '\r\n')"
+          fi
+
+          if [ -z "$API_BASE" ] || [ -z "${CI_CALLBACK_TOKEN:-}" ]; then
             echo "⚠️ API_BASE or CI_CALLBACK_TOKEN missing, skipping final status"
             exit 0
           fi
-          
+
           JOB_STATUS="${{ job.status }}"
-          
+
           if [ "$JOB_STATUS" = "success" ]; then
             echo "✅ Job succeeded → marking SUCCEEDED"
             curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/succeeded" \
@@ -1009,5 +1034,5 @@ jobs:
               -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
               -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\",\"error\":\"${ERROR_MSG}\"}" || true
           fi
-          
+
           echo "✅ Final status reported"
