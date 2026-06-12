@@ -368,7 +368,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return BlocProvider.value(
           value: _profileCubit,
           child: _ProfileBottomSheet(
-            aupId: Env.ownerProjectLinkId,
             fallbackRole: (_role ?? 'ADMIN'),
             onReload: () => _profileCubit.load(),
           ),
@@ -846,12 +845,10 @@ final bool lockActions =
 // =========================== PROFILE SHEET ===========================
 
 class _ProfileBottomSheet extends StatelessWidget {
-  final String aupId;
   final String fallbackRole;
   final VoidCallback onReload;
 
   const _ProfileBottomSheet({
-    required this.aupId,
     required this.fallbackRole,
     required this.onReload,
   });
@@ -917,8 +914,6 @@ class _ProfileBottomSheet extends StatelessWidget {
     required dynamic colors,
     required dynamic profile,
     required String role,
-    required String adminId,
-    required String businessId,
     required String email,
     required String phone,
     required String name,
@@ -998,20 +993,8 @@ class _ProfileBottomSheet extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _ProfileRow(
-          label: l10n.adminIdLabel,
-          value: adminId,
-          icon: Icons.badge_outlined,
-          colors: colors,
-          onCopy: () => _copy(context, adminId, l10n.copiedLabel),
-        ),
-        _ProfileRow(
-          label: l10n.aupIdLabel,
-          value: aupId,
-          icon: Icons.link_outlined,
-          colors: colors,
-          onCopy: () => _copy(context, aupId, l10n.copiedLabel),
-        ),
+        // Only the basic info the owner needs — internal identifiers
+        // (admin id, AUP id, business id) and timestamps are intentionally hidden.
         _ProfileRow(
           label: l10n.usernameLabel,
           value: profile.username,
@@ -1021,14 +1004,6 @@ class _ProfileBottomSheet extends StatelessWidget {
               ? null
               : () => _copy(context, profile.username, l10n.copiedLabel),
         ),
-        if (businessId.isNotEmpty)
-          _ProfileRow(
-            label: l10n.businessIdLabel,
-            value: businessId,
-            icon: Icons.store_outlined,
-            colors: colors,
-            onCopy: () => _copy(context, businessId, l10n.copiedLabel),
-          ),
         if (email.isNotEmpty)
           _ProfileRow(
             label: l10n.emailLabel,
@@ -1044,30 +1019,6 @@ class _ProfileBottomSheet extends StatelessWidget {
             icon: Icons.phone_outlined,
             colors: colors,
             onCopy: () => _copy(context, phone, l10n.copiedLabel),
-          ),
-        if ((profile.createdAt ?? '').trim().isNotEmpty)
-          _ProfileRow(
-            label: l10n.createdAtLabel,
-            value: (profile.createdAt ?? '').toString(),
-            icon: Icons.schedule_outlined,
-            colors: colors,
-            onCopy: () => _copy(
-              context,
-              (profile.createdAt ?? '').toString(),
-              l10n.copiedLabel,
-            ),
-          ),
-        if ((profile.updatedAt ?? '').trim().isNotEmpty)
-          _ProfileRow(
-            label: l10n.updatedAtLabel,
-            value: (profile.updatedAt ?? '').toString(),
-            icon: Icons.update_outlined,
-            colors: colors,
-            onCopy: () => _copy(
-              context,
-              (profile.updatedAt ?? '').toString(),
-              l10n.copiedLabel,
-            ),
           ),
       ],
     );
@@ -1173,9 +1124,6 @@ class _ProfileBottomSheet extends StatelessWidget {
 
                         final email = p.email.trim();
                         final phone = p.phoneNumber.trim();
-                        final businessId =
-                            p.businessId == null ? '' : p.businessId.toString();
-                        final adminId = p.adminId.toString();
 
                         body = Column(
                           children: [
@@ -1189,8 +1137,6 @@ class _ProfileBottomSheet extends StatelessWidget {
                                   colors: colors,
                                   profile: p,
                                   role: role,
-                                  adminId: adminId,
-                                  businessId: businessId,
                                   email: email,
                                   phone: phone,
                                   name: name,
