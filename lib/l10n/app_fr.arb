@@ -1,6 +1,10 @@
 {
   "@@locale": "fr",
   "appTitle": "App",
+  "contactSupportTitle": "Contacter le support",
+  "contactSupportSubtitle": "Discutez avec nous sur WhatsApp",
+  "contactSupportMessage": "Bonjour, j'ai besoin d'aide avec la boutique Build4All.",
+  "contactSupportUnavailable": "Le support n'est pas disponible pour le moment.",
   "loginTitle": "Connexion",
   "loginSubtitle": "Bon retour ! Connectez-vous pour continuer.",
   "emailLabel": "E-mail",

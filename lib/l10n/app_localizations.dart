@@ -4009,6 +4009,30 @@ abstract class AppLocalizations {
   /// **'Excel Import'**
   String get adminExcelImportTitle;
 
+  /// No description provided for @contactSupportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupportTitle;
+
+  /// No description provided for @contactSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with us on WhatsApp'**
+  String get contactSupportSubtitle;
+
+  /// No description provided for @contactSupportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, I need help with the Build4All store.'**
+  String get contactSupportMessage;
+
+  /// No description provided for @contactSupportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Support contact is not available right now.'**
+  String get contactSupportUnavailable;
+
   /// No description provided for @adminExcelImportSubtitle.
   ///
   /// In en, this message translates to:

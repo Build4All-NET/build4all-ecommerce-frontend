@@ -2028,6 +2028,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminExcelImportTitle => 'Excel Import';
 
   @override
+  String get contactSupportTitle => 'Contacter le support';
+
+  @override
+  String get contactSupportSubtitle => 'Discutez avec nous sur WhatsApp';
+
+  @override
+  String get contactSupportMessage => 'Bonjour, j\'ai besoin d\'aide avec la boutique Build4All.';
+
+  @override
+  String get contactSupportUnavailable => 'Le support n\'est pas disponible pour le moment.';
+
+  @override
   String get adminExcelImportSubtitle => 'Import data using an Excel template prepared by Build4All.';
 
   @override

@@ -55,6 +55,10 @@ import 'package:build4front/features/admin/coupons/domain/usecases/delete_coupon
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/core/exceptions/exception_mapper.dart';
 
+// ✅ Contact support (WhatsApp with super admin)
+import 'package:build4front/common/support/support_contact_service.dart';
+import 'package:build4front/common/support/whatsapp_launcher.dart';
+
 // ✅ Profile (clean arch)
 import 'package:build4front/features/admin/profile/domain/usecases/get_my_admin_profile.dart';
 import 'package:build4front/features/admin/profile/presentation/cubit/admin_profile_cubit.dart';
@@ -373,6 +377,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  bool _contactingSupport = false;
+
+  Future<void> _openContactSupport() async {
+    if (_contactingSupport) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _contactingSupport = true);
+
+    try {
+      final number = await SupportContactService().fetchSupportNumber();
+
+      if (!mounted) return;
+
+      if (number == null) {
+        AppToast.error(context, l10n.contactSupportUnavailable);
+        return;
+      }
+
+      final opened = await openWhatsApp(
+        rawNumber: number,
+        message: l10n.contactSupportMessage,
+      );
+
+      if (!mounted) return;
+      if (!opened) {
+        AppToast.error(context, l10n.contactSupportUnavailable);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      AppToast.error(context, l10n.contactSupportUnavailable);
+    } finally {
+      if (mounted) setState(() => _contactingSupport = false);
+    }
+  }
+
   Future<void> _openLicenseDetails(OwnerAppAccess access) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -621,6 +660,14 @@ final bool lockActions =
         title: l10n.adminExcelImportTitle,
         subtitle: l10n.adminActionExcelSubtitle,
         onTap: guarded(() => Navigator.of(context).pushNamed('/admin/excel-import')),
+      ),
+      // Contact support stays available even when the license is blocked, so
+      // owners can always reach the super admin on WhatsApp for help.
+      _DashAction(
+        icon: Icons.support_agent_outlined,
+        title: l10n.contactSupportTitle,
+        subtitle: l10n.contactSupportSubtitle,
+        onTap: _openContactSupport,
       ),
     ];
 
