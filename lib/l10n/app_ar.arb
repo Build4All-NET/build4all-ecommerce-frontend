@@ -1,6 +1,10 @@
 {
   "@@locale": "ar",
   "appTitle": "التطبيق",
+  "contactSupportTitle": "التواصل مع الدعم",
+  "contactSupportSubtitle": "تواصل معنا عبر واتساب",
+  "contactSupportMessage": "مرحباً، أحتاج إلى مساعدة بخصوص متجر Build4All.",
+  "contactSupportUnavailable": "خدمة الدعم غير متاحة حالياً.",
   "loginTitle": "تسجيل الدخول",
   "loginSubtitle": "مرحبًا بعودتك! سجّل دخولك للمتابعة.",
   "emailLabel": "البريد الإلكتروني",
