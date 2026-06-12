@@ -798,8 +798,12 @@ jobs:
           cat android/app/src/main/res/values/strings.xml
 
           flutter pub get
-          flutter pub run flutter_launcher_icons
-          flutter pub run flutter_native_splash:create
+          if [ -f "assets/branding/logo.png" ]; then
+            flutter pub run flutter_launcher_icons || true
+            flutter pub run flutter_native_splash:create || true
+          else
+            echo "⚠️ Logo not available, skipping launcher icon / splash generation"
+          fi
 
       - name: 🔎 Validate app_name resource before build
         run: |
