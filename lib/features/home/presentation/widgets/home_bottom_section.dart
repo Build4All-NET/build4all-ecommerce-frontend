@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dlibphonenumber/dlibphonenumber.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/constants/app_links.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/common/widgets/app_toast.dart';
 
@@ -413,6 +414,23 @@ class HomeBottomSection extends StatelessWidget {
     }
   }
 
+  Future<void> _openTickets(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final uri = Uri.parse(AppLinks.ticketsUrl);
+
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && context.mounted) {
+        AppToast.error(context, l10n.home_open_ticket_failed);
+      }
+    } catch (e) {
+      _log('open ticket launch error: $e');
+      if (context.mounted) {
+        AppToast.error(context, l10n.home_open_ticket_failed);
+      }
+    }
+  }
+
   void _showSupportOptions(BuildContext context) {
     final spacing = context.read<ThemeCubit>().state.tokens.spacing;
     final l10n = AppLocalizations.of(context)!;
@@ -589,6 +607,12 @@ class HomeBottomSection extends StatelessWidget {
             ? contactSubtitle
             : l10n.home_support_not_configured,
         onTap: () => _showSupportOptions(context),
+      ),
+      _BottomCardModel(
+        icon: Icons.confirmation_number_rounded,
+        title: l10n.home_open_ticket_title,
+        subtitle: l10n.home_open_ticket_subtitle,
+        onTap: () => _openTickets(context),
       ),
       _BottomCardModel(
         icon: Icons.credit_card_rounded,

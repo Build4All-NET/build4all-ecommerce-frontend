@@ -2031,6 +2031,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactSupportTitle => 'التواصل مع الدعم';
 
   @override
+  String get home_open_ticket_title => 'فتح تذكرة';
+
+  @override
+  String get home_open_ticket_subtitle => 'أرسل مشكلة إلى فريق الدعم لدينا';
+
+  @override
+  String get home_open_ticket_failed => 'تعذّر فتح بوابة التذاكر.';
+
+  @override
+  String get adminOpenTicketTitle => 'فتح تذكرة';
+
+  @override
+  String get adminOpenTicketSubtitle => 'أرسل مشكلة إلى فريق الدعم لدينا';
+
+  @override
+  String get adminOpenTicketFailed => 'تعذّر فتح بوابة التذاكر.';
+
+  @override
   String get contactSupportSubtitle => 'تواصل معنا عبر واتساب';
 
   @override

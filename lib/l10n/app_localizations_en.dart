@@ -2031,6 +2031,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactSupportTitle => 'Contact support';
 
   @override
+  String get home_open_ticket_title => 'Open a ticket';
+
+  @override
+  String get home_open_ticket_subtitle => 'Submit an issue to our support team';
+
+  @override
+  String get home_open_ticket_failed => 'Could not open the ticket portal.';
+
+  @override
+  String get adminOpenTicketTitle => 'Open a ticket';
+
+  @override
+  String get adminOpenTicketSubtitle => 'Submit an issue to our support team';
+
+  @override
+  String get adminOpenTicketFailed => 'Could not open the ticket portal.';
+
+  @override
   String get contactSupportSubtitle => 'Chat with us on WhatsApp';
 
   @override
