@@ -28,8 +28,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/core/constants/app_links.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/core/config/env.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 
 import 'package:build4front/features/admin/product/presentation/screens/admin_products_list_screen.dart';
@@ -411,6 +413,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _openTickets() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final opened = await launchUrl(
+        Uri.parse(AppLinks.ticketsUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!mounted) return;
+      if (!opened) {
+        AppToast.error(context, l10n.adminOpenTicketFailed);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      AppToast.error(context, l10n.adminOpenTicketFailed);
+    }
+  }
+
   Future<void> _openLicenseDetails(OwnerAppAccess access) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -667,6 +686,12 @@ final bool lockActions =
         title: l10n.contactSupportTitle,
         subtitle: l10n.contactSupportSubtitle,
         onTap: _openContactSupport,
+      ),
+      _DashAction(
+        icon: Icons.confirmation_number_outlined,
+        title: l10n.adminOpenTicketTitle,
+        subtitle: l10n.adminOpenTicketSubtitle,
+        onTap: _openTickets,
       ),
     ];
 

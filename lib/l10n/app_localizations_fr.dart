@@ -2031,6 +2031,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactSupportTitle => 'Contacter le support';
 
   @override
+  String get home_open_ticket_title => 'Ouvrir un ticket';
+
+  @override
+  String get home_open_ticket_subtitle =>
+      'Soumettez un problème à notre équipe d\'assistance';
+
+  @override
+  String get home_open_ticket_failed =>
+      'Impossible d\'ouvrir le portail des tickets.';
+
+  @override
+  String get adminOpenTicketTitle => 'Ouvrir un ticket';
+
+  @override
+  String get adminOpenTicketSubtitle =>
+      'Soumettez un problème à notre équipe d\'assistance';
+
+  @override
+  String get adminOpenTicketFailed =>
+      'Impossible d\'ouvrir le portail des tickets.';
+
+  @override
   String get contactSupportSubtitle => 'Discutez avec nous sur WhatsApp';
 
   @override
