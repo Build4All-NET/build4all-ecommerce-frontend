@@ -874,7 +874,9 @@ jobs:
           r.raise_for_status()
           apps = r.json()["data"]
           if not apps:
-              fallback = int(time.time()) % 100000
+              # No app in ASC yet: seed with monotonic epoch seconds (always increasing,
+              # never wraps). Stays well under Apple's CFBundleVersion limit (~4.29B) until 2106.
+              fallback = int(time.time())
               env = json.load(open(env_path))
               env["IOS_BUILD_NUMBER"] = fallback
               json.dump(env, open(env_path, "w"), indent=2)
@@ -901,7 +903,10 @@ jobs:
               next_url = body.get("links", {}).get("next")
               pages += 1
           import time as _t
-          new_bn = (int(_t.time()) % 100000) if max_bn == 0 else max_bn + 1
+          # Always strictly greater than the highest existing ASC build AND monotonic over
+          # time. epoch seconds never wraps, so a later build can never get a lower number
+          # (which is what TestFlight rejects). No more "% 100000" wrap-around bug.
+          new_bn = max(max_bn + 1, int(_t.time()))
           env = json.load(open(env_path))
           env["IOS_BUILD_NUMBER"] = new_bn
           json.dump(env, open(env_path, "w"), indent=2)
