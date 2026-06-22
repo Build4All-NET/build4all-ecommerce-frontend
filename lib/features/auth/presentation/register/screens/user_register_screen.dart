@@ -15,6 +15,7 @@ import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 
 class UserRegisterScreen extends StatefulWidget {
   final AppConfig appConfig;
@@ -458,50 +459,23 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
     required this.onChanged,
   });
 
-  String _normalizeLbNumber(String input) {
-    String v = input.trim().replaceAll(RegExp(r'\s+'), '');
+  /// Parses a phone number against the rules of the selected country.
+  ///
+  /// [isoCode] is the ISO-2 code coming from [IntlPhoneField] (e.g. `LB`),
+  /// and [nationalNumber] is the digits the user typed (may include a
+  /// leading national prefix `0`, which the parser strips automatically).
+  ///
+  /// Returns `null` if the country/number cannot be parsed.
+  pnp.PhoneNumber? _parsePhone(String isoCode, String nationalNumber) {
+    final trimmed = nationalNumber.trim();
+    if (trimmed.isEmpty) return null;
 
-    // remove any non-digit chars just in case
-    v = v.replaceAll(RegExp(r'[^0-9]'), '');
-
-    // if user typed local Lebanese number with leading 0 => remove it
-    if (v.startsWith('0')) {
-      v = v.substring(1);
+    try {
+      final iso = pnp.IsoCode.values.byName(isoCode.toUpperCase());
+      return pnp.PhoneNumber.parse(trimmed, callerCountry: iso);
+    } catch (_) {
+      return null;
     }
-
-    return v;
-  }
-
-  bool _isValidLebaneseMobile(String raw) {
-    final v = _normalizeLbNumber(raw);
-
-    // Lebanese mobile examples after removing leading 0:
-    // 3xxxxxx  -> 7 digits
-    // 70xxxxxx -> 8 digits
-    // 71xxxxxx -> 8 digits
-    // 76xxxxxx -> 8 digits
-    // 78xxxxxx -> 8 digits
-    // 79xxxxxx -> 8 digits
-    // 81xxxxxx -> 8 digits
-
-    // Case 1: old style 03xxxxxx => becomes 3xxxxxx
-    if (v.startsWith('3') && v.length == 7) {
-      return true;
-    }
-
-    // Case 2: other Lebanese mobile prefixes
-    const validTwoDigitPrefixes = ['70', '71', '76', '78', '79', '81'];
-    if (v.length == 8 &&
-        validTwoDigitPrefixes.any((prefix) => v.startsWith(prefix))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  String _toE164Lebanese(String raw) {
-    final v = _normalizeLbNumber(raw);
-    return '+961$v';
   }
 
   @override
@@ -531,14 +505,14 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
       flagsButtonPadding: const EdgeInsets.only(left: 8),
 
       onChanged: (phone) {
-        final raw = phone.number;
-        final normalized = _normalizeLbNumber(raw);
+        // Store the normalized E.164 number (e.g. "+9613123123") when it is
+        // valid for the selected country, otherwise keep the raw value so
+        // validation can flag it.
+        final parsed = _parsePhone(phone.countryISOCode, phone.number);
 
-        if (phone.countryCode == '+961') {
-          onChanged('+961$normalized');
-        } else {
-          onChanged(phone.completeNumber);
-        }
+        onChanged(parsed != null && parsed.isValid()
+            ? parsed.international
+            : phone.completeNumber);
       },
 
       validator: (phone) {
@@ -546,17 +520,11 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
           return l10n.fieldRequired;
         }
 
-        final raw = phone.number.trim();
+        // Validate against the rules of the selected country (length,
+        // prefixes, etc.) for every country, not just Lebanon.
+        final parsed = _parsePhone(phone.countryISOCode, phone.number);
 
-        if (phone.countryCode == '+961') {
-          if (!_isValidLebaneseMobile(raw)) {
-            return l10n.invalidPhone;
-          }
-          return null;
-        }
-
-        // fallback for non-LB numbers
-        if (raw.length < 6) {
+        if (parsed == null || !parsed.isValid()) {
           return l10n.invalidPhone;
         }
 
