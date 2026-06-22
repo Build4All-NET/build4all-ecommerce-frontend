@@ -57,8 +57,9 @@ void _goHome() {
     final spacing = context.watch<ThemeCubit>().state.tokens.spacing;
 
     return Scaffold(
-      // No AppBar here: the hosting MainShell already shows the "Cart" title.
-      body: BlocConsumer<CartBloc, CartState>(
+      // No AppBar: the shell shows no title for Cart, so guard the top inset.
+      body: SafeArea(
+        child: BlocConsumer<CartBloc, CartState>(
         listenWhen: (previous, current) =>
             previous.errorMessage != current.errorMessage &&
             current.errorMessage != null &&
@@ -165,6 +166,7 @@ void _goHome() {
             ),
           );
         },
+        ),
       ),
     );
   }
