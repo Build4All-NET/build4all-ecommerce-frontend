@@ -1570,11 +1570,16 @@ jobs:
             OTHER_CODE_SIGN_FLAGS="--keychain ${KEYCHAIN_PATH}"
 
       - name: Upload IPA artifact
+        # Non-fatal: TestFlight (below) is the real delivery channel. The IPA
+        # artifact is only a convenience copy, so a storage-quota failure here
+        # must never block the TestFlight upload or fail the build.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
           path: build/ios/ipa/**/*.ipa
           if-no-files-found: error
+          retention-days: 1
 
       - name: Upload to TestFlight
         shell: bash

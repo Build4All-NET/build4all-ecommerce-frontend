@@ -249,11 +249,15 @@ jobs:
 
       - name: Upload tester_result.json artifact
         if: always()
+        # Non-fatal: the result is also reported to the backend below, so a
+        # storage-quota failure on this debug artifact must not fail the job.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: tester-result
           path: tester_result.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: 📡 Report result to backend
         if: always()
