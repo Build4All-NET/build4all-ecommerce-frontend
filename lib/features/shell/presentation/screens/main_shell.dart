@@ -183,7 +183,8 @@ class _MainShellState extends State<MainShell> {
         case 'user':
         case 'account':
         case 'me':
-          return _ProfileTabShell(appConfig: widget.appConfig);
+          // Embedded in the shell (which already provides an AppBar).
+          return _ProfileTabShell(appConfig: widget.appConfig, embedded: true);
 
         default:
           return PlaceholderScreen(title: tab.label);
@@ -244,9 +245,19 @@ class _MainShellState extends State<MainShell> {
     final effectiveMenuType = themeMenuType.isNotEmpty ? themeMenuType : appMenuType;
     final isBottom = effectiveMenuType == 'bottom';
 
-    // ✅ Hide AppBar on HOME only (but keep it in drawer mode so hamburger stays)
+    // ✅ Hide the shell AppBar (no title) for these tabs in bottom mode.
+    //    Kept in drawer mode so the hamburger button stays available.
     final currentTabId = _tabs[_currentIndex].id.trim().toLowerCase();
-    final hideAppBar = isBottom && currentTabId == 'home';
+    const noTitleTabs = {
+      'home',
+      'explore',
+      'cart',
+      'profile',
+      'user',
+      'account',
+      'me',
+    };
+    final hideAppBar = isBottom && noTitleTabs.contains(currentTabId);
 
     return RepositoryProvider<UserProfileService>(
       create: (_) => UserProfileService(),
@@ -480,7 +491,12 @@ class NavItemView {
 /// ===============================
 class _ProfileTabShell extends StatelessWidget {
   final AppConfig appConfig;
-  const _ProfileTabShell({required this.appConfig});
+
+  /// True when shown as a bottom-nav tab inside MainShell (which already has
+  /// an AppBar). False when pushed as a standalone route (needs its own bar).
+  final bool embedded;
+
+  const _ProfileTabShell({required this.appConfig, this.embedded = false});
 
   Future<void> _handleLogout(BuildContext context) async {
     final authRepo = context.read<AuthRepositoryImpl>();
@@ -512,6 +528,8 @@ class _ProfileTabShell extends StatelessWidget {
     return UserProfileScreen(
       token: token,
       userId: userId,
+      // Hide the inner AppBar when embedded as a tab (shell provides one).
+      showAppBar: !embedded,
       onChangeLocale: (loc) => context.read<LocaleCubit>().setLocale(loc),
       onLogout: () => _handleLogout(context),
     );

@@ -22,6 +22,7 @@
   "invalidPhone": "Veuillez saisir un numéro de téléphone valide.",
   "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
   "authErrorGeneric": "Une erreur s’est produite. Veuillez réessayer.",
+  "otpSendLimitReached": "Vous avez atteint le nombre maximal de demandes de code pour ce numéro. Veuillez réessayer plus tard.",
   "noAccountText": "Vous n’avez pas de compte ?",
   "signUpText": "S’inscrire",
   "loginWithEmail": "E-mail",

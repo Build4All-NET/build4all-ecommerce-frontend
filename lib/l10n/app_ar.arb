@@ -22,6 +22,7 @@
   "invalidPhone": "يرجى إدخال رقم هاتف صحيح.",
   "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
   "authErrorGeneric": "حدث خطأ ما. حاول مرة أخرى.",
+  "otpSendLimitReached": "لقد وصلت إلى الحد الأقصى لعدد طلبات الرمز لهذا الرقم. حاول مرة أخرى لاحقاً.",
   "noAccountText": "ليس لديك حساب؟",
   "signUpText": "إنشاء حساب",
   "loginWithEmail": "البريد الإلكتروني",

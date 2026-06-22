@@ -28,12 +28,18 @@ class UserProfileScreen extends StatefulWidget {
   final void Function(Locale) onChangeLocale;
   final VoidCallback onLogout;
 
+  /// Whether to render an AppBar. Set to false when hosted inside a parent
+  /// shell that already provides one (e.g. the bottom-nav MainShell), to
+  /// avoid showing two stacked title bars.
+  final bool showAppBar;
+
   const UserProfileScreen({
     super.key,
     required this.token,
     required this.userId,
     required this.onChangeLocale,
     required this.onLogout,
+    this.showAppBar = true,
   });
 
   @override
@@ -372,7 +378,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
           return Scaffold(
             backgroundColor: theme.colorScheme.background,
-            appBar: AppBar(),
+            appBar: widget.showAppBar ? AppBar() : null,
             body: SafeArea(
               child: ListView(
                 padding:

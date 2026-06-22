@@ -169,6 +169,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get authErrorGeneric;
 
+  /// No description provided for @otpSendLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You've reached the maximum number of code requests for this number. Please try again later.'**
+  String get otpSendLimitReached;
+
   /// No description provided for @noAccountText.
   ///
   /// In en, this message translates to:

@@ -45,6 +45,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authErrorGeneric => 'حدث خطأ ما. حاول مرة أخرى.';
 
   @override
+  String get otpSendLimitReached =>
+      'لقد وصلت إلى الحد الأقصى لعدد طلبات الرمز لهذا الرقم. حاول مرة أخرى لاحقاً.';
+
+  @override
   String get noAccountText => 'ليس لديك حساب؟';
 
   @override

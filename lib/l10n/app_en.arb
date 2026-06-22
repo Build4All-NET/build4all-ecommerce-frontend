@@ -12,6 +12,7 @@
   "invalidPhone": "Please enter a valid phone number.",
   "passwordTooShort": "Password must be at least 6 characters long.",
   "authErrorGeneric": "Something went wrong. Please try again.",
+  "otpSendLimitReached": "You've reached the maximum number of code requests for this number. Please try again later.",
   "noAccountText": "Don't have an account?",
   "signUpText": "Sign up",
   "loginWithEmail": "Email",
