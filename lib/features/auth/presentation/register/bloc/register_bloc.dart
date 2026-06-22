@@ -364,6 +364,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     switch (code) {
       case 'EMAIL_ALREADY_EXISTS':
       case 'EMAIL_ALREADY_IN_USE':
+      case 'EMAIL_ALREADY_USED':
+      case 'EMAIL_USED':
       case 'EMAIL_EXISTS':
       case 'EMAIL_IN_USE':
       case 'DUPLICATE_EMAIL':
@@ -373,6 +375,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
       case 'PHONE_ALREADY_EXISTS':
       case 'PHONE_ALREADY_IN_USE':
+      case 'PHONE_ALREADY_USED':
+      case 'PHONE_USED':
       case 'PHONE_EXISTS':
       case 'PHONE_IN_USE':
       case 'PHONE_NUMBER_ALREADY_EXISTS':

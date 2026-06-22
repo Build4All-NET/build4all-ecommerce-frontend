@@ -24,8 +24,14 @@ String localizeError(BuildContext context, Object error) {
     case 'USERNAME_TAKEN':
       return l10n.authUsernameTaken;
     case 'EMAIL_ALREADY_EXISTS':
+    case 'EMAIL_ALREADY_USED':
+    case 'EMAIL_USED':
+    case 'EMAIL_IN_USE':
       return l10n.authEmailAlreadyExists;
     case 'PHONE_ALREADY_EXISTS':
+    case 'PHONE_ALREADY_USED':
+    case 'PHONE_USED':
+    case 'PHONE_IN_USE':
       return l10n.authPhoneAlreadyExists;
 
     // --- Login specific ---
