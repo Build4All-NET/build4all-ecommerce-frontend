@@ -14,6 +14,7 @@ import 'package:build4front/features/auth/presentation/login/screens/user_login_
 import 'package:build4front/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 
@@ -394,6 +395,11 @@ class _UserCompleteProfileScreenState extends State<UserCompleteProfileScreen> {
                         label: l10n.usernameLabel,
                         controller: _usernameCtrl,
                         focusNode: _usernameFocus,
+                        // Username must never contain whitespace.
+                        // Block typing/pasting any space at the source.
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                        ],
                         validator: (_) => null,
                       ),
                       const SizedBox(height: 16),
