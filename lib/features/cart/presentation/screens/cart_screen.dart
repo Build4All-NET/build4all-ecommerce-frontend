@@ -57,7 +57,7 @@ void _goHome() {
     final spacing = context.watch<ThemeCubit>().state.tokens.spacing;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.cart_title)),
+      // No AppBar here: the hosting MainShell already shows the "Cart" title.
       body: BlocConsumer<CartBloc, CartState>(
         listenWhen: (previous, current) =>
             previous.errorMessage != current.errorMessage &&

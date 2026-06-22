@@ -183,7 +183,8 @@ class _MainShellState extends State<MainShell> {
         case 'user':
         case 'account':
         case 'me':
-          return _ProfileTabShell(appConfig: widget.appConfig);
+          // Embedded in the shell (which already provides an AppBar).
+          return _ProfileTabShell(appConfig: widget.appConfig, embedded: true);
 
         default:
           return PlaceholderScreen(title: tab.label);
@@ -480,7 +481,12 @@ class NavItemView {
 /// ===============================
 class _ProfileTabShell extends StatelessWidget {
   final AppConfig appConfig;
-  const _ProfileTabShell({required this.appConfig});
+
+  /// True when shown as a bottom-nav tab inside MainShell (which already has
+  /// an AppBar). False when pushed as a standalone route (needs its own bar).
+  final bool embedded;
+
+  const _ProfileTabShell({required this.appConfig, this.embedded = false});
 
   Future<void> _handleLogout(BuildContext context) async {
     final authRepo = context.read<AuthRepositoryImpl>();
@@ -512,6 +518,8 @@ class _ProfileTabShell extends StatelessWidget {
     return UserProfileScreen(
       token: token,
       userId: userId,
+      // Hide the inner AppBar when embedded as a tab (shell provides one).
+      showAppBar: !embedded,
       onChangeLocale: (loc) => context.read<LocaleCubit>().setLocale(loc),
       onLogout: () => _handleLogout(context),
     );
