@@ -45,6 +45,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorGeneric => 'Something went wrong. Please try again.';
 
   @override
+  String get otpSendLimitReached =>
+      'You\'ve reached the maximum number of code requests for this number. Please try again later.';
+
+  @override
   String get noAccountText => 'Don\'t have an account?';
 
   @override

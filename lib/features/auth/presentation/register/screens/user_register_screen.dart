@@ -553,6 +553,10 @@ String _l10nFromCode(AppLocalizations l10n, String code) {
       case 'PENDING_ALREADY_VERIFIED':
   return l10n.accountAlreadyVerified; // or add dedicated l10n key later
 
+    case 'OTP_SEND_LIMIT_REACHED':
+    case 'TOO_MANY_REQUESTS':
+      return l10n.otpSendLimitReached;
+
     case 'USER_NOT_FOUND':
       return l10n.authUserNotFound;
     case 'WRONG_PASSWORD':

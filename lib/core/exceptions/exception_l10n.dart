@@ -34,6 +34,10 @@ String localizeError(BuildContext context, Object error) {
     case 'PHONE_IN_USE':
       return l10n.authPhoneAlreadyExists;
 
+    case 'OTP_SEND_LIMIT_REACHED':
+    case 'TOO_MANY_REQUESTS':
+      return l10n.otpSendLimitReached;
+
     // --- Login specific ---
     case 'USER_NOT_FOUND':
       return l10n.authUserNotFound;
