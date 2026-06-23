@@ -15,6 +15,7 @@ import 'package:build4front/features/forgotpassword/presentation/screens/forgot_
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/countries.dart' as phone_countries;
 
 import '../../../../../common/widgets/primary_button.dart';
 import '../../../../../common/widgets/app_text_field.dart';
@@ -988,7 +989,11 @@ class _PhoneFieldIntl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntlPhoneField(
-      initialCountryCode: 'LB',
+      // Default phone country = Canada. Israel removed from the selector.
+      countries: phone_countries.countries
+          .where((country) => country.code.toUpperCase() != 'IL')
+          .toList(),
+      initialCountryCode: 'CA',
       disableLengthCheck: true,
       decoration: InputDecoration(
         labelText: l10n.phoneLabel,

@@ -56,7 +56,7 @@ class HomeBottomSection extends StatelessWidget {
     super.key,
     this.ownerPhoneNumber,
     this.ownerPhoneRegionIso2,
-    this.fallbackRegionIso2 = 'LB',
+    this.fallbackRegionIso2 = 'CA',
     this.appName,
     this.projectName, // ✅ NEW
     this.ownerProjectId,
@@ -185,7 +185,7 @@ class HomeBottomSection extends StatelessWidget {
 
   // -----------------------------
   // ✅ Region resolver
-  // priority: param -> fallbackRegionIso2 -> locale country -> platform locale -> LB
+  // priority: param -> fallbackRegionIso2 -> locale country -> platform locale -> CA
   // -----------------------------
   String _resolveRegionIso2(BuildContext context) {
     final fromParam = (ownerPhoneRegionIso2 ?? '').trim().toUpperCase();
@@ -206,7 +206,7 @@ class HomeBottomSection extends StatelessWidget {
             .trim()
             .toUpperCase();
 
-    return loc2.isNotEmpty ? loc2 : 'LB';
+    return loc2.isNotEmpty ? loc2 : 'CA';
   }
 
   // -----------------------------

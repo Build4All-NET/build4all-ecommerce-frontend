@@ -101,14 +101,14 @@ class _ShippingMethodFormSheetState extends State<ShippingMethodFormSheet> {
     super.dispose();
   }
 
-  CountryModel? _findLebanon(List<CountryModel> countries) {
+  CountryModel? _findCanada(List<CountryModel> countries) {
     final byIso = countries.where(
-      (c) => c.iso2Code.trim().toUpperCase() == 'LB',
+      (c) => c.iso2Code.trim().toUpperCase() == 'CA',
     );
     if (byIso.isNotEmpty) return byIso.first;
 
     final byName = countries.where(
-      (c) => c.name.trim().toLowerCase().contains('lebanon'),
+      (c) => c.name.trim().toLowerCase().contains('canada'),
     );
     if (byName.isNotEmpty) return byName.first;
 
@@ -131,7 +131,12 @@ class _ShippingMethodFormSheetState extends State<ShippingMethodFormSheet> {
     }
 
     try {
-      final countries = await _catalogApi.listCountries(authToken: token);
+      // Remove Israel from the country picker.
+      final countries = (await _catalogApi.listCountries(authToken: token))
+          .where((c) =>
+              c.iso2Code.trim().toUpperCase() != 'IL' &&
+              !c.name.trim().toLowerCase().contains('israel'))
+          .toList();
       final regions = await _catalogApi.listRegions(authToken: token);
 
       CountryModel? initCountry;
@@ -151,8 +156,8 @@ class _ShippingMethodFormSheetState extends State<ShippingMethodFormSheet> {
             .firstOrNull;
       }
 
-      // ✅ DEFAULT Lebanon on create
-      initCountry ??= _findLebanon(countries);
+      // ✅ DEFAULT Canada on create
+      initCountry ??= _findCanada(countries);
 
       setState(() {
         _countries = countries;

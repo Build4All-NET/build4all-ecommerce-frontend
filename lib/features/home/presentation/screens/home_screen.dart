@@ -914,7 +914,7 @@ class _HomeScreenState extends State<HomeScreen>
           ownerPhoneNumber: ownerPhone,
           supportEmail: _supportInfo?.email,
           supportName: _supportInfo?.ownerName,
-          fallbackRegionIso2: 'LB',
+          fallbackRegionIso2: 'CA',
           debugLogs: true,
         );
     }
