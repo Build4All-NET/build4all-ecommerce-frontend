@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/countries.dart' as phone_countries;
 
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/core/exceptions/exception_mapper.dart';
@@ -264,15 +265,15 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
     );
   }
 
-  CountryModel? _findLebanon(List<CountryModel> countries) {
+  CountryModel? _findCanada(List<CountryModel> countries) {
     return countries
-            .where((c) => c.iso2Code.toUpperCase() == 'LB')
+            .where((c) => c.iso2Code.toUpperCase() == 'CA')
             .firstOrNull ??
         countries
-            .where((c) => c.name.toLowerCase().trim() == 'lebanon')
+            .where((c) => c.name.toLowerCase().trim() == 'canada')
             .firstOrNull ??
         countries
-            .where((c) => c.name.toLowerCase().contains('lebanon'))
+            .where((c) => c.name.toLowerCase().contains('canada'))
             .firstOrNull;
   }
 
@@ -325,7 +326,12 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
         return;
       }
 
-      final countries = await _catalogApi.listCountries(authToken: token);
+      // Remove Israel from the country picker.
+      final countries = (await _catalogApi.listCountries(authToken: token))
+          .where((c) =>
+              c.iso2Code.trim().toUpperCase() != 'IL' &&
+              !c.name.trim().toLowerCase().contains('israel'))
+          .toList();
       final regions = await _catalogApi.listRegions(authToken: token);
 
       CountryModel? initCountry;
@@ -344,8 +350,8 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
             countries.where((c) => c.id == initRegion?.countryId).firstOrNull;
       }
 
-      // 2) default to Lebanon
-      initCountry ??= _findLebanon(countries);
+      // 2) default to Canada
+      initCountry ??= _findCanada(countries);
 
       // 3) if region doesn't match country, reset
       if (initRegion != null && initCountry != null) {
@@ -413,7 +419,7 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
       return '${l10n.checkoutCityLabel}: ${l10n.fieldRequired}';
     }
 
-    final iso = (_selectedCountry?.iso2Code ?? 'LB').toUpperCase();
+    final iso = (_selectedCountry?.iso2Code ?? 'CA').toUpperCase();
     final localDigits = _phoneLocalDigits.replaceAll(RegExp(r'\D'), '');
 
     if (localDigits.isEmpty) {
@@ -502,7 +508,7 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
       );
     }
 
-    final countryIso = (_selectedCountry?.iso2Code ?? 'LB').toUpperCase();
+    final countryIso = (_selectedCountry?.iso2Code ?? 'CA').toUpperCase();
 
     final autoMode = widget.showPickerErrors
         ? AutovalidateMode.onUserInteraction
@@ -655,6 +661,10 @@ class _CheckoutAddressFormState extends State<CheckoutAddressForm> {
           IntlPhoneField(
             key: ValueKey(countryIso),
             focusNode: _phoneFocus,
+            // Israel removed from the phone country selector.
+            countries: phone_countries.countries
+                .where((country) => country.code.toUpperCase() != 'IL')
+                .toList(),
             initialCountryCode: countryIso,
             initialValue: _phoneDisplayValue, // local digits only
             disableLengthCheck: true,

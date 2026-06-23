@@ -15,6 +15,7 @@ import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/countries.dart' as phone_countries;
 import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 
 class UserRegisterScreen extends StatefulWidget {
@@ -481,7 +482,11 @@ class _PhoneFieldIntlRegister extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntlPhoneField(
-      initialCountryCode: 'LB',
+      // Default phone country = Canada. Israel removed from the selector.
+      countries: phone_countries.countries
+          .where((country) => country.code.toUpperCase() != 'IL')
+          .toList(),
+      initialCountryCode: 'CA',
       disableLengthCheck: true,
       decoration: InputDecoration(
         labelText: l10n.phoneLabel,
