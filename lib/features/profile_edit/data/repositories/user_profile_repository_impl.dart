@@ -90,6 +90,36 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
+  Future<void> requestPhoneChange({
+    required String token,
+    required int userId,
+    required String newPhone,
+  }) {
+    return api.requestPhoneChange(
+      token: token,
+      userId: userId,
+      newPhone: newPhone,
+    );
+  }
+
+  @override
+  Future<void> verifyPhoneChange({
+    required String token,
+    required int userId,
+    required String code,
+  }) {
+    return api.verifyPhoneChange(token: token, userId: userId, code: code);
+  }
+
+  @override
+  Future<void> resendPhoneChange({
+    required String token,
+    required int userId,
+  }) {
+    return api.resendPhoneChange(token: token, userId: userId);
+  }
+
+  @override
   Future<void> deleteUser({
     required String token,
     required int userId,

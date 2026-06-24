@@ -2718,6 +2718,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile_emailUpdatedToast => 'Email updated successfully';
 
   @override
+  String get editProfile_verifyNewPhoneTitle => 'Verify new phone';
+
+  @override
+  String get editProfile_codeSentToastPhone =>
+      'Verification code sent to your new phone';
+
+  @override
+  String get editProfile_phoneUpdatedToast =>
+      'Phone number updated successfully';
+
+  @override
   String home_stock_left_label(int count) {
     return 'Only $count left';
   }

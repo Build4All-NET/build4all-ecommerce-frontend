@@ -30,6 +30,23 @@ abstract class UserProfileRepository {
     required int userId,
   });
 
+  Future<void> requestPhoneChange({
+    required String token,
+    required int userId,
+    required String newPhone,
+  });
+
+  Future<void> verifyPhoneChange({
+    required String token,
+    required int userId,
+    required String code,
+  });
+
+  Future<void> resendPhoneChange({
+    required String token,
+    required int userId,
+  });
+
   Future<void> deleteUser({
     required String token,
     required int userId,

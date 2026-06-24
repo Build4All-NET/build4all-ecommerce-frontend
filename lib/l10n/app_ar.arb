@@ -933,6 +933,9 @@
   "editProfile_remove": "حذف",
   "editProfile_codeSentToast": "تم إرسال رمز التحقق إلى بريدك الجديد",
   "editProfile_emailUpdatedToast": "تم تحديث البريد الإلكتروني بنجاح",
+  "editProfile_verifyNewPhoneTitle": "تأكيد رقم الهاتف الجديد",
+  "editProfile_codeSentToastPhone": "تم إرسال رمز التحقق إلى رقم هاتفك الجديد",
+  "editProfile_phoneUpdatedToast": "تم تحديث رقم الهاتف بنجاح",
   "home_stock_left_label": "باقي {count} فقط",
   "@home_stock_left_label": {
     "placeholders": {

@@ -155,6 +155,43 @@ class UserProfileApiService {
     _throwIfFailed(res);
   }
 
+  Future<void> requestPhoneChange({
+    required String token,
+    required int userId,
+    required String newPhone,
+  }) async {
+    final res = await dio.post(
+      '${_apiRoot()}/users/$userId/phone-change/request',
+      data: {'newPhone': newPhone},
+      options: _authJson(token),
+    );
+    _throwIfFailed(res);
+  }
+
+  Future<void> verifyPhoneChange({
+    required String token,
+    required int userId,
+    required String code,
+  }) async {
+    final res = await dio.post(
+      '${_apiRoot()}/users/$userId/phone-change/verify',
+      data: {'code': code},
+      options: _authJson(token),
+    );
+    _throwIfFailed(res);
+  }
+
+  Future<void> resendPhoneChange({
+    required String token,
+    required int userId,
+  }) async {
+    final res = await dio.post(
+      '${_apiRoot()}/users/$userId/phone-change/resend',
+      options: _authJson(token),
+    );
+    _throwIfFailed(res);
+  }
+
   Future<void> deleteUser({
     required String token,
     required int userId,
