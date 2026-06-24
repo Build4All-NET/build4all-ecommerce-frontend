@@ -2722,6 +2722,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get editProfile_emailUpdatedToast => 'E-mail mis à jour avec succès';
 
   @override
+  String get editProfile_verifyNewPhoneTitle =>
+      'Vérifier le nouveau numéro';
+
+  @override
+  String get editProfile_codeSentToastPhone =>
+      'Code de vérification envoyé à votre nouveau numéro';
+
+  @override
+  String get editProfile_phoneUpdatedToast =>
+      'Numéro de téléphone mis à jour avec succès';
+
+  @override
   String home_stock_left_label(int count) {
     return 'Stock restant : $count';
   }

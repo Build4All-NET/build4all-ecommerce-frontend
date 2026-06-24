@@ -1063,6 +1063,9 @@
   "editProfile_remove": "Remove",
   "editProfile_codeSentToast": "Verification code sent to your new email",
   "editProfile_emailUpdatedToast": "Email updated successfully",
+  "editProfile_verifyNewPhoneTitle": "Verify new phone",
+  "editProfile_codeSentToastPhone": "Verification code sent to your new phone",
+  "editProfile_phoneUpdatedToast": "Phone number updated successfully",
   "home_stock_left_label": "Only {count} left",
   "@home_stock_left_label": {
     "placeholders": {

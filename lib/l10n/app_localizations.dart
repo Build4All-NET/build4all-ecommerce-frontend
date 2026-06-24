@@ -5335,6 +5335,24 @@ abstract class AppLocalizations {
   /// **'Email updated successfully'**
   String get editProfile_emailUpdatedToast;
 
+  /// No description provided for @editProfile_verifyNewPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify new phone'**
+  String get editProfile_verifyNewPhoneTitle;
+
+  /// No description provided for @editProfile_codeSentToastPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent to your new phone'**
+  String get editProfile_codeSentToastPhone;
+
+  /// No description provided for @editProfile_phoneUpdatedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number updated successfully'**
+  String get editProfile_phoneUpdatedToast;
+
   /// No description provided for @home_stock_left_label.
   ///
   /// In en, this message translates to:

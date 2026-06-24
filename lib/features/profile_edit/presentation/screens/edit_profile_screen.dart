@@ -21,6 +21,9 @@ import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/delete_user.dart';
 import '../../domain/usecases/verify_email_change.dart';
 import '../../domain/usecases/resend_email_change.dart';
+import '../../domain/usecases/request_phone_change.dart';
+import '../../domain/usecases/verify_phone_change.dart';
+import '../../domain/usecases/resend_phone_change.dart';
 
 import '../bloc/edit_profile_bloc.dart';
 import '../bloc/edit_profile_event.dart';
@@ -98,6 +101,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _phoneCtrl = TextEditingController();
 
   String _originalEmail = '';
+  String _originalPhone = '';
   bool _isPhoneAccount = false;
 
   bool _public = true;
@@ -113,6 +117,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _emailFlowActive = false;
   bool _emailDialogOpen = false;
   bool _awaitingVerifyReload = false;
+  bool _phoneDialogOpen = false;
 
   // inline errors
   String? _firstError;
@@ -170,6 +175,9 @@ final dio = g.appDio!;
       deleteUser: DeleteUser(repo),
       verifyEmailChange: VerifyEmailChange(repo),
       resendEmailChange: ResendEmailChange(repo),
+      requestPhoneChange: RequestPhoneChange(repo),
+      verifyPhoneChange: VerifyPhoneChange(repo),
+      resendPhoneChange: ResendPhoneChange(repo),
     );
 
    _bloc.add(
@@ -370,6 +378,75 @@ Future<void> _pickImage() async {
     return ok == true;
   }
 
+  /// Loose comparison so trivial formatting differences (spaces, dashes,
+  /// leading "00") don't count as a phone change.
+  String _normalizePhoneForCompare(String? raw) {
+    if (raw == null) return '';
+    var v = raw.trim().replaceAll(RegExp(r'[\s\-().]'), '');
+    if (v.startsWith('00')) v = '+${v.substring(2)}';
+    return v;
+  }
+
+  /// Requests a verification code for the new phone number and, on success,
+  /// opens the OTP dialog. Returns true only once the new phone is verified.
+  Future<bool> _handlePhoneChange(
+    AppLocalizations loc,
+    String newPhone,
+  ) async {
+    try {
+      await _bloc.requestPhoneChangeDirect(
+        token: _currentToken(),
+        userId: widget.userId,
+        newPhone: newPhone,
+      );
+    } catch (e) {
+      if (mounted) {
+        AppToast.error(context, ExceptionMapper.toMessage(e));
+      }
+      return false;
+    }
+
+    if (!mounted) return false;
+    AppToast.success(context, loc.editProfile_codeSentToastPhone);
+
+    final ok = await _showPhoneOtpDialog(loc: loc, pendingPhone: newPhone);
+    if (ok) {
+      _originalPhone = newPhone;
+    }
+    return ok;
+  }
+
+  Future<bool> _showPhoneOtpDialog({
+    required AppLocalizations loc,
+    required String pendingPhone,
+  }) async {
+    if (_phoneDialogOpen) return false;
+    _phoneDialogOpen = true;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return _PhoneOtpDialog(
+          loc: loc,
+          pendingPhone: pendingPhone,
+          onVerify: (code) => _bloc.verifyPhoneChangeDirect(
+            token: _currentToken(),
+            userId: widget.userId,
+            code: code,
+          ),
+          onResend: () => _bloc.resendPhoneChangeDirect(
+            token: _currentToken(),
+            userId: widget.userId,
+          ),
+        );
+      },
+    );
+
+    _phoneDialogOpen = false;
+    return ok == true;
+  }
+
   @override
   void dispose() {
     _bloc.close();
@@ -427,6 +504,7 @@ Future<void> _pickImage() async {
               _emailCtrl.text = email;
               _phoneCtrl.text = phone;
               _originalEmail = email;
+              _originalPhone = phone;
 
               setState(() {});
             });
@@ -445,6 +523,7 @@ Future<void> _pickImage() async {
               _emailCtrl.text = u.email ?? '';
               _phoneCtrl.text = u.phoneNumber ?? '';
               _originalEmail = (u.email ?? '').trim();
+              _originalPhone = (u.phoneNumber ?? '').trim();
 
               Navigator.pop(this.context, u);
             });
@@ -541,7 +620,6 @@ Future<void> _pickImage() async {
                               controller: _phoneCtrl,
                               label: loc.phoneLabel,
                               keyboardType: TextInputType.phone,
-                              enabled: false,
                             )
                           else
                             AppTextField(
@@ -611,7 +689,7 @@ Future<void> _pickImage() async {
                           ElevatedButton(
                             onPressed: state.saving
                                 ? null
-                                : () {
+                                : () async {
                                     final valid = _validateInputs(loc);
                                     if (!valid) {
                                       AppToast.error(
@@ -624,6 +702,21 @@ Future<void> _pickImage() async {
                                       );
                                       return;
                                     }
+
+                                    // ✅ Phone change uses a dedicated OTP flow
+                                    // (separate endpoint), mirroring registration.
+                                    if (_isPhoneAccount) {
+                                      final newPhone = _phoneCtrl.text.trim();
+                                      if (_normalizePhoneForCompare(newPhone) !=
+                                          _normalizePhoneForCompare(
+                                              _originalPhone)) {
+                                        final ok =
+                                            await _handlePhoneChange(loc, newPhone);
+                                        if (!ok) return;
+                                      }
+                                    }
+
+                                    if (!mounted) return;
 
                                     _saveRequested = true;
                                     _awaitingVerifyReload = false;
@@ -925,6 +1018,119 @@ class _EmailOtpDialogState extends State<_EmailOtpDialog> {
                     await widget.onVerify(code);
                     if (!mounted) return;
                     AppToast.success(context, loc.editProfile_emailUpdatedToast);
+                    Navigator.of(context, rootNavigator: true).pop(true);
+                  } catch (e) {
+                    if (!mounted) return;
+                    AppToast.error(context, _cleanErr(e));
+                    Navigator.of(context, rootNavigator: true).pop(false);
+                  } finally {
+                    if (mounted) setState(() => _loading = false);
+                  }
+                },
+          child: _loading
+              ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(loc.editProfile_verify),
+        ),
+      ],
+    );
+  }
+}
+
+class _PhoneOtpDialog extends StatefulWidget {
+  final AppLocalizations loc;
+  final String pendingPhone;
+  final Future<void> Function(String code) onVerify;
+  final Future<void> Function() onResend;
+
+  const _PhoneOtpDialog({
+    required this.loc,
+    required this.pendingPhone,
+    required this.onVerify,
+    required this.onResend,
+  });
+
+  @override
+  State<_PhoneOtpDialog> createState() => _PhoneOtpDialogState();
+}
+
+class _PhoneOtpDialogState extends State<_PhoneOtpDialog> {
+  final _codeCtrl = TextEditingController();
+  bool _loading = false;
+
+  String _cleanErr(Object e) => ExceptionMapper.toMessage(e);
+
+  @override
+  void dispose() {
+    _codeCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = widget.loc;
+
+    return AlertDialog(
+      title: Text(loc.editProfile_verifyNewPhoneTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(loc.editProfile_codeSentTo),
+            const SizedBox(height: 6),
+            Text(
+              widget.pendingPhone,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _codeCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: loc.editProfile_codeLabel),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading
+              ? null
+              : () async {
+                  setState(() => _loading = true);
+                  try {
+                    await widget.onResend();
+                    if (!mounted) return;
+                    AppToast.success(context, loc.editProfile_resend);
+                  } catch (e) {
+                    if (!mounted) return;
+                    AppToast.error(context, _cleanErr(e));
+                    Navigator.of(context, rootNavigator: true).pop(false);
+                  } finally {
+                    if (mounted) setState(() => _loading = false);
+                  }
+                },
+          child: Text(loc.editProfile_resend),
+        ),
+        ElevatedButton(
+          onPressed: _loading
+              ? null
+              : () async {
+                  final code = _codeCtrl.text.trim();
+                  if (code.isEmpty) {
+                    AppToast.error(context, loc.editProfile_codeRequired);
+                    Navigator.of(context, rootNavigator: true).pop(false);
+                    return;
+                  }
+
+                  setState(() => _loading = true);
+                  try {
+                    await widget.onVerify(code);
+                    if (!mounted) return;
+                    AppToast.success(context, loc.editProfile_phoneUpdatedToast);
                     Navigator.of(context, rootNavigator: true).pop(true);
                   } catch (e) {
                     if (!mounted) return;

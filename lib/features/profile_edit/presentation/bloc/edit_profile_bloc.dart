@@ -7,6 +7,9 @@ import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/delete_user.dart';
 import '../../domain/usecases/verify_email_change.dart';
 import '../../domain/usecases/resend_email_change.dart';
+import '../../domain/usecases/request_phone_change.dart';
+import '../../domain/usecases/verify_phone_change.dart';
+import '../../domain/usecases/resend_phone_change.dart';
 
 import 'edit_profile_event.dart';
 import 'edit_profile_state.dart';
@@ -19,12 +22,19 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
   final VerifyEmailChange verifyEmailChange;
   final ResendEmailChange resendEmailChange;
 
+  final RequestPhoneChange requestPhoneChange;
+  final VerifyPhoneChange verifyPhoneChange;
+  final ResendPhoneChange resendPhoneChange;
+
   EditProfileBloc({
     required this.getUserById,
     required this.updateUserProfile,
     required this.deleteUser,
     required this.verifyEmailChange,
     required this.resendEmailChange,
+    required this.requestPhoneChange,
+    required this.verifyPhoneChange,
+    required this.resendPhoneChange,
   }) : super(EditProfileState.initial) {
     on<LoadEditProfile>(_onLoad);
     on<SaveEditProfile>(_onSave);
@@ -120,6 +130,29 @@ class EditProfileBloc extends Bloc<EditProfileEvent, EditProfileState> {
     required int userId,
   }) async {
     await resendEmailChange(token: token, userId: userId);
+  }
+
+  Future<void> requestPhoneChangeDirect({
+    required String token,
+    required int userId,
+    required String newPhone,
+  }) async {
+    await requestPhoneChange(token: token, userId: userId, newPhone: newPhone);
+  }
+
+  Future<void> verifyPhoneChangeDirect({
+    required String token,
+    required int userId,
+    required String code,
+  }) async {
+    await verifyPhoneChange(token: token, userId: userId, code: code);
+  }
+
+  Future<void> resendPhoneChangeDirect({
+    required String token,
+    required int userId,
+  }) async {
+    await resendPhoneChange(token: token, userId: userId);
   }
 
   Future<void> _onDelete(

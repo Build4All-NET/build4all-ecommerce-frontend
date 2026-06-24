@@ -2718,6 +2718,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editProfile_emailUpdatedToast => 'تم تحديث البريد الإلكتروني بنجاح';
 
   @override
+  String get editProfile_verifyNewPhoneTitle => 'تأكيد رقم الهاتف الجديد';
+
+  @override
+  String get editProfile_codeSentToastPhone =>
+      'تم إرسال رمز التحقق إلى رقم هاتفك الجديد';
+
+  @override
+  String get editProfile_phoneUpdatedToast => 'تم تحديث رقم الهاتف بنجاح';
+
+  @override
   String home_stock_left_label(int count) {
     return 'باقي $count فقط';
   }
