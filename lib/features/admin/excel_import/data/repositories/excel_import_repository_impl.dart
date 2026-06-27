@@ -15,6 +15,28 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
   @override
   Future<ExcelValidationResult> validate(File file) async {
     final raw = await api.validateExcel(file);
+
+    // The validate endpoint can fail BEFORE the file is ever parsed
+    // (auth, subscription limit, owner-project not resolved, server/network
+    // error). Those responses carry no counts, so building a result here would
+    // silently show "0 everywhere" with no reason. Surface the server message
+    // as an error instead so the user knows what actually happened.
+    final status = raw['statusCode'] as int?;
+    final httpOk = status == null || (status >= 200 && status < 300);
+    final success = raw['success'] == true;
+    if (!httpOk || !success) {
+      final errs = raw['errors'];
+      final firstErr = (errs is List && errs.isNotEmpty) ? errs.first.toString() : null;
+      final msg = [
+        raw['message']?.toString(),
+        firstErr,
+      ].firstWhere(
+        (s) => s != null && s.trim().isNotEmpty,
+        orElse: () => 'Validation failed. Please try again.',
+      );
+      throw Exception(msg);
+    }
+
     final m = ExcelValidationResultModel.fromJson(raw);
 
     return ExcelValidationResult(
