@@ -682,6 +682,7 @@
   "adminNoOrders": "Aucune commande",
   "adminNoOrdersHint": "Essayez de changer le statut, la période, ou tirez pour actualiser.",
   "adminFilterAll": "Tout",
+  "adminOrdersSearchHint": "Rechercher par n° de commande, nom ou téléphone",
   "adminOrderDetailsTitle": "Commande n°{id}",
   "@adminOrderDetailsTitle": {
     "placeholders": {

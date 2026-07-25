@@ -3643,6 +3643,12 @@ abstract class AppLocalizations {
   /// **'All'**
   String get adminFilterAll;
 
+  /// No description provided for @adminOrdersSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by order #, name, or phone'**
+  String get adminOrdersSearchHint;
+
   /// No description provided for @adminOrderDetailsTitle.
   ///
   /// In en, this message translates to:

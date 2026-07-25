@@ -621,6 +621,7 @@
   "adminNoOrders": "لا توجد طلبات",
   "adminNoOrdersHint": "جرّب تغيير الحالة أو الفترة أو اسحب للتحديث.",
   "adminFilterAll": "الكل",
+  "adminOrdersSearchHint": "ابحث برقم الطلب أو الاسم أو رقم الهاتف",
   "adminOrderDetailsTitle": "طلب رقم {id}",
   "@adminOrderDetailsTitle": {
     "placeholders": {

@@ -1830,6 +1830,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminFilterAll => 'All';
 
   @override
+  String get adminOrdersSearchHint => 'Search by order #, name, or phone';
+
+  @override
   String adminOrderDetailsTitle(Object id) {
     return 'Order #$id';
   }
