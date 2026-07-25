@@ -674,6 +674,7 @@
   "adminNoOrders": "No orders",
   "adminNoOrdersHint": "Try changing the status filter, date range, or pull to refresh.",
   "adminFilterAll": "All",
+  "adminOrdersSearchHint": "Search by order #, name, or phone",
   "adminOrderDetailsTitle": "Order #{id}",
   "@adminOrderDetailsTitle": {
     "placeholders": {

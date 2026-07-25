@@ -28,6 +28,7 @@ class OrderHeaderRow {
 
   final String? phone;
   final String? addressLine;
+  final String? customerName;
 
   final String? orderCode;
   final int? orderSeq;
@@ -43,6 +44,7 @@ class OrderHeaderRow {
     required this.payment,
     this.phone,
     this.addressLine,
+    this.customerName,
     this.orderCode,
     this.orderSeq,
   });

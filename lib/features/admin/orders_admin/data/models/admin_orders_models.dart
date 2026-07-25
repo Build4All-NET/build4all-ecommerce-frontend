@@ -165,6 +165,7 @@ class OrderHeaderRowModel {
 
   final String? phone;
   final String? addressLine;
+  final String? customerName;
 
   final String? orderCode;
   final int? orderSeq;
@@ -180,6 +181,7 @@ class OrderHeaderRowModel {
     required this.payment,
     this.phone,
     this.addressLine,
+    this.customerName,
     this.orderCode,
     this.orderSeq,
   });
@@ -203,6 +205,11 @@ class OrderHeaderRowModel {
         'shippingAddress',
         'shippingAddressLine',
       ]),
+      customerName: _firstNonEmpty(json, const [
+        'shippingFullName',
+        'fullName',
+        'customerName',
+      ]),
       orderCode: json['orderCode']?.toString(),
       orderSeq: json['orderSeq'] == null ? null : _toInt(json['orderSeq']),
     );
@@ -219,6 +226,7 @@ class OrderHeaderRowModel {
         payment: payment.toEntity(),
         phone: phone,
         addressLine: addressLine,
+        customerName: customerName,
         orderCode: orderCode,
         orderSeq: orderSeq,
       );

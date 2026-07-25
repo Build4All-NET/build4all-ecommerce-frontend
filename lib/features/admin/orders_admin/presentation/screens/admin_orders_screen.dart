@@ -22,7 +22,14 @@ class AdminOrdersScreen extends StatefulWidget {
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   DateTimeRange? _range;
   int? _quickDaysSelected; // 7 / 30 / null
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _toast(String msg, {bool error = false}) {
   final safe = msg.trim();
@@ -75,6 +82,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     setState(() {
       _range = null;
       _quickDaysSelected = null;
+      _searchQuery = '';
+      _searchController.clear();
     });
 
     context.read<AdminOrdersBloc>().add(
@@ -116,7 +125,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             }
 
             final statusFiltered = state.orders;
-            final filteredOrders = _applyRangeFilter(statusFiltered, _range);
+            final rangeFiltered = _applyRangeFilter(statusFiltered, _range);
+            final filteredOrders = _applySearchFilter(rangeFiltered, _searchQuery);
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -129,13 +139,18 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                 padding: EdgeInsets.all(spacing.md),
                 children: [
                   AdminOrdersAnalyticsHeader(
-                    orders: filteredOrders,
+                    orders: rangeFiltered,
                     range: _range,
                     quickDaysSelected: _quickDaysSelected,
                     onPickRange: () => _pickRange(context),
                     onQuick7: () => _quickRange(7),
                     onQuick30: () => _quickRange(30),
                     onClear: _clearAllFilters,
+                  ),
+                  SizedBox(height: spacing.md),
+                  _OrdersSearchField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchQuery = v),
                   ),
                   SizedBox(height: spacing.md),
                   _StatusChips(
@@ -199,6 +214,24 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       if (dt == null) return false;
       final x = day(dt.toLocal());
       return !x.isBefore(start) && !x.isAfter(end);
+    }).toList();
+  }
+
+  List<OrderHeaderRow> _applySearchFilter(
+    List<OrderHeaderRow> orders,
+    String query,
+  ) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return orders;
+
+    bool contains(String? v) => (v ?? '').toLowerCase().contains(q);
+
+    return orders.where((o) {
+      return contains(o.orderCode) ||
+          contains('#${o.id}') ||
+          contains(o.id.toString()) ||
+          contains(o.customerName) ||
+          contains(o.phone);
     }).toList();
   }
 }
@@ -688,6 +721,67 @@ class _StatusChips extends StatelessWidget {
   }
 }
 
+/* ===================== Search ===================== */
+
+class _OrdersSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  const _OrdersSearchField({
+    required this.controller,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.watch<ThemeCubit>().state.tokens;
+    final colors = tokens.colors;
+    final card = tokens.card;
+    final l10n = AppLocalizations.of(context)!;
+
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          style: tokens.typography.bodyMedium.copyWith(color: colors.label),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: colors.surface,
+            hintText: l10n.adminOrdersSearchHint,
+            hintStyle: tokens.typography.bodyMedium.copyWith(color: colors.muted),
+            prefixIcon: Icon(Icons.search, color: colors.muted),
+            suffixIcon: value.text.isEmpty
+                ? null
+                : IconButton(
+                    icon: Icon(Icons.close, color: colors.muted, size: 18),
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                  ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(card.radius),
+              borderSide: BorderSide(color: colors.border.withOpacity(0.35)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(card.radius),
+              borderSide: BorderSide(color: colors.border.withOpacity(0.35)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(card.radius),
+              borderSide: BorderSide(color: colors.primary),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 /* ===================== Card ===================== */
 
 class _OrderHeaderCard extends StatelessWidget {
@@ -737,6 +831,8 @@ class _OrderHeaderCard extends StatelessWidget {
     final seq = row.orderSeq;
     final title =
         code.isNotEmpty ? 'Order $code' : l10n.adminOrderCardTitle(row.id);
+    final customerName = (row.customerName ?? '').trim();
+    final phone = (row.phone ?? '').trim();
 
     return InkWell(
       borderRadius: BorderRadius.circular(card.radius),
@@ -772,6 +868,48 @@ class _OrderHeaderCard extends StatelessWidget {
                             color: colors.muted,
                             fontWeight: FontWeight.w700,
                           ),
+                        ),
+                      ],
+                      if (customerName.isNotEmpty) ...[
+                        SizedBox(height: spacing.xs),
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 14, color: colors.muted),
+                            SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                customerName,
+                                style: tokens.typography.bodySmall.copyWith(
+                                  color: colors.body,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (phone.isNotEmpty) ...[
+                        SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(Icons.phone_outlined,
+                                size: 14, color: colors.muted),
+                            SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                phone,
+                                style: tokens.typography.bodySmall.copyWith(
+                                  color: colors.muted,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],

@@ -1830,6 +1830,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminFilterAll => 'الكل';
 
   @override
+  String get adminOrdersSearchHint => 'ابحث برقم الطلب أو الاسم أو رقم الهاتف';
+
+  @override
   String adminOrderDetailsTitle(Object id) {
     return 'طلب رقم $id';
   }

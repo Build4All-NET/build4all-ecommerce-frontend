@@ -1830,6 +1830,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminFilterAll => 'Tout';
 
   @override
+  String get adminOrdersSearchHint => 'Rechercher par n° de commande, nom ou téléphone';
+
+  @override
   String adminOrderDetailsTitle(Object id) {
     return 'Commande n°$id';
   }
