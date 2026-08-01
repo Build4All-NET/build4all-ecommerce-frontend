@@ -387,6 +387,7 @@
   "checkoutPaymentCash": "الدفع عند الاستلام",
   "checkoutStripeNote": "Stripe يتطلب تأكيد الدفع (قريبًا).",
   "checkoutSelectPayment": "يرجى اختيار طريقة الدفع",
+  "paymentMethodVisaCreditCardTitle": "فيزا / بطاقة ائتمان",
   "checkoutSummaryTitle": "ملخص الطلب",
   "checkoutSubtotal": "المجموع الفرعي",
   "checkoutShipping": "الشحن",
