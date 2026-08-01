@@ -448,6 +448,7 @@
   "checkoutPaymentCash": "Paiement à la livraison",
   "checkoutStripeNote": "Stripe nécessite une confirmation de paiement (bientôt).",
   "checkoutSelectPayment": "Veuillez sélectionner un moyen de paiement",
+  "paymentMethodVisaCreditCardTitle": "Visa / Carte de crédit",
   "checkoutSummaryTitle": "Récapitulatif de commande",
   "checkoutSubtotal": "Sous-total",
   "checkoutShipping": "Livraison",

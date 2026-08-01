@@ -70,11 +70,11 @@ class CheckoutPaymentMethods extends StatelessWidget {
                 onChanged: (v) {
                   if (v != null) onSelectIndex(v);
                 },
-                // m.name now carries the buyer-facing displayName from the
-                // gateway plugin (e.g. MPGS → "Card"). The technical code
-                // (m.code) is intentionally not shown — it's developer
-                // jargon and confused buyers seeing "MPGS / MPGS".
-                title: Text(m.name),
+                // m.name carries the buyer-facing displayName from the
+                // gateway plugin. The technical code (m.code) is
+                // intentionally not shown — it's developer jargon and
+                // confused buyers seeing "MPGS / MPGS".
+                title: Text(_label(l10n, m)),
                 contentPadding: EdgeInsets.symmetric(horizontal: spacing.sm),
                 dense: true,
               ),
@@ -90,5 +90,18 @@ class CheckoutPaymentMethods extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Buyer-facing label for a payment method.
+  ///
+  /// MPGS is the acquiring gateway's technical name — buyers only care that
+  /// it's the card option, so it's always shown as "Visa / Credit Card"
+  /// regardless of the displayName the backend returns. Everything else keeps
+  /// the name coming from the gateway plugin.
+  String _label(AppLocalizations l10n, PaymentMethod m) {
+    if (m.code.toUpperCase() == 'MPGS' || m.name.toUpperCase() == 'MPGS') {
+      return l10n.paymentMethodVisaCreditCardTitle;
+    }
+    return m.name;
   }
 }

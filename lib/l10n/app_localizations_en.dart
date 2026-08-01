@@ -1324,6 +1324,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkoutSelectPayment => 'Please select a payment method';
 
   @override
+  String get paymentMethodVisaCreditCardTitle => 'Visa / Credit Card';
+
+  @override
   String get checkoutSummaryTitle => 'Order Summary';
 
   @override

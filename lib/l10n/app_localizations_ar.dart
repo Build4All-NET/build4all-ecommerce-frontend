@@ -1324,6 +1324,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkoutSelectPayment => 'يرجى اختيار طريقة الدفع';
 
   @override
+  String get paymentMethodVisaCreditCardTitle => 'فيزا / بطاقة ائتمان';
+
+  @override
   String get checkoutSummaryTitle => 'ملخص الطلب';
 
   @override
