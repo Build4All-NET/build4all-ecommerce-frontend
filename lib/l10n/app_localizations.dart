@@ -2695,11 +2695,11 @@ abstract class AppLocalizations {
   /// **'Please select a payment method'**
   String get checkoutSelectPayment;
 
-  /// No description provided for @paymentMethodVisaCreditCardTitle.
+  /// No description provided for @paymentMethodPayByCardTitle.
   ///
   /// In en, this message translates to:
-  /// **'Visa / Credit Card'**
-  String get paymentMethodVisaCreditCardTitle;
+  /// **'Pay by Card'**
+  String get paymentMethodPayByCardTitle;
 
   /// No description provided for @checkoutSummaryTitle.
   ///

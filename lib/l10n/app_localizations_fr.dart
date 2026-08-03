@@ -1324,7 +1324,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get checkoutSelectPayment => 'Veuillez sélectionner un moyen de paiement';
 
   @override
-  String get paymentMethodVisaCreditCardTitle => 'Visa / Carte de crédit';
+  String get paymentMethodPayByCardTitle => 'Payer par carte';
 
   @override
   String get checkoutSummaryTitle => 'Récapitulatif de commande';

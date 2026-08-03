@@ -440,7 +440,7 @@
   "checkoutPaymentCash": "Cash on delivery",
   "checkoutStripeNote": "Stripe requires payment confirmation (coming next).",
   "checkoutSelectPayment": "Please select a payment method",
-  "paymentMethodVisaCreditCardTitle": "Visa / Credit Card",
+  "paymentMethodPayByCardTitle": "Pay by Card",
   "checkoutSummaryTitle": "Order Summary",
   "checkoutSubtotal": "Subtotal",
   "checkoutShipping": "Shipping",
