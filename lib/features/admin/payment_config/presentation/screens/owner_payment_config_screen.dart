@@ -1,5 +1,5 @@
 // ============================================================================
-// FIX: Display MPGS as "Credit/Debit Card" in Owner Payment Config Screen
+// FIX: Display MPGS as "Pay by Card" in Owner Payment Config Screen
 // ============================================================================
 // File: lib/features/admin/payment_config/presentation/screens/owner_payment_config_screen.dart
 //
@@ -78,7 +78,7 @@ class _OwnerPaymentConfigViewState extends State<_OwnerPaymentConfigView> {
     
     // Map internal names to display names
     const nameMapping = {
-      'MPGS': 'Credit/Debit Card',  // ← MPGS shows as Credit/Debit Card
+      'MPGS': 'Pay by Card',  // ← MPGS is the gateway's technical code
       'STRIPE': 'Stripe',
       'PAYPAL': 'PayPal',
       'CASH': 'Cash Payment',
