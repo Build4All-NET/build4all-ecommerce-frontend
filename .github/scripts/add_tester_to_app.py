@@ -37,6 +37,12 @@ import sys
 import pathlib
 import traceback
 
+import asc_http  # same directory as this script
+
+# Route every requests.get/post/patch/delete below through the shared retrying
+# sessions so a transient App Store Connect 5xx doesn't fail the run.
+asc_http.install()
+
 api_key    = json.load(open(sys.argv[1], encoding="utf-8"))
 bundle_id  = sys.argv[2].strip()
 email      = sys.argv[3].strip().lower()

@@ -1,5 +1,11 @@
 import json, jwt, time, requests, sys
 
+import asc_http  # noqa: E402  (same directory as this script)
+
+# Route every requests.get/post/patch/delete below through the shared retrying
+# sessions so a transient App Store Connect 5xx doesn't fail the build.
+asc_http.install()
+
 api_key          = json.load(open(sys.argv[1]))
 bundle_id        = sys.argv[2]
 owner_email      = sys.argv[3]
