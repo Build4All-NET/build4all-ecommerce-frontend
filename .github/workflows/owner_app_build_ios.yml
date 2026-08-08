@@ -862,7 +862,9 @@ jobs:
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
           ENV_FILE="lib/env/ci_env.json"
           python3 - "$API_KEY_JSON" "$BUNDLE_ID" "$ENV_FILE" <<'PY'
-          import json, jwt, time, requests, sys, re
+          import json, jwt, os, time, sys, re
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          import asc_http
           api_key  = json.load(open(sys.argv[1]))
           bundle   = sys.argv[2]
           env_path = sys.argv[3]
@@ -870,28 +872,45 @@ jobs:
               return jwt.encode({"iss": api_key["issuer_id"],"iat": int(time.time()),"exp": int(time.time()) + 600,"aud": "appstoreconnect-v1"}, api_key["key"], algorithm="ES256", headers={"kid": api_key["key_id"], "typ": "JWT"})
           def h():
               return {"Authorization": f"Bearer {token()}","Content-Type": "application/json"}
-          r = requests.get(f"https://api.appstoreconnect.apple.com/v1/apps?filter[bundleId]={bundle}", headers=h())
-          r.raise_for_status()
-          apps = r.json()["data"]
-          if not apps:
-              # No app in ASC yet: seed with monotonic epoch seconds (always increasing,
-              # never wraps). Stays well under Apple's CFBundleVersion limit (~4.29B) until 2106.
-              fallback = int(time.time())
+          def set_build_number(bn):
               env = json.load(open(env_path))
-              env["IOS_BUILD_NUMBER"] = fallback
+              env["IOS_BUILD_NUMBER"] = bn
               json.dump(env, open(env_path, "w"), indent=2)
               plist = "ios/Runner/Info.plist"
               content = open(plist).read()
-              content = re.sub(r"(<key>CFBundleVersion</key>\s*<string>)[^<]*(</string>)", rf"\g<1>{fallback}\g<2>", content)
+              content = re.sub(r"(<key>CFBundleVersion</key>\s*<string>)[^<]*(</string>)", rf"\g<1>{bn}\g<2>", content)
               open(plist, "w").write(content)
+              print(f"Build number set to {bn}")
+          # Monotonic epoch seconds: always increasing, never wraps, and strictly greater
+          # than any build number this pipeline has produced before (they are all
+          # max(previous + 1, epoch-at-the-time)). Stays well under Apple's
+          # CFBundleVersion limit (~4.29B) until 2106.
+          fallback = int(time.time())
+          r = asc_http.get(f"{asc_http.BASE}/v1/apps", params={"filter[bundleId]": bundle}, headers=h())
+          if r.status_code >= 500:
+              # Apple is erroring on its side and asc_http has already exhausted its
+              # retries. Don't fail the build over it — the epoch fallback can only ever
+              # move the build number forward, which is all TestFlight requires.
+              print(f"::warning::App Store Connect lookup failed, seeding build number from epoch — {asc_http.describe(r)}")
+              set_build_number(fallback)
+              sys.exit(0)
+          asc_http.raise_for_status(r, f"look up app for bundleId={bundle}")
+          apps = r.json()["data"]
+          if not apps:
+              # No app in ASC yet (it is created later by the "Ensure App ID exists" step).
+              set_build_number(fallback)
               sys.exit(0)
           app_id = apps[0]["id"]
           max_bn = 0
-          next_url = f"https://api.appstoreconnect.apple.com/v1/builds?filter[app]={app_id}&limit=100&sort=-uploadedDate"
+          next_url = f"{asc_http.BASE}/v1/builds?filter[app]={app_id}&limit=100&sort=-uploadedDate"
           pages = 0
           while next_url and pages < 5:
-              r = requests.get(next_url, headers=h())
-              r.raise_for_status()
+              r = asc_http.get(next_url, headers=h())
+              if not r.ok:
+                  # Partial results are safe: the epoch floor below still guarantees a
+                  # higher number than anything already uploaded.
+                  print(f"::warning::Stopped paging App Store Connect builds — {asc_http.describe(r)}")
+                  break
               body = r.json()
               for b in body.get("data", []):
                   try:
@@ -902,18 +921,10 @@ jobs:
                       pass
               next_url = body.get("links", {}).get("next")
               pages += 1
-          import time as _t
           # Always strictly greater than the highest existing ASC build AND monotonic over
           # time. epoch seconds never wraps, so a later build can never get a lower number
           # (which is what TestFlight rejects). No more "% 100000" wrap-around bug.
-          new_bn = max(max_bn + 1, int(_t.time()))
-          env = json.load(open(env_path))
-          env["IOS_BUILD_NUMBER"] = new_bn
-          json.dump(env, open(env_path, "w"), indent=2)
-          plist = "ios/Runner/Info.plist"
-          content = open(plist).read()
-          content = re.sub(r"(<key>CFBundleVersion</key>\s*<string>)[^<]*(</string>)", rf"\g<1>{new_bn}\g<2>", content)
-          open(plist, "w").write(content)
+          set_build_number(max(max_bn + 1, fallback))
           PY
 
       - name: Sync Flutter version/build (pubspec + env vars)
@@ -944,7 +955,9 @@ jobs:
           API_KEY_JSON="$GITHUB_WORKSPACE/.private/api_key.json"
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
           python3 - "$API_KEY_JSON" "$BUNDLE_ID" "${BETA_APP_DESCRIPTION}" "${BETA_FEEDBACK_EMAIL}" "${BETA_CONTACT_PHONE}" "$DEMO_EMAIL" "$DEMO_PASSWORD" <<'PYEOF'
-          import json, jwt, time, requests, sys
+          import json, jwt, os, time, requests, sys
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          import asc_http; asc_http.install()  # retries + timeouts on transient ASC 5xx
           api_key = json.load(open(sys.argv[1]))
           def create_token():
               return jwt.encode({'iss': api_key['issuer_id'],'iat': int(time.time()),'exp': int(time.time()) + 1200,'aud': 'appstoreconnect-v1'}, api_key['key'], algorithm='ES256', headers={'kid': api_key['key_id'], 'typ': 'JWT'})
@@ -1323,7 +1336,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json, jwt, time, requests, pathlib, sys
+          import json, jwt, os, time, requests, pathlib, sys
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          import asc_http; asc_http.install()  # retries + timeouts on transient ASC 5xx
           api_key = json.load(open(".private/api_key.json", encoding="utf-8"))
           payload = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8")) or {}
           cfg = payload.get("CONFIG") or {}
