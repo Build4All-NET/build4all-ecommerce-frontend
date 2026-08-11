@@ -80,6 +80,18 @@ class Env {
     defaultValue: 'ACTIVITIES',
   );
 
+  /// Where this app's products, stock and orders actually live.
+  ///
+  /// 'BUILD4ALL' (the default) or 'WOOCOMMERCE'. Separate from [appType] on
+  /// purpose: a WooCommerce shop is still an ECOMMERCE app, it just does not
+  /// own its catalogue. Anything unrecognised — including a build made before
+  /// this existed — reads as Build4All, so an older app can never be mistaken
+  /// for a store it does not have.
+  static const commerceSource = String.fromEnvironment(
+    'COMMERCE_SOURCE',
+    defaultValue: 'BUILD4ALL',
+  );
+
   static const themeId = String.fromEnvironment('THEME_ID', defaultValue: '0');
 
   static const themeJsonB64 = String.fromEnvironment(

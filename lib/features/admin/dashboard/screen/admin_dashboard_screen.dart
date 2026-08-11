@@ -30,6 +30,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/core/constants/app_links.dart';
 import 'package:build4front/l10n/app_localizations.dart';
+import 'package:build4front/core/config/app_config.dart';
 import 'package:build4front/core/config/env.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
@@ -554,19 +555,25 @@ final bool lockActions =
 
     final ownerId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
 
+    // A WooCommerce shop owns its own catalogue: the backend answers product
+    // writes with 409 COMMERCE_SOURCE_READ_ONLY, so showing the tile would only
+    // walk the owner into an error. They manage products in WordPress.
+    final canManageProducts = AppConfig.fromEnv().canManageCatalogueInApp;
+
     final actions = <_DashAction>[
-      _DashAction(
-        icon: Icons.shopping_bag_outlined,
-        title: l10n.adminProductsTitle,
-        subtitle: l10n.adminActionProductsSubtitle,
-        onTap: guarded(() {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AdminProductsListScreen(ownerProjectId: ownerId),
-            ),
-          );
-        }),
-      ),
+      if (canManageProducts)
+        _DashAction(
+          icon: Icons.shopping_bag_outlined,
+          title: l10n.adminProductsTitle,
+          subtitle: l10n.adminActionProductsSubtitle,
+          onTap: guarded(() {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AdminProductsListScreen(ownerProjectId: ownerId),
+              ),
+            );
+          }),
+        ),
       _DashAction(
         icon: Icons.local_shipping_outlined,
         title: l10n.adminShippingTitle,

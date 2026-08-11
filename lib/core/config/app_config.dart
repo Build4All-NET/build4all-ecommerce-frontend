@@ -26,6 +26,9 @@ class NavItemConfig {
 class AppConfig {
   final String appName;
   final String appType;
+
+  /// 'BUILD4ALL' or 'WOOCOMMERCE' — see [AppConfigX.isExternalCommerce].
+  final String commerceSource;
   final List<String> enabledFeatures;
   final List<NavItemConfig> navigation;
 
@@ -38,6 +41,7 @@ class AppConfig {
   const AppConfig({
     required this.appName,
     required this.appType,
+    this.commerceSource = 'BUILD4ALL',
     required this.enabledFeatures,
     required this.navigation,
     required this.menuType,
@@ -140,6 +144,7 @@ class AppConfig {
     return AppConfig(
       appName: Env.appName,
       appType: Env.appType,
+      commerceSource: Env.commerceSource,
       enabledFeatures: features,
       navigation: navList,
       menuType: menuType,
@@ -158,4 +163,14 @@ extension AppConfigX on AppConfig {
 
   bool get isBottomNav => menuType == 'bottom';
   bool get isDrawerNav => menuType == 'drawer';
+
+  /// True when the catalogue lives outside Build4All (a WooCommerce store).
+  ///
+  /// Owner-side editing is hidden in that case: the backend answers those
+  /// writes with 409 COMMERCE_SOURCE_READ_ONLY, so offering the buttons would
+  /// only lead the owner into an error. They manage the shop in WordPress.
+  bool get isExternalCommerce =>
+      commerceSource.trim().toUpperCase() == 'WOOCOMMERCE';
+
+  bool get canManageCatalogueInApp => !isExternalCommerce;
 }
