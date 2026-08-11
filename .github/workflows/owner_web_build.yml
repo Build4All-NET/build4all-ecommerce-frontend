@@ -1,0 +1,519 @@
+name: Owner Web Build (storefront site)
+
+# Listens on the SAME repository_dispatch event as the Android build, so one
+# dispatch from the backend produces the app and the site together — GitHub runs
+# every workflow subscribed to an event in parallel. The extra `owner_web_build`
+# type lets the site be rebuilt on its own without redoing the mobile builds.
+on:
+  repository_dispatch:
+    types: [owner_app_build, owner_web_build]
+  workflow_dispatch:
+    inputs:
+      link_id:
+        description: "OWNER_PROJECT_LINK_ID to build a site for"
+        required: true
+      api_base:
+        description: "Backend base URL (e.g. https://api.build4all.net)"
+        required: true
+      slug:
+        description: "Slug used for the site path; defaults to app<link_id>"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+
+    env:
+      CI_AUTH_TOKEN: ${{ secrets.CI_AUTH_TOKEN }}
+      CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
+      CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ════════════════════════════════════════════════════════════════════
+      # EXTRACT BUILD_ID / LINK_ID / API_BASE
+      # Mirrors the Android workflow, plus a workflow_dispatch path for manual
+      # runs (there is no client_payload then).
+      # ════════════════════════════════════════════════════════════════════
+      - name: Extract BUILD_ID, LINK_ID and API_BASE
+        run: |
+          set -e
+          python3 - <<'PY'
+          import json, os
+
+          event_name = os.environ.get("GITHUB_EVENT_NAME", "")
+
+          if event_name == "workflow_dispatch":
+              build_id = ""
+              link_id = os.environ.get("IN_LINK_ID", "").strip()
+              api_base = os.environ.get("IN_API_BASE", "").strip().rstrip("/")
+          else:
+              payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
+              cfg = payload.get("CONFIG") or {}
+
+              build_id = (
+                  (payload.get("BUILD_ID") or "")
+                  or (payload.get("buildId") or "")
+                  or ""
+              ).strip()
+
+              link_id = str(
+                  cfg.get("OWNER_PROJECT_LINK_ID")
+                  or payload.get("OWNER_PROJECT_LINK_ID")
+                  or payload.get("ownerProjectLinkId")
+                  or cfg.get("ownerProjectLinkId")
+                  or ""
+              ).strip()
+
+              api_base = ((cfg.get("API_BASE_URL") or payload.get("API_BASE_URL") or "").rstrip("/")).strip()
+
+          open("ci_build_id.txt","w",encoding="utf-8").write(build_id)
+          open("ci_link_id.txt","w",encoding="utf-8").write(link_id)
+          open("ci_api_base.txt","w",encoding="utf-8").write(api_base)
+
+          print("BUILD_ID =", build_id or "(empty)")
+          print("LINK_ID  =", link_id or "(empty)")
+          print("API_BASE =", api_base or "(empty)")
+
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"BUILD_ID={build_id}\n")
+              f.write(f"LINK_ID={link_id}\n")
+              f.write(f"API_BASE={api_base}\n")
+          PY
+        env:
+          IN_LINK_ID: ${{ github.event.inputs.link_id }}
+          IN_API_BASE: ${{ github.event.inputs.api_base }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.0"
+          channel: stable
+          cache: true
+
+      - name: Show Flutter/Dart versions
+        run: |
+          flutter --version
+          dart --version
+
+      # ════════════════════════════════════════════════════════════════════
+      # BUILD ci_env.json — same BY_LINK runtime-config contract the mobile
+      # builds use, so the site is configured from exactly the same source.
+      # Web-specific: REQUIRE_FIREBASE is forced off (web push needs an FCM web
+      # config and a service worker, which this pipeline does not provision).
+      # ════════════════════════════════════════════════════════════════════
+      - name: Build ci_env.json (BY_LINK runtime-config + fallback)
+        run: |
+          set -e
+          mkdir -p lib/env
+
+          python3 - <<'PY'
+          import json, re, os, urllib.request, urllib.error, socket
+
+          event_name = os.environ.get("GITHUB_EVENT_NAME", "")
+          if event_name == "workflow_dispatch":
+              payload = {}
+          else:
+              payload = json.loads(r'''${{ toJson(github.event.client_payload) }}''') or {}
+          cfg = payload.get("CONFIG") or {}
+
+          api_base = open("ci_api_base.txt", encoding="utf-8").read().strip().rstrip("/")
+          link_id = open("ci_link_id.txt", encoding="utf-8").read().strip()
+
+          if not api_base:
+              raise SystemExit("Missing API_BASE_URL")
+          if not link_id:
+              raise SystemExit("Missing OWNER_PROJECT_LINK_ID")
+
+          url = f"{api_base}/api/public/runtime-config/by-link?linkId={link_id}"
+          runtime = {}
+          source = "FALLBACK (payload/defaults)"
+
+          token = (os.getenv("CI_RUNTIME_TOKEN") or "").strip()
+          headers = {"Accept": "application/json"}
+          if token:
+              headers["X-Auth-Token"] = token
+
+          try:
+              print("Fetching runtime config:", url)
+              print("Auth header present =", "YES" if token else "NO")
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=12) as r:
+                  runtime = json.loads(r.read().decode("utf-8"))
+              source = "BY_LINK"
+          except (urllib.error.HTTPError, urllib.error.URLError, socket.timeout, json.JSONDecodeError) as e:
+              print("⚠️ runtime-config fetch failed, using fallback:", repr(e))
+
+          print("CONFIG SOURCE =", source)
+
+          def pick(key, default=None):
+              for src in (runtime, cfg, payload):
+                  v = src.get(key)
+                  if v not in (None, "", []):
+                      return v
+              return default
+
+          def pick_any(*keys, default=None):
+              for k in keys:
+                  v = pick(k)
+                  if v not in (None, "", []):
+                      return v
+              return default
+
+          app_name = pick("APP_NAME", "My App")
+          app_type = pick("APP_TYPE", "ECOMMERCE")
+          project_id = str(pick("PROJECT_ID", "")).strip()
+
+          # Slug drives the public path the site is served from.
+          slug = str(
+              os.environ.get("IN_SLUG", "").strip()
+              or pick_any("SLUG", "slug", default="")
+          ).strip().lower()
+          slug = re.sub(r"[^a-z0-9-]+", "-", slug).strip("-")
+          if not slug:
+              slug = f"app{link_id}"
+
+          env = {
+              # Web push is not provisioned by this pipeline — keep Firebase off
+              # so the app never tries to initialize it in the browser.
+              "REQUIRE_FIREBASE": "false",
+              "API_BASE_URL": api_base,
+              "APP_NAME": app_name,
+              "APP_TYPE": app_type,
+              "OWNER_PROJECT_LINK_ID": link_id,
+              "PROJECT_ID": project_id,
+              "CONFIG_SOURCE": source,
+          }
+
+          currency_id = pick_any("CURRENCY_ID", "currencyId")
+          if currency_id not in (None, "", []):
+              env["CURRENCY_ID"] = str(currency_id).strip()
+
+          def clean_b64(v):
+              if not v:
+                  return None
+              return re.sub(r"\s+", "", str(v))
+
+          for env_key, alt_key in [
+              ("THEME_JSON_B64", "themeJsonB64"),
+              ("NAV_JSON_B64", "navJsonB64"),
+              ("HOME_JSON_B64", "homeJsonB64"),
+              ("ENABLED_FEATURES_JSON_B64", "enabledFeaturesJsonB64"),
+              ("BRANDING_JSON_B64", "brandingJsonB64"),
+          ]:
+              v = clean_b64(pick_any(env_key, alt_key))
+              if v:
+                  env[env_key] = v
+
+          logo_url = str(pick_any("LOGO_URL", "LOGO_PATH", "logoUrl", default="")).strip()
+          if logo_url:
+              env["LOGO_URL"] = logo_url
+
+          open("ci_slug.txt", "w", encoding="utf-8").write(slug)
+
+          os.makedirs("lib/env", exist_ok=True)
+          with open("lib/env/ci_env.json", "w", encoding="utf-8") as f:
+              json.dump(env, f, ensure_ascii=False, indent=2)
+
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"SLUG={slug}\n")
+
+          print("ci_env.json written")
+          print("API_BASE_URL =", api_base)
+          print("OWNER_PROJECT_LINK_ID =", link_id)
+          print("SLUG =", slug)
+          print("CURRENCY_ID =", env.get("CURRENCY_ID"))
+          for k in ["THEME_JSON_B64","NAV_JSON_B64","HOME_JSON_B64","ENABLED_FEATURES_JSON_B64","BRANDING_JSON_B64"]:
+              print(k, "=", "YES" if env.get(k) else "NO")
+          PY
+        env:
+          IN_SLUG: ${{ github.event.inputs.slug }}
+
+      # Identical to the Android workflow: the manager stores menuType under
+      # BRANDING, but the app reads it from THEME.
+      - name: 🔧 Sync menuType (BRANDING -> THEME)
+        run: |
+          python3 - <<'PY'
+          import json, base64, pathlib
+
+          p = pathlib.Path("lib/env/ci_env.json")
+          env = json.loads(p.read_text(encoding="utf-8"))
+
+          def b64decode(s: str) -> str:
+              s = (s or "").strip()
+              if not s:
+                  return ""
+              return base64.b64decode(s + "==="[: (4 - len(s) % 4) % 4]).decode("utf-8", "replace")
+
+          def b64encode(s: str) -> str:
+              return base64.b64encode(s.encode("utf-8")).decode("utf-8")
+
+          branding = {}
+          theme = {}
+
+          if env.get("BRANDING_JSON_B64"):
+              branding = json.loads(b64decode(env["BRANDING_JSON_B64"]) or "{}")
+          elif env.get("BRANDING_JSON"):
+              branding = json.loads(env["BRANDING_JSON"] or "{}")
+
+          if env.get("THEME_JSON_B64"):
+              theme = json.loads(b64decode(env["THEME_JSON_B64"]) or "{}")
+          elif env.get("THEME_JSON"):
+              theme = json.loads(env["THEME_JSON"] or "{}")
+
+          menu = (branding.get("menuType") or "").strip().lower()
+          if menu == "drawer":
+              menu = "hamburger"
+
+          if menu in ("hamburger", "bottom"):
+              theme["menuType"] = menu
+              theme_json = json.dumps(theme, separators=(",", ":"))
+              env["THEME_JSON"] = theme_json
+              env["THEME_JSON_B64"] = b64encode(theme_json)
+              print("✅ Forced THEME menuType =", menu)
+          else:
+              print("ℹ️ No valid branding menuType found, left THEME as-is. branding.menuType =", menu)
+
+          p.write_text(json.dumps(env, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+
+          echo "----- ci_env.json -----"
+          cat lib/env/ci_env.json
+
+      # ════════════════════════════════════════════════════════════════════
+      # WEB BRANDING — the browser equivalent of strings.xml + launcher icons:
+      # tab title, favicon, PWA manifest name and icons.
+      # ════════════════════════════════════════════════════════════════════
+      - name: Apply web branding (title, favicon, manifest)
+        run: |
+          set -e
+          python3 - <<'PY'
+          import json, pathlib, re, urllib.request
+          from html import escape
+
+          cfg = json.load(open("lib/env/ci_env.json", encoding="utf-8"))
+
+          app_name = str(cfg.get("APP_NAME") or "My App")
+          # The manager allows emoji written JS-style; strip what the browser
+          # would render literally.
+          app_name = re.sub(r"\\u\{([0-9a-fA-F]+)\}", lambda m: chr(int(m.group(1), 16)), app_name)
+          app_name = re.sub(r"\\u\{[^}]*\}", "", app_name).replace("\\", "")
+          app_name = re.sub(r"[\x00-\x1F\x7F]", " ", app_name).strip() or "My App"
+
+          api_base = (cfg.get("API_BASE_URL") or "").strip().rstrip("/")
+          logo_url = (cfg.get("LOGO_URL") or "").strip()
+          if logo_url.startswith("/") and api_base:
+              logo_url = api_base + logo_url
+
+          web = pathlib.Path("web")
+          icons = web / "icons"
+          icons.mkdir(parents=True, exist_ok=True)
+
+          got_logo = False
+          if logo_url:
+              try:
+                  print("Downloading logo:", logo_url)
+                  urllib.request.urlretrieve(logo_url, web / "favicon.png")
+                  for name in ("Icon-192.png", "Icon-512.png",
+                               "Icon-maskable-192.png", "Icon-maskable-512.png"):
+                      (icons / name).write_bytes((web / "favicon.png").read_bytes())
+                  got_logo = True
+                  print("✅ Logo applied to favicon + PWA icons")
+              except Exception as e:
+                  print("⚠️ Failed to download logo, keeping defaults:", e)
+
+          # Tab title
+          index = web / "index.html"
+          html = index.read_text(encoding="utf-8")
+          html = re.sub(r"<title>.*?</title>", f"<title>{escape(app_name)}</title>", html, flags=re.S)
+          html = re.sub(
+              r'(<meta name="apple-mobile-web-app-title" content=")[^"]*(")',
+              rf"\1{escape(app_name)}\2",
+              html,
+          )
+          index.write_text(html, encoding="utf-8")
+
+          # PWA manifest — what "Add to Home Screen" uses
+          manifest_path = web / "manifest.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest["name"] = app_name
+          manifest["short_name"] = app_name[:12]
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          print("✅ Web branding applied. APP_NAME =", app_name, "| logo =", got_logo)
+          PY
+
+      - name: Build web
+        run: |
+          set -e
+          BASE_HREF="/s/${SLUG}/"
+          echo "BASE_HREF=$BASE_HREF"
+          echo "BASE_HREF=$BASE_HREF" >> $GITHUB_ENV
+
+          flutter pub get
+
+          # Flags mirror scripts/build_web.sh in build4all-manager-frontend,
+          # which is already tuned for first-load time in production:
+          #   --no-web-resources-cdn  self-host CanvasKit instead of pulling it
+          #                           from gstatic (no third-party dependency)
+          #   --pwa-strategy          precache for repeat visits
+          #   --tree-shake-icons      drops unused icon glyphs
+          flutter build web \
+            --release \
+            --base-href "$BASE_HREF" \
+            --no-web-resources-cdn \
+            --pwa-strategy=offline-first \
+            --tree-shake-icons \
+            --dart-define-from-file=lib/env/ci_env.json
+
+          echo "----- build/web -----"
+          ls -la build/web | head -20
+
+      # Keeps a downloadable copy of every site build regardless of whether
+      # hosting is wired up yet.
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ env.SLUG }}-${{ github.run_number }}
+          path: build/web
+          retention-days: 14
+
+      # ════════════════════════════════════════════════════════════════════
+      # DEPLOY — skipped (without failing) until the hosting secrets exist, so
+      # this workflow is safe to merge before the S3/CloudFront setup is done.
+      # ════════════════════════════════════════════════════════════════════
+      - name: Check hosting configuration
+        id: hosting
+        env:
+          SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          if [ -n "$SITE_BUCKET" ] && [ -n "$SITE_BASE_URL" ]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+            echo "✅ Hosting configured — will deploy."
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ SITE_BUCKET / SITE_BASE_URL not set — skipping deploy."
+            echo "   The built site is still attached as a workflow artifact."
+          fi
+
+          if [ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            echo "cloudfront=true" >> $GITHUB_OUTPUT
+          else
+            echo "cloudfront=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials
+        if: steps.hosting.outputs.configured == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ca-central-1
+
+      - name: Deploy to S3
+        if: steps.hosting.outputs.configured == 'true'
+        env:
+          SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
+        run: |
+          set -e
+          DEST="s3://${SITE_BUCKET}/s/${SLUG}/"
+
+          # Hashed build assets are immutable; index.html and the service worker
+          # must never be cached or clients keep booting the previous build.
+          aws s3 sync build/web "$DEST" \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html" \
+            --exclude "flutter_service_worker.js" \
+            --exclude "manifest.json" \
+            --exclude "version.json"
+
+          aws s3 sync build/web "$DEST" \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --exclude "*" \
+            --include "index.html" \
+            --include "flutter_service_worker.js" \
+            --include "manifest.json" \
+            --include "version.json"
+
+          echo "✅ Deployed to $DEST"
+
+      - name: Invalidate CloudFront
+        if: steps.hosting.outputs.configured == 'true' && steps.hosting.outputs.cloudfront == 'true'
+        env:
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/s/${SLUG}/*" \
+            --query "Invalidation.Id" --output text
+
+      # ════════════════════════════════════════════════════════════════════
+      # CALLBACK — save the public URL on the owner-project link.
+      # ════════════════════════════════════════════════════════════════════
+      - name: Callback backend (SAVE web URL)
+        if: steps.hosting.outputs.configured == 'true'
+        env:
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+        run: |
+          set -e
+          SITE_BASE="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
+          WEB_URL="${SITE_BASE}/s/${SLUG}/"
+
+          echo "========================================"
+          echo "✅ SITE URL: $WEB_URL"
+          echo "LINK_ID:  ${LINK_ID}"
+          echo "BUILD_ID: ${BUILD_ID:-(empty)}"
+          echo "========================================"
+
+          WEB_JSON="{\"webUrl\":\"${WEB_URL}\""
+          if [ -n "$BUILD_ID" ]; then
+            WEB_JSON="${WEB_JSON},\"buildId\":\"${BUILD_ID}\""
+          fi
+          WEB_JSON="${WEB_JSON}}"
+
+          HTTP=$(curl -sS -o web_resp.txt -w "%{http_code}" -X PUT \
+            "${API_BASE}/api/ci/owner-project-links/${LINK_ID}/web-url" \
+            -H "Content-Type: application/json" \
+            -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
+            -d "${WEB_JSON}" || true)
+
+          echo "HTTP_STATUS=$HTTP"
+          cat web_resp.txt || true
+          echo ""
+
+          if [ "$HTTP" -ge 400 ]; then
+            echo "⚠️ Callback failed (backend did not save the URL)."
+            echo "✅ The site itself is deployed and reachable at $WEB_URL."
+            exit 0
+          fi
+
+          echo "✅ Callback succeeded."
+
+      - name: Summary
+        if: always()
+        env:
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+        run: |
+          {
+            echo "### Owner Web Build"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Link ID | \`${LINK_ID:-?}\` |"
+            echo "| Slug | \`${SLUG:-?}\` |"
+            echo "| Base href | \`${BASE_HREF:-?}\` |"
+            if [ "${{ steps.hosting.outputs.configured }}" = "true" ]; then
+              SITE_BASE="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
+              echo "| Site URL | ${SITE_BASE}/s/${SLUG}/ |"
+            else
+              echo "| Site URL | _not deployed — hosting secrets not set_ |"
+            fi
+          } >> $GITHUB_STEP_SUMMARY
