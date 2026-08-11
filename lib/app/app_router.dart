@@ -165,6 +165,16 @@ class AppRouter {
       // ✅ Admin Products
       case adminProducts:
         {
+          // Closed for shops whose catalogue lives in WooCommerce. The tile is
+          // already hidden, but a deep link or a stale route must not reach a
+          // screen whose every write the backend refuses with 409.
+          if (appConfig.isExternalCommerce) {
+            return MaterialPageRoute(
+              builder: (_) => MainShell(appConfig: appConfig),
+              settings: settings,
+            );
+          }
+
           final ownerId = int.tryParse(Env.ownerProjectLinkId) ?? 0;
 
           return MaterialPageRoute(
