@@ -374,7 +374,10 @@ jobs:
           if logo_url:
               try:
                   print("Downloading logo:", logo_url)
-                  urllib.request.urlretrieve(logo_url, web / "favicon.png")
+                  # Bounded: an API host the runner cannot reach (a LAN address,
+                  # a stopped server) must cost seconds, not stall the job.
+                  with urllib.request.urlopen(logo_url, timeout=15) as r:
+                      (web / "favicon.png").write_bytes(r.read())
                   for name in ("Icon-192.png", "Icon-512.png",
                                "Icon-maskable-192.png", "Icon-maskable-512.png"):
                       (icons / name).write_bytes((web / "favicon.png").read_bytes())
@@ -560,19 +563,30 @@ jobs:
           fi
           WEB_JSON="${WEB_JSON}}"
 
+          # Bounded so an unreachable API host fails fast instead of stalling.
           HTTP=$(curl -sS -o web_resp.txt -w "%{http_code}" -X PUT \
+            --connect-timeout 10 --max-time 30 \
             "${API_BASE}/api/ci/owner-project-links/${LINK_ID}/web-url" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "${WEB_JSON}" || true)
+            -d "${WEB_JSON}" || echo "000")
 
           echo "HTTP_STATUS=$HTTP"
           cat web_resp.txt || true
           echo ""
 
+          # The site is live either way, so this does not fail the build — but a
+          # silent failure here means the owner never sees the link, so it has to
+          # surface on the run instead of scrolling past in the log.
+          if [ "$HTTP" = "000" ]; then
+            echo "::warning title=Web URL not saved::Could not reach ${API_BASE}. The site is live at ${WEB_URL} but the backend has no record of it, so it will not appear in the manager."
+            echo "ℹ️ A GitHub runner only reaches public addresses — localhost and LAN addresses such as 192.168.x.x will always time out."
+            exit 0
+          fi
+
           if [ "$HTTP" -ge 400 ]; then
-            echo "⚠️ Callback failed (backend did not save the URL)."
-            echo "✅ The site itself is deployed and reachable at $WEB_URL."
+            echo "::warning title=Web URL not saved::Backend returned HTTP ${HTTP} for link ${LINK_ID}. The site is live at ${WEB_URL} but will not appear in the manager."
+            cat web_resp.txt || true
             exit 0
           fi
 
