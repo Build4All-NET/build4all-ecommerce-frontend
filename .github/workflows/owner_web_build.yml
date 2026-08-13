@@ -89,6 +89,62 @@ jobs:
           IN_LINK_ID: ${{ github.event.inputs.link_id }}
           IN_API_BASE: ${{ github.event.inputs.api_base }}
 
+      # ════════════════════════════════════════════════════════════════════
+      # RESOLVE DEPLOY TARGET
+      # Runs before the build because the public path is compiled into the
+      # bundle (--base-href), so where the site will live has to be known
+      # first. Three modes:
+      #   s3    — SITE_BUCKET + SITE_BASE_URL are set: served at the site root
+      #   pages — otherwise: GitHub Pages project site, served under /<repo>/
+      #   none  — Pages disabled via USE_GITHUB_PAGES=false and no bucket:
+      #           build only, site stays available as a workflow artifact
+      # ════════════════════════════════════════════════════════════════════
+      - name: Resolve deploy target
+        id: hosting
+        env:
+          SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          USE_GITHUB_PAGES: ${{ vars.USE_GITHUB_PAGES }}
+        run: |
+          set -e
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          OWNER_LC="$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')"
+
+          if [ -n "$SITE_BUCKET" ] && [ -n "$SITE_BASE_URL" ]; then
+            MODE="s3"
+            PATH_PREFIX=""
+            SITE_ROOT="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
+          elif [ "${USE_GITHUB_PAGES,,}" = "false" ]; then
+            MODE="none"
+            PATH_PREFIX=""
+            SITE_ROOT=""
+          else
+            # GitHub Pages project sites are served from /<repo>/, so that
+            # prefix has to be part of every asset path in the bundle.
+            MODE="pages"
+            PATH_PREFIX="/${REPO_NAME}"
+            SITE_ROOT="https://${OWNER_LC}.github.io/${REPO_NAME}"
+          fi
+
+          {
+            echo "mode=$MODE"
+            echo "path_prefix=$PATH_PREFIX"
+            echo "site_root=$SITE_ROOT"
+            if [ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+              echo "cloudfront=true"
+            else
+              echo "cloudfront=false"
+            fi
+          } >> $GITHUB_OUTPUT
+
+          case "$MODE" in
+            s3)    echo "✅ Deploy target: S3 ($SITE_ROOT)" ;;
+            pages) echo "✅ Deploy target: GitHub Pages ($SITE_ROOT)"
+                   echo "   Pages must be enabled in repo settings, serving the gh-pages branch." ;;
+            none)  echo "ℹ️ No deploy target — building only. The site is attached as an artifact." ;;
+          esac
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -349,9 +405,11 @@ jobs:
           PY
 
       - name: Build web
+        env:
+          PATH_PREFIX: ${{ steps.hosting.outputs.path_prefix }}
         run: |
           set -e
-          BASE_HREF="/s/${SLUG}/"
+          BASE_HREF="${PATH_PREFIX}/s/${SLUG}/"
           echo "BASE_HREF=$BASE_HREF"
           echo "BASE_HREF=$BASE_HREF" >> $GITHUB_ENV
 
@@ -383,34 +441,8 @@ jobs:
           path: build/web
           retention-days: 14
 
-      # ════════════════════════════════════════════════════════════════════
-      # DEPLOY — skipped (without failing) until the hosting secrets exist, so
-      # this workflow is safe to merge before the S3/CloudFront setup is done.
-      # ════════════════════════════════════════════════════════════════════
-      - name: Check hosting configuration
-        id: hosting
-        env:
-          SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
-          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
-          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
-        run: |
-          if [ -n "$SITE_BUCKET" ] && [ -n "$SITE_BASE_URL" ]; then
-            echo "configured=true" >> $GITHUB_OUTPUT
-            echo "✅ Hosting configured — will deploy."
-          else
-            echo "configured=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ SITE_BUCKET / SITE_BASE_URL not set — skipping deploy."
-            echo "   The built site is still attached as a workflow artifact."
-          fi
-
-          if [ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
-            echo "cloudfront=true" >> $GITHUB_OUTPUT
-          else
-            echo "cloudfront=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Configure AWS credentials
-        if: steps.hosting.outputs.configured == 'true'
+        if: steps.hosting.outputs.mode == 's3'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -418,7 +450,7 @@ jobs:
           aws-region: ca-central-1
 
       - name: Deploy to S3
-        if: steps.hosting.outputs.configured == 'true'
+        if: steps.hosting.outputs.mode == 's3'
         env:
           SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
         run: |
@@ -446,7 +478,7 @@ jobs:
           echo "✅ Deployed to $DEST"
 
       - name: Invalidate CloudFront
-        if: steps.hosting.outputs.configured == 'true' && steps.hosting.outputs.cloudfront == 'true'
+        if: steps.hosting.outputs.mode == 's3' && steps.hosting.outputs.cloudfront == 'true'
         env:
           CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
@@ -456,16 +488,65 @@ jobs:
             --query "Invalidation.Id" --output text
 
       # ════════════════════════════════════════════════════════════════════
+      # GITHUB PAGES — every owner's site is a folder on one gh-pages branch,
+      # so each build must add its own folder without disturbing the others.
+      # That rules out the deploy-pages action, which replaces the whole site.
+      # ════════════════════════════════════════════════════════════════════
+      - name: Deploy to GitHub Pages
+        if: steps.hosting.outputs.mode == 'pages'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+
+          WORK="$(mktemp -d)"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --heads "$REMOTE" gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages "$REMOTE" "$WORK"
+          else
+            echo "gh-pages does not exist yet — creating it."
+            git clone --depth 1 "$REMOTE" "$WORK"
+            git -C "$WORK" checkout --orphan gh-pages
+            git -C "$WORK" rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          # Jekyll would otherwise skip files and folders beginning with "_".
+          touch "$WORK/.nojekyll"
+
+          rm -rf "$WORK/s/${SLUG}"
+          mkdir -p "$WORK/s/${SLUG}"
+          cp -r build/web/. "$WORK/s/${SLUG}/"
+
+          # Flutter web routes client-side. Pages serves 404.html for unknown
+          # paths, so pointing it at index.html keeps deep links and refreshes
+          # working instead of showing GitHub's 404.
+          cp "$WORK/s/${SLUG}/index.html" "$WORK/s/${SLUG}/404.html"
+
+          git -C "$WORK" add -A
+          if git -C "$WORK" diff --cached --quiet; then
+            echo "No change for slug ${SLUG} — nothing to publish."
+          else
+            git -C "$WORK" commit -q -m "Publish site for ${SLUG} (build ${GITHUB_RUN_NUMBER})"
+            git -C "$WORK" push origin gh-pages
+            echo "✅ Published to gh-pages under /s/${SLUG}/"
+          fi
+
+          echo "ℹ️ Pages must be enabled in Settings → Pages, source = gh-pages branch."
+
+      # ════════════════════════════════════════════════════════════════════
       # CALLBACK — save the public URL on the owner-project link.
       # ════════════════════════════════════════════════════════════════════
       - name: Callback backend (SAVE web URL)
-        if: steps.hosting.outputs.configured == 'true'
+        if: steps.hosting.outputs.mode != 'none'
         env:
-          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+          SITE_ROOT: ${{ steps.hosting.outputs.site_root }}
         run: |
           set -e
-          SITE_BASE="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
-          WEB_URL="${SITE_BASE}/s/${SLUG}/"
+          WEB_URL="${SITE_ROOT}/s/${SLUG}/"
 
           echo "========================================"
           echo "✅ SITE URL: $WEB_URL"
@@ -500,7 +581,8 @@ jobs:
       - name: Summary
         if: always()
         env:
-          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+          MODE: ${{ steps.hosting.outputs.mode }}
+          SITE_ROOT: ${{ steps.hosting.outputs.site_root }}
         run: |
           {
             echo "### Owner Web Build"
@@ -510,10 +592,10 @@ jobs:
             echo "| Link ID | \`${LINK_ID:-?}\` |"
             echo "| Slug | \`${SLUG:-?}\` |"
             echo "| Base href | \`${BASE_HREF:-?}\` |"
-            if [ "${{ steps.hosting.outputs.configured }}" = "true" ]; then
-              SITE_BASE="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
-              echo "| Site URL | ${SITE_BASE}/s/${SLUG}/ |"
+            echo "| Target | \`${MODE:-?}\` |"
+            if [ -n "$SITE_ROOT" ]; then
+              echo "| Site URL | ${SITE_ROOT}/s/${SLUG}/ |"
             else
-              echo "| Site URL | _not deployed — hosting secrets not set_ |"
+              echo "| Site URL | _not deployed — see the artifact above_ |"
             fi
           } >> $GITHUB_STEP_SUMMARY
