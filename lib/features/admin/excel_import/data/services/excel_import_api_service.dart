@@ -1,6 +1,7 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/globals.dart' as g;
+
+import '../../domain/entities/picked_excel_file.dart';
 
 class ExcelImportApiService {
   final Dio _dio;
@@ -101,15 +102,18 @@ class ExcelImportApiService {
   }
 
   Map<String, dynamic> _fromDioError(DioException e, {String? fallbackMessage}) {
-    final isSocket = e.error is SocketException;
+    // dart:io's SocketException cannot be referenced from a web build. Dio
+    // reports the same "network is down" condition as connectionError on every
+    // platform, and anything else without a response still falls through to the
+    // unreachable-server message at the end of this method.
+    final isNetworkDown = e.type == DioExceptionType.connectionError;
 
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
-        e.type == DioExceptionType.connectionError ||
-        (e.type == DioExceptionType.unknown && isSocket)) {
+        isNetworkDown) {
       return _fail(
-        isSocket
+        isNetworkDown
             ? 'No internet connection.'
             : "Can't reach the server. Check your internet and try again.",
       );
@@ -133,12 +137,9 @@ class ExcelImportApiService {
     );
   }
 
-  Future<Map<String, dynamic>> validateExcel(File file) async {
+  Future<Map<String, dynamic>> validateExcel(PickedExcelFile file) async {
     final form = FormData.fromMap({
-      'file': await MultipartFile.fromFile(
-        file.path,
-        filename: file.path.split(Platform.pathSeparator).last,
-      ),
+      'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
     });
 
     try {
@@ -157,15 +158,12 @@ class ExcelImportApiService {
   }
 
   Future<Map<String, dynamic>> importExcel({
-    required File file,
+    required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
   }) async {
     final form = FormData.fromMap({
-      'file': await MultipartFile.fromFile(
-        file.path,
-        filename: file.path.split(Platform.pathSeparator).last,
-      ),
+      'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
     });
 
     try {

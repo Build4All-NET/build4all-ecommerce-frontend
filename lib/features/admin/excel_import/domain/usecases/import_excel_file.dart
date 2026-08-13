@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../entities/picked_excel_file.dart';
 import '../entities/excel_import_result.dart';
 import '../repositories/excel_import_repository.dart';
 
@@ -7,7 +7,7 @@ class ImportExcelFile {
   ImportExcelFile(this.repo);
 
   Future<ExcelImportResult> call({
-    required File file,
+    required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
   }) {

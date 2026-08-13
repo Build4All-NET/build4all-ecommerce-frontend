@@ -1,11 +1,12 @@
-import 'dart:io';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/picked_excel_file.dart';
+
 class ExcelFileCard extends StatelessWidget {
-  final File? file;
+  final PickedExcelFile? file;
   final bool isPicking;
   final VoidCallback onPick;
 
@@ -24,7 +25,7 @@ class ExcelFileCard extends StatelessWidget {
 
     final name = file == null
         ? l10n.adminExcelNoFile
-        : file!.path.split(Platform.pathSeparator).last;
+        : file!.name;
 
     return Container(
       padding: const EdgeInsets.all(14),

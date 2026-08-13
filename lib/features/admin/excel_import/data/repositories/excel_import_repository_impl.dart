@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../../domain/entities/picked_excel_file.dart';
 
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/excel_validation_result.dart';
@@ -13,7 +13,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
   ExcelImportRepositoryImpl({required this.api});
 
   @override
-  Future<ExcelValidationResult> validate(File file) async {
+  Future<ExcelValidationResult> validate(PickedExcelFile file) async {
     final raw = await api.validateExcel(file);
 
     // The validate endpoint can fail BEFORE the file is ever parsed
@@ -54,7 +54,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
 
   @override
   Future<ExcelImportResult> importFile({
-    required File file,
+    required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
   }) async {
