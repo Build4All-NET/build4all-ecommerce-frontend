@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../../core/exceptions/exception_mapper.dart';
+import '../../data/services/template_saver.dart';
+import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/usecases/import_excel_file.dart';
 import '../../domain/usecases/validate_excel_file.dart';
 import 'excel_import_event.dart';
@@ -34,21 +33,25 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     emit(state.copyWith(picking: true, clearError: true));
 
     try {
+      // withData so the bytes come back on every platform. The browser never
+      // exposes a path for a picked file, and reading one there throws.
       final res = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['xlsx'],
-        withData: false,
+        withData: true,
       );
 
-      if (res == null || res.files.isEmpty || res.files.first.path == null) {
+      final picked = (res == null || res.files.isEmpty) ? null : res.files.first;
+      final bytes = picked?.bytes;
+
+      if (picked == null || bytes == null) {
         emit(state.copyWith(picking: false));
         return;
       }
 
-      final file = File(res.files.first.path!);
       emit(state.copyWith(
         picking: false,
-        file: file,
+        file: PickedExcelFile(name: picked.name, bytes: bytes),
         clearValidation: true,
         clearResult: true,
       ));
@@ -134,18 +137,13 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
       final data = await rootBundle.load('assets/templates/Template.xlsx');
       final bytes = data.buffer.asUint8List();
 
-      final dir = await getApplicationSupportDirectory();
-      final outFile = File('${dir.path}/Build4All_Template.xlsx');
-
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
-
-      await outFile.writeAsBytes(bytes, flush: true);
+      // Null on web: the browser downloads the file itself and gives back no
+      // path, so there is nothing to show or reopen there.
+      final savedPath = await saveTemplate(bytes, 'Build4All_Template.xlsx');
 
       emit(state.copyWith(
         downloadingTemplate: false,
-        templateFilePath: outFile.path,
+        templateFilePath: savedPath,
       ));
     } catch (e) {
       emit(state.copyWith(

@@ -349,7 +349,7 @@ jobs:
         run: |
           set -e
           python3 - <<'PY'
-          import json, pathlib, re, urllib.request
+          import base64, json, pathlib, re, urllib.request, zlib
           from html import escape
 
           cfg = json.load(open("lib/env/ci_env.json", encoding="utf-8"))
@@ -366,6 +366,25 @@ jobs:
           if logo_url.startswith("/") and api_base:
               logo_url = api_base + logo_url
 
+          # Brand colour, used only by the no-logo fallback below.
+          theme = {}
+          try:
+              if cfg.get("THEME_JSON_B64"):
+                  theme = json.loads(base64.b64decode(
+                      cfg["THEME_JSON_B64"] + "===").decode("utf-8", "replace") or "{}")
+              elif cfg.get("THEME_JSON"):
+                  theme = json.loads(cfg["THEME_JSON"] or "{}")
+          except Exception as e:
+              print("⚠️ Could not read theme colours:", e)
+
+          primary = str(
+              theme.get("primary")
+              or (theme.get("colors") or {}).get("primary")
+              or "#16A34A"
+          ).strip()
+          if not re.fullmatch(r"#[0-9a-fA-F]{6}", primary):
+              primary = "#16A34A"
+
           web = pathlib.Path("web")
           icons = web / "icons"
           icons.mkdir(parents=True, exist_ok=True)
@@ -374,18 +393,70 @@ jobs:
           if logo_url:
               try:
                   print("Downloading logo:", logo_url)
-                  urllib.request.urlretrieve(logo_url, web / "favicon.png")
+                  # Bounded: an API host the runner cannot reach (a LAN address,
+                  # a stopped server) must cost seconds, not stall the job.
+                  with urllib.request.urlopen(logo_url, timeout=15) as r:
+                      (web / "favicon.png").write_bytes(r.read())
                   for name in ("Icon-192.png", "Icon-512.png",
                                "Icon-maskable-192.png", "Icon-maskable-512.png"):
                       (icons / name).write_bytes((web / "favicon.png").read_bytes())
                   got_logo = True
                   print("✅ Logo applied to favicon + PWA icons")
               except Exception as e:
-                  print("⚠️ Failed to download logo, keeping defaults:", e)
+                  print("⚠️ Failed to download logo:", e)
+
+          # Without a logo the stock Flutter icon would ship as the tab and
+          # home-screen icon of a merchant's storefront. Fall back to the app's
+          # initial on its brand colour instead — wrong-looking, but theirs.
+          if not got_logo:
+              initial = escape(app_name.strip()[:1].upper() or "?")
+              (web / "favicon.svg").write_text(
+                  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+                  f'<rect width="64" height="64" rx="12" fill="{primary}"/>'
+                  '<text x="32" y="33" font-family="system-ui,sans-serif" '
+                  'font-size="34" font-weight="700" fill="#FFFFFF" '
+                  'text-anchor="middle" dominant-baseline="central">'
+                  f'{initial}</text></svg>',
+                  encoding="utf-8",
+              )
+
+              # Manifest icons must be raster, so a plain brand-coloured square
+              # stands in — still better than another product's logo.
+              def solid_png(size, hex_colour):
+                  rgb = bytes(int(hex_colour[i:i + 2], 16) for i in (1, 3, 5))
+                  raw = b"".join(b"\x00" + rgb * size for _ in range(size))
+
+                  def chunk(tag, data):
+                      body = tag + data
+                      return (len(data).to_bytes(4, "big") + body
+                              + zlib.crc32(body).to_bytes(4, "big"))
+
+                  return (b"\x89PNG\r\n\x1a\n"
+                          + chunk(b"IHDR", size.to_bytes(4, "big") + size.to_bytes(4, "big")
+                                  + bytes([8, 2, 0, 0, 0]))
+                          + chunk(b"IDAT", zlib.compress(raw))
+                          + chunk(b"IEND", b""))
+
+              (web / "favicon.png").write_bytes(solid_png(64, primary))
+              for name, size in (("Icon-192.png", 192), ("Icon-512.png", 512),
+                                 ("Icon-maskable-192.png", 192),
+                                 ("Icon-maskable-512.png", 512)):
+                  (icons / name).write_bytes(solid_png(size, primary))
+
+              print("ℹ️ No logo — generated a fallback icon from the app initial:", initial)
 
           # Tab title
           index = web / "index.html"
           html = index.read_text(encoding="utf-8")
+
+          # An SVG favicon only exists in the fallback case; prefer it when it
+          # does, since it carries the initial while the PNG is a bare square.
+          if not got_logo:
+              html = html.replace(
+                  '<link rel="icon" type="image/png" href="favicon.png">',
+                  '<link rel="icon" type="image/svg+xml" href="favicon.svg">\n'
+                  '  <link rel="icon" type="image/png" href="favicon.png">',
+              )
           html = re.sub(r"<title>.*?</title>", f"<title>{escape(app_name)}</title>", html, flags=re.S)
           html = re.sub(
               r'(<meta name="apple-mobile-web-app-title" content=")[^"]*(")',
@@ -560,19 +631,30 @@ jobs:
           fi
           WEB_JSON="${WEB_JSON}}"
 
+          # Bounded so an unreachable API host fails fast instead of stalling.
           HTTP=$(curl -sS -o web_resp.txt -w "%{http_code}" -X PUT \
+            --connect-timeout 10 --max-time 30 \
             "${API_BASE}/api/ci/owner-project-links/${LINK_ID}/web-url" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "${WEB_JSON}" || true)
+            -d "${WEB_JSON}" || echo "000")
 
           echo "HTTP_STATUS=$HTTP"
           cat web_resp.txt || true
           echo ""
 
+          # The site is live either way, so this does not fail the build — but a
+          # silent failure here means the owner never sees the link, so it has to
+          # surface on the run instead of scrolling past in the log.
+          if [ "$HTTP" = "000" ]; then
+            echo "::warning title=Web URL not saved::Could not reach ${API_BASE}. The site is live at ${WEB_URL} but the backend has no record of it, so it will not appear in the manager."
+            echo "ℹ️ A GitHub runner only reaches public addresses — localhost and LAN addresses such as 192.168.x.x will always time out."
+            exit 0
+          fi
+
           if [ "$HTTP" -ge 400 ]; then
-            echo "⚠️ Callback failed (backend did not save the URL)."
-            echo "✅ The site itself is deployed and reachable at $WEB_URL."
+            echo "::warning title=Web URL not saved::Backend returned HTTP ${HTTP} for link ${LINK_ID}. The site is live at ${WEB_URL} but will not appear in the manager."
+            cat web_resp.txt || true
             exit 0
           fi
 

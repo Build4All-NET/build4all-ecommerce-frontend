@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/excel_import_result.dart';
+import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/excel_validation_result.dart';
 
 class ExcelImportState extends Equatable {
@@ -11,7 +11,7 @@ class ExcelImportState extends Equatable {
 
   final bool downloadingTemplate;
 
-  final File? file;
+  final PickedExcelFile? file;
   final ExcelValidationResult? validation;
   final ExcelImportResult? result;
 
@@ -55,7 +55,7 @@ class ExcelImportState extends Equatable {
     bool? validating,
     bool? importing,
     bool? downloadingTemplate,
-    File? file,
+    PickedExcelFile? file,
     ExcelValidationResult? validation,
     ExcelImportResult? result,
     bool? replace,
@@ -98,7 +98,7 @@ class ExcelImportState extends Equatable {
         validating,
         importing,
         downloadingTemplate,
-        file?.path,
+        file?.name,
         validation,
         result,
         replace,
