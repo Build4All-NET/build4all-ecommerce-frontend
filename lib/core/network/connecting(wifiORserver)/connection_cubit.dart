@@ -4,9 +4,6 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:build4front/core/config/env.dart';
 
 import 'connection_status.dart';
 
@@ -30,18 +27,27 @@ class ConnectionStateModel {
   }
 }
 
+/// Drives the connection banner from two signals, neither of which polls:
+///
+///  * the device's connectivity stream, for "no internet";
+///  * the app's own traffic, for "server unreachable" — every request already
+///    reports back through [setOnline] and [setServerDown].
+///
+/// This used to run a heartbeat as well: an unauthenticated GET on the API root
+/// every 10 seconds. In a browser that request is a liability rather than a
+/// signal — the API root is not an endpoint the app otherwise calls, so it
+/// answers without CORS headers, and on an https page an http API is blocked
+/// outright. Either way it failed, and the banner sat on "reconnecting" while
+/// the app's real requests were succeeding beside it.
 class ConnectionCubit extends Cubit<ConnectionStateModel> {
   final Connectivity _connectivity;
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
-  Timer? _heartbeatTimer;
   Timer? _serverDownDebounce;
 
   bool _hasInternet = true;
-  DateTime? _lastServerFailureAt;
 
-  static const Duration _heartbeatEvery = Duration(seconds: 10);
-  static const Duration _pingTimeout = Duration(seconds: 5);
+  /// Brief grace period so a single failed request does not flash the banner.
   static const Duration _serverDownDelay = Duration(seconds: 2);
 
   ConnectionCubit({Connectivity? connectivity})
@@ -70,21 +76,18 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
 
     _clearServerDownDebounce();
 
-    if (state.status == ConnectionStatus.offline) {
+    // Assume the server is reachable again once the device is back online. The
+    // next request the app makes settles it either way.
+    if (state.status != ConnectionStatus.online) {
       emit(const ConnectionStateModel(
         status: ConnectionStatus.online,
         message: null,
       ));
     }
-
-    _startHeartbeat();
-    _pingServer();
   }
 
   void _emitOffline() {
     _clearServerDownDebounce();
-    _stopHeartbeat();
-    _lastServerFailureAt = null;
 
     if (state.status != ConnectionStatus.offline) {
       emit(const ConnectionStateModel(
@@ -94,42 +97,9 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
     }
   }
 
-  void _startHeartbeat() {
-    _heartbeatTimer ??= Timer.periodic(
-      _heartbeatEvery,
-      (_) => _pingServer(),
-    );
-  }
-
-  void _stopHeartbeat() {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
-  }
-
   void _clearServerDownDebounce() {
     _serverDownDebounce?.cancel();
     _serverDownDebounce = null;
-  }
-
-  Future<void> _pingServer() async {
-    if (!_hasInternet || state.status == ConnectionStatus.offline) return;
-
-    try {
-      final uri = Uri.parse(Env.apiBaseUrl);
-      await http.get(uri).timeout(_pingTimeout);
-
-      _lastServerFailureAt = null;
-      _clearServerDownDebounce();
-
-      if (state.status != ConnectionStatus.online) {
-        emit(const ConnectionStateModel(
-          status: ConnectionStatus.online,
-          message: null,
-        ));
-      }
-    } catch (_) {
-      _markServerDown('Server is not responding');
-    }
   }
 
   void _markServerDown(String message) {
@@ -137,8 +107,6 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
       _emitOffline();
       return;
     }
-
-    _lastServerFailureAt ??= DateTime.now();
 
     _serverDownDebounce ??= Timer(_serverDownDelay, () {
       _serverDownDebounce = null;
@@ -155,15 +123,15 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
     });
   }
 
+  /// Reported by the networking layer when a request cannot reach the server.
   void setServerDown([String? message]) {
     _markServerDown(message ?? 'Server is not responding');
   }
 
+  /// Reported by the networking layer when a request succeeds.
   void setOnline() {
     _hasInternet = true;
-    _lastServerFailureAt = null;
     _clearServerDownDebounce();
-    _startHeartbeat();
 
     if (state.status != ConnectionStatus.online || state.message != null) {
       emit(const ConnectionStateModel(
@@ -177,7 +145,6 @@ class ConnectionCubit extends Cubit<ConnectionStateModel> {
   Future<void> close() async {
     await _subscription?.cancel();
     _clearServerDownDebounce();
-    _stopHeartbeat();
     return super.close();
   }
 }
