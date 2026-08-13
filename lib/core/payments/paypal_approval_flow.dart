@@ -14,6 +14,7 @@
 // Whoever calls [PaypalApprovalFlow.run] is responsible for telling the
 // backend whether to capture (true) or abandon (false) afterwards.
 
+import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,21 +46,19 @@ class PaypalApprovalFlow {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+
         return AlertDialog(
-          title: Text('Complete $providerLabel payment'),
-          content: Text(
-            "We've opened the $providerLabel payment page in your browser. "
-            'After you finish paying there, come back and tap "I\'ve paid" '
-            'so we can place your order.',
-          ),
+          title: Text(l10n.paypalApprovalTitle(providerLabel)),
+          content: Text(l10n.paypalApprovalBody(providerLabel)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text("I've paid"),
+              child: Text(l10n.paypalApprovalPaidBtn),
             ),
           ],
         );

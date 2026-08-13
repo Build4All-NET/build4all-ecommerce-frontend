@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "en",
   "appTitle": "App",
   "loginTitle": "Log in",
@@ -1594,6 +1594,8 @@
 "navLabelProfile": "Profile",
 "navLabelNotifications": "Notifications",
 "navLabelBookings": "Bookings",
-"excelImportConstraintViolation": "Your data is currently in use (linked to orders or carts) and can't be replaced."
-
+"excelImportConstraintViolation": "Your data is currently in use (linked to orders or carts) and can't be replaced.",
+  "paypalApprovalTitle": "Complete {provider} payment",
+  "paypalApprovalBody": "We've opened the {provider} payment page in your browser. After you finish paying there, come back and tap “I've paid” so we can place your order.",
+  "paypalApprovalPaidBtn": "I've paid"
 }
