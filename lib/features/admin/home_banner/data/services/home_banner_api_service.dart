@@ -3,6 +3,8 @@ import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/api_client.dart';
 import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:dio/dio.dart';
+import 'package:build4front/core/utils/x_file_upload.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 
 class HomeBannerApiService {
   final Dio _dio;
@@ -43,10 +45,7 @@ class HomeBannerApiService {
 
     final form = FormData.fromMap({
       ...body,
-      'image': await MultipartFile.fromFile(
-        safeImagePath,
-        filename: File(safeImagePath).path.split('/').last,
-      ),
+      'image': await multipartFromXFile(XFile(safeImagePath)),
     });
 
     final res = await _dio.post(
@@ -74,10 +73,7 @@ class HomeBannerApiService {
         imagePath,
         preferredName: 'home_banner_update_upload',
       );
-      map['image'] = await MultipartFile.fromFile(
-        safeImagePath,
-        filename: File(safeImagePath).path.split('/').last,
-      );
+      map['image'] = await multipartFromXFile(XFile(safeImagePath));
     }
 
     final form = FormData.fromMap(map);

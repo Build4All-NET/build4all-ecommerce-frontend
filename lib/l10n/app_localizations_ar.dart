@@ -45,8 +45,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authErrorGeneric => 'حدث خطأ ما. حاول مرة أخرى.';
 
   @override
-  String get otpSendLimitReached =>
-      'لقد وصلت إلى الحد الأقصى لعدد طلبات الرمز لهذا الرقم. حاول مرة أخرى لاحقاً.';
+  String get otpSendLimitReached => 'لقد وصلت إلى الحد الأقصى لعدد طلبات الرمز لهذا الرقم. حاول مرة أخرى لاحقاً.';
 
   @override
   String get noAccountText => 'ليس لديك حساب؟';
@@ -527,7 +526,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductStatusLabel => 'الحالة';
 
   @override
-  String get adminProductImageUrlLabel => 'Image URL';
+  String get adminProductImageUrlLabel => 'رابط الصورة';
 
   @override
   String get adminProductSkuLabel => 'SKU';
@@ -914,187 +913,187 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminUpdated => 'تم التحديث بنجاح';
 
   @override
-  String get adminHomeBannersTitle => 'Home Banners';
+  String get adminHomeBannersTitle => 'بنرات الصفحة الرئيسية';
 
   @override
-  String get adminHomeBannerAdd => 'Add banner';
+  String get adminHomeBannerAdd => 'إضافة بنر';
 
   @override
-  String get adminHomeBannerNoBanners => 'No banners yet';
+  String get adminHomeBannerNoBanners => 'لا توجد بنرات بعد';
 
   @override
-  String get adminHomeBannerCreateTitle => 'Create home banner';
+  String get adminHomeBannerCreateTitle => 'إنشاء بنر للصفحة الرئيسية';
 
   @override
-  String get adminHomeBannerEditTitle => 'Edit home banner';
+  String get adminHomeBannerEditTitle => 'تعديل بنر الصفحة الرئيسية';
 
   @override
-  String get adminHomeBannerTitleLabel => 'Title';
+  String get adminHomeBannerTitleLabel => 'العنوان';
 
   @override
-  String get adminHomeBannerSubtitleLabel => 'Subtitle';
+  String get adminHomeBannerSubtitleLabel => 'العنوان الفرعي';
 
   @override
-  String get adminHomeBannerTargetTypeLabel => 'Target type';
+  String get adminHomeBannerTargetTypeLabel => 'نوع الوجهة';
 
   @override
-  String get adminHomeBannerTargetIdLabel => 'Target ID';
+  String get adminHomeBannerTargetIdLabel => 'معرّف الوجهة';
 
   @override
-  String get adminHomeBannerTargetUrlLabel => 'Target URL';
+  String get adminHomeBannerTargetUrlLabel => 'رابط الوجهة';
 
   @override
-  String get adminHomeBannerSortOrderLabel => 'Sort order';
+  String get adminHomeBannerSortOrderLabel => 'ترتيب العرض';
 
   @override
-  String get adminHomeBannerActiveLabel => 'Active';
+  String get adminHomeBannerActiveLabel => 'نشط';
 
   @override
-  String get adminImageLabel => 'Banner image';
+  String get adminImageLabel => 'صورة البنر';
 
   @override
-  String get adminChooseFromGallery => 'Choose from gallery';
+  String get adminChooseFromGallery => 'اختيار من المعرض';
 
   @override
-  String get adminTakePhoto => 'Take photo';
+  String get adminTakePhoto => 'التقاط صورة';
 
   @override
-  String get adminRemoveImage => 'Remove';
+  String get adminRemoveImage => 'إزالة';
 
   @override
-  String get adminImageRequired => 'Image is required';
+  String get adminImageRequired => 'الصورة مطلوبة';
 
   @override
-  String get adminTargetShort => 'Target';
+  String get adminTargetShort => 'الوجهة';
 
   @override
-  String get adminSortShort => 'Sort';
+  String get adminSortShort => 'الترتيب';
 
   @override
-  String get adminUntitled => 'Untitled';
+  String get adminUntitled => 'بدون عنوان';
 
   @override
-  String get adminHomeBannerEdit => 'Edit banner';
+  String get adminHomeBannerEdit => 'تعديل البنر';
 
   @override
-  String get adminHomeBannerCreate => 'Create banner';
+  String get adminHomeBannerCreate => 'إنشاء بنر';
 
   @override
-  String get adminHomeBannerImageLabel => 'Banner image';
+  String get adminHomeBannerImageLabel => 'صورة البنر';
 
   @override
-  String get adminHomeBannerImageRequired => 'Image is required';
+  String get adminHomeBannerImageRequired => 'الصورة مطلوبة';
 
   @override
-  String get adminPickFromGallery => 'Gallery';
+  String get adminPickFromGallery => 'المعرض';
 
   @override
-  String get adminPickFromCamera => 'Camera';
+  String get adminPickFromCamera => 'الكاميرا';
 
   @override
-  String get adminHomeBannerSortLabel => 'Sort order';
+  String get adminHomeBannerSortLabel => 'ترتيب العرض';
 
   @override
-  String get adminHomeBannerLoadingTargets => 'Loading targets...';
+  String get adminHomeBannerLoadingTargets => 'جارٍ تحميل الوجهات...';
 
   @override
-  String get adminHomeBannerTargetTypeHint => 'Select target type';
+  String get adminHomeBannerTargetTypeHint => 'اختر نوع الوجهة';
 
   @override
-  String get adminHomeBannerTargetNone => 'None';
+  String get adminHomeBannerTargetNone => 'بدون';
 
   @override
-  String get adminHomeBannerTargetCategory => 'Category';
+  String get adminHomeBannerTargetCategory => 'فئة';
 
   @override
-  String get adminHomeBannerTargetProduct => 'Product';
+  String get adminHomeBannerTargetProduct => 'منتج';
 
   @override
-  String get adminHomeBannerTargetUrl => 'External URL';
+  String get adminHomeBannerTargetUrl => 'رابط خارجي';
 
   @override
-  String get adminHomeBannerUrlRequired => 'URL is required';
+  String get adminHomeBannerUrlRequired => 'الرابط مطلوب';
 
   @override
-  String get adminHomeBannerTargetCategoryLabel => 'Category';
+  String get adminHomeBannerTargetCategoryLabel => 'الفئة';
 
   @override
-  String get adminHomeBannerTargetCategoryHint => 'Select category';
+  String get adminHomeBannerTargetCategoryHint => 'اختر الفئة';
 
   @override
-  String get adminHomeBannerCategoryRequired => 'Category is required';
+  String get adminHomeBannerCategoryRequired => 'الفئة مطلوبة';
 
   @override
-  String get adminHomeBannerTargetProductLabel => 'Product';
+  String get adminHomeBannerTargetProductLabel => 'المنتج';
 
   @override
-  String get adminHomeBannerTargetProductHint => 'Select product';
+  String get adminHomeBannerTargetProductHint => 'اختر المنتج';
 
   @override
-  String get adminHomeBannerProductRequired => 'Product is required';
+  String get adminHomeBannerProductRequired => 'المنتج مطلوب';
 
   @override
-  String get adminActiveLabel => 'Active';
+  String get adminActiveLabel => 'نشط';
 
   @override
-  String get adminNoOptions => 'No options';
+  String get adminNoOptions => 'لا توجد خيارات';
 
   @override
-  String get noResultsLabel => 'No results';
+  String get noResultsLabel => 'لا توجد نتائج';
 
   @override
-  String get searchLabel => 'Search...';
+  String get searchLabel => 'بحث...';
 
   @override
-  String get adminProductsSearchHint => 'Search products...';
+  String get adminProductsSearchHint => 'ابحث عن منتجات...';
 
   @override
-  String get adminProductsFilterAll => 'All products';
+  String get adminProductsFilterAll => 'كل المنتجات';
 
   @override
-  String get adminProductEditSubtitle => 'Update product details';
+  String get adminProductEditSubtitle => 'تحديث تفاصيل المنتج';
 
   @override
-  String get adminProductCreateSubtitle => 'Add a new product';
+  String get adminProductCreateSubtitle => 'إضافة منتج جديد';
 
   @override
-  String get adminProductSectionBasicInfoTitle => 'Basic info';
+  String get adminProductSectionBasicInfoTitle => 'المعلومات الأساسية';
 
   @override
-  String get adminProductSectionPricingTitle => 'Pricing';
+  String get adminProductSectionPricingTitle => 'التسعير';
 
   @override
-  String get adminProductSectionBasicInfoSubtitle => 'Name, description, type, SKU';
+  String get adminProductSectionBasicInfoSubtitle => 'الاسم، الوصف، النوع، SKU';
 
   @override
-  String get adminProductSectionPricingSubtitle => 'Price, sale, stock';
+  String get adminProductSectionPricingSubtitle => 'السعر، التخفيض، المخزون';
 
   @override
-  String get adminProductSectionMetaTitle => 'Product';
+  String get adminProductSectionMetaTitle => 'المنتج';
 
   @override
-  String get adminProductSectionMetaSubtitle => 'SEO title & description';
+  String get adminProductSectionMetaSubtitle => 'عنوان ووصف تحسين محركات البحث';
 
   @override
-  String get adminSelectCategoryFirst => 'Select category first';
+  String get adminSelectCategoryFirst => 'اختر الفئة أولاً';
 
   @override
-  String get adminProductImageSectionTitle => 'Product image';
+  String get adminProductImageSectionTitle => 'صورة المنتج';
 
   @override
-  String get adminProductImageSectionSubtitle => 'Upload product image';
+  String get adminProductImageSectionSubtitle => 'ارفع صورة المنتج';
 
   @override
-  String get adminProductSectionConfigTitle => 'Product configuration';
+  String get adminProductSectionConfigTitle => 'إعدادات المنتج';
 
   @override
-  String get adminProductSectionConfigSubtitle => 'Virtual, downloadable, external';
+  String get adminProductSectionConfigSubtitle => 'افتراضي، قابل للتنزيل، خارجي';
 
   @override
-  String get adminProductSaleSectionSubtitle => 'Set sale price and duration';
+  String get adminProductSaleSectionSubtitle => 'حدّد سعر التخفيض ومدته';
 
   @override
-  String get adminProductAttributesSubtitle => 'Add custom attributes';
+  String get adminProductAttributesSubtitle => 'أضف خصائص مخصصة';
 
   @override
   String get cart_title => 'سلة التسوق';
@@ -1824,6 +1823,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminPaidRevenueLast7Days => 'الإيراد المدفوع (آخر 7 أيام)';
 
   @override
+  String get adminDashboardRevenueNote => 'الربح يتطلب التكاليف/COGS — هذه اللوحة تعرض الإيرادات والمبالغ المدفوعة فقط.';
+
+  @override
   String get adminNoOrders => 'لا توجد طلبات';
 
   @override
@@ -2035,10 +2037,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminShippingTaxTotal => 'إجمالي ضريبة التوصيل';
 
   @override
-  String get adminExcelImportTitle => 'Excel Import';
+  String get adminExcelImportTitle => 'استيراد من إكسل';
 
   @override
   String get contactSupportTitle => 'التواصل مع الدعم';
+
+  @override
+  String get contactSupportSubtitle => 'تواصل معنا عبر واتساب';
+
+  @override
+  String get contactSupportMessage => 'مرحباً، أحتاج إلى مساعدة بخصوص متجر Build4All.';
+
+  @override
+  String get contactSupportUnavailable => 'خدمة الدعم غير متاحة حالياً.';
 
   @override
   String get home_open_ticket_title => 'فتح تذكرة';
@@ -2059,139 +2070,130 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminOpenTicketFailed => 'تعذّر فتح بوابة التذاكر.';
 
   @override
-  String get contactSupportSubtitle => 'تواصل معنا عبر واتساب';
+  String get adminExcelImportSubtitle => 'استورد البيانات باستخدام قالب إكسل المُعد من Build4All.';
 
   @override
-  String get contactSupportMessage => 'مرحباً، أحتاج إلى مساعدة بخصوص متجر Build4All.';
+  String get adminExcelPickBtn => 'اختيار';
 
   @override
-  String get contactSupportUnavailable => 'خدمة الدعم غير متاحة حالياً.';
+  String get adminExcelFileLabel => 'الملف المحدد';
 
   @override
-  String get adminExcelImportSubtitle => 'Import data using an Excel template prepared by Build4All.';
+  String get adminExcelNoFile => 'لم يتم اختيار ملف إكسل بعد';
 
   @override
-  String get adminExcelPickBtn => 'Pick';
+  String get adminExcelValidateBtn => 'التحقق من الملف';
 
   @override
-  String get adminExcelFileLabel => 'Selected file';
+  String get adminExcelImportBtn => 'استيراد البيانات';
 
   @override
-  String get adminExcelNoFile => 'No Excel file selected yet';
+  String get adminExcelErrorsTitle => 'الأخطاء';
 
   @override
-  String get adminExcelValidateBtn => 'Validate Excel';
+  String get adminExcelWarningsTitle => 'التحذيرات';
 
   @override
-  String get adminExcelImportBtn => 'Import Data';
+  String get adminExcelReplaceTitle => 'استبدال البيانات الحالية';
 
   @override
-  String get adminExcelErrorsTitle => 'Errors';
+  String get adminExcelReplaceHint => 'عند التفعيل، سنحذف بيانات المتجر الحالية قبل استيراد الملف الجديد.';
 
   @override
-  String get adminExcelWarningsTitle => 'Warnings';
+  String get adminExcelReplaceScopeLabel => 'نطاق الاستبدال';
 
   @override
-  String get adminExcelReplaceTitle => 'Replace existing data';
+  String get adminExcelProTipTitle => 'نصيحة';
 
   @override
-  String get adminExcelReplaceHint => 'If enabled, we delete existing tenant data before importing the new file.';
+  String get adminExcelProTipBody => ' تحقّق دائماً من ملف إكسل قبل الاستيراد لتفادي البيانات الناقصة أو غير الصالحة.';
 
   @override
-  String get adminExcelReplaceScopeLabel => 'Replace scope';
+  String get loadingLabel => 'جارٍ التحميل...';
 
   @override
-  String get adminExcelProTipTitle => 'Pro tip';
+  String get adminExcelDownloadTemplateBtn => 'تنزيل قالب إكسل';
 
   @override
-  String get adminExcelProTipBody => ' Always validate the Excel file before importing to avoid partial or invalid data.';
+  String get adminExcelTemplateDownloaded => 'تم تنزيل قالب إكسل';
 
   @override
-  String get loadingLabel => 'Loading...';
+  String get adminExcelTemplateReadyMsg => 'قالب إكسل جاهز.';
 
   @override
-  String get adminExcelDownloadTemplateBtn => 'Download Excel Template';
+  String get adminExcelOpenTemplateBtn => 'فتح القالب';
 
   @override
-  String get adminExcelTemplateDownloaded => 'Excel template downloaded';
+  String get adminExcelShareTemplateBtn => 'مشاركة القالب';
 
   @override
-  String get adminExcelTemplateReadyMsg => 'Your Excel template is ready.';
+  String get adminExcelShareTemplateHint => 'شارك قالب إكسل عبر البريد الإلكتروني أو التطبيقات الأخرى.';
 
   @override
-  String get adminExcelOpenTemplateBtn => 'Open Template';
+  String get adminExcelStep1Title => 'الخطوة ١ · تنزيل القالب';
 
   @override
-  String get adminExcelShareTemplateBtn => 'Share template';
+  String get adminExcelStep1Subtitle => 'نزّل قالب إكسل الرسمي، املأه، ثم ارفعه من جديد.';
 
   @override
-  String get adminExcelShareTemplateHint => 'Share the Excel template via email or other apps.';
+  String get adminExcelTemplateSavedToast => 'تم تنزيل قالب إكسل بنجاح';
 
   @override
-  String get adminExcelStep1Title => 'Step 1 · Download Template';
+  String get adminExcelSavedLocationTitle => 'تم حفظ القالب';
 
   @override
-  String get adminExcelStep1Subtitle => 'Download the official Excel template, fill it, then upload it back.';
+  String get adminExcelSavedLocationBody => 'تم حفظ قالب إكسل على جهازك.';
 
   @override
-  String get adminExcelTemplateSavedToast => 'Excel template downloaded successfully';
+  String get adminExcelStep2Title => 'الخطوة ٢ · الرفع والتحقق';
 
   @override
-  String get adminExcelSavedLocationTitle => 'Template saved';
+  String get adminExcelStep2Subtitle => 'ارفع ملف إكسل بعد تعبئته وتحقّق من محتواه.';
 
   @override
-  String get adminExcelSavedLocationBody => 'The Excel template has been saved locally on your device.';
+  String get ai_chat_hint => 'اسأل عن هذا المنتج…';
 
   @override
-  String get adminExcelStep2Title => 'Step 2 · Upload & Validate';
+  String get ai_chat_suggested_question => 'أعطني ملخصاً سريعاً وأهم تفاصيل هذا المنتج.';
 
   @override
-  String get adminExcelStep2Subtitle => 'Upload the filled Excel file and validate its content.';
+  String get ai_chat_error_send_failed => 'تعذّر إرسال الرسالة';
 
   @override
-  String get ai_chat_hint => 'Ask about this item…';
+  String get ai_ask_button => 'اسأل الذكاء الاصطناعي';
 
   @override
-  String get ai_chat_suggested_question => 'Give me a quick summary and key details about this item.';
+  String get common_sale_tag => 'تخفيض';
 
   @override
-  String get ai_chat_error_send_failed => 'Failed to send message';
+  String get common_description_title => 'الوصف';
 
   @override
-  String get ai_ask_button => 'Ask AI';
-
-  @override
-  String get common_sale_tag => 'SALE';
-
-  @override
-  String get common_description_title => 'Description';
-
-  @override
-  String get common_attributes_title => 'Attributes';
+  String get common_attributes_title => 'الخصائص';
 
   @override
   String get common_sku_label => 'SKU';
 
   @override
-  String get common_stock_label_plain => 'Stock';
+  String get common_stock_label_plain => 'المخزون';
 
   @override
-  String get common_tax_label => 'Tax';
+  String get common_tax_label => 'الضريبة';
 
   @override
-  String get common_yes => 'Yes';
+  String get common_yes => 'نعم';
 
   @override
-  String get common_no => 'No';
+  String get common_no => 'لا';
 
   @override
-  String get ai_prompt_summary => 'Summarize this item';
+  String get ai_prompt_summary => 'لخّص هذا المنتج';
 
   @override
-  String get ai_prompt_features => 'What are the main features?';
+  String get ai_prompt_features => 'ما هي أبرز مزاياه؟';
 
   @override
-  String get ai_prompt_best_use => 'Is this good for me?';
+  String get ai_prompt_best_use => 'هل يناسبني؟';
 
   @override
   String get outOfStock => 'غير متوفر';
@@ -2452,25 +2454,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get businessIdLabel => 'معرّف المتجر';
 
   @override
-  String get profileLabel => 'Profile';
+  String get profileLabel => 'الملف الشخصي';
 
   @override
-  String get adminIdLabel => 'Admin ID';
+  String get adminIdLabel => 'معرّف المشرف';
 
   @override
-  String get copyLabel => 'Copy';
+  String get copyLabel => 'نسخ';
 
   @override
-  String get copiedLabel => 'Copied ';
+  String get copiedLabel => 'تم النسخ ';
 
   @override
-  String get closeLabel => 'Close';
+  String get closeLabel => 'إغلاق';
 
   @override
-  String get createdAtLabel => 'Created at';
+  String get createdAtLabel => 'تاريخ الإنشاء';
 
   @override
-  String get updatedAtLabel => 'Updated at';
+  String get updatedAtLabel => 'تاريخ التحديث';
 
   @override
   String get adminProductSaleDatesBothRequired => 'يرجى تحديد تاريخ بداية التخفيض وتاريخ نهاية التخفيض معًا.';
@@ -2641,13 +2643,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appAccessBlockedButton => 'الوصول محظور';
 
   @override
-  String get pasteButtonLabel => 'Paste';
+  String get pasteButtonLabel => 'لصق';
 
   @override
-  String get codeReadyToVerifyHint => 'Code ready to verify';
+  String get codeReadyToVerifyHint => 'الرمز جاهز للتحقق';
 
   @override
-  String get enterSixDigitCodeHint => 'Enter 6-digit verification code';
+  String get enterSixDigitCodeHint => 'أدخل رمز التحقق المكوّن من 6 أرقام';
 
   @override
   String get accountAlreadyVerified => 'تم التحقق من الحساب بالفعل. الرجاء تسجيل الدخول.';
@@ -2727,8 +2729,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editProfile_verifyNewPhoneTitle => 'تأكيد رقم الهاتف الجديد';
 
   @override
-  String get editProfile_codeSentToastPhone =>
-      'تم إرسال رمز التحقق إلى رقم هاتفك الجديد';
+  String get editProfile_codeSentToastPhone => 'تم إرسال رمز التحقق إلى رقم هاتفك الجديد';
 
   @override
   String get editProfile_phoneUpdatedToast => 'تم تحديث رقم الهاتف بنجاح';
@@ -3109,7 +3110,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminAllAttributeTypesAlreadyAdded => 'تمت إضافة جميع أنواع الخصائص المتاحة';
 
   @override
-  String get adminUploadFailed => 'failed to pick image';
+  String get adminUploadFailed => 'تعذّر اختيار الصورة';
 
   @override
   String get commonClear => 'مسح';
@@ -3287,31 +3288,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminOrderRestore => 'استعادة';
 
   @override
-  String get adminOrderSequenceLabel => 'Order Seq';
+  String get adminOrderSequenceLabel => 'تسلسل الطلب';
 
   @override
-  String get adminOrderInternalIdLabel => 'Internal ID';
+  String get adminOrderInternalIdLabel => 'المعرّف الداخلي';
 
   @override
-  String get adminPaymentMethodLabel => 'Payment Method';
+  String get adminPaymentMethodLabel => 'طريقة الدفع';
 
   @override
-  String get adminOrderCompleteTitle => 'Mark Completed';
+  String get adminOrderCompleteTitle => 'تحديد كمكتمل';
 
   @override
-  String get adminOrderCompleteBody => 'This will mark the order as completed.';
+  String get adminOrderCompleteBody => 'سيتم تحديد هذا الطلب كمكتمل.';
 
   @override
-  String get adminOrderReopenTitle => 'Reopen (Cancel + Unpay)';
+  String get adminOrderReopenTitle => 'إعادة فتح (إلغاء وإلغاء الدفع)';
 
   @override
-  String get adminOrderReopenBody => 'This will cancel the order and reset payment back to UNPAID.';
+  String get adminOrderReopenBody => 'سيتم إلغاء الطلب وإعادة حالة الدفع إلى غير مدفوع.';
 
   @override
-  String get adminOrderRestoreTitle => 'Restore to Pending';
+  String get adminOrderRestoreTitle => 'إعادة إلى قيد الانتظار';
 
   @override
-  String get adminOrderRestoreBody => 'This will restore the order back to Pending.';
+  String get adminOrderRestoreBody => 'سيتم إعادة الطلب إلى حالة قيد الانتظار.';
 
   @override
   String get commonSomethingWentWrongTryAgain => 'حدث خطأ ما. يرجى المحاولة مرة أخرى.';
@@ -3531,13 +3532,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upgradeCompletePaypalTitle => 'إتمام الدفع عبر PayPal';
 
   @override
-  String get upgradeCompletePaypalContent => 'لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على "لقد دفعت" لتفعيل خطتك.';
+  String get upgradeCompletePaypalContent => 'لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.';
 
   @override
   String get upgradeCompleteCardTitle => 'إتمام الدفع بالبطاقة';
 
   @override
-  String get upgradeCompleteCardContent => 'لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على "لقد دفعت" لتفعيل خطتك.';
+  String get upgradeCompleteCardContent => 'لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.';
 
   @override
   String get upgradePendingConfirmationTitle => 'الدفع في انتظار التأكيد';
@@ -3589,7 +3590,6 @@ class AppLocalizationsAr extends AppLocalizations {
     return '$count صورة';
   }
 
-
   @override
   String get navLabelHome => 'الرئيسية';
 
@@ -3612,7 +3612,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navLabelBookings => 'الحجوزات';
 
   @override
-  String get excelImportConstraintViolation =>
-      'بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها.';
+  String get excelImportConstraintViolation => 'بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها.';
 
+  @override
+  String paypalApprovalTitle(Object provider) {
+    return 'أكمل الدفع عبر $provider';
+  }
+
+  @override
+  String paypalApprovalBody(Object provider) {
+    return 'فتحنا صفحة الدفع الخاصة بـ $provider في متصفحك. بعد إتمام الدفع هناك، عُد إلى هنا واضغط “دفعت” حتى نتمكن من تأكيد طلبك.';
+  }
+
+  @override
+  String get paypalApprovalPaidBtn => 'دفعت';
 }

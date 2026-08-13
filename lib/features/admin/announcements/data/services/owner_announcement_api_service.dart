@@ -1,6 +1,8 @@
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:dio/dio.dart';
+import 'package:build4front/core/utils/x_file_upload.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 
 class OwnerAnnouncementApiService {
   final Future<String?> Function() getToken;
@@ -109,10 +111,7 @@ class OwnerAnnouncementApiService {
     if (imagePath != null && imagePath.trim().isNotEmpty) {
       final cleanPath = imagePath.trim();
 
-      body['image'] = await MultipartFile.fromFile(
-        cleanPath,
-        filename: cleanPath.split('/').last,
-      );
+      body['image'] = await multipartFromXFile(XFile(cleanPath));
     }
 
     return FormData.fromMap(body);

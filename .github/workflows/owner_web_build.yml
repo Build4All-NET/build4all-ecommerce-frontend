@@ -490,13 +490,16 @@ jobs:
           # which is already tuned for first-load time in production:
           #   --no-web-resources-cdn  self-host CanvasKit instead of pulling it
           #                           from gstatic (no third-party dependency)
-          #   --pwa-strategy          precache for repeat visits
+          #   --pwa-strategy=none     no service worker. offline-first installs
+          #                           one that intercepts fetches, and it blocks
+          #                           the storefront's cross-origin API calls —
+          #                           the cart came back empty because of it.
           #   --tree-shake-icons      drops unused icon glyphs
           flutter build web \
             --release \
             --base-href "$BASE_HREF" \
             --no-web-resources-cdn \
-            --pwa-strategy=offline-first \
+            --pwa-strategy=none \
             --tree-shake-icons \
             --dart-define-from-file=lib/env/ci_env.json
 

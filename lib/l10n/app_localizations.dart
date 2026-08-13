@@ -172,7 +172,7 @@ abstract class AppLocalizations {
   /// No description provided for @otpSendLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You've reached the maximum number of code requests for this number. Please try again later.'**
+  /// **'You\'ve reached the maximum number of code requests for this number. Please try again later.'**
   String get otpSendLimitReached;
 
   /// No description provided for @noAccountText.
@@ -3631,6 +3631,12 @@ abstract class AppLocalizations {
   /// **'Paid revenue (last 7 days)'**
   String get adminPaidRevenueLast7Days;
 
+  /// No description provided for @adminDashboardRevenueNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit needs cost/COGS — for now this dashboard shows revenue + paid ledger amounts.'**
+  String get adminDashboardRevenueNote;
+
   /// No description provided for @adminNoOrders.
   ///
   /// In en, this message translates to:
@@ -4033,6 +4039,24 @@ abstract class AppLocalizations {
   /// **'Contact support'**
   String get contactSupportTitle;
 
+  /// No description provided for @contactSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with us on WhatsApp'**
+  String get contactSupportSubtitle;
+
+  /// No description provided for @contactSupportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, I need help with the Build4All store.'**
+  String get contactSupportMessage;
+
+  /// No description provided for @contactSupportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Support contact is not available right now.'**
+  String get contactSupportUnavailable;
+
   /// No description provided for @home_open_ticket_title.
   ///
   /// In en, this message translates to:
@@ -4068,24 +4092,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the ticket portal.'**
   String get adminOpenTicketFailed;
-
-  /// No description provided for @contactSupportSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat with us on WhatsApp'**
-  String get contactSupportSubtitle;
-
-  /// No description provided for @contactSupportMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Hello, I need help with the Build4All store.'**
-  String get contactSupportMessage;
-
-  /// No description provided for @contactSupportUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Support contact is not available right now.'**
-  String get contactSupportUnavailable;
 
   /// No description provided for @adminExcelImportSubtitle.
   ///
@@ -6922,7 +6928,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeCompletePaypalContent.
   ///
   /// In en, this message translates to:
-  /// **"We've opened PayPal in your browser."**
+  /// **'We\'ve opened PayPal in your browser. After you finish paying, come back here and tap \"I\'ve paid\" so we can activate your plan.'**
   String get upgradeCompletePaypalContent;
 
   /// No description provided for @upgradeCompleteCardTitle.
@@ -6934,7 +6940,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeCompleteCardContent.
   ///
   /// In en, this message translates to:
-  /// **"We've opened the secure card payment page in your browser."**
+  /// **'We\'ve opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I\'ve paid\" so we can activate your plan.'**
   String get upgradeCompleteCardContent;
 
   /// No description provided for @upgradePendingConfirmationTitle.
@@ -6946,7 +6952,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeIvePaidButton.
   ///
   /// In en, this message translates to:
-  /// **"I've paid"**
+  /// **'I\'ve paid'**
   String get upgradeIvePaidButton;
 
   /// No description provided for @upgradeGotItButton.
@@ -6976,7 +6982,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradePendingInstructions.
   ///
   /// In en, this message translates to:
-  /// **'Please complete your {method}.'**
+  /// **'Please complete your {method}. Your subscription will be activated automatically once an administrator confirms the payment has been received.'**
   String upgradePendingInstructions(String method);
 
   /// No description provided for @upgradeCashPayment.
@@ -7022,29 +7028,70 @@ abstract class AppLocalizations {
   String adminProductImageCount(int count);
 
   /// No description provided for @navLabelHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
   String get navLabelHome;
 
   /// No description provided for @navLabelExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
   String get navLabelExplore;
 
   /// No description provided for @navLabelCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
   String get navLabelCart;
 
   /// No description provided for @navLabelOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
   String get navLabelOrders;
 
   /// No description provided for @navLabelProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
   String get navLabelProfile;
 
   /// No description provided for @navLabelNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
   String get navLabelNotifications;
 
   /// No description provided for @navLabelBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
   String get navLabelBookings;
 
   /// No description provided for @excelImportConstraintViolation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is currently in use (linked to orders or carts) and can\'t be replaced.'**
   String get excelImportConstraintViolation;
 
+  /// No description provided for @paypalApprovalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete {provider} payment'**
+  String paypalApprovalTitle(Object provider);
+
+  /// No description provided for @paypalApprovalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve opened the {provider} payment page in your browser. After you finish paying there, come back and tap “I\'ve paid” so we can place your order.'**
+  String paypalApprovalBody(Object provider);
+
+  /// No description provided for @paypalApprovalPaidBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve paid'**
+  String get paypalApprovalPaidBtn;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

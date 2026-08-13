@@ -45,8 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorGeneric => 'Something went wrong. Please try again.';
 
   @override
-  String get otpSendLimitReached =>
-      'You\'ve reached the maximum number of code requests for this number. Please try again later.';
+  String get otpSendLimitReached => 'You\'ve reached the maximum number of code requests for this number. Please try again later.';
 
   @override
   String get noAccountText => 'Don\'t have an account?';
@@ -1824,6 +1823,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminPaidRevenueLast7Days => 'Paid revenue (last 7 days)';
 
   @override
+  String get adminDashboardRevenueNote => 'Profit needs cost/COGS — for now this dashboard shows revenue + paid ledger amounts.';
+
+  @override
   String get adminNoOrders => 'No orders';
 
   @override
@@ -2041,6 +2043,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactSupportTitle => 'Contact support';
 
   @override
+  String get contactSupportSubtitle => 'Chat with us on WhatsApp';
+
+  @override
+  String get contactSupportMessage => 'Hello, I need help with the Build4All store.';
+
+  @override
+  String get contactSupportUnavailable => 'Support contact is not available right now.';
+
+  @override
   String get home_open_ticket_title => 'Open a ticket';
 
   @override
@@ -2057,15 +2068,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminOpenTicketFailed => 'Could not open the ticket portal.';
-
-  @override
-  String get contactSupportSubtitle => 'Chat with us on WhatsApp';
-
-  @override
-  String get contactSupportMessage => 'Hello, I need help with the Build4All store.';
-
-  @override
-  String get contactSupportUnavailable => 'Support contact is not available right now.';
 
   @override
   String get adminExcelImportSubtitle => 'Import data using an Excel template prepared by Build4All.';
@@ -2727,12 +2729,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile_verifyNewPhoneTitle => 'Verify new phone';
 
   @override
-  String get editProfile_codeSentToastPhone =>
-      'Verification code sent to your new phone';
+  String get editProfile_codeSentToastPhone => 'Verification code sent to your new phone';
 
   @override
-  String get editProfile_phoneUpdatedToast =>
-      'Phone number updated successfully';
+  String get editProfile_phoneUpdatedToast => 'Phone number updated successfully';
 
   @override
   String home_stock_left_label(int count) {
@@ -3532,19 +3532,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeCompletePaypalTitle => 'Complete PayPal payment';
 
   @override
-  String get upgradeCompletePaypalContent => "We've opened PayPal in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.";
+  String get upgradeCompletePaypalContent => 'We\'ve opened PayPal in your browser. After you finish paying, come back here and tap \"I\'ve paid\" so we can activate your plan.';
 
   @override
   String get upgradeCompleteCardTitle => 'Complete card payment';
 
   @override
-  String get upgradeCompleteCardContent => "We've opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.";
+  String get upgradeCompleteCardContent => 'We\'ve opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I\'ve paid\" so we can activate your plan.';
 
   @override
   String get upgradePendingConfirmationTitle => 'Payment pending confirmation';
 
   @override
-  String get upgradeIvePaidButton => "I've paid";
+  String get upgradeIvePaidButton => 'I\'ve paid';
 
   @override
   String get upgradeGotItButton => 'Got it';
@@ -3590,7 +3590,6 @@ class AppLocalizationsEn extends AppLocalizations {
     return '$count image(s)';
   }
 
-
   @override
   String get navLabelHome => 'Home';
 
@@ -3613,7 +3612,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navLabelBookings => 'Bookings';
 
   @override
-  String get excelImportConstraintViolation =>
-      "Your data is currently in use (linked to orders or carts) and can't be replaced.";
+  String get excelImportConstraintViolation => 'Your data is currently in use (linked to orders or carts) and can\'t be replaced.';
 
+  @override
+  String paypalApprovalTitle(Object provider) {
+    return 'Complete $provider payment';
+  }
+
+  @override
+  String paypalApprovalBody(Object provider) {
+    return 'We\'ve opened the $provider payment page in your browser. After you finish paying there, come back and tap “I\'ve paid” so we can place your order.';
+  }
+
+  @override
+  String get paypalApprovalPaidBtn => 'I\'ve paid';
 }

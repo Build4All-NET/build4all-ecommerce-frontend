@@ -45,8 +45,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrorGeneric => 'Une erreur s’est produite. Veuillez réessayer.';
 
   @override
-  String get otpSendLimitReached =>
-      'Vous avez atteint le nombre maximal de demandes de code pour ce numéro. Veuillez réessayer plus tard.';
+  String get otpSendLimitReached => 'Vous avez atteint le nombre maximal de demandes de code pour ce numéro. Veuillez réessayer plus tard.';
 
   @override
   String get noAccountText => 'Vous n’avez pas de compte ?';
@@ -527,7 +526,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminProductStatusLabel => 'Statut';
 
   @override
-  String get adminProductImageUrlLabel => 'Image URL';
+  String get adminProductImageUrlLabel => 'URL de l\'image';
 
   @override
   String get adminProductSkuLabel => 'SKU';
@@ -1824,6 +1823,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminPaidRevenueLast7Days => 'Revenu payé (7 derniers jours)';
 
   @override
+  String get adminDashboardRevenueNote => 'Le bénéfice nécessite les coûts/COGS — ce tableau de bord affiche les revenus et les montants payés.';
+
+  @override
   String get adminNoOrders => 'Aucune commande';
 
   @override
@@ -2035,32 +2037,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminShippingTaxTotal => 'Total taxe livraison';
 
   @override
-  String get adminExcelImportTitle => 'Excel Import';
+  String get adminExcelImportTitle => 'Import Excel';
 
   @override
   String get contactSupportTitle => 'Contacter le support';
-
-  @override
-  String get home_open_ticket_title => 'Ouvrir un ticket';
-
-  @override
-  String get home_open_ticket_subtitle =>
-      'Soumettez un problème à notre équipe d\'assistance';
-
-  @override
-  String get home_open_ticket_failed =>
-      'Impossible d\'ouvrir le portail des tickets.';
-
-  @override
-  String get adminOpenTicketTitle => 'Ouvrir un ticket';
-
-  @override
-  String get adminOpenTicketSubtitle =>
-      'Soumettez un problème à notre équipe d\'assistance';
-
-  @override
-  String get adminOpenTicketFailed =>
-      'Impossible d\'ouvrir le portail des tickets.';
 
   @override
   String get contactSupportSubtitle => 'Discutez avec nous sur WhatsApp';
@@ -2072,106 +2052,124 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactSupportUnavailable => 'Le support n\'est pas disponible pour le moment.';
 
   @override
-  String get adminExcelImportSubtitle => 'Import data using an Excel template prepared by Build4All.';
+  String get home_open_ticket_title => 'Ouvrir un ticket';
 
   @override
-  String get adminExcelPickBtn => 'Pick';
+  String get home_open_ticket_subtitle => 'Soumettez un problème à notre équipe d\'assistance';
 
   @override
-  String get adminExcelFileLabel => 'Selected file';
+  String get home_open_ticket_failed => 'Impossible d\'ouvrir le portail des tickets.';
 
   @override
-  String get adminExcelNoFile => 'No Excel file selected yet';
+  String get adminOpenTicketTitle => 'Ouvrir un ticket';
 
   @override
-  String get adminExcelValidateBtn => 'Validate Excel';
+  String get adminOpenTicketSubtitle => 'Soumettez un problème à notre équipe d\'assistance';
 
   @override
-  String get adminExcelImportBtn => 'Import Data';
+  String get adminOpenTicketFailed => 'Impossible d\'ouvrir le portail des tickets.';
 
   @override
-  String get adminExcelErrorsTitle => 'Errors';
+  String get adminExcelImportSubtitle => 'Importez vos données à l\'aide du modèle Excel préparé par Build4All.';
 
   @override
-  String get adminExcelWarningsTitle => 'Warnings';
+  String get adminExcelPickBtn => 'Choisir';
 
   @override
-  String get adminExcelReplaceTitle => 'Replace existing data';
+  String get adminExcelFileLabel => 'Fichier sélectionné';
 
   @override
-  String get adminExcelReplaceHint => 'If enabled, we delete existing tenant data before importing the new file.';
+  String get adminExcelNoFile => 'Aucun fichier Excel sélectionné';
 
   @override
-  String get adminExcelReplaceScopeLabel => 'Replace scope';
+  String get adminExcelValidateBtn => 'Valider le fichier';
 
   @override
-  String get adminExcelProTipTitle => 'Pro tip';
+  String get adminExcelImportBtn => 'Importer les données';
 
   @override
-  String get adminExcelProTipBody => ' Always validate the Excel file before importing to avoid partial or invalid data.';
+  String get adminExcelErrorsTitle => 'Erreurs';
 
   @override
-  String get loadingLabel => 'Loading...';
+  String get adminExcelWarningsTitle => 'Avertissements';
 
   @override
-  String get adminExcelDownloadTemplateBtn => 'Download Excel Template';
+  String get adminExcelReplaceTitle => 'Remplacer les données existantes';
 
   @override
-  String get adminExcelTemplateDownloaded => 'Excel template downloaded';
+  String get adminExcelReplaceHint => 'Si activé, les données actuelles de la boutique sont supprimées avant l\'import du nouveau fichier.';
 
   @override
-  String get adminExcelTemplateReadyMsg => 'Your Excel template is ready.';
+  String get adminExcelReplaceScopeLabel => 'Portée du remplacement';
 
   @override
-  String get adminExcelOpenTemplateBtn => 'Open Template';
+  String get adminExcelProTipTitle => 'Conseil';
 
   @override
-  String get adminExcelShareTemplateBtn => 'Share template';
+  String get adminExcelProTipBody => ' Validez toujours le fichier Excel avant de l\'importer, pour éviter des données partielles ou invalides.';
 
   @override
-  String get adminExcelShareTemplateHint => 'Share the Excel template via email or other apps.';
+  String get loadingLabel => 'Chargement...';
 
   @override
-  String get adminExcelStep1Title => 'Step 1 · Download Template';
+  String get adminExcelDownloadTemplateBtn => 'Télécharger le modèle Excel';
 
   @override
-  String get adminExcelStep1Subtitle => 'Download the official Excel template, fill it, then upload it back.';
+  String get adminExcelTemplateDownloaded => 'Modèle Excel téléchargé';
 
   @override
-  String get adminExcelTemplateSavedToast => 'Excel template downloaded successfully';
+  String get adminExcelTemplateReadyMsg => 'Votre modèle Excel est prêt.';
 
   @override
-  String get adminExcelSavedLocationTitle => 'Template saved';
+  String get adminExcelOpenTemplateBtn => 'Ouvrir le modèle';
 
   @override
-  String get adminExcelSavedLocationBody => 'The Excel template has been saved locally on your device.';
+  String get adminExcelShareTemplateBtn => 'Partager le modèle';
 
   @override
-  String get adminExcelStep2Title => 'Step 2 · Upload & Validate';
+  String get adminExcelShareTemplateHint => 'Partagez le modèle Excel par e-mail ou via d\'autres applications.';
 
   @override
-  String get adminExcelStep2Subtitle => 'Upload the filled Excel file and validate its content.';
+  String get adminExcelStep1Title => 'Étape 1 · Télécharger le modèle';
 
   @override
-  String get ai_chat_hint => 'Ask about this item…';
+  String get adminExcelStep1Subtitle => 'Téléchargez le modèle Excel officiel, remplissez-le, puis renvoyez-le.';
 
   @override
-  String get ai_chat_suggested_question => 'Give me a quick summary and key details about this item.';
+  String get adminExcelTemplateSavedToast => 'Modèle Excel téléchargé avec succès';
 
   @override
-  String get ai_chat_error_send_failed => 'Failed to send message';
+  String get adminExcelSavedLocationTitle => 'Modèle enregistré';
 
   @override
-  String get ai_ask_button => 'Ask AI';
+  String get adminExcelSavedLocationBody => 'Le modèle Excel a été enregistré sur votre appareil.';
 
   @override
-  String get common_sale_tag => 'SALE';
+  String get adminExcelStep2Title => 'Étape 2 · Envoyer et valider';
+
+  @override
+  String get adminExcelStep2Subtitle => 'Envoyez le fichier Excel rempli et validez son contenu.';
+
+  @override
+  String get ai_chat_hint => 'Posez une question sur cet article…';
+
+  @override
+  String get ai_chat_suggested_question => 'Donne-moi un résumé rapide et les détails clés de cet article.';
+
+  @override
+  String get ai_chat_error_send_failed => 'Échec de l\'envoi du message';
+
+  @override
+  String get ai_ask_button => 'Demander à l\'IA';
+
+  @override
+  String get common_sale_tag => 'PROMO';
 
   @override
   String get common_description_title => 'Description';
 
   @override
-  String get common_attributes_title => 'Attributes';
+  String get common_attributes_title => 'Caractéristiques';
 
   @override
   String get common_sku_label => 'SKU';
@@ -2180,22 +2178,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_stock_label_plain => 'Stock';
 
   @override
-  String get common_tax_label => 'Tax';
+  String get common_tax_label => 'Taxe';
 
   @override
-  String get common_yes => 'Yes';
+  String get common_yes => 'Oui';
 
   @override
-  String get common_no => 'No';
+  String get common_no => 'Non';
 
   @override
-  String get ai_prompt_summary => 'Summarize this item';
+  String get ai_prompt_summary => 'Résume cet article';
 
   @override
-  String get ai_prompt_features => 'What are the main features?';
+  String get ai_prompt_features => 'Quelles sont les principales caractéristiques ?';
 
   @override
-  String get ai_prompt_best_use => 'Is this good for me?';
+  String get ai_prompt_best_use => 'Est-ce que cela me convient ?';
 
   @override
   String get outOfStock => 'En rupture de stock';
@@ -2456,25 +2454,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get businessIdLabel => 'ID Business';
 
   @override
-  String get profileLabel => 'Profile';
+  String get profileLabel => 'Profil';
 
   @override
-  String get adminIdLabel => 'Admin ID';
+  String get adminIdLabel => 'ID administrateur';
 
   @override
-  String get copyLabel => 'Copy';
+  String get copyLabel => 'Copier';
 
   @override
-  String get copiedLabel => 'Copied ';
+  String get copiedLabel => 'Copié ';
 
   @override
-  String get closeLabel => 'Close';
+  String get closeLabel => 'Fermer';
 
   @override
-  String get createdAtLabel => 'Created at';
+  String get createdAtLabel => 'Créé le';
 
   @override
-  String get updatedAtLabel => 'Updated at';
+  String get updatedAtLabel => 'Mis à jour le';
 
   @override
   String get adminProductSaleDatesBothRequired => 'Veuillez sélectionner la date de début et la date de fin de la promotion.';
@@ -2645,13 +2643,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appAccessBlockedButton => 'Accès bloqué';
 
   @override
-  String get pasteButtonLabel => 'Paste';
+  String get pasteButtonLabel => 'Coller';
 
   @override
-  String get codeReadyToVerifyHint => 'Code ready to verify';
+  String get codeReadyToVerifyHint => 'Code prêt à être vérifié';
 
   @override
-  String get enterSixDigitCodeHint => 'Enter 6-digit verification code';
+  String get enterSixDigitCodeHint => 'Saisissez le code de vérification à 6 chiffres';
 
   @override
   String get accountAlreadyVerified => 'Votre compte est déjà vérifié. Veuillez vous connecter.';
@@ -2728,16 +2726,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get editProfile_emailUpdatedToast => 'E-mail mis à jour avec succès';
 
   @override
-  String get editProfile_verifyNewPhoneTitle =>
-      'Vérifier le nouveau numéro';
+  String get editProfile_verifyNewPhoneTitle => 'Vérifier le nouveau numéro';
 
   @override
-  String get editProfile_codeSentToastPhone =>
-      'Code de vérification envoyé à votre nouveau numéro';
+  String get editProfile_codeSentToastPhone => 'Code de vérification envoyé à votre nouveau numéro';
 
   @override
-  String get editProfile_phoneUpdatedToast =>
-      'Numéro de téléphone mis à jour avec succès';
+  String get editProfile_phoneUpdatedToast => 'Numéro de téléphone mis à jour avec succès';
 
   @override
   String home_stock_left_label(int count) {
@@ -3115,7 +3110,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminAllAttributeTypesAlreadyAdded => 'Tous les types d’attributs disponibles sont déjà ajoutés';
 
   @override
-  String get adminUploadFailed => 'failed to pick image';
+  String get adminUploadFailed => 'échec de la sélection de l\'image';
 
   @override
   String get commonClear => 'Effacer';
@@ -3293,31 +3288,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminOrderRestore => 'Restaurer';
 
   @override
-  String get adminOrderSequenceLabel => 'Order Seq';
+  String get adminOrderSequenceLabel => 'N° de commande';
 
   @override
-  String get adminOrderInternalIdLabel => 'Internal ID';
+  String get adminOrderInternalIdLabel => 'ID interne';
 
   @override
-  String get adminPaymentMethodLabel => 'Payment Method';
+  String get adminPaymentMethodLabel => 'Moyen de paiement';
 
   @override
-  String get adminOrderCompleteTitle => 'Mark Completed';
+  String get adminOrderCompleteTitle => 'Marquer comme terminée';
 
   @override
-  String get adminOrderCompleteBody => 'This will mark the order as completed.';
+  String get adminOrderCompleteBody => 'Cette commande sera marquée comme terminée.';
 
   @override
-  String get adminOrderReopenTitle => 'Reopen (Cancel + Unpay)';
+  String get adminOrderReopenTitle => 'Rouvrir (annuler et repasser en impayé)';
 
   @override
-  String get adminOrderReopenBody => 'This will cancel the order and reset payment back to UNPAID.';
+  String get adminOrderReopenBody => 'La commande sera annulée et le paiement repassera à IMPAYÉ.';
 
   @override
-  String get adminOrderRestoreTitle => 'Restore to Pending';
+  String get adminOrderRestoreTitle => 'Remettre en attente';
 
   @override
-  String get adminOrderRestoreBody => 'This will restore the order back to Pending.';
+  String get adminOrderRestoreBody => 'La commande sera remise en attente.';
 
   @override
   String get commonSomethingWentWrongTryAgain => 'Une erreur s’est produite. Veuillez réessayer.';
@@ -3537,13 +3532,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get upgradeCompletePaypalTitle => 'Finaliser le paiement PayPal';
 
   @override
-  String get upgradeCompletePaypalContent => 'Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur "J’ai payé" pour activer votre abonnement.';
+  String get upgradeCompletePaypalContent => 'Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.';
 
   @override
   String get upgradeCompleteCardTitle => 'Finaliser le paiement par carte';
 
   @override
-  String get upgradeCompleteCardContent => 'Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur "J’ai payé" pour activer votre abonnement.';
+  String get upgradeCompleteCardContent => 'Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.';
 
   @override
   String get upgradePendingConfirmationTitle => 'Paiement en attente de confirmation';
@@ -3595,7 +3590,6 @@ class AppLocalizationsFr extends AppLocalizations {
     return '$count image(s)';
   }
 
-
   @override
   String get navLabelHome => 'Accueil';
 
@@ -3618,7 +3612,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navLabelBookings => 'Réservations';
 
   @override
-  String get excelImportConstraintViolation =>
-      'Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées.';
+  String get excelImportConstraintViolation => 'Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées.';
 
+  @override
+  String paypalApprovalTitle(Object provider) {
+    return 'Finaliser le paiement $provider';
+  }
+
+  @override
+  String paypalApprovalBody(Object provider) {
+    return 'Nous avons ouvert la page de paiement $provider dans votre navigateur. Une fois le paiement effectué, revenez ici et appuyez sur « J\'ai payé » pour que nous puissions valider votre commande.';
+  }
+
+  @override
+  String get paypalApprovalPaidBtn => 'J\'ai payé';
 }

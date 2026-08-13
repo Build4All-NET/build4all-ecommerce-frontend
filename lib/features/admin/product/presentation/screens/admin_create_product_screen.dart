@@ -21,6 +21,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:build4front/shared/widgets/x_file_image.dart';
 import '../../domain/entities/product_image.dart';
 
 import '../../data/models/create_product_request.dart';
@@ -2140,8 +2141,8 @@ class AdminProductImageSection extends StatelessWidget {
                       index == mainPickedImageIndex;
 
                   return buildCard(
-                    imageWidget: Image.file(
-                      File(image.path),
+                    imageWidget: XFileImage(
+                      image,
                       fit: BoxFit.cover,
                     ),
                     isMain: isMain,
