@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/api_client.dart';
 import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
+import 'package:build4front/core/utils/x_file_upload.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:build4front/core/config/env.dart';
 
 class ProductApiService {
@@ -113,7 +115,7 @@ class ProductApiService {
       form.files.add(
         MapEntry(
           'image',
-          await MultipartFile.fromFile(safeImagePath),
+          await multipartFromXFile(XFile(safeImagePath)),
         ),
       );
     }
@@ -128,7 +130,7 @@ class ProductApiService {
       form.files.add(
         MapEntry(
           'images',
-          await MultipartFile.fromFile(safeImagePath),
+          await multipartFromXFile(XFile(safeImagePath)),
         ),
       );
     }
