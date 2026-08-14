@@ -1,6 +1,7 @@
 // lib/features/notifications/data/datasources/notifications_api_service.dart
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
 import '../models/notification_model.dart';
@@ -12,14 +13,14 @@ class NotificationsApiService {
 Future<List<NotificationModel>> getMyNotifications() async {
   final resp = await _dio.get('/api/front/notifications');
 
-  print('NOTIF STATUS => ${resp.statusCode}');
-  print('NOTIF RAW DATA => ${resp.data}');
+  debugPrint('NOTIF STATUS => ${resp.statusCode}');
+  debugPrint('NOTIF RAW DATA => ${resp.data}');
 
   final data = resp.data;
 
   if (data is List) {
     for (final item in data) {
-      print('NOTIF ITEM => $item');
+      debugPrint('NOTIF ITEM => $item');
     }
 
     return data
@@ -30,7 +31,7 @@ Future<List<NotificationModel>> getMyNotifications() async {
   if (data is Map<String, dynamic>) {
     final items = data['items'] ?? data['content'] ?? data['data'];
 
-    print('NOTIF WRAPPED ITEMS => $items');
+    debugPrint('NOTIF WRAPPED ITEMS => $items');
 
     if (items is List) {
       return items

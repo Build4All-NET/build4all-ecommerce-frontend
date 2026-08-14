@@ -1,6 +1,7 @@
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:build4front/core/utils/x_file_upload.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 
@@ -188,8 +189,8 @@ class OwnerAnnouncementApiService {
   }) async {
     final token = (tokenOverride ?? await getToken())?.trim() ?? '';
 
-    print(
-      'ANNOUNCEMENT TOKEN => ${token.isEmpty ? "EMPTY" : "len=${token.length}"}',
+    debugPrint(
+      'ANNOUNCEMENT TOKEN => ${token.isEmpty ? "EMPTY" : "present"}',
     );
 
     if (token.isEmpty) {
