@@ -523,6 +523,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminProductStockLabel => 'Stock';
 
   @override
+  String get productStatusPublished => 'Published';
+
+  @override
+  String get productStatusUpcoming => 'Upcoming';
+
+  @override
+  String get productStatusUnknown => 'Unknown';
+
+  @override
+  String get productStockIn => 'In stock';
+
+  @override
+  String get productStockLow => 'Low stock';
+
+  @override
+  String get productStockOut => 'Out of stock';
+
+  @override
+  String get adminProductsStockShortLow => 'Low';
+
+  @override
+  String get adminProductsStockShortOut => 'Out';
+
+  @override
+  String get adminProductsFilterTypeLabel => 'Type';
+
+  @override
+  String get adminProductsNoFilterMatch => 'No products match the current filters.';
+
+  @override
+  String get adminProductCardEditAction => 'Edit product';
+
+  @override
+  String get adminProductCardDeleteAction => 'Delete product';
+
+  @override
+  String get couponsStatusScheduled => 'Scheduled';
+
+  @override
+  String get couponsStatusExpired => 'Expired';
+
+  @override
+  String get couponsStatusLimitReached => 'Limit reached';
+
+  @override
+  String get couponsUsageUnlimited => 'Unlimited';
+
+  @override
+  String get couponsValidityAlwaysActive => 'Always active';
+
+  @override
+  String get couponsChipUsed => 'Used';
+
+  @override
+  String get couponsChipStarted => 'Started';
+
+  @override
+  String get couponsChipExpired => 'Expired';
+
+  @override
+  String get couponsChipValidNow => 'Valid now';
+
+  @override
   String get adminProductStatusLabel => 'Status';
 
   @override

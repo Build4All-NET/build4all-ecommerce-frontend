@@ -1,4 +1,5 @@
 // lib/debug/debug_config_banner.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Values coming from --dart-define-from-file=lib/env/ci_env.json

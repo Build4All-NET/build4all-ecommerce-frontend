@@ -31,6 +31,11 @@ jobs:
       CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
       CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
 
+      # GitHub Actions run identity, reported on every backend callback so a
+      # super admin can jump straight to this run's logs from the manager.
+      CI_RUN_NUMBER: ${{ github.run_number }}
+      CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -654,6 +659,10 @@ jobs:
           if [ -n "$BUILD_ID" ]; then
             WEB_JSON="${WEB_JSON},\"buildId\":\"${BUILD_ID}\""
           fi
+          # Run identity for traceability. The backend logs it rather than storing it:
+          # this workflow shares BUILD_ID with the mobile build, so writing it onto the
+          # build job would replace the mobile run link the super admin needs.
+          WEB_JSON="${WEB_JSON},\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\""
           WEB_JSON="${WEB_JSON}}"
 
           # Bounded so an unreachable API host fails fast instead of stalling.

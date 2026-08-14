@@ -523,6 +523,69 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductStockLabel => 'المخزون';
 
   @override
+  String get productStatusPublished => 'منشور';
+
+  @override
+  String get productStatusUpcoming => 'قادم';
+
+  @override
+  String get productStatusUnknown => 'غير معروف';
+
+  @override
+  String get productStockIn => 'متوفر';
+
+  @override
+  String get productStockLow => 'مخزون منخفض';
+
+  @override
+  String get productStockOut => 'نفد المخزون';
+
+  @override
+  String get adminProductsStockShortLow => 'منخفض';
+
+  @override
+  String get adminProductsStockShortOut => 'نفد';
+
+  @override
+  String get adminProductsFilterTypeLabel => 'النوع';
+
+  @override
+  String get adminProductsNoFilterMatch => 'لا توجد منتجات تطابق عوامل التصفية الحالية.';
+
+  @override
+  String get adminProductCardEditAction => 'تعديل المنتج';
+
+  @override
+  String get adminProductCardDeleteAction => 'حذف المنتج';
+
+  @override
+  String get couponsStatusScheduled => 'مجدولة';
+
+  @override
+  String get couponsStatusExpired => 'منتهية';
+
+  @override
+  String get couponsStatusLimitReached => 'بلغت الحد';
+
+  @override
+  String get couponsUsageUnlimited => 'غير محدود';
+
+  @override
+  String get couponsValidityAlwaysActive => 'نشطة دائماً';
+
+  @override
+  String get couponsChipUsed => 'المستخدمة';
+
+  @override
+  String get couponsChipStarted => 'بدأت';
+
+  @override
+  String get couponsChipExpired => 'منتهية';
+
+  @override
+  String get couponsChipValidNow => 'صالحة الآن';
+
+  @override
   String get adminProductStatusLabel => 'الحالة';
 
   @override

@@ -57,41 +57,41 @@ class AdminProductCard extends StatelessWidget {
     return 'UNKNOWN';
   }
 
-  String get _statusLabel {
+  String _statusLabel(AppLocalizations l10n) {
     final rawName = (product.statusName ?? '').trim();
     if (rawName.isNotEmpty) return rawName;
 
     switch (_statusCode) {
       case 'DRAFT':
-        return 'Draft';
+        return l10n.productStatusDraft;
       case 'UPCOMING':
-        return 'Upcoming';
+        return l10n.productStatusUpcoming;
       case 'PUBLISHED':
-        return 'Published';
+        return l10n.productStatusPublished;
       case 'ARCHIVED':
-        return 'Archived';
+        return l10n.productStatusArchived;
       default:
-        return 'Unknown';
+        return l10n.productStatusUnknown;
     }
   }
 
-  String get _stockLabel {
-    if (_isOutOfStock) return 'Out of stock';
-    if (_isLowStock) return 'Low stock';
-    return 'In stock';
+  String _stockLabel(AppLocalizations l10n) {
+    if (_isOutOfStock) return l10n.productStockOut;
+    if (_isLowStock) return l10n.productStockLow;
+    return l10n.productStockIn;
   }
 
-  String get _productTypeLabel {
+  String _productTypeLabel(AppLocalizations l10n) {
     switch (product.productType.toUpperCase()) {
       case 'VARIABLE':
-        return 'Variable';
+        return l10n.adminProductTypeVariable;
       case 'GROUPED':
-        return 'Grouped';
+        return l10n.adminProductTypeGrouped;
       case 'EXTERNAL':
-        return 'External';
+        return l10n.adminProductTypeExternal;
       case 'SIMPLE':
       default:
-        return 'Simple';
+        return l10n.adminProductTypeSimple;
     }
   }
 
@@ -195,7 +195,7 @@ class AdminProductCard extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.edit_outlined, color: colors.primary),
                   title: Text(
-                    'Edit product',
+                    l10n.adminProductCardEditAction,
                     style: text.bodyMedium.copyWith(color: colors.label),
                   ),
                   onTap: () => Navigator.of(ctx).pop('edit'),
@@ -204,7 +204,7 @@ class AdminProductCard extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.delete_outline, color: colors.danger),
                   title: Text(
-                    'Delete product',
+                    l10n.adminProductCardDeleteAction,
                     style: text.bodyMedium.copyWith(color: colors.danger),
                   ),
                   onTap: () => Navigator.of(ctx).pop('delete'),
@@ -319,6 +319,7 @@ class AdminProductCard extends StatelessWidget {
 
   Widget _buildSkuBox({
     required dynamic tokens,
+    required AppLocalizations l10n,
     required String sku,
     required bool compact,
   }) {
@@ -352,7 +353,7 @@ class AdminProductCard extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'SKU: ${sku.trim()}',
+                  '${l10n.adminProductSkuLabel}: ${sku.trim()}',
                   maxLines: 1,
                   softWrap: false,
                   style: text.bodySmall.copyWith(
@@ -508,6 +509,7 @@ class AdminProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final tokens = context.watch<ThemeCubit>().state.tokens;
     final colors = tokens.colors;
     final spacing = tokens.spacing;
@@ -595,13 +597,13 @@ class AdminProductCard extends StatelessWidget {
                           children: [
                             _buildPill(
                               tokens: tokens,
-                              label: _statusLabel,
+                              label: _statusLabel(l10n),
                               bg: _statusBg(colors),
                               fg: _statusFg(colors),
                             ),
                             _buildPill(
                               tokens: tokens,
-                              label: _stockLabel,
+                              label: _stockLabel(l10n),
                               bg: _stockBg(colors),
                               fg: _stockFg(colors),
                             ),
@@ -671,7 +673,7 @@ class AdminProductCard extends StatelessWidget {
                         Text(
                           _hasText(product.description)
                               ? product.description!.trim()
-                              : _productTypeLabel,
+                              : _productTypeLabel(l10n),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: bodyStyle,
@@ -680,7 +682,7 @@ class AdminProductCard extends StatelessWidget {
                         _buildMiniChip(
                           tokens: tokens,
                           icon: Icons.widgets_outlined,
-                          label: _productTypeLabel,
+                          label: _productTypeLabel(l10n),
                           fg: colors.primary,
                           bg: colors.primary.withOpacity(0.10),
                           maxWidth: compact ? 82 : 108,
@@ -689,6 +691,7 @@ class AdminProductCard extends StatelessWidget {
                           SizedBox(height: spacing.xs),
                           _buildSkuBox(
                             tokens: tokens,
+                            l10n: l10n,
                             sku: product.sku!,
                             compact: compact,
                           ),
@@ -700,7 +703,7 @@ class AdminProductCard extends StatelessWidget {
                               child: _buildMetricBox(
                                 tokens: tokens,
                                 icon: Icons.sell_outlined,
-                                label: 'Price',
+                                label: l10n.adminProductPriceLabel,
                                 value: _moneyStrict(product.effectivePrice),
                                 valueColor: colors.primary,
                                 compact: compact,
@@ -711,7 +714,7 @@ class AdminProductCard extends StatelessWidget {
                               child: _buildMetricBox(
                                 tokens: tokens,
                                 icon: Icons.inventory_2_outlined,
-                                label: 'Stock',
+                                label: l10n.adminProductStockLabel,
                                 value: '$_safeStock',
                                 valueColor: _isOutOfStock
                                     ? colors.danger
@@ -732,7 +735,7 @@ class AdminProductCard extends StatelessWidget {
                                 primary: false,
                                 onPressed: onDelete,
                                 icon: Icons.delete_outline,
-                                label: 'Delete',
+                                label: l10n.commonDelete,
                               ),
                             ),
                             SizedBox(width: spacing.sm),
@@ -742,7 +745,7 @@ class AdminProductCard extends StatelessWidget {
                                 primary: true,
                                 onPressed: onEdit,
                                 icon: Icons.edit_outlined,
-                                label: 'Edit',
+                                label: l10n.adminEdit,
                               ),
                             ),
                           ],
