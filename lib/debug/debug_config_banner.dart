@@ -41,8 +41,10 @@ class DebugConfigBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🔥 خليه true هلق كرمال الديباغ. لما تخلصي خليه false أو شي flag
-    const bool showDebug = true;
+    // On in debug, never in a release build: this panel prints the API base
+    // URL and the raw config blobs on top of the UI, and the storefront runs
+    // the same code in a browser where any visitor would read them.
+    const bool showDebug = kDebugMode;
 
     if (!showDebug) return child;
 

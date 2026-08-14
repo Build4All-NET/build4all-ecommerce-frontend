@@ -12,6 +12,8 @@ import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/network/globals.dart';
 
 Future<void> main() async {
+  _silenceLogsOutsideDebug();
+
   WidgetsFlutterBinding.ensureInitialized();
 
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -45,6 +47,20 @@ Future<void> main() async {
       debugPrintStack(stackTrace: stackTrace);
     },
   );
+}
+
+/// Turns every `debugPrint` in the app into a no-op outside debug builds.
+///
+/// `debugPrint` is not compiled out of a release build — it keeps printing, and
+/// on the web that means straight into the browser console, where anyone who
+/// opens DevTools on a merchant's storefront can read the login responses,
+/// tokens and payloads those lines carry. Reassigning it here covers every call
+/// site at once, including `debugPrintStack` and any log added later, instead
+/// of trusting each one to check the build mode itself.
+void _silenceLogsOutsideDebug() {
+  if (kDebugMode) return;
+
+  debugPrint = (String? message, {int? wrapWidth}) {};
 }
 
 Future<void> _bootstrapApp() async {

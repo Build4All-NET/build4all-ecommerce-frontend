@@ -90,15 +90,14 @@ class ThemeCubit extends Cubit<ThemeState> {
 
       emit(state.copyWith(isLoaded: true));
     } catch (e) {
-      // ignore: avoid_print
-      print('Theme runtime load failed: $e');
+      debugPrint('Theme runtime load failed: $e');
       emit(state.copyWith(isLoaded: true));
     }
   }
 
  void _applyThemeFromB64(String b64, {required String source}) {
     try {
-      print('Applying theme from $source (len=${b64.length})');
+      debugPrint('Applying theme from $source (len=${b64.length})');
 
       final remote = RemoteThemeDto.fromBase64Json(b64);
       final tokens = AppThemeTokens.fromRemote(remote);
@@ -113,7 +112,7 @@ class ThemeCubit extends Cubit<ThemeState> {
         ),
       );
     } catch (e) {
-      print('Theme apply failed ($source): $e');
+      debugPrint('Theme apply failed ($source): $e');
     }
   }
 

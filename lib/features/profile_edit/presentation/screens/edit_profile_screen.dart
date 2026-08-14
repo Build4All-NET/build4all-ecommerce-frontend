@@ -62,12 +62,13 @@ class _EditProfileAuthDebugInterceptor extends Interceptor {
     if (t.isNotEmpty) {
       o.headers['Authorization'] = o.headers['Authorization'] ?? 'Bearer $t';
     }
-    // ignore: avoid_print
-    print(">>> URL: ${o.uri}");
-    // ignore: avoid_print
-    print(">>> AUTH: ${o.headers['Authorization']}");
-    // ignore: avoid_print
-    print(">>> CT: ${o.headers['Content-Type']}");
+    debugPrint(">>> URL: ${o.uri}");
+    // Presence only. That header *is* the session token, and a log line is the
+    // one place it can be read by someone who does not already hold it.
+    debugPrint(
+      ">>> AUTH: ${o.headers['Authorization'] == null ? 'none' : 'Bearer ***'}",
+    );
+    debugPrint(">>> CT: ${o.headers['Content-Type']}");
     h.next(o);
   }
 }

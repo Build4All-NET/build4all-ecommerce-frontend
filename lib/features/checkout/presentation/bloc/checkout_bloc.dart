@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 import 'package:build4front/core/exceptions/app_exception.dart';
 import 'package:build4front/core/exceptions/exception_mapper.dart';
@@ -622,8 +623,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
             clientSecret: clientSecret,
             merchantName: Env.appName,
           );
-          // ignore: avoid_print
-          print('[checkout] StripePaymentSheet result=$sheetResult');
+          debugPrint('[checkout] StripePaymentSheet result=$sheetResult');
         } on StripeException catch (se) {
           // User canceled or provider error. Abandon the intent; no order
           // was created so nothing else to roll back.

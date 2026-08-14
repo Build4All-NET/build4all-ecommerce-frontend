@@ -40,7 +40,7 @@ class FrontFirebasePushService {
     debugPrint('FRONT APP ID => $appId');
 
     final token = await _messaging.getToken();
-    debugPrint('FRONT FCM TOKEN => $token');
+    debugPrint('FRONT FCM TOKEN => ${token == null ? "none" : "received"}');
 
     if (token != null && token.isNotEmpty) {
       await _api.registerFrontFcmToken(
@@ -54,7 +54,7 @@ class FrontFirebasePushService {
     }
 
     _messaging.onTokenRefresh.listen((newToken) async {
-      debugPrint('FRONT FCM TOKEN REFRESH => $newToken');
+      debugPrint('FRONT FCM TOKEN REFRESH => received');
 
       await _api.registerFrontFcmToken(
         ownerProjectLinkId: ownerProjectLinkId,
