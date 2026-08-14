@@ -486,6 +486,17 @@ jobs:
           print("✅ Web branding applied. APP_NAME =", app_name, "| logo =", got_logo)
           PY
 
+          # The loading screen is served from web/splash/, generated from
+          # assets/branding/logo.png rather than read at runtime. The mobile
+          # workflows run this generator; without it the site keeps the images
+          # committed in the repo, so the favicon showed the merchant's logo
+          # while the splash still showed the placeholder.
+          if [ -f "assets/branding/logo.png" ]; then
+            flutter pub get
+            flutter pub run flutter_native_splash:create || \
+              echo "::warning title=Splash not regenerated::The site keeps the default loading image."
+          fi
+
       - name: Build web
         env:
           PATH_PREFIX: ${{ steps.hosting.outputs.path_prefix }}
