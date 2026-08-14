@@ -41,14 +41,14 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
       case 'INACTIVE':
         return l10n.coupons_inactive_badge;
       case 'SCHEDULED':
-        return 'Scheduled';
+        return l10n.couponsStatusScheduled;
       case 'EXPIRED':
-        return 'Expired';
+        return l10n.couponsStatusExpired;
       case 'USAGE_LIMIT_REACHED':
-        return 'Limit reached';
+        return l10n.couponsStatusLimitReached;
       case 'ACTIVE':
       default:
-        return 'Active';
+        return l10n.coupons_active;
     }
   }
 
@@ -91,9 +91,9 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
     return '${coupon.usedCount} / ${coupon.maxUses}';
   }
 
-  String _remainingText(Coupon coupon) {
+  String _remainingText(BuildContext context, Coupon coupon) {
     if (coupon.remainingUses == null) {
-      return 'Unlimited';
+      return AppLocalizations.of(context)!.couponsUsageUnlimited;
     }
     return coupon.remainingUses.toString();
   }
@@ -178,7 +178,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                   };
 
                   final validity = (coupon.startsAt == null && coupon.expiresAt == null)
-                      ? 'Always active'
+                      ? l10n.couponsValidityAlwaysActive
                       : '${_fmt(coupon.startsAt)} → ${_fmt(coupon.expiresAt)}';
 
                   return Container(
@@ -300,24 +300,24 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                           runSpacing: spacing.sm,
                           children: [
                             _InfoChip(
-                              label: 'Used',
+                              label: l10n.couponsChipUsed,
                               value: _usageText(coupon),
                             ),
                             _InfoChip(
-                              label: 'Remaining',
-                              value: _remainingText(coupon),
+                              label: l10n.adminRemaining,
+                              value: _remainingText(context, coupon),
                             ),
                             _InfoChip(
-                              label: 'Started',
-                              value: coupon.started ? 'Yes' : 'No',
+                              label: l10n.couponsChipStarted,
+                              value: coupon.started ? l10n.commonYes : l10n.commonNo,
                             ),
                             _InfoChip(
-                              label: 'Expired',
-                              value: coupon.expired ? 'Yes' : 'No',
+                              label: l10n.couponsChipExpired,
+                              value: coupon.expired ? l10n.commonYes : l10n.commonNo,
                             ),
                             _InfoChip(
-                              label: 'Valid now',
-                              value: coupon.currentlyValid ? 'Yes' : 'No',
+                              label: l10n.couponsChipValidNow,
+                              value: coupon.currentlyValid ? l10n.commonYes : l10n.commonNo,
                             ),
                           ],
                         ),

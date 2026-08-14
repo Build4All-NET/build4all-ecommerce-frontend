@@ -16,6 +16,11 @@ jobs:
       CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
       CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
 
+      # GitHub Actions run identity, reported on every backend callback so a
+      # super admin can jump straight to this run's logs from the manager.
+      CI_RUN_NUMBER: ${{ github.run_number }}
+      CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,7 +92,7 @@ jobs:
           curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/running" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\"}" || true
+            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           
           echo "✅ Build marked as RUNNING"
 
@@ -1029,14 +1034,16 @@ jobs:
             curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/succeeded" \
               -H "Content-Type: application/json" \
               -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-              -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\"}" || true
+              -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           else
             echo "❌ Job failed/cancelled → marking FAILED"
-            ERROR_MSG="Android build ${JOB_STATUS} (see GitHub Actions logs for details)"
+            # Owner-facing text: owners have no access to GitHub Actions, and the super
+            # admin now gets the run link instead. Keep internal detail out of it.
+            ERROR_MSG="The Android build did not complete (${JOB_STATUS}). Please try again or contact support."
             curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/failed" \
               -H "Content-Type: application/json" \
               -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-              -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\",\"error\":\"${ERROR_MSG}\"}" || true
+              -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"ANDROID\",\"error\":\"${ERROR_MSG}\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           fi
 
           echo "✅ Final status reported"

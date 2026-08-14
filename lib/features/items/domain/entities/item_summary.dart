@@ -1,5 +1,12 @@
 enum ItemKind { activity, product, service, unknown }
 
+/// What the primary call-to-action on an item should do.
+///
+/// The entity resolves the *action*; the presentation layer maps it to a
+/// localized label (`openLabel` / `downloadLabel` /
+/// `adminButtonTextDefaultAddToCart`). Domain code stays free of l10n.
+enum ItemActionKind { open, download, addToCart }
+
 class ItemSummary {
   final int id;
   final String title;
@@ -115,22 +122,27 @@ class ItemSummary {
       normalizedStatusCode == 'ARCHIVED' ||
       normalizedStatusName == 'ARCHIVED';
 
+  /// Technical status code for the UI to localize: PUBLISHED / DRAFT /
+  /// UPCOMING / ARCHIVED / UNKNOWN. Never a display string.
+  String get displayStatusCode {
+    switch (normalizedStatusCode) {
+      case 'PUBLISHED':
+      case 'DRAFT':
+      case 'UPCOMING':
+      case 'ARCHIVED':
+        return normalizedStatusCode;
+      default:
+        return 'UNKNOWN';
+    }
+  }
+
+  /// The backend-provided status name when the owner set one, otherwise the
+  /// technical code — the presentation layer localizes the code via
+  /// `productStatus*` keys.
   String get displayStatus {
     final name = (statusName ?? '').trim();
     if (name.isNotEmpty) return name;
-
-    switch (normalizedStatusCode) {
-      case 'PUBLISHED':
-        return 'Published';
-      case 'DRAFT':
-        return 'Draft';
-      case 'UPCOMING':
-        return 'Upcoming';
-      case 'ARCHIVED':
-        return 'Archived';
-      default:
-        return 'Unknown';
-    }
+    return displayStatusCode;
   }
 
   String get normalizedProductType => (productType ?? '').trim().toUpperCase();
@@ -156,11 +168,18 @@ class ItemSummary {
     return true;
   }
 
-  String get resolvedButtonText {
+  /// Owner-configured button text, when they set one. It is their own copy, so
+  /// it is passed through untranslated.
+  String? get customButtonText {
     final t = (buttonText ?? '').trim();
-    if (t.isNotEmpty) return t;
-    if (isExternalProduct) return 'Open';
-    if (downloadable) return 'Download';
-    return 'Add to cart';
+    return t.isEmpty ? null : t;
+  }
+
+  /// Fallback action when the owner set no custom text. The UI turns this into a
+  /// localized label.
+  ItemActionKind get resolvedActionKind {
+    if (isExternalProduct) return ItemActionKind.open;
+    if (downloadable) return ItemActionKind.download;
+    return ItemActionKind.addToCart;
   }
 }

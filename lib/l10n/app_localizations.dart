@@ -1099,6 +1099,132 @@ abstract class AppLocalizations {
   /// **'Stock'**
   String get adminProductStockLabel;
 
+  /// No description provided for @productStatusPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get productStatusPublished;
+
+  /// No description provided for @productStatusUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get productStatusUpcoming;
+
+  /// No description provided for @productStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get productStatusUnknown;
+
+  /// No description provided for @productStockIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get productStockIn;
+
+  /// No description provided for @productStockLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get productStockLow;
+
+  /// No description provided for @productStockOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get productStockOut;
+
+  /// No description provided for @adminProductsStockShortLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get adminProductsStockShortLow;
+
+  /// No description provided for @adminProductsStockShortOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get adminProductsStockShortOut;
+
+  /// No description provided for @adminProductsFilterTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get adminProductsFilterTypeLabel;
+
+  /// No description provided for @adminProductsNoFilterMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match the current filters.'**
+  String get adminProductsNoFilterMatch;
+
+  /// No description provided for @adminProductCardEditAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit product'**
+  String get adminProductCardEditAction;
+
+  /// No description provided for @adminProductCardDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete product'**
+  String get adminProductCardDeleteAction;
+
+  /// No description provided for @couponsStatusScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get couponsStatusScheduled;
+
+  /// No description provided for @couponsStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get couponsStatusExpired;
+
+  /// No description provided for @couponsStatusLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit reached'**
+  String get couponsStatusLimitReached;
+
+  /// No description provided for @couponsUsageUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get couponsUsageUnlimited;
+
+  /// No description provided for @couponsValidityAlwaysActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Always active'**
+  String get couponsValidityAlwaysActive;
+
+  /// No description provided for @couponsChipUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get couponsChipUsed;
+
+  /// No description provided for @couponsChipStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get couponsChipStarted;
+
+  /// No description provided for @couponsChipExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get couponsChipExpired;
+
+  /// No description provided for @couponsChipValidNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid now'**
+  String get couponsChipValidNow;
+
   /// No description provided for @adminProductStatusLabel.
   ///
   /// In en, this message translates to:

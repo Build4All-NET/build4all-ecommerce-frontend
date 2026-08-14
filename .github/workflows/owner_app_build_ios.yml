@@ -20,6 +20,11 @@ jobs:
       CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
       CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
 
+      # GitHub Actions run identity, reported on every backend callback so a
+      # super admin can jump straight to this run's logs from the manager.
+      CI_RUN_NUMBER: ${{ github.run_number }}
+      CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
       IOS_P12_B64: ${{ secrets.IOS_P12_B64 }}
       IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
       IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
@@ -123,7 +128,7 @@ jobs:
           curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/running" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}" || true
+            -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           echo "✅ Early RUNNING status sent"
 
       - name: Setup Flutter
@@ -383,7 +388,7 @@ jobs:
           RESPONSE="$(curl -sS -w "\n%{http_code}" -X PUT "${API_BASE}/api/ci/build-jobs/running" \
             -H "Content-Type: application/json" \
             -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}")"
+            -d "{\"buildId\":\"${BUILD_ID}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}")"
 
           HTTP_CODE="$(echo "$RESPONSE" | tail -n1)"
           BODY="$(echo "$RESPONSE" | sed '$d')"
@@ -1745,11 +1750,13 @@ jobs:
             curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/succeeded" \
               -H "Content-Type: application/json" \
               -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-              -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\"}" || true
+              -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           else
-            ERROR_MSG="iOS build ${JOB_STATUS} (see GitHub Actions logs for details)"
+            # Owner-facing text: owners have no access to GitHub Actions, and the super
+            # admin now gets the run link instead. Keep internal detail out of it.
+            ERROR_MSG="The iOS build did not complete (${JOB_STATUS}). Please try again or contact support."
             curl -sS -X PUT "${API_BASE}/api/ci/build-jobs/failed" \
               -H "Content-Type: application/json" \
               -H "X-Auth-Token: ${CI_CALLBACK_TOKEN}" \
-              -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\",\"error\":\"${ERROR_MSG}\"}" || true
+              -d "{\"buildId\":\"${BUILD_ID_VAL}\",\"linkId\":\"${LINK_ID}\",\"platform\":\"IOS\",\"error\":\"${ERROR_MSG}\",\"runNumber\":\"${CI_RUN_NUMBER}\",\"runUrl\":\"${CI_RUN_URL}\"}" || true
           fi

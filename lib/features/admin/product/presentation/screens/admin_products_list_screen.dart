@@ -254,21 +254,21 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     return 'UNKNOWN';
   }
 
-  String _statusLabelOf(Product p) {
+  String _statusLabelOf(AppLocalizations l10n, Product p) {
     final rawName = (p.statusName ?? '').trim();
     if (rawName.isNotEmpty) return rawName;
 
     switch (_statusCodeOf(p)) {
       case 'DRAFT':
-        return 'Draft';
+        return l10n.productStatusDraft;
       case 'UPCOMING':
-        return 'Upcoming';
+        return l10n.productStatusUpcoming;
       case 'PUBLISHED':
-        return 'Published';
+        return l10n.productStatusPublished;
       case 'ARCHIVED':
-        return 'Archived';
+        return l10n.productStatusArchived;
       default:
-        return 'Unknown';
+        return l10n.productStatusUnknown;
     }
   }
 
@@ -279,26 +279,26 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     return 'IN_STOCK';
   }
 
-  String _stockLabelOf(Product p) {
+  String _stockLabelOf(AppLocalizations l10n, Product p) {
     switch (_stockCodeOf(p)) {
       case 'OUT_OF_STOCK':
-        return 'Out of stock';
+        return l10n.productStockOut;
       case 'LOW_STOCK':
-        return 'Low stock';
+        return l10n.productStockLow;
       case 'IN_STOCK':
       default:
-        return 'In stock';
+        return l10n.productStockIn;
     }
   }
 
-  bool _matchesSearch(Product p, String query) {
+  bool _matchesSearch(AppLocalizations l10n, Product p, String query) {
     final q = _norm(query);
     if (q.isEmpty) return true;
 
     final name = _norm(p.name);
     final sku = _normSku(p.sku);
-    final status = _norm(_statusLabelOf(p));
-    final stock = _norm(_stockLabelOf(p));
+    final status = _norm(_statusLabelOf(l10n, p));
+    final stock = _norm(_stockLabelOf(l10n, p));
 
     if (q.length == 1) {
       return name.startsWith(q) ||
@@ -323,11 +323,11 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
     return _stockCodeOf(p) == _stockFilter;
   }
 
-  List<Product> _applyFilters(ProductListState state) {
+  List<Product> _applyFilters(AppLocalizations l10n, ProductListState state) {
     var list = [...state.products];
 
     if (_searchQuery.trim().isNotEmpty) {
-      list = list.where((p) => _matchesSearch(p, _searchQuery)).toList();
+      list = list.where((p) => _matchesSearch(l10n, p, _searchQuery)).toList();
     }
 
     if (_typeFilter != 'ALL') {
@@ -501,7 +501,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
 
                 _maybeWarmUp(state.products);
 
-                final filtered = _applyFilters(state);
+                final filtered = _applyFilters(l10n, state);
                 final crossAxisCount = _crossAxisCount(availableWidth);
                 final gridSpacing = _gridSpacing(availableWidth);
                 final cardExtent = _cardExtent(availableWidth);
@@ -548,7 +548,7 @@ class _AdminProductsListViewState extends State<_AdminProductsListView> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: Text(
-                                'No products match the current filters.',
+                                l10n.adminProductsNoFilterMatch,
                                 textAlign: TextAlign.center,
                                 style: text.bodyMedium.copyWith(
                                   color: colors.body,
@@ -730,43 +730,43 @@ class _AdminProductsHeaderBar extends StatelessWidget {
               children: [
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Draft',
+                  label: l10n.productStatusDraft,
                   count: statusCounts['DRAFT'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Upcoming',
+                  label: l10n.productStatusUpcoming,
                   count: statusCounts['UPCOMING'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Published',
+                  label: l10n.productStatusPublished,
                   count: statusCounts['PUBLISHED'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Archived',
+                  label: l10n.productStatusArchived,
                   count: statusCounts['ARCHIVED'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'In stock',
+                  label: l10n.productStockIn,
                   count: stockCounts['IN_STOCK'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Low',
+                  label: l10n.adminProductsStockShortLow,
                   count: stockCounts['LOW_STOCK'] ?? 0,
                 ),
                 SizedBox(width: spacing.xs),
                 _SummaryPill(
                   tokens: tokens,
-                  label: 'Out',
+                  label: l10n.adminProductsStockShortOut,
                   count: stockCounts['OUT_OF_STOCK'] ?? 0,
                 ),
               ],
@@ -788,41 +788,41 @@ class _AdminProductsHeaderBar extends StatelessWidget {
               children: [
                 _CompactFilterDropdown(
                   tokens: tokens,
-                  label: 'Type',
+                  label: l10n.adminProductsFilterTypeLabel,
                   value: typeFilter,
-                  items: const [
-                    _FilterItem(value: 'ALL', label: 'All'),
-                    _FilterItem(value: 'SIMPLE', label: 'Simple'),
-                    _FilterItem(value: 'VARIABLE', label: 'Variable'),
-                    _FilterItem(value: 'GROUPED', label: 'Grouped'),
-                    _FilterItem(value: 'EXTERNAL', label: 'External'),
+                  items: [
+                    _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                    _FilterItem(value: 'SIMPLE', label: l10n.adminProductTypeSimple),
+                    _FilterItem(value: 'VARIABLE', label: l10n.adminProductTypeVariable),
+                    _FilterItem(value: 'GROUPED', label: l10n.adminProductTypeGrouped),
+                    _FilterItem(value: 'EXTERNAL', label: l10n.adminProductTypeExternal),
                   ],
                   onChanged: onTypeFilterChanged,
                 ),
                 SizedBox(height: spacing.sm),
                 _CompactFilterDropdown(
                   tokens: tokens,
-                  label: 'Status',
+                  label: l10n.adminProductStatusLabel,
                   value: statusFilter,
-                  items: const [
-                    _FilterItem(value: 'ALL', label: 'All'),
-                    _FilterItem(value: 'DRAFT', label: 'Draft'),
-                    _FilterItem(value: 'UPCOMING', label: 'Upcoming'),
-                    _FilterItem(value: 'PUBLISHED', label: 'Published'),
-                    _FilterItem(value: 'ARCHIVED', label: 'Archived'),
+                  items: [
+                    _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                    _FilterItem(value: 'DRAFT', label: l10n.productStatusDraft),
+                    _FilterItem(value: 'UPCOMING', label: l10n.productStatusUpcoming),
+                    _FilterItem(value: 'PUBLISHED', label: l10n.productStatusPublished),
+                    _FilterItem(value: 'ARCHIVED', label: l10n.productStatusArchived),
                   ],
                   onChanged: onStatusFilterChanged,
                 ),
                 SizedBox(height: spacing.sm),
                 _CompactFilterDropdown(
                   tokens: tokens,
-                  label: 'Stock',
+                  label: l10n.adminProductStockLabel,
                   value: stockFilter,
-                  items: const [
-                    _FilterItem(value: 'ALL', label: 'All'),
-                    _FilterItem(value: 'IN_STOCK', label: 'In stock'),
-                    _FilterItem(value: 'LOW_STOCK', label: 'Low stock'),
-                    _FilterItem(value: 'OUT_OF_STOCK', label: 'Out of stock'),
+                  items: [
+                    _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                    _FilterItem(value: 'IN_STOCK', label: l10n.productStockIn),
+                    _FilterItem(value: 'LOW_STOCK', label: l10n.productStockLow),
+                    _FilterItem(value: 'OUT_OF_STOCK', label: l10n.productStockOut),
                   ],
                   onChanged: onStockFilterChanged,
                 ),
@@ -837,14 +837,14 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                   width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
-                    label: 'Type',
+                    label: l10n.adminProductsFilterTypeLabel,
                     value: typeFilter,
-                    items: const [
-                      _FilterItem(value: 'ALL', label: 'All'),
-                      _FilterItem(value: 'SIMPLE', label: 'Simple'),
-                      _FilterItem(value: 'VARIABLE', label: 'Variable'),
-                      _FilterItem(value: 'GROUPED', label: 'Grouped'),
-                      _FilterItem(value: 'EXTERNAL', label: 'External'),
+                    items: [
+                      _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                      _FilterItem(value: 'SIMPLE', label: l10n.adminProductTypeSimple),
+                      _FilterItem(value: 'VARIABLE', label: l10n.adminProductTypeVariable),
+                      _FilterItem(value: 'GROUPED', label: l10n.adminProductTypeGrouped),
+                      _FilterItem(value: 'EXTERNAL', label: l10n.adminProductTypeExternal),
                     ],
                     onChanged: onTypeFilterChanged,
                   ),
@@ -853,14 +853,14 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                   width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
-                    label: 'Status',
+                    label: l10n.adminProductStatusLabel,
                     value: statusFilter,
-                    items: const [
-                      _FilterItem(value: 'ALL', label: 'All'),
-                      _FilterItem(value: 'DRAFT', label: 'Draft'),
-                      _FilterItem(value: 'UPCOMING', label: 'Upcoming'),
-                      _FilterItem(value: 'PUBLISHED', label: 'Published'),
-                      _FilterItem(value: 'ARCHIVED', label: 'Archived'),
+                    items: [
+                      _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                      _FilterItem(value: 'DRAFT', label: l10n.productStatusDraft),
+                      _FilterItem(value: 'UPCOMING', label: l10n.productStatusUpcoming),
+                      _FilterItem(value: 'PUBLISHED', label: l10n.productStatusPublished),
+                      _FilterItem(value: 'ARCHIVED', label: l10n.productStatusArchived),
                     ],
                     onChanged: onStatusFilterChanged,
                   ),
@@ -869,13 +869,13 @@ class _AdminProductsHeaderBar extends StatelessWidget {
                   width: filterWidth,
                   child: _CompactFilterDropdown(
                     tokens: tokens,
-                    label: 'Stock',
+                    label: l10n.adminProductStockLabel,
                     value: stockFilter,
-                    items: const [
-                      _FilterItem(value: 'ALL', label: 'All'),
-                      _FilterItem(value: 'IN_STOCK', label: 'In stock'),
-                      _FilterItem(value: 'LOW_STOCK', label: 'Low stock'),
-                      _FilterItem(value: 'OUT_OF_STOCK', label: 'Out of stock'),
+                    items: [
+                      _FilterItem(value: 'ALL', label: l10n.adminFilterAll),
+                      _FilterItem(value: 'IN_STOCK', label: l10n.productStockIn),
+                      _FilterItem(value: 'LOW_STOCK', label: l10n.productStockLow),
+                      _FilterItem(value: 'OUT_OF_STOCK', label: l10n.productStockOut),
                     ],
                     onChanged: onStockFilterChanged,
                   ),
