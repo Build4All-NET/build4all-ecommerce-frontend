@@ -400,8 +400,19 @@ jobs:
                   for name in ("Icon-192.png", "Icon-512.png",
                                "Icon-maskable-192.png", "Icon-maskable-512.png"):
                       (icons / name).write_bytes((web / "favicon.png").read_bytes())
+
+                  # The app itself reads assets/branding/logo.png — the mobile
+                  # builds write it here too. Without it the web bundle ships
+                  # the repo's placeholder, which is why the site showed a
+                  # default image while the phone showed the real logo.
+                  branding = pathlib.Path("assets/branding")
+                  branding.mkdir(parents=True, exist_ok=True)
+                  logo_bytes = (web / "favicon.png").read_bytes()
+                  for name in ("logo.png", "launcher.png", "splash.png"):
+                      (branding / name).write_bytes(logo_bytes)
+
                   got_logo = True
-                  print("✅ Logo applied to favicon + PWA icons")
+                  print("✅ Logo applied to favicon, PWA icons and app assets")
               except Exception as e:
                   print("⚠️ Failed to download logo:", e)
 
