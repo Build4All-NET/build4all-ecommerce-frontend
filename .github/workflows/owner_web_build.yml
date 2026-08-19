@@ -16,7 +16,7 @@ on:
         description: "Backend base URL (e.g. https://api.build4all.net)"
         required: true
       slug:
-        description: "Slug used for the site path; defaults to app<link_id>"
+        description: "Slug for the site path (/s/<slug>/) or the Cloudflare project (b4a-<slug>); defaults to app<link_id>"
         required: false
 
 permissions:
@@ -98,11 +98,20 @@ jobs:
       # RESOLVE DEPLOY TARGET
       # Runs before the build because the public path is compiled into the
       # bundle (--base-href), so where the site will live has to be known
-      # first. Three modes:
-      #   s3    — SITE_BUCKET + SITE_BASE_URL are set: served at the site root
-      #   pages — otherwise: GitHub Pages project site, served under /<repo>/
-      #   none  — Pages disabled via USE_GITHUB_PAGES=false and no bucket:
-      #           build only, site stays available as a workflow artifact
+      # first. Four modes:
+      #   s3         — SITE_BUCKET + SITE_BASE_URL are set: served at the site
+      #                root, every merchant under /s/<slug>/
+      #   cloudflare — CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID are set:
+      #                one Cloudflare Pages project per merchant (b4a-<slug>),
+      #                each served at its own https://b4a-<slug>.pages.dev root
+      #   pages      — GitHub Pages project site, served under /<repo>/s/<slug>/
+      #   none       — Pages disabled via USE_GITHUB_PAGES=false and nothing
+      #                else configured: build only, site stays a workflow artifact
+      #
+      # Auto-detection prefers S3, then Cloudflare, then GitHub Pages, so a repo
+      # that already deploys to a bucket keeps doing exactly that. Set the
+      # SITE_HOSTING repo variable (s3 | cloudflare | pages | none) to pin one
+      # explicitly — e.g. cloudflare while an old bucket is still around.
       # ════════════════════════════════════════════════════════════════════
       - name: Resolve deploy target
         id: hosting
@@ -110,27 +119,71 @@ jobs:
           SITE_BUCKET: ${{ secrets.SITE_BUCKET }}
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
           CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           USE_GITHUB_PAGES: ${{ vars.USE_GITHUB_PAGES }}
+          SITE_HOSTING: ${{ vars.SITE_HOSTING }}
         run: |
           set -e
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           OWNER_LC="$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')"
 
-          if [ -n "$SITE_BUCKET" ] && [ -n "$SITE_BASE_URL" ]; then
-            MODE="s3"
-            PATH_PREFIX=""
-            SITE_ROOT="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
-          elif [ "${USE_GITHUB_PAGES,,}" = "false" ]; then
-            MODE="none"
-            PATH_PREFIX=""
-            SITE_ROOT=""
-          else
-            # GitHub Pages project sites are served from /<repo>/, so that
-            # prefix has to be part of every asset path in the bundle.
-            MODE="pages"
-            PATH_PREFIX="/${REPO_NAME}"
-            SITE_ROOT="https://${OWNER_LC}.github.io/${REPO_NAME}"
+          HAVE_S3=false
+          HAVE_CF=false
+          if [ -n "$SITE_BUCKET" ] && [ -n "$SITE_BASE_URL" ]; then HAVE_S3=true; fi
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then HAVE_CF=true; fi
+
+          MODE="${SITE_HOSTING,,}"
+          if [ -z "$MODE" ]; then
+            if [ "$HAVE_S3" = true ]; then
+              MODE="s3"
+            elif [ "$HAVE_CF" = true ]; then
+              MODE="cloudflare"
+            elif [ "${USE_GITHUB_PAGES,,}" = "false" ]; then
+              MODE="none"
+            else
+              MODE="pages"
+            fi
           fi
+
+          # A pinned mode whose credentials are missing would otherwise fail
+          # deep in the deploy step, after a full Flutter build.
+          if [ "$MODE" = "s3" ] && [ "$HAVE_S3" != true ]; then
+            echo "::error title=Hosting misconfigured::SITE_HOSTING=s3 but SITE_BUCKET/SITE_BASE_URL are not set."
+            exit 1
+          fi
+          if [ "$MODE" = "cloudflare" ] && [ "$HAVE_CF" != true ]; then
+            echo "::error title=Hosting misconfigured::SITE_HOSTING=cloudflare but CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are not set."
+            exit 1
+          fi
+
+          case "$MODE" in
+            s3)
+              PATH_PREFIX=""
+              SITE_ROOT="$(echo "$SITE_BASE_URL" | sed 's:/*$::')"
+              ;;
+            cloudflare)
+              # Each merchant gets its own Pages project, so the site owns the
+              # whole origin: no path prefix, and the root is only known once
+              # the slug has been resolved (see "Resolve site URL").
+              PATH_PREFIX=""
+              SITE_ROOT=""
+              ;;
+            none)
+              PATH_PREFIX=""
+              SITE_ROOT=""
+              ;;
+            pages)
+              # GitHub Pages project sites are served from /<repo>/, so that
+              # prefix has to be part of every asset path in the bundle.
+              PATH_PREFIX="/${REPO_NAME}"
+              SITE_ROOT="https://${OWNER_LC}.github.io/${REPO_NAME}"
+              ;;
+            *)
+              echo "::error title=Hosting misconfigured::Unknown SITE_HOSTING '${SITE_HOSTING}'. Use s3, cloudflare, pages or none."
+              exit 1
+              ;;
+          esac
 
           {
             echo "mode=$MODE"
@@ -144,10 +197,11 @@ jobs:
           } >> $GITHUB_OUTPUT
 
           case "$MODE" in
-            s3)    echo "✅ Deploy target: S3 ($SITE_ROOT)" ;;
-            pages) echo "✅ Deploy target: GitHub Pages ($SITE_ROOT)"
-                   echo "   Pages must be enabled in repo settings, serving the gh-pages branch." ;;
-            none)  echo "ℹ️ No deploy target — building only. The site is attached as an artifact." ;;
+            s3)         echo "✅ Deploy target: S3 ($SITE_ROOT)" ;;
+            cloudflare) echo "✅ Deploy target: Cloudflare Pages (project b4a-<slug>, https://b4a-<slug>.pages.dev)" ;;
+            pages)      echo "✅ Deploy target: GitHub Pages ($SITE_ROOT)"
+                        echo "   Pages must be enabled in repo settings, serving the gh-pages branch." ;;
+            none)       echo "ℹ️ No deploy target — building only. The site is attached as an artifact." ;;
           esac
 
       - name: Setup Flutter
@@ -294,6 +348,52 @@ jobs:
           PY
         env:
           IN_SLUG: ${{ github.event.inputs.slug }}
+
+      # ════════════════════════════════════════════════════════════════════
+      # RESOLVE SITE URL
+      # The slug is only known after the runtime config has been fetched, so
+      # the final public URL is settled here rather than in "Resolve deploy
+      # target". Everything downstream — the base href compiled into the
+      # bundle, the deploy step, the callback and the summary — reads BASE_HREF
+      # and SITE_URL from here, so the URL is built in exactly one place.
+      #   cloudflare  https://b4a-<slug>.pages.dev/     (own project, own origin)
+      #   s3/pages    <site root>/s/<slug>/             (shared origin, one path each)
+      # ════════════════════════════════════════════════════════════════════
+      - name: Resolve site URL
+        env:
+          MODE: ${{ steps.hosting.outputs.mode }}
+          PATH_PREFIX: ${{ steps.hosting.outputs.path_prefix }}
+          SITE_ROOT: ${{ steps.hosting.outputs.site_root }}
+        run: |
+          set -e
+
+          if [ "$MODE" = "cloudflare" ]; then
+            # Cloudflare Pages project names: lowercase alphanumerics and
+            # dashes, must start with a letter or digit, 58 chars max. The slug
+            # is already sanitised to [a-z0-9-]; the b4a- prefix keeps every
+            # merchant project grouped and guarantees a valid first character.
+            CF_PROJECT="b4a-${SLUG}"
+            CF_PROJECT="$(echo "$CF_PROJECT" | cut -c1-58 | sed 's/-*$//')"
+
+            BASE_HREF="/"
+            SITE_URL="https://${CF_PROJECT}.pages.dev/"
+
+            echo "CF_PROJECT=$CF_PROJECT" >> $GITHUB_ENV
+          else
+            CF_PROJECT=""
+            BASE_HREF="${PATH_PREFIX}/s/${SLUG}/"
+            SITE_URL="${SITE_ROOT}/s/${SLUG}/"
+          fi
+
+          {
+            echo "BASE_HREF=$BASE_HREF"
+            echo "SITE_URL=$SITE_URL"
+          } >> $GITHUB_ENV
+
+          echo "MODE       = $MODE"
+          echo "BASE_HREF  = $BASE_HREF"
+          echo "SITE_URL   = ${SITE_URL:-(not deployed)}"
+          if [ -n "$CF_PROJECT" ]; then echo "CF_PROJECT = $CF_PROJECT"; fi
 
       # Identical to the Android workflow: the manager stores menuType under
       # BRANDING, but the app reads it from THEME.
@@ -503,13 +603,9 @@ jobs:
           fi
 
       - name: Build web
-        env:
-          PATH_PREFIX: ${{ steps.hosting.outputs.path_prefix }}
         run: |
           set -e
-          BASE_HREF="${PATH_PREFIX}/s/${SLUG}/"
           echo "BASE_HREF=$BASE_HREF"
-          echo "BASE_HREF=$BASE_HREF" >> $GITHUB_ENV
 
           flutter pub get
 
@@ -589,6 +685,73 @@ jobs:
             --query "Invalidation.Id" --output text
 
       # ════════════════════════════════════════════════════════════════════
+      # CLOUDFLARE PAGES — one project per merchant (b4a-<slug>), so every
+      # storefront gets its own origin at https://b4a-<slug>.pages.dev instead
+      # of sharing a path on one host. Uploads are direct from the runner
+      # (wrangler), so Cloudflare never needs access to this repository.
+      # ════════════════════════════════════════════════════════════════════
+      - name: Prepare Cloudflare Pages files (_redirects, _headers)
+        if: steps.hosting.outputs.mode == 'cloudflare'
+        run: |
+          set -e
+
+          # Flutter web routes client-side. Without this, a refresh or a deep
+          # link on /product/42 hits Cloudflare's 404 instead of the app.
+          # 200 keeps the URL as typed, so the router still sees the real path.
+          printf '/*    /index.html    200\n' > build/web/_redirects
+
+          # Hashed build assets are immutable; index.html and the manifest must
+          # never be cached, or clients keep booting the previous build.
+          {
+            for f in /index.html /manifest.json /version.json /flutter_service_worker.js; do
+              printf '%s\n  Cache-Control: no-cache, no-store, must-revalidate\n' "$f"
+            done
+            for d in '/assets/*' '/canvaskit/*'; do
+              printf '%s\n  Cache-Control: public, max-age=31536000, immutable\n' "$d"
+            done
+          } > build/web/_headers
+
+          echo "✅ _redirects and _headers written"
+
+      - name: Setup Node (wrangler)
+        if: steps.hosting.outputs.mode == 'cloudflare'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.hosting.outputs.mode == 'cloudflare'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          WRANGLER="wrangler@3"
+
+          # First build for a merchant: the project does not exist yet. Creating
+          # it is idempotent in practice — an existing project makes this fail,
+          # which is why the failure is tolerated and the deploy below is what
+          # actually decides the outcome.
+          if npx --yes "$WRANGLER" pages project list 2>/dev/null \
+               | grep -qE "(^|[[:space:]])${CF_PROJECT}([[:space:]]|$)"; then
+            echo "ℹ️ Cloudflare Pages project ${CF_PROJECT} already exists."
+          else
+            echo "Creating Cloudflare Pages project ${CF_PROJECT}…"
+            npx --yes "$WRANGLER" pages project create "$CF_PROJECT" \
+              --production-branch main \
+              || echo "::warning title=Project create failed::Continuing — the deploy below will report the real error if ${CF_PROJECT} is genuinely missing."
+          fi
+
+          # --branch main matches the production branch, so this publishes to
+          # the project's production URL rather than a preview subdomain.
+          npx --yes "$WRANGLER" pages deploy build/web \
+            --project-name "$CF_PROJECT" \
+            --branch main \
+            --commit-dirty=true
+
+          echo "✅ Deployed to ${SITE_URL}"
+
+      # ════════════════════════════════════════════════════════════════════
       # GITHUB PAGES — every owner's site is a folder on one gh-pages branch,
       # so each build must add its own folder without disturbing the others.
       # That rules out the deploy-pages action, which replaces the whole site.
@@ -643,11 +806,13 @@ jobs:
       # ════════════════════════════════════════════════════════════════════
       - name: Callback backend (SAVE web URL)
         if: steps.hosting.outputs.mode != 'none'
-        env:
-          SITE_ROOT: ${{ steps.hosting.outputs.site_root }}
         run: |
           set -e
-          WEB_URL="${SITE_ROOT}/s/${SLUG}/"
+          # Resolved in "Resolve site URL" — a per-merchant pages.dev origin
+          # under Cloudflare, a path on the shared site root otherwise. Whatever
+          # it is, this is what the manager shows the owner, so it is saved on
+          # every build: switching hosting replaces the stored URL by itself.
+          WEB_URL="${SITE_URL}"
 
           echo "========================================"
           echo "✅ SITE URL: $WEB_URL"
@@ -698,7 +863,6 @@ jobs:
         if: always()
         env:
           MODE: ${{ steps.hosting.outputs.mode }}
-          SITE_ROOT: ${{ steps.hosting.outputs.site_root }}
         run: |
           {
             echo "### Owner Web Build"
@@ -709,8 +873,11 @@ jobs:
             echo "| Slug | \`${SLUG:-?}\` |"
             echo "| Base href | \`${BASE_HREF:-?}\` |"
             echo "| Target | \`${MODE:-?}\` |"
-            if [ -n "$SITE_ROOT" ]; then
-              echo "| Site URL | ${SITE_ROOT}/s/${SLUG}/ |"
+            if [ -n "$CF_PROJECT" ]; then
+              echo "| Cloudflare project | \`${CF_PROJECT}\` |"
+            fi
+            if [ -n "$SITE_URL" ]; then
+              echo "| Site URL | ${SITE_URL} |"
             else
               echo "| Site URL | _not deployed — see the artifact above_ |"
             fi
