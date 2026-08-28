@@ -49,6 +49,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       taxRules: m.taxRules,
       shippingMethods: m.shippingMethods,
       coupons: m.coupons,
+      productPreviews: m.productPreviews,
     );
   }
 
@@ -57,11 +58,13 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
     required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
+    Map<int, int> imageAssignments = const {},
   }) async {
     final raw = await api.importExcel(
       file: file,
       replace: replace,
       replaceScope: replaceScope,
+      imageAssignments: imageAssignments,
     );
 
     final m = ExcelImportResultModel.fromJson(raw);
@@ -93,4 +96,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       warnings: m.warnings,
     );
   }
+
+  @override
+  Future<List<int>?> downloadTemplate() => api.downloadTemplate();
 }

@@ -3689,4 +3689,103 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paypalApprovalPaidBtn => 'دفعت';
+
+  @override
+  String get adminGalleryTitle => 'معرض الصور';
+
+  @override
+  String get adminActionGallerySubtitle => 'ارفع صورك مرة واحدة واستخدمها في أي مكان';
+
+  @override
+  String get galleryUploadButton => 'رفع صور';
+
+  @override
+  String get galleryUploading => 'جارٍ الرفع…';
+
+  @override
+  String get galleryEmptyTitle => 'لا توجد صور بعد';
+
+  @override
+  String get galleryEmptyMessage => 'ارفع صور منتجاتك هنا، ثم أضفها إلى المنتجات عند الاستيراد.';
+
+  @override
+  String get galleryDeleteTitle => 'حذف الصورة؟';
+
+  @override
+  String get galleryDeleteMessage => 'لن تعود متاحة لإضافتها إلى المنتجات.';
+
+  @override
+  String get galleryDeleteConfirm => 'حذف';
+
+  @override
+  String get galleryCancel => 'إلغاء';
+
+  @override
+  String galleryUploadedCount(Object count) {
+    return 'تم رفع $count صورة';
+  }
+
+  @override
+  String gallerySomeFailed(Object count) {
+    return 'تعذّر رفع $count';
+  }
+
+  @override
+  String get galleryLoadMore => 'تحميل المزيد';
+
+  @override
+  String galleryImageCount(Object count) {
+    return '$count صورة';
+  }
+
+  @override
+  String get galleryPickTitle => 'اختر صورة';
+
+  @override
+  String get galleryPickNone => 'بدون صورة';
+
+  @override
+  String get galleryPickEmpty => 'معرض الصور فارغ. ارفع صورًا أولًا.';
+
+  @override
+  String get galleryOpen => 'فتح المعرض';
+
+  @override
+  String get excelPreviewTitle => 'المنتجات التي وجدناها';
+
+  @override
+  String excelPreviewSubtitle(Object count) {
+    return '$count منتج جاهز للاستيراد';
+  }
+
+  @override
+  String excelPreviewRow(Object row) {
+    return 'الصف $row';
+  }
+
+  @override
+  String get excelPreviewChooseImage => 'اختر صورة';
+
+  @override
+  String get excelPreviewChangeImage => 'تغيير';
+
+  @override
+  String get excelPreviewRemoveImage => 'إزالة الصورة';
+
+  @override
+  String get excelPreviewNoImage => 'بدون صورة';
+
+  @override
+  String get excelPreviewRowHasIssues => 'بحاجة إلى تصحيح';
+
+  @override
+  String excelPreviewImagesAssigned(Object assigned, Object total) {
+    return '$assigned من أصل $total منتج لديه صورة';
+  }
+
+  @override
+  String get excelPreviewNoProducts => 'لم نجد أي منتج في هذا الملف.';
+
+  @override
+  String get excelPreviewFixFirst => 'صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.';
 }

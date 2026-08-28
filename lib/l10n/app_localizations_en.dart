@@ -3689,4 +3689,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paypalApprovalPaidBtn => 'I\'ve paid';
+
+  @override
+  String get adminGalleryTitle => 'Gallery';
+
+  @override
+  String get adminActionGallerySubtitle => 'Upload your pictures once and use them anywhere';
+
+  @override
+  String get galleryUploadButton => 'Upload images';
+
+  @override
+  String get galleryUploading => 'Uploading…';
+
+  @override
+  String get galleryEmptyTitle => 'No images yet';
+
+  @override
+  String get galleryEmptyMessage => 'Upload your product pictures here, then attach them to products when you import.';
+
+  @override
+  String get galleryDeleteTitle => 'Remove image?';
+
+  @override
+  String get galleryDeleteMessage => 'It will no longer be available to attach to products.';
+
+  @override
+  String get galleryDeleteConfirm => 'Remove';
+
+  @override
+  String get galleryCancel => 'Cancel';
+
+  @override
+  String galleryUploadedCount(Object count) {
+    return '$count images uploaded';
+  }
+
+  @override
+  String gallerySomeFailed(Object count) {
+    return '$count could not be uploaded';
+  }
+
+  @override
+  String get galleryLoadMore => 'Load more';
+
+  @override
+  String galleryImageCount(Object count) {
+    return '$count images';
+  }
+
+  @override
+  String get galleryPickTitle => 'Choose an image';
+
+  @override
+  String get galleryPickNone => 'No image';
+
+  @override
+  String get galleryPickEmpty => 'Your gallery is empty. Upload images first.';
+
+  @override
+  String get galleryOpen => 'Open gallery';
+
+  @override
+  String get excelPreviewTitle => 'Products found';
+
+  @override
+  String excelPreviewSubtitle(Object count) {
+    return '$count products are ready to import';
+  }
+
+  @override
+  String excelPreviewRow(Object row) {
+    return 'Row $row';
+  }
+
+  @override
+  String get excelPreviewChooseImage => 'Choose image';
+
+  @override
+  String get excelPreviewChangeImage => 'Change';
+
+  @override
+  String get excelPreviewRemoveImage => 'Remove image';
+
+  @override
+  String get excelPreviewNoImage => 'No picture yet';
+
+  @override
+  String get excelPreviewRowHasIssues => 'Needs fixing';
+
+  @override
+  String excelPreviewImagesAssigned(Object assigned, Object total) {
+    return '$assigned of $total products have a picture';
+  }
+
+  @override
+  String get excelPreviewNoProducts => 'No products were found in this file.';
+
+  @override
+  String get excelPreviewFixFirst => 'Fix the rows marked below, then upload the file again.';
 }

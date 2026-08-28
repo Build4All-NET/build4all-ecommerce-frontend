@@ -4,9 +4,16 @@ import '../entities/excel_validation_result.dart';
 
 abstract class ExcelImportRepository {
   Future<ExcelValidationResult> validate(PickedExcelFile file);
+
   Future<ExcelImportResult> importFile({
     required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
+
+    /// Gallery image id chosen for each product, keyed by its row in the sheet.
+    Map<int, int> imageAssignments,
   });
+
+  /// The blank workbook, or null when the server could not provide it.
+  Future<List<int>?> downloadTemplate();
 }

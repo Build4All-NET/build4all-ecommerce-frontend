@@ -7218,6 +7218,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I\'ve paid'**
   String get paypalApprovalPaidBtn;
+
+  /// No description provided for @adminGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get adminGalleryTitle;
+
+  /// No description provided for @adminActionGallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your pictures once and use them anywhere'**
+  String get adminActionGallerySubtitle;
+
+  /// No description provided for @galleryUploadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload images'**
+  String get galleryUploadButton;
+
+  /// No description provided for @galleryUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get galleryUploading;
+
+  /// No description provided for @galleryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No images yet'**
+  String get galleryEmptyTitle;
+
+  /// No description provided for @galleryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your product pictures here, then attach them to products when you import.'**
+  String get galleryEmptyMessage;
+
+  /// No description provided for @galleryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image?'**
+  String get galleryDeleteTitle;
+
+  /// No description provided for @galleryDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It will no longer be available to attach to products.'**
+  String get galleryDeleteMessage;
+
+  /// No description provided for @galleryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get galleryDeleteConfirm;
+
+  /// No description provided for @galleryCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get galleryCancel;
+
+  /// No description provided for @galleryUploadedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images uploaded'**
+  String galleryUploadedCount(Object count);
+
+  /// No description provided for @gallerySomeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} could not be uploaded'**
+  String gallerySomeFailed(Object count);
+
+  /// No description provided for @galleryLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get galleryLoadMore;
+
+  /// No description provided for @galleryImageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images'**
+  String galleryImageCount(Object count);
+
+  /// No description provided for @galleryPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an image'**
+  String get galleryPickTitle;
+
+  /// No description provided for @galleryPickNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get galleryPickNone;
+
+  /// No description provided for @galleryPickEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gallery is empty. Upload images first.'**
+  String get galleryPickEmpty;
+
+  /// No description provided for @galleryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open gallery'**
+  String get galleryOpen;
+
+  /// No description provided for @excelPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products found'**
+  String get excelPreviewTitle;
+
+  /// No description provided for @excelPreviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products are ready to import'**
+  String excelPreviewSubtitle(Object count);
+
+  /// No description provided for @excelPreviewRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}'**
+  String excelPreviewRow(Object row);
+
+  /// No description provided for @excelPreviewChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get excelPreviewChooseImage;
+
+  /// No description provided for @excelPreviewChangeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get excelPreviewChangeImage;
+
+  /// No description provided for @excelPreviewRemoveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get excelPreviewRemoveImage;
+
+  /// No description provided for @excelPreviewNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No picture yet'**
+  String get excelPreviewNoImage;
+
+  /// No description provided for @excelPreviewRowHasIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs fixing'**
+  String get excelPreviewRowHasIssues;
+
+  /// No description provided for @excelPreviewImagesAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} of {total} products have a picture'**
+  String excelPreviewImagesAssigned(Object assigned, Object total);
+
+  /// No description provided for @excelPreviewNoProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products were found in this file.'**
+  String get excelPreviewNoProducts;
+
+  /// No description provided for @excelPreviewFixFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix the rows marked below, then upload the file again.'**
+  String get excelPreviewFixFirst;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

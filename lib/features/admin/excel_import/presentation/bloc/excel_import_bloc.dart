@@ -1,10 +1,13 @@
 import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../data/services/template_saver.dart';
 import '../../domain/entities/picked_excel_file.dart';
+import '../../domain/usecases/download_excel_template.dart';
 import '../../domain/usecases/import_excel_file.dart';
 import '../../domain/usecases/validate_excel_file.dart';
 import 'excel_import_event.dart';
@@ -13,10 +16,12 @@ import 'excel_import_state.dart';
 class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final ValidateExcelFile validateUc;
   final ImportExcelFile importUc;
+  final DownloadExcelTemplate? downloadTemplateUc;
 
   ExcelImportBloc({
     required this.validateUc,
     required this.importUc,
+    this.downloadTemplateUc,
   }) : super(ExcelImportState.initial()) {
     on<ExcelPickFilePressed>(_pickFile);
     on<ExcelValidatePressed>(_validate);
@@ -24,6 +29,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelReplaceToggled>(_toggleReplace);
     on<ExcelReplaceScopeChanged>(_changeScope);
     on<ExcelDownloadTemplatePressed>(_downloadTemplate);
+    on<ExcelProductImageAssigned>(_assignImage);
+    on<ExcelProductImageCleared>(_clearImage);
   }
 
   Future<void> _pickFile(
@@ -54,6 +61,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         file: PickedExcelFile(name: picked.name, bytes: bytes),
         clearValidation: true,
         clearResult: true,
+        // Row numbers only mean something against the file they came from.
+        clearRowImages: true,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -99,6 +108,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         file: state.file!,
         replace: state.replace,
         replaceScope: state.replaceScope,
+        imageAssignments: state.imageAssignments,
       );
       emit(state.copyWith(importing: false, result: r));
     } catch (e) {
@@ -134,8 +144,16 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     ));
 
     try {
-      final data = await rootBundle.load('assets/templates/Template.xlsx');
-      final bytes = data.buffer.asUint8List();
+      // The server's copy is generated from the same columns the importer reads,
+      // so it is preferred; the bundled asset is only there for an owner who is
+      // offline or on a backend that predates the endpoint.
+      final fromServer = await downloadTemplateUc?.call();
+
+      final bytes = fromServer != null
+          ? Uint8List.fromList(fromServer)
+          : (await rootBundle.load('assets/templates/Template.xlsx'))
+              .buffer
+              .asUint8List();
 
       // Null on web: the browser downloads the file itself and gives back no
       // path, so there is nothing to show or reopen there.
@@ -151,5 +169,23 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         errorMessage: ExceptionMapper.toMessage(e),
       ));
     }
+  }
+
+  void _assignImage(
+    ExcelProductImageAssigned event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(rowImages: {
+      ...state.rowImages,
+      event.row: ExcelRowImage(id: event.imageId, url: event.imageUrl),
+    }));
+  }
+
+  void _clearImage(
+    ExcelProductImageCleared event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    final next = Map<int, ExcelRowImage>.from(state.rowImages)..remove(event.row);
+    emit(state.copyWith(rowImages: next));
   }
 }

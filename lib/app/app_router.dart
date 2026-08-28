@@ -2,10 +2,13 @@
 
 import 'package:build4front/features/admin/excel_import/data/repositories/excel_import_repository_impl.dart';
 import 'package:build4front/features/admin/excel_import/data/services/excel_import_api_service.dart';
+import 'package:build4front/features/admin/excel_import/domain/usecases/download_excel_template.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_excel_file.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/validate_excel_file.dart';
 import 'package:build4front/features/admin/excel_import/presentation/bloc/excel_import_bloc.dart';
 import 'package:build4front/features/admin/excel_import/presentation/screens/admin_excel_import_screen.dart';
+import 'package:build4front/features/admin/gallery/gallery_locator.dart';
+import 'package:build4front/features/admin/gallery/presentation/screens/admin_gallery_screen.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/features/checkout/domain/usecases/get_last_shipping_address.dart';
 import 'package:build4front/features/checkout/domain/usecases/quote_from_cart.dart';
@@ -89,6 +92,7 @@ class AppRouter {
   static const forgotVerify = '/forgot/verify';
   static const forgotUpdate = '/forgot/update';
   static const adminExcelImport = '/admin/excel-import';
+  static const adminGallery = '/admin/gallery';
 
   static Route<dynamic> onGenerateRoute(
     RouteSettings settings,
@@ -286,8 +290,24 @@ class AppRouter {
                 create: (_) => ExcelImportBloc(
                   validateUc: ValidateExcelFile(repo),
                   importUc: ImportExcelFile(repo),
+                  downloadTemplateUc: DownloadExcelTemplate(repo),
                 ),
                 child: const AdminExcelImportScreen(),
+              );
+            },
+          ),
+        );
+
+      case adminGallery:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => AdminGate(
+            builder: (ctx) {
+              final store = ctx.read<AdminTokenStore>();
+
+              return BlocProvider(
+                create: (_) => createGalleryBloc(getToken: () => store.getToken()),
+                child: const AdminGalleryScreen(),
               );
             },
           ),

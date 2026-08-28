@@ -1,5 +1,7 @@
 
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
+import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -13,10 +15,39 @@ import '../bloc/excel_import_state.dart';
 import '../widgets/excel_counts_card.dart';
 import '../widgets/excel_issues_list.dart';
 import '../widgets/excel_file_card.dart';
+import '../widgets/excel_product_review_list.dart';
 import '../widgets/excel_replace_card.dart';
 
 class AdminExcelImportScreen extends StatelessWidget {
   const AdminExcelImportScreen({super.key});
+
+  /// Opens the gallery over the import screen so the owner can attach a picture
+  /// without losing the file they already validated.
+  Future<void> _pickImageForRow(BuildContext context, int row) async {
+    final bloc = context.read<ExcelImportBloc>();
+    final store = context.read<AdminTokenStore>();
+    final current = bloc.state.rowImages[row];
+
+    final result = await GalleryPickerSheet.show(
+      context,
+      getToken: () => store.getToken(),
+      selectedId: current?.id,
+      allowClear: current != null,
+    );
+
+    if (result == null) return;
+
+    if (result.isCleared) {
+      bloc.add(ExcelProductImageCleared(row));
+      return;
+    }
+
+    bloc.add(ExcelProductImageAssigned(
+      row: row,
+      imageId: result.image!.id,
+      imageUrl: result.image!.url,
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +181,52 @@ class AdminExcelImportScreen extends StatelessWidget {
                         isError: false,
                       ),
                     ],
+                    const SizedBox(height: 16),
+
+                    // ===== Step 3: review what was found, and give each
+                    // product a picture. An Excel file cannot carry one, so
+                    // this is the only place the two halves meet.
+                    _SectionHeader(
+                      title: l10n.excelPreviewTitle,
+                      subtitle: state.previews.isEmpty
+                          ? l10n.excelPreviewNoProducts
+                          : l10n.excelPreviewSubtitle(state.previews.length),
+                      colors: colors,
+                    ),
+                    if (state.previews.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.excelPreviewImagesAssigned(
+                          state.productsWithImage,
+                          state.previews.length,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colors.body,
+                            ),
+                      ),
+                    ],
+                    if (!state.validation!.valid) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.excelPreviewFixFirst,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colors.body,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+
+                    ExcelProductReviewList(
+                      previews: state.previews,
+                      rowImages: state.rowImages,
+                      onPickImage: (product) =>
+                          _pickImageForRow(context, product.row),
+                      onClearImage: (product) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelProductImageCleared(product.row)),
+                    ),
+
                     const SizedBox(height: 12),
                     ExcelReplaceCard(
                       replace: state.replace,
