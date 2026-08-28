@@ -3,9 +3,9 @@ enum ItemKind { activity, product, service, unknown }
 /// What the primary call-to-action on an item should do.
 ///
 /// The entity resolves the *action*; the presentation layer maps it to a
-/// localized label (`openLabel` / `downloadLabel` /
-/// `adminButtonTextDefaultAddToCart`). Domain code stays free of l10n.
-enum ItemActionKind { open, download, addToCart }
+/// localized label (`openLabel` / `adminButtonTextDefaultAddToCart`). Domain
+/// code stays free of l10n.
+enum ItemActionKind { open, addToCart }
 
 class ItemSummary {
   final int id;
@@ -33,8 +33,6 @@ class ItemSummary {
   final int? categoryId;
 
   final String? productType;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
@@ -59,8 +57,6 @@ class ItemSummary {
     this.kind = ItemKind.unknown,
     this.categoryId,
     this.productType,
-    this.downloadable = false,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
   });
@@ -151,8 +147,6 @@ class ItemSummary {
 
   bool get hasExternalUrl => (externalUrl ?? '').trim().isNotEmpty;
 
-  bool get hasDownloadUrl => (downloadUrl ?? '').trim().isNotEmpty;
-
   bool get isVisibleForUser {
     if (kind == ItemKind.product) {
       return isPublished || isUpcoming;
@@ -179,7 +173,6 @@ class ItemSummary {
   /// localized label.
   ItemActionKind get resolvedActionKind {
     if (isExternalProduct) return ItemActionKind.open;
-    if (downloadable) return ItemActionKind.download;
     return ItemActionKind.addToCart;
   }
 }

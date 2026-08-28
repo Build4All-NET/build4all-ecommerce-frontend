@@ -72,7 +72,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   final _stockCtrl = TextEditingController();
   final _skuCtrl = TextEditingController();
 
-  final _downloadUrlCtrl = TextEditingController();
   final _externalUrlCtrl = TextEditingController();
   final _buttonTextCtrl = TextEditingController();
 
@@ -82,7 +81,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
 
   ProductTypeDto _selectedProductType = ProductTypeDto.simple;
   bool _virtualProduct = false;
-  bool _downloadable = false;
 
   DateTime? _saleStartDate;
   DateTime? _saleEndDate;
@@ -166,7 +164,6 @@ int? _selectedExistingMainImageId;
     _priceCtrl.dispose();
     _stockCtrl.dispose();
     _skuCtrl.dispose();
-    _downloadUrlCtrl.dispose();
     _externalUrlCtrl.dispose();
     _buttonTextCtrl.dispose();
     _salePriceCtrl.dispose();
@@ -193,20 +190,11 @@ int? _selectedExistingMainImageId;
     _selectedStatusCode = p.statusCode;
 
     _virtualProduct = p.virtualProduct;
-    _downloadable = p.downloadable;
 
-    _downloadUrlCtrl.text = p.downloadUrl ?? '';
     _externalUrlCtrl.text = p.externalUrl ?? '';
     _buttonTextCtrl.text = p.buttonText ?? '';
 
     _selectedProductType = _productTypeFromString(p.productType);
-
-    if (_downloadable) {
-      _selectedProductType = ProductTypeDto.simple;
-      _virtualProduct = true;
-      _externalUrlCtrl.clear();
-      _buttonTextCtrl.clear();
-    }
 
     if (p.salePrice != null) {
       _salePriceCtrl.text = p.salePrice!.toStringAsFixed(2);
@@ -1130,33 +1118,12 @@ void _setExistingMainImage(ProductImage image) {
     try {
       final price = double.parse(_priceCtrl.text.trim());
 
-      if (_downloadable) {
-        if (_selectedProductType != ProductTypeDto.simple) {
-          setState(() => _errorMessage = l.adminDownloadableMustBeSimple);
-          return;
-        }
-
-        if (!_virtualProduct) {
-          setState(() => _errorMessage = l.adminDownloadableMustBeVirtual);
-          return;
-        }
-
-        if (_downloadUrlCtrl.text.trim().isEmpty) {
-          setState(() => _errorMessage = l.adminDownloadUrlRequired);
-          return;
-        }
-      }
-
       if (_selectedProductType == ProductTypeDto.external) {
         if (_externalUrlCtrl.text.trim().isEmpty) {
           setState(() => _errorMessage = l.adminExternalUrlRequired);
           return;
         }
 
-        if (_downloadable) {
-          setState(() => _errorMessage = l.adminExternalCannotBeDownloadable);
-          return;
-        }
       }
 
       final saleErr = _validateSaleFields(l, regularPrice: price);
@@ -1199,7 +1166,6 @@ void _setExistingMainImage(ProductImage image) {
 
       final isExternal = _selectedProductType == ProductTypeDto.external;
 
-      final downloadUrl = _downloadable ? clean(_downloadUrlCtrl.text) : null;
       final externalUrl = isExternal ? clean(_externalUrlCtrl.text) : null;
       final buttonText = isExternal ? clean(_buttonTextCtrl.text) : null;
 
@@ -1217,13 +1183,10 @@ void _setExistingMainImage(ProductImage image) {
   stock: stock,
   statusCode: _selectedStatusCode,
   sku: sku,
-  productType:
-      _downloadable ? ProductTypeDto.simple : _selectedProductType,
-  virtualProduct: _downloadable ? true : _virtualProduct,
-  downloadable: _downloadable,
-  downloadUrl: _downloadable ? downloadUrl : null,
-  externalUrl: _downloadable ? null : externalUrl,
-  buttonText: _downloadable ? null : buttonText,
+  productType: _selectedProductType,
+  virtualProduct: _virtualProduct,
+  externalUrl: externalUrl,
+  buttonText: buttonText,
   salePrice: salePrice,
   saleStart: saleStartText,
   saleEnd: saleEndText,
@@ -1245,14 +1208,10 @@ void _setExistingMainImage(ProductImage image) {
   'stock': stock,
   'statusCode': _selectedStatusCode,
   'sku': sku,
-  'productType': productTypeDtoToApi(
-    _downloadable ? ProductTypeDto.simple : _selectedProductType,
-  ),
-  'virtualProduct': _downloadable ? true : _virtualProduct,
-  'downloadable': _downloadable,
-  'downloadUrl': _downloadable ? downloadUrl : null,
-  'externalUrl': _downloadable ? null : externalUrl,
-  'buttonText': _downloadable ? null : buttonText,
+  'productType': productTypeDtoToApi(_selectedProductType),
+  'virtualProduct': _virtualProduct,
+  'externalUrl': externalUrl,
+  'buttonText': buttonText,
   'salePrice': salePrice,
   'saleStart': saleStartText,
   'saleEnd': saleEndText,
@@ -1413,46 +1372,14 @@ void _setExistingMainImage(ProductImage image) {
                     setState(() {
                       _selectedProductType = val;
 
-                      if (val == ProductTypeDto.external) {
-                        _downloadable = false;
-                        _downloadUrlCtrl.clear();
-                      } else {
+                      if (val != ProductTypeDto.external) {
                         _externalUrlCtrl.clear();
                         _buttonTextCtrl.clear();
-                      }
-
-                      if (_downloadable) {
-                        _selectedProductType = ProductTypeDto.simple;
-                        _virtualProduct = true;
                       }
                     });
                   },
                   virtualProduct: _virtualProduct,
-                  onVirtualChanged: (v) {
-                    setState(() {
-                      if (_downloadable && !v) {
-                        _virtualProduct = true;
-                      } else {
-                        _virtualProduct = v;
-                      }
-                    });
-                  },
-                  downloadable: _downloadable,
-                  onDownloadableChanged: (v) {
-                    setState(() {
-                      _downloadable = v;
-
-                      if (v) {
-                        _selectedProductType = ProductTypeDto.simple;
-                        _virtualProduct = true;
-                        _externalUrlCtrl.clear();
-                        _buttonTextCtrl.clear();
-                      } else {
-                        _downloadUrlCtrl.clear();
-                      }
-                    });
-                  },
-                  downloadUrlCtrl: _downloadUrlCtrl,
+                  onVirtualChanged: (v) => setState(() => _virtualProduct = v),
                   externalUrlCtrl: _externalUrlCtrl,
                   buttonTextCtrl: _buttonTextCtrl,
                 ),
@@ -2185,10 +2112,7 @@ class AdminProductConfigSection extends StatelessWidget {
   final bool virtualProduct;
   final ValueChanged<bool> onVirtualChanged;
 
-  final bool downloadable;
-  final ValueChanged<bool> onDownloadableChanged;
 
-  final TextEditingController downloadUrlCtrl;
   final TextEditingController externalUrlCtrl;
   final TextEditingController buttonTextCtrl;
 
@@ -2201,9 +2125,6 @@ class AdminProductConfigSection extends StatelessWidget {
     required this.onProductTypeChanged,
     required this.virtualProduct,
     required this.onVirtualChanged,
-    required this.downloadable,
-    required this.onDownloadableChanged,
-    required this.downloadUrlCtrl,
     required this.externalUrlCtrl,
     required this.buttonTextCtrl,
   });
@@ -2261,26 +2182,6 @@ class AdminProductConfigSection extends StatelessWidget {
             value: virtualProduct,
             onChanged: onVirtualChanged,
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.adminProductDownloadableLabel),
-            value: downloadable,
-            onChanged: onDownloadableChanged,
-          ),
-          if (downloadable) ...[
-            SizedBox(height: spacing.xs),
-            Text(
-              l.adminDownloadableRulesHint,
-              style: text.bodySmall.copyWith(color: tokens.colors.muted),
-            ),
-            SizedBox(height: spacing.sm),
-            TextFormField(
-              controller: downloadUrlCtrl,
-              decoration: InputDecoration(
-                hintText: l.adminProductDownloadUrlHint,
-              ),
-            ),
-          ],
           if (selectedProductType == ProductTypeDto.external) ...[
             SizedBox(height: spacing.md),
             TextFormField(

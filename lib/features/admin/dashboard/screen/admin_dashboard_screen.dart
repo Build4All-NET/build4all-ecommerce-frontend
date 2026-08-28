@@ -680,6 +680,14 @@ final bool lockActions =
         subtitle: l10n.adminActionOrdersSubtitle,
         onTap: guarded(() => Navigator.of(context).pushNamed('/admin/orders')),
       ),
+      // Sits next to the import because the two are one job: the pictures the
+      // import cannot carry are the ones the owner uploads here.
+      _DashAction(
+        icon: Icons.photo_library_outlined,
+        title: l10n.adminGalleryTitle,
+        subtitle: l10n.adminActionGallerySubtitle,
+        onTap: guarded(() => Navigator.of(context).pushNamed('/admin/gallery')),
+      ),
       _DashAction(
         icon: Icons.upload_file_outlined,
         title: l10n.adminExcelImportTitle,

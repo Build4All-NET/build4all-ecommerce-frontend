@@ -199,9 +199,6 @@
   "adminProductTypeGrouped": "Groupé",
   "adminProductTypeExternal": "Externe",
   "adminProductVirtualLabel": "Produit virtuel",
-  "adminProductDownloadableLabel": "Téléchargeable",
-  "adminProductDownloadUrlLabel": "URL de téléchargement",
-  "adminProductDownloadUrlHint": "https://...",
   "adminProductExternalUrlLabel": "URL externe",
   "adminProductExternalUrlHint": "https://...",
   "adminProductButtonTextLabel": "Texte du bouton",
@@ -371,7 +368,7 @@
   "adminProductImageSectionTitle": "Image du produit",
   "adminProductImageSectionSubtitle": "Téléverser l’image du produit",
   "adminProductSectionConfigTitle": "Configuration du produit",
-  "adminProductSectionConfigSubtitle": "Virtuel, téléchargeable, externe",
+  "adminProductSectionConfigSubtitle": "Virtuel et externe",
   "adminProductSaleSectionSubtitle": "Définir le prix promo et la durée",
   "adminProductAttributesSubtitle": "Ajouter des attributs personnalisés",
   "cart_title": "Panier",
@@ -1146,24 +1143,12 @@
   "adminDisabledOnly": "Désactivées seulement",
   "adminAllLabel": "Toutes",
   "openLinkLabel": "Ouvrir le lien",
-  "downloadNowLabel": "Télécharger",
-  "downloadLabel": "Téléchargement",
-  "downloadReadyLabel": "Prêt au téléchargement",
-  "downloadAfterPurchaseLabel": "Disponible après achat",
   "externalProductLabel": "Produit externe",
   "productTypeLabel": "Type de produit",
   "invalidExternalUrlLabel": "URL externe invalide",
   "missingExternalUrlLabel": "URL externe manquante",
   "couldNotOpenLinkLabel": "Impossible d’ouvrir le lien",
-  "invalidDownloadUrlLabel": "URL de téléchargement invalide",
-  "missingDownloadUrlLabel": "URL de téléchargement manquante",
-  "couldNotStartDownloadLabel": "Impossible de démarrer le téléchargement",
-  "adminDownloadableMustBeSimple": "Le produit téléchargeable doit être de type simple",
-  "adminDownloadableMustBeVirtual": "Le produit téléchargeable doit être virtuel",
-  "adminDownloadUrlRequired": "L’URL de téléchargement est obligatoire pour un produit téléchargeable",
   "adminExternalUrlRequired": "L’URL externe est obligatoire pour un produit externe",
-  "adminExternalCannotBeDownloadable": "Un produit externe ne peut pas être téléchargeable",
-  "adminDownloadableRulesHint": "Les produits téléchargeables sont enregistrés comme Simple + Virtuel et nécessitent une URL de téléchargement.",
   "adminAllAttributeTypesAlreadyAdded": "Tous les types d’attributs disponibles sont déjà ajoutés",
   "commonClear": "Effacer",
   "commonPrev": "Précédent",
@@ -1235,44 +1220,44 @@
   "commonSomethingWentWrongTryAgain": "Une erreur s’est produite. Veuillez réessayer.",
   "orderDetailsInvoiceDownloadFailed": "Échec du téléchargement de la facture : {error}",
   "stripeWebhookSetupTitle": "Configuration du webhook Stripe",
-"stripeWebhookSetupDescription": "Pour que le statut du paiement soit mis à jour correctement dans l’application, créez un webhook Stripe et sélectionnez les événements requis ci-dessous.",
-"stripeWebhookStep1": "1. Ouvrez votre tableau de bord Stripe.",
-"stripeWebhookStep2": "2. Allez dans Developers > Webhooks.",
-"stripeWebhookStep3": "3. Cliquez sur « Add endpoint ».",
-"stripeWebhookStep4": "4. Collez l’URL du webhook affichée ci-dessous.",
-"stripeWebhookStep5": "5. Sélectionnez ces événements :",
-"stripeWebhookStep6": "6. Cliquez sur « Add endpoint ».",
-"stripeWebhookStep7": "7. Copiez le Signing Secret depuis Stripe.",
-"stripeWebhookStep8": "8. Collez le Signing Secret dans cette configuration de paiement puis enregistrez.",
-"stripeWebhookImportant": "Important : sans ce webhook, Stripe peut recevoir le paiement, mais l’application peut encore afficher la commande comme non payée.",
-"stripeWebhookUrlLabel": "URL du webhook",
-"stripeWebhookCopyButton": "Copier l’URL du webhook",
-"stripeWebhookCopied": "URL du webhook copiée",
-"stripeWebhookOpenStripe": "Ouvrir Stripe",
-"stripeWebhookMustTestFirst": "Veuillez tester la connexion Stripe et le webhook avant d’enregistrer.",
-"connectionSucceeded": "Connexion réussie",
-"connectionFailed": "Échec de la connexion",
-"paymentTestingConnection": "Test en cours…",
-"paymentTestConnection": "Tester la connexion",
-"paymentOpenProviderDocs": "Ouvrir la documentation du fournisseur",
-"paymentOn": "Activé",
-"paymentOff": "Désactivé",
-"paymentLearnMore": "En savoir plus",
-"paymentCouldNotOpenUrl": "Impossible d’ouvrir le lien.",
-"paymentInvalidNumber": "Nombre invalide : {field}",
-"@paymentInvalidNumber": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"paymentMissingRequiredField": "Champ requis manquant : {field}",
-"@paymentMissingRequiredField": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"subscriptionExpiredRenewRequired": "Votre abonnement a expiré. Veuillez le renouveler pour continuer à gérer votre application.",
-"loginLabel": "Connexion",
+  "stripeWebhookSetupDescription": "Pour que le statut du paiement soit mis à jour correctement dans l’application, créez un webhook Stripe et sélectionnez les événements requis ci-dessous.",
+  "stripeWebhookStep1": "1. Ouvrez votre tableau de bord Stripe.",
+  "stripeWebhookStep2": "2. Allez dans Developers > Webhooks.",
+  "stripeWebhookStep3": "3. Cliquez sur « Add endpoint ».",
+  "stripeWebhookStep4": "4. Collez l’URL du webhook affichée ci-dessous.",
+  "stripeWebhookStep5": "5. Sélectionnez ces événements :",
+  "stripeWebhookStep6": "6. Cliquez sur « Add endpoint ».",
+  "stripeWebhookStep7": "7. Copiez le Signing Secret depuis Stripe.",
+  "stripeWebhookStep8": "8. Collez le Signing Secret dans cette configuration de paiement puis enregistrez.",
+  "stripeWebhookImportant": "Important : sans ce webhook, Stripe peut recevoir le paiement, mais l’application peut encore afficher la commande comme non payée.",
+  "stripeWebhookUrlLabel": "URL du webhook",
+  "stripeWebhookCopyButton": "Copier l’URL du webhook",
+  "stripeWebhookCopied": "URL du webhook copiée",
+  "stripeWebhookOpenStripe": "Ouvrir Stripe",
+  "stripeWebhookMustTestFirst": "Veuillez tester la connexion Stripe et le webhook avant d’enregistrer.",
+  "connectionSucceeded": "Connexion réussie",
+  "connectionFailed": "Échec de la connexion",
+  "paymentTestingConnection": "Test en cours…",
+  "paymentTestConnection": "Tester la connexion",
+  "paymentOpenProviderDocs": "Ouvrir la documentation du fournisseur",
+  "paymentOn": "Activé",
+  "paymentOff": "Désactivé",
+  "paymentLearnMore": "En savoir plus",
+  "paymentCouldNotOpenUrl": "Impossible d’ouvrir le lien.",
+  "paymentInvalidNumber": "Nombre invalide : {field}",
+  "@paymentInvalidNumber": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "paymentMissingRequiredField": "Champ requis manquant : {field}",
+  "@paymentMissingRequiredField": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "subscriptionExpiredRenewRequired": "Votre abonnement a expiré. Veuillez le renouveler pour continuer à gérer votre application.",
+  "loginLabel": "Connexion",
   "adminAnnouncementsTitle": "Annonces",
   "adminAnnouncementsSubtitle": "Notifier tous les utilisateurs de cette application",
   "adminAnnouncementsNotifyAllTitle": "Notifier tous les utilisateurs",
@@ -1303,74 +1288,83 @@
   "adminAnnouncementsTypeService": "Service",
   "adminAnnouncementsTypeMaintenance": "Maintenance",
   "adminAnnouncementsCreatedSuccess": "Annonce envoyée avec succès",
-"adminAnnouncementsDeletedSuccess": "Annonce supprimée avec succès",
-"adminAnnouncementsEmptyTitle": "Aucune annonce pour le moment",
-"adminAnnouncementsEmptyMessage": "Créez votre première annonce pour notifier vos utilisateurs.",
-"adminAnnouncementsDeleteTitle": "Supprimer l’annonce ?",
-"adminAnnouncementsDeleteMessage": "Cette annonce sera masquée pour les utilisateurs.",
-"adminAnnouncementsCancel": "Annuler",
-"adminAnnouncementsDelete": "Supprimer",
-"adminAnnouncementsSentToUsers": "Envoyée à {count} utilisateurs",
-"@adminAnnouncementsSentToUsers": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "adminAnnouncementsDeletedSuccess": "Annonce supprimée avec succès",
+  "adminAnnouncementsEmptyTitle": "Aucune annonce pour le moment",
+  "adminAnnouncementsEmptyMessage": "Créez votre première annonce pour notifier vos utilisateurs.",
+  "adminAnnouncementsDeleteTitle": "Supprimer l’annonce ?",
+  "adminAnnouncementsDeleteMessage": "Cette annonce sera masquée pour les utilisateurs.",
+  "adminAnnouncementsCancel": "Annuler",
+  "adminAnnouncementsDelete": "Supprimer",
+  "adminAnnouncementsSentToUsers": "Envoyée à {count} utilisateurs",
+  "@adminAnnouncementsSentToUsers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
-"chooseImage": "Choisir une image",
-"removeImage": "Supprimer l’image",
-"availableAfterPurchaseLabel": "Disponible après l’achat",
-"tapToZoomLabel": "Appuyer pour agrandir",
-"openLabel": "Ouvrir",
-"completeProfileFailed": "Échec de la complétion du profil",
-"upgradeCompletePaypalTitle": "Finaliser le paiement PayPal",
-"upgradeCompletePaypalContent": "Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
-"upgradeCompleteCardTitle": "Finaliser le paiement par carte",
-"upgradeCompleteCardContent": "Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
-"upgradePendingConfirmationTitle": "Paiement en attente de confirmation",
-"upgradeIvePaidButton": "J’ai payé",
-"upgradeGotItButton": "Compris",
-"upgradePendingSubmitted": "Votre demande de mise à niveau a été soumise.",
-"upgradePendingSubmittedWithPlan": "Votre demande de mise à niveau vers {planName} ({cycle}) a été soumise.",
-"@upgradePendingSubmittedWithPlan": {
-  "placeholders": {
-    "planName": { "type": "String" },
-    "cycle": { "type": "String" }
-  }
-},
-"upgradeAmountDue": "Montant dû : {amount}",
-"@upgradeAmountDue": {
-  "placeholders": {
-    "amount": { "type": "String" }
-  }
-},
-"upgradePendingInstructions": "Veuillez effectuer votre {method}. Votre abonnement sera activé automatiquement dès qu’un administrateur aura confirmé la réception du paiement.",
-"@upgradePendingInstructions": {
-  "placeholders": {
-    "method": { "type": "String" }
-  }
-},
-"upgradeCashPayment": "paiement en espèces",
-"upgradeBankTransfer": "virement bancaire",
-"adminStatusBreakdown": "Répartition des statuts",
-"adminProductCurrentGallery": "Galerie actuelle",
-"adminProductNewUploads": "Nouveaux téléchargements",
-"adminProductExistingLabel": "Existant",
-"adminProductImageCount": "{count} image(s)",
-"@adminProductImageCount": {
-  "placeholders": {
-    "count": { "type": "int" }
-  }
-},
-"navLabelHome": "Accueil",
-"navLabelExplore": "Explorer",
-"navLabelCart": "Panier",
-"navLabelOrders": "Commandes",
-"navLabelProfile": "Profil",
-"navLabelNotifications": "Notifications",
-"navLabelBookings": "Réservations",
-"excelImportConstraintViolation": "Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées.",
+  },
+  "chooseImage": "Choisir une image",
+  "removeImage": "Supprimer l’image",
+  "tapToZoomLabel": "Appuyer pour agrandir",
+  "openLabel": "Ouvrir",
+  "completeProfileFailed": "Échec de la complétion du profil",
+  "upgradeCompletePaypalTitle": "Finaliser le paiement PayPal",
+  "upgradeCompletePaypalContent": "Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
+  "upgradeCompleteCardTitle": "Finaliser le paiement par carte",
+  "upgradeCompleteCardContent": "Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.",
+  "upgradePendingConfirmationTitle": "Paiement en attente de confirmation",
+  "upgradeIvePaidButton": "J’ai payé",
+  "upgradeGotItButton": "Compris",
+  "upgradePendingSubmitted": "Votre demande de mise à niveau a été soumise.",
+  "upgradePendingSubmittedWithPlan": "Votre demande de mise à niveau vers {planName} ({cycle}) a été soumise.",
+  "@upgradePendingSubmittedWithPlan": {
+    "placeholders": {
+      "planName": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeAmountDue": "Montant dû : {amount}",
+  "@upgradeAmountDue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradePendingInstructions": "Veuillez effectuer votre {method}. Votre abonnement sera activé automatiquement dès qu’un administrateur aura confirmé la réception du paiement.",
+  "@upgradePendingInstructions": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeCashPayment": "paiement en espèces",
+  "upgradeBankTransfer": "virement bancaire",
+  "adminStatusBreakdown": "Répartition des statuts",
+  "adminProductCurrentGallery": "Galerie actuelle",
+  "adminProductNewUploads": "Nouveaux téléchargements",
+  "adminProductExistingLabel": "Existant",
+  "adminProductImageCount": "{count} image(s)",
+  "@adminProductImageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navLabelHome": "Accueil",
+  "navLabelExplore": "Explorer",
+  "navLabelCart": "Panier",
+  "navLabelOrders": "Commandes",
+  "navLabelProfile": "Profil",
+  "navLabelNotifications": "Notifications",
+  "navLabelBookings": "Réservations",
+  "excelImportConstraintViolation": "Vos données sont actuellement utilisées (liées à des commandes ou paniers) et ne peuvent pas être remplacées.",
   "adminProductImageUrlLabel": "URL de l'image",
   "adminExcelImportTitle": "Import Excel",
   "adminExcelImportSubtitle": "Importez vos données à l'aide du modèle Excel préparé par Build4All.",
@@ -1437,5 +1431,35 @@
   "adminOrderRestoreBody": "La commande sera remise en attente.",
   "paypalApprovalTitle": "Finaliser le paiement {provider}",
   "paypalApprovalBody": "Nous avons ouvert la page de paiement {provider} dans votre navigateur. Une fois le paiement effectué, revenez ici et appuyez sur « J'ai payé » pour que nous puissions valider votre commande.",
-  "paypalApprovalPaidBtn": "J'ai payé"
+  "paypalApprovalPaidBtn": "J'ai payé",
+  "adminGalleryTitle": "Galerie",
+  "adminActionGallerySubtitle": "Importez vos images une fois et réutilisez-les partout",
+  "galleryUploadButton": "Importer des images",
+  "galleryUploading": "Import en cours…",
+  "galleryEmptyTitle": "Aucune image",
+  "galleryEmptyMessage": "Importez ici les photos de vos produits, puis attribuez-les lors de l'import.",
+  "galleryDeleteTitle": "Supprimer l'image ?",
+  "galleryDeleteMessage": "Elle ne pourra plus être attribuée à des produits.",
+  "galleryDeleteConfirm": "Supprimer",
+  "galleryCancel": "Annuler",
+  "galleryUploadedCount": "{count} images importées",
+  "gallerySomeFailed": "{count} n'ont pas pu être importées",
+  "galleryLoadMore": "Charger plus",
+  "galleryImageCount": "{count} images",
+  "galleryPickTitle": "Choisir une image",
+  "galleryPickNone": "Aucune image",
+  "galleryPickEmpty": "Votre galerie est vide. Importez d'abord des images.",
+  "galleryOpen": "Ouvrir la galerie",
+  "excelPreviewTitle": "Produits trouvés",
+  "excelPreviewSubtitle": "{count} produits prêts à être importés",
+  "excelPreviewRow": "Ligne {row}",
+  "excelPreviewChooseImage": "Choisir une image",
+  "excelPreviewChangeImage": "Modifier",
+  "excelPreviewRemoveImage": "Retirer l'image",
+  "excelPreviewNoImage": "Pas encore d'image",
+  "excelPreviewRowHasIssues": "À corriger",
+  "excelPreviewImagesAssigned": "{assigned} produits sur {total} ont une image",
+  "excelPreviewNoProducts": "Aucun produit trouvé dans ce fichier.",
+  "excelPreviewFixFirst": "Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.",
+  "excelPreviewNoShipping": "Sans livraison"
 }

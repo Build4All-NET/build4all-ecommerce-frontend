@@ -199,9 +199,6 @@
   "adminProductTypeGrouped": "مجمع",
   "adminProductTypeExternal": "خارجي",
   "adminProductVirtualLabel": "منتج افتراضي",
-  "adminProductDownloadableLabel": "قابل للتحميل",
-  "adminProductDownloadUrlLabel": "رابط التحميل",
-  "adminProductDownloadUrlHint": "https://...",
   "adminProductExternalUrlLabel": "رابط خارجي",
   "adminProductExternalUrlHint": "https://...",
   "adminProductButtonTextLabel": "نص الزر",
@@ -589,7 +586,7 @@
   "paymentIncomplete": "غير مكتمل",
   "adminPaymentConfigTitle": "بوابات الدفع",
   "checkoutConfirmDialogTitle": "تأكيد الدفع",
- "checkoutConfirmCartCleared": "هل تريد المتابعة إلى الدفع؟",
+  "checkoutConfirmCartCleared": "هل تريد المتابعة إلى الدفع؟",
   "commonYes": "نعم",
   "commonNo": "لا",
   "@checkoutConfirmCartCleared": {
@@ -1085,24 +1082,12 @@
   "adminDisabledOnly": "المعطّلة فقط",
   "adminAllLabel": "الكل",
   "openLinkLabel": "فتح الرابط",
-  "downloadNowLabel": "تنزيل",
-  "downloadLabel": "التنزيل",
-  "downloadReadyLabel": "جاهز للتنزيل",
-  "downloadAfterPurchaseLabel": "متاح بعد الشراء",
   "externalProductLabel": "منتج خارجي",
   "productTypeLabel": "نوع المنتج",
   "invalidExternalUrlLabel": "رابط خارجي غير صالح",
   "missingExternalUrlLabel": "رابط المنتج الخارجي مفقود",
   "couldNotOpenLinkLabel": "تعذر فتح الرابط",
-  "invalidDownloadUrlLabel": "رابط التنزيل غير صالح",
-  "missingDownloadUrlLabel": "رابط التنزيل مفقود",
-  "couldNotStartDownloadLabel": "تعذر بدء التنزيل",
-  "adminDownloadableMustBeSimple": "المنتج القابل للتنزيل يجب أن يكون من النوع البسيط",
-  "adminDownloadableMustBeVirtual": "المنتج القابل للتنزيل يجب أن يكون افتراضيًا",
-  "adminDownloadUrlRequired": "رابط التنزيل مطلوب للمنتج القابل للتنزيل",
   "adminExternalUrlRequired": "الرابط الخارجي مطلوب للمنتج الخارجي",
-  "adminExternalCannotBeDownloadable": "المنتج الخارجي لا يمكن أن يكون قابلاً للتنزيل",
-  "adminDownloadableRulesHint": "المنتجات القابلة للتنزيل تُحفظ كمنتج بسيط وافتراضي وتتطلب رابط تنزيل.",
   "adminAllAttributeTypesAlreadyAdded": "تمت إضافة جميع أنواع الخصائص المتاحة",
   "commonClear": "مسح",
   "commonPrev": "السابق",
@@ -1174,44 +1159,44 @@
   "commonSomethingWentWrongTryAgain": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
   "orderDetailsInvoiceDownloadFailed": "فشل تنزيل الفاتورة: {error}",
   "stripeWebhookSetupTitle": "إعداد Webhook الخاص بـ Stripe",
-"stripeWebhookSetupDescription": "لكي يتم تحديث حالة الدفع بشكل صحيح داخل التطبيق، أنشئ Webhook في Stripe واختر الأحداث المطلوبة أدناه.",
-"stripeWebhookStep1": "1. افتح لوحة تحكم Stripe.",
-"stripeWebhookStep2": "2. انتقل إلى Developers > Webhooks.",
-"stripeWebhookStep3": "3. اضغط على “Add endpoint”.",
-"stripeWebhookStep4": "4. الصق رابط الـ Webhook الظاهر أدناه.",
-"stripeWebhookStep5": "5. اختر هذه الأحداث:",
-"stripeWebhookStep6": "6. اضغط على “Add endpoint”.",
-"stripeWebhookStep7": "7. انسخ Signing Secret من Stripe.",
-"stripeWebhookStep8": "8. الصق Signing Secret داخل إعدادات الدفع هذه ثم احفظ.",
-"stripeWebhookImportant": "مهم: بدون هذا الـ Webhook، قد يستلم Stripe الدفع، لكن قد يبقى الطلب داخل التطبيق ظاهرًا كغير مدفوع.",
-"stripeWebhookUrlLabel": "رابط الـ Webhook",
-"stripeWebhookCopyButton": "نسخ رابط الـ Webhook",
-"stripeWebhookCopied": "تم نسخ رابط الـ Webhook",
-"stripeWebhookOpenStripe": "فتح Stripe",
-"stripeWebhookMustTestFirst": "يرجى اختبار اتصال Stripe والـ Webhook قبل الحفظ.",
-"connectionSucceeded": "تم الاتصال بنجاح",
-"connectionFailed": "فشل الاتصال",
-"paymentTestingConnection": "جارٍ الاختبار…",
-"paymentTestConnection": "اختبار الاتصال",
-"paymentOpenProviderDocs": "فتح توثيق المزود",
-"paymentOn": "مفعل",
-"paymentOff": "غير مفعل",
-"paymentLearnMore": "معرفة المزيد",
-"paymentCouldNotOpenUrl": "تعذر فتح الرابط.",
-"paymentInvalidNumber": "رقم غير صالح: {field}",
-"@paymentInvalidNumber": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"paymentMissingRequiredField": "حقل مطلوب مفقود: {field}",
-"@paymentMissingRequiredField": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"subscriptionExpiredRenewRequired": "انتهى اشتراكك. يرجى تجديد الاشتراك لمتابعة إدارة التطبيق.",
-"loginLabel": "تسجيل الدخول",
+  "stripeWebhookSetupDescription": "لكي يتم تحديث حالة الدفع بشكل صحيح داخل التطبيق، أنشئ Webhook في Stripe واختر الأحداث المطلوبة أدناه.",
+  "stripeWebhookStep1": "1. افتح لوحة تحكم Stripe.",
+  "stripeWebhookStep2": "2. انتقل إلى Developers > Webhooks.",
+  "stripeWebhookStep3": "3. اضغط على “Add endpoint”.",
+  "stripeWebhookStep4": "4. الصق رابط الـ Webhook الظاهر أدناه.",
+  "stripeWebhookStep5": "5. اختر هذه الأحداث:",
+  "stripeWebhookStep6": "6. اضغط على “Add endpoint”.",
+  "stripeWebhookStep7": "7. انسخ Signing Secret من Stripe.",
+  "stripeWebhookStep8": "8. الصق Signing Secret داخل إعدادات الدفع هذه ثم احفظ.",
+  "stripeWebhookImportant": "مهم: بدون هذا الـ Webhook، قد يستلم Stripe الدفع، لكن قد يبقى الطلب داخل التطبيق ظاهرًا كغير مدفوع.",
+  "stripeWebhookUrlLabel": "رابط الـ Webhook",
+  "stripeWebhookCopyButton": "نسخ رابط الـ Webhook",
+  "stripeWebhookCopied": "تم نسخ رابط الـ Webhook",
+  "stripeWebhookOpenStripe": "فتح Stripe",
+  "stripeWebhookMustTestFirst": "يرجى اختبار اتصال Stripe والـ Webhook قبل الحفظ.",
+  "connectionSucceeded": "تم الاتصال بنجاح",
+  "connectionFailed": "فشل الاتصال",
+  "paymentTestingConnection": "جارٍ الاختبار…",
+  "paymentTestConnection": "اختبار الاتصال",
+  "paymentOpenProviderDocs": "فتح توثيق المزود",
+  "paymentOn": "مفعل",
+  "paymentOff": "غير مفعل",
+  "paymentLearnMore": "معرفة المزيد",
+  "paymentCouldNotOpenUrl": "تعذر فتح الرابط.",
+  "paymentInvalidNumber": "رقم غير صالح: {field}",
+  "@paymentInvalidNumber": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "paymentMissingRequiredField": "حقل مطلوب مفقود: {field}",
+  "@paymentMissingRequiredField": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "subscriptionExpiredRenewRequired": "انتهى اشتراكك. يرجى تجديد الاشتراك لمتابعة إدارة التطبيق.",
+  "loginLabel": "تسجيل الدخول",
   "adminAnnouncementsTitle": "الإعلانات",
   "adminAnnouncementsSubtitle": "إرسال إشعار لكل مستخدمي هذا التطبيق",
   "adminAnnouncementsNotifyAllTitle": "إشعار كل المستخدمين",
@@ -1242,74 +1227,83 @@
   "adminAnnouncementsTypeService": "خدمة",
   "adminAnnouncementsTypeMaintenance": "صيانة",
   "adminAnnouncementsCreatedSuccess": "تم إرسال الإعلان بنجاح",
-"adminAnnouncementsDeletedSuccess": "تم حذف الإعلان بنجاح",
-"adminAnnouncementsEmptyTitle": "لا توجد إعلانات بعد",
-"adminAnnouncementsEmptyMessage": "أنشئ أول إعلان لإشعار المستخدمين.",
-"adminAnnouncementsDeleteTitle": "حذف الإعلان؟",
-"adminAnnouncementsDeleteMessage": "سيتم إخفاء هذا الإعلان عن المستخدمين.",
-"adminAnnouncementsCancel": "إلغاء",
-"adminAnnouncementsDelete": "حذف",
-"adminAnnouncementsSentToUsers": "تم الإرسال إلى {count} مستخدم",
-"@adminAnnouncementsSentToUsers": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "adminAnnouncementsDeletedSuccess": "تم حذف الإعلان بنجاح",
+  "adminAnnouncementsEmptyTitle": "لا توجد إعلانات بعد",
+  "adminAnnouncementsEmptyMessage": "أنشئ أول إعلان لإشعار المستخدمين.",
+  "adminAnnouncementsDeleteTitle": "حذف الإعلان؟",
+  "adminAnnouncementsDeleteMessage": "سيتم إخفاء هذا الإعلان عن المستخدمين.",
+  "adminAnnouncementsCancel": "إلغاء",
+  "adminAnnouncementsDelete": "حذف",
+  "adminAnnouncementsSentToUsers": "تم الإرسال إلى {count} مستخدم",
+  "@adminAnnouncementsSentToUsers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
-"chooseImage": "اختيار صورة",
-"removeImage": "إزالة الصورة",
-"availableAfterPurchaseLabel": "متاح بعد الشراء",
-"tapToZoomLabel": "اضغط للتكبير",
-"openLabel": "فتح",
-"completeProfileFailed": "فشل إكمال الملف الشخصي",
-"upgradeCompletePaypalTitle": "إتمام الدفع عبر PayPal",
-"upgradeCompletePaypalContent": "لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
-"upgradeCompleteCardTitle": "إتمام الدفع بالبطاقة",
-"upgradeCompleteCardContent": "لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
-"upgradePendingConfirmationTitle": "الدفع في انتظار التأكيد",
-"upgradeIvePaidButton": "لقد دفعت",
-"upgradeGotItButton": "حسناً",
-"upgradePendingSubmitted": "تم تقديم طلب الترقية.",
-"upgradePendingSubmittedWithPlan": "تم تقديم طلبك للترقية إلى {planName} ({cycle}).",
-"@upgradePendingSubmittedWithPlan": {
-  "placeholders": {
-    "planName": { "type": "String" },
-    "cycle": { "type": "String" }
-  }
-},
-"upgradeAmountDue": "المبلغ المستحق: {amount}",
-"@upgradeAmountDue": {
-  "placeholders": {
-    "amount": { "type": "String" }
-  }
-},
-"upgradePendingInstructions": "يرجى إكمال {method}. سيتم تفعيل اشتراكك تلقائياً بمجرد تأكيد أحد المسؤولين استلام الدفعة.",
-"@upgradePendingInstructions": {
-  "placeholders": {
-    "method": { "type": "String" }
-  }
-},
-"upgradeCashPayment": "الدفع النقدي",
-"upgradeBankTransfer": "التحويل البنكي",
-"adminStatusBreakdown": "توزيع الحالات",
-"adminProductCurrentGallery": "المعرض الحالي",
-"adminProductNewUploads": "تحميلات جديدة",
-"adminProductExistingLabel": "موجود",
-"adminProductImageCount": "{count} صورة",
-"@adminProductImageCount": {
-  "placeholders": {
-    "count": { "type": "int" }
-  }
-},
-"navLabelHome": "الرئيسية",
-"navLabelExplore": "استكشاف",
-"navLabelCart": "السلة",
-"navLabelOrders": "طلباتي",
-"navLabelProfile": "الملف الشخصي",
-"navLabelNotifications": "الإشعارات",
-"navLabelBookings": "الحجوزات",
-"excelImportConstraintViolation": "بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها.",
+  },
+  "chooseImage": "اختيار صورة",
+  "removeImage": "إزالة الصورة",
+  "tapToZoomLabel": "اضغط للتكبير",
+  "openLabel": "فتح",
+  "completeProfileFailed": "فشل إكمال الملف الشخصي",
+  "upgradeCompletePaypalTitle": "إتمام الدفع عبر PayPal",
+  "upgradeCompletePaypalContent": "لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
+  "upgradeCompleteCardTitle": "إتمام الدفع بالبطاقة",
+  "upgradeCompleteCardContent": "لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.",
+  "upgradePendingConfirmationTitle": "الدفع في انتظار التأكيد",
+  "upgradeIvePaidButton": "لقد دفعت",
+  "upgradeGotItButton": "حسناً",
+  "upgradePendingSubmitted": "تم تقديم طلب الترقية.",
+  "upgradePendingSubmittedWithPlan": "تم تقديم طلبك للترقية إلى {planName} ({cycle}).",
+  "@upgradePendingSubmittedWithPlan": {
+    "placeholders": {
+      "planName": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeAmountDue": "المبلغ المستحق: {amount}",
+  "@upgradeAmountDue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradePendingInstructions": "يرجى إكمال {method}. سيتم تفعيل اشتراكك تلقائياً بمجرد تأكيد أحد المسؤولين استلام الدفعة.",
+  "@upgradePendingInstructions": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeCashPayment": "الدفع النقدي",
+  "upgradeBankTransfer": "التحويل البنكي",
+  "adminStatusBreakdown": "توزيع الحالات",
+  "adminProductCurrentGallery": "المعرض الحالي",
+  "adminProductNewUploads": "تحميلات جديدة",
+  "adminProductExistingLabel": "موجود",
+  "adminProductImageCount": "{count} صورة",
+  "@adminProductImageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navLabelHome": "الرئيسية",
+  "navLabelExplore": "استكشاف",
+  "navLabelCart": "السلة",
+  "navLabelOrders": "طلباتي",
+  "navLabelProfile": "الملف الشخصي",
+  "navLabelNotifications": "الإشعارات",
+  "navLabelBookings": "الحجوزات",
+  "excelImportConstraintViolation": "بياناتك قيد الاستخدام حالياً (مرتبطة بطلبات أو سلات) ولا يمكن استبدالها.",
   "adminProductImageUrlLabel": "رابط الصورة",
   "adminProductsSearchHint": "ابحث عن منتجات...",
   "adminProductsFilterAll": "كل المنتجات",
@@ -1325,7 +1319,7 @@
   "adminProductImageSectionTitle": "صورة المنتج",
   "adminProductImageSectionSubtitle": "ارفع صورة المنتج",
   "adminProductSectionConfigTitle": "إعدادات المنتج",
-  "adminProductSectionConfigSubtitle": "افتراضي، قابل للتنزيل، خارجي",
+  "adminProductSectionConfigSubtitle": "افتراضي وخارجي",
   "adminProductSaleSectionSubtitle": "حدّد سعر التخفيض ومدته",
   "adminProductAttributesSubtitle": "أضف خصائص مخصصة",
   "adminHomeBannersTitle": "بنرات الصفحة الرئيسية",
@@ -1437,5 +1431,35 @@
   "adminOrderRestoreBody": "سيتم إعادة الطلب إلى حالة قيد الانتظار.",
   "paypalApprovalTitle": "أكمل الدفع عبر {provider}",
   "paypalApprovalBody": "فتحنا صفحة الدفع الخاصة بـ {provider} في متصفحك. بعد إتمام الدفع هناك، عُد إلى هنا واضغط “دفعت” حتى نتمكن من تأكيد طلبك.",
-  "paypalApprovalPaidBtn": "دفعت"
+  "paypalApprovalPaidBtn": "دفعت",
+  "adminGalleryTitle": "معرض الصور",
+  "adminActionGallerySubtitle": "ارفع صورك مرة واحدة واستخدمها في أي مكان",
+  "galleryUploadButton": "رفع صور",
+  "galleryUploading": "جارٍ الرفع…",
+  "galleryEmptyTitle": "لا توجد صور بعد",
+  "galleryEmptyMessage": "ارفع صور منتجاتك هنا، ثم أضفها إلى المنتجات عند الاستيراد.",
+  "galleryDeleteTitle": "حذف الصورة؟",
+  "galleryDeleteMessage": "لن تعود متاحة لإضافتها إلى المنتجات.",
+  "galleryDeleteConfirm": "حذف",
+  "galleryCancel": "إلغاء",
+  "galleryUploadedCount": "تم رفع {count} صورة",
+  "gallerySomeFailed": "تعذّر رفع {count}",
+  "galleryLoadMore": "تحميل المزيد",
+  "galleryImageCount": "{count} صورة",
+  "galleryPickTitle": "اختر صورة",
+  "galleryPickNone": "بدون صورة",
+  "galleryPickEmpty": "معرض الصور فارغ. ارفع صورًا أولًا.",
+  "galleryOpen": "فتح المعرض",
+  "excelPreviewTitle": "المنتجات التي وجدناها",
+  "excelPreviewSubtitle": "{count} منتج جاهز للاستيراد",
+  "excelPreviewRow": "الصف {row}",
+  "excelPreviewChooseImage": "اختر صورة",
+  "excelPreviewChangeImage": "تغيير",
+  "excelPreviewRemoveImage": "إزالة الصورة",
+  "excelPreviewNoImage": "بدون صورة",
+  "excelPreviewRowHasIssues": "بحاجة إلى تصحيح",
+  "excelPreviewImagesAssigned": "{assigned} من أصل {total} منتج لديه صورة",
+  "excelPreviewNoProducts": "لم نجد أي منتج في هذا الملف.",
+  "excelPreviewFixFirst": "صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.",
+  "excelPreviewNoShipping": "بدون شحن"
 }

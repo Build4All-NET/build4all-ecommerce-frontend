@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/picked_excel_file.dart';
+import '../../domain/entities/excel_product_preview.dart';
 import '../../domain/entities/excel_validation_result.dart';
 
 class ExcelImportState extends Equatable {
@@ -22,6 +23,13 @@ class ExcelImportState extends Equatable {
 
   final String? errorMessage;
 
+  /// Gallery image chosen for each product row: row number to (id, url).
+  ///
+  /// Held here rather than folded into the preview objects because the previews
+  /// are what the server said and these are what the owner decided; keeping them
+  /// apart means re-validating the file never silently discards their choices.
+  final Map<int, ExcelRowImage> rowImages;
+
   const ExcelImportState({
     required this.picking,
     required this.validating,
@@ -34,6 +42,7 @@ class ExcelImportState extends Equatable {
     required this.replaceScope,
     required this.templateFilePath,
     required this.errorMessage,
+    this.rowImages = const {},
   });
 
   factory ExcelImportState.initial() => const ExcelImportState(
@@ -62,10 +71,12 @@ class ExcelImportState extends Equatable {
     String? replaceScope,
     String? templateFilePath,
     String? errorMessage,
+    Map<int, ExcelRowImage>? rowImages,
     bool clearError = false,
     bool clearValidation = false,
     bool clearResult = false,
     bool clearTemplatePath = false,
+    bool clearRowImages = false,
   }) {
     return ExcelImportState(
       picking: picking ?? this.picking,
@@ -81,8 +92,24 @@ class ExcelImportState extends Equatable {
           ? null
           : (templateFilePath ?? this.templateFilePath),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      rowImages: clearRowImages ? const {} : (rowImages ?? this.rowImages),
     );
   }
+
+  List<ExcelProductPreview> get previews =>
+      validation?.productPreviews ?? const [];
+
+  /// How many reviewed products the owner has given a picture to, counting both
+  /// their gallery choices and links that were already in the file.
+  int get productsWithImage => previews
+      .where((p) =>
+          rowImages.containsKey(p.row) ||
+          (p.imageUrl != null && p.imageUrl!.trim().isNotEmpty))
+      .length;
+
+  /// The payload the import call needs: row number to gallery image id.
+  Map<int, int> get imageAssignments =>
+      rowImages.map((row, image) => MapEntry(row, image.id));
 
   bool get canValidate => file != null && !validating && !importing;
   bool get canImport =>
@@ -105,5 +132,18 @@ class ExcelImportState extends Equatable {
         replaceScope,
         templateFilePath,
         errorMessage,
+        rowImages,
       ];
+}
+
+/// A gallery image the owner attached to a row, kept as both parts: the id is
+/// what the server needs, the url is what the review list has to draw.
+class ExcelRowImage extends Equatable {
+  final int id;
+  final String url;
+
+  const ExcelRowImage({required this.id, required this.url});
+
+  @override
+  List<Object?> get props => [id, url];
 }

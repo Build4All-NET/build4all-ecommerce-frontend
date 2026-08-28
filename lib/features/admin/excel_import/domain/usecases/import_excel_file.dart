@@ -10,11 +10,13 @@ class ImportExcelFile {
     required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
+    Map<int, int> imageAssignments = const {},
   }) {
     return repo.importFile(
       file: file,
       replace: replace,
       replaceScope: replaceScope,
+      imageAssignments: imageAssignments,
     );
   }
 }

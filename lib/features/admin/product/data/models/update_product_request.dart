@@ -19,8 +19,6 @@ class UpdateProductRequest {
   final ProductTypeDto? productType;
 
   final bool? virtualProduct;
-  final bool? downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
@@ -58,8 +56,6 @@ class UpdateProductRequest {
     this.sku,
     this.productType,
     this.virtualProduct,
-    this.downloadable,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
     this.salePrice,
@@ -98,8 +94,6 @@ class UpdateProductRequest {
       if (sku != null) 'sku': sku,
       if (productType != null) 'productType': productTypeDtoToApi(productType!),
       if (virtualProduct != null) 'virtualProduct': virtualProduct,
-      if (downloadable != null) 'downloadable': downloadable,
-      if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (externalUrl != null) 'externalUrl': externalUrl,
       if (buttonText != null) 'buttonText': buttonText,
       if (salePrice != null) 'salePrice': salePrice,

@@ -34,7 +34,33 @@ class ExcelReplaceScopeChanged extends ExcelImportEvent {
   List<Object?> get props => [scope];
 }
 
-/// ✅ NEW: download template into app storage
+/// Downloads the blank workbook into app storage.
 class ExcelDownloadTemplatePressed extends ExcelImportEvent {
   const ExcelDownloadTemplatePressed();
+}
+
+/// Attaches a gallery image to one reviewed product row.
+class ExcelProductImageAssigned extends ExcelImportEvent {
+  final int row;
+  final int imageId;
+  final String imageUrl;
+
+  const ExcelProductImageAssigned({
+    required this.row,
+    required this.imageId,
+    required this.imageUrl,
+  });
+
+  @override
+  List<Object?> get props => [row, imageId, imageUrl];
+}
+
+/// Takes the picture back off a row.
+class ExcelProductImageCleared extends ExcelImportEvent {
+  final int row;
+
+  const ExcelProductImageCleared(this.row);
+
+  @override
+  List<Object?> get props => [row];
 }

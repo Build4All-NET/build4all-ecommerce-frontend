@@ -26,8 +26,6 @@ class Product {
   final String productType; // SIMPLE / VARIABLE / GROUPED / EXTERNAL
 
   final bool virtualProduct;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
@@ -58,8 +56,6 @@ class Product {
     this.sku,
     required this.productType,
     required this.virtualProduct,
-    required this.downloadable,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
     this.salePrice,

@@ -136,33 +136,9 @@ class _HomeScreenState extends State<HomeScreen>
     return _itemProductType(item) == 'EXTERNAL';
   }
 
-  bool _isDownloadable(ItemSummary item) {
-    try {
-      return _safeBool((item as dynamic).downloadable);
-    } catch (_) {
-      return false;
-    }
-  }
-
-  bool _canDownloadNow(ItemSummary item) {
-    try {
-      return _safeBool((item as dynamic).canDownload);
-    } catch (_) {
-      return false;
-    }
-  }
-
   String? _externalUrl(ItemSummary item) {
     try {
       return _safeNullableString((item as dynamic).externalUrl);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  String? _downloadUrl(ItemSummary item) {
-    try {
-      return _safeNullableString((item as dynamic).downloadUrl);
     } catch (_) {
       return null;
     }
@@ -178,14 +154,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   bool _hasExternalUrl(ItemSummary item) {
     return (_externalUrl(item) ?? '').trim().isNotEmpty;
-  }
-
-  bool _hasDownloadUrl(ItemSummary item) {
-    return (_downloadUrl(item) ?? '').trim().isNotEmpty;
-  }
-
-  bool _isDownloadReady(ItemSummary item) {
-    return _isDownloadable(item) && _canDownloadNow(item) && _hasDownloadUrl(item);
   }
 
   void _ensureHomeDataLoaded() {
@@ -557,10 +525,6 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (_isExternalProduct(item)) {
       return !_hasExternalUrl(item);
-    }
-
-    if (_isDownloadReady(item)) {
-      return !_hasDownloadUrl(item);
     }
 
     if (_isComingSoon(item)) return false;
@@ -1038,10 +1002,6 @@ class _HomeScreenState extends State<HomeScreen>
           return _buttonText(item) ?? l10n.openLinkLabel;
         }
 
-        if (_isDownloadReady(item)) {
-          return _buttonText(item) ?? l10n.downloadNowLabel;
-        }
-
         if (_isComingSoon(item)) return l10n.home_coming_soon_button;
         if (_isOutOfStock(item)) return l10n.outOfStock;
 
@@ -1087,12 +1047,6 @@ class _HomeScreenState extends State<HomeScreen>
           return l10n.externalProductLabel;
         }
 
-        if (_isDownloadable(item)) {
-          return _isDownloadReady(item)
-              ? l10n.downloadReadyLabel
-              : l10n.downloadAfterPurchaseLabel;
-        }
-
         final stock = item.stock;
 
         if (stock == null) return null;
@@ -1131,32 +1085,6 @@ class _HomeScreenState extends State<HomeScreen>
 
       if (!ok) {
         AppToast.error(context, l10n.couldNotOpenLinkLabel);
-      }
-
-      return;
-    }
-
-    if (item.kind == ItemKind.product && _isDownloadReady(item)) {
-      final rawUrl = (_downloadUrl(item) ?? '').trim();
-
-      if (rawUrl.isEmpty) {
-        AppToast.error(context, l10n.missingDownloadUrlLabel);
-        return;
-      }
-
-      final uri = Uri.tryParse(rawUrl);
-
-      if (uri == null) {
-        AppToast.error(context, l10n.invalidDownloadUrlLabel);
-        return;
-      }
-
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-
-      if (!context.mounted) return;
-
-      if (!ok) {
-        AppToast.error(context, l10n.couldNotStartDownloadLabel);
       }
 
       return;

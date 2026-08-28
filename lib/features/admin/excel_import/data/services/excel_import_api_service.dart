@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
@@ -161,6 +163,7 @@ class ExcelImportApiService {
     required PickedExcelFile file,
     required bool replace,
     required String replaceScope,
+    Map<int, int> imageAssignments = const {},
   }) async {
     final form = FormData.fromMap({
       'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
@@ -172,6 +175,12 @@ class ExcelImportApiService {
         queryParameters: {
           'replace': replace,
           'replaceScope': replaceScope,
+          // Sent as one JSON object keyed by row so the whole import — file and
+          // picture choices together — stays a single request.
+          if (imageAssignments.isNotEmpty)
+            'imageAssignments': jsonEncode(
+              imageAssignments.map((row, id) => MapEntry(row.toString(), id)),
+            ),
         },
         data: form,
         options: await _auth(),
@@ -182,6 +191,35 @@ class ExcelImportApiService {
       return _fromDioError(e, fallbackMessage: 'Import request failed.');
     } catch (e) {
       return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Fetches the blank workbook from the backend.
+  ///
+  /// The template used to ship inside the app, which meant a change to the
+  /// importer's columns needed an app release to reach owners. Serving it from
+  /// the same place that parses it removes that gap.
+  Future<List<int>?> downloadTemplate() async {
+    try {
+      final token = await getToken();
+
+      final res = await _dio.get<List<int>>(
+        '/api/admin/import/excel/template',
+        options: Options(
+          headers: {
+            if (token != null && token.trim().isNotEmpty)
+              'Authorization': 'Bearer ${_cleanToken(token)}',
+          },
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      final bytes = res.data;
+      return (bytes == null || bytes.isEmpty) ? null : bytes;
+    } catch (_) {
+      // Null means "fall back to the copy bundled with the app" rather than
+      // leaving the owner with no template at all.
+      return null;
     }
   }
 }

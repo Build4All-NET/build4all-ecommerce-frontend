@@ -1279,18 +1279,6 @@ abstract class AppLocalizations {
   /// **'Virtual product'**
   String get adminProductVirtualLabel;
 
-  /// No description provided for @adminProductDownloadableLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable'**
-  String get adminProductDownloadableLabel;
-
-  /// No description provided for @adminProductDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download URL'**
-  String get adminProductDownloadUrlLabel;
-
   /// No description provided for @adminProductExternalUrlLabel.
   ///
   /// In en, this message translates to:
@@ -1404,12 +1392,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ex: SKU-123'**
   String get adminProductSkuHint;
-
-  /// No description provided for @adminProductDownloadUrlHint.
-  ///
-  /// In en, this message translates to:
-  /// **'https://...'**
-  String get adminProductDownloadUrlHint;
 
   /// No description provided for @adminProductExternalUrlHint.
   ///
@@ -2356,7 +2338,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminProductSectionConfigSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Virtual, downloadable, external'**
+  /// **'Virtual and external'**
   String get adminProductSectionConfigSubtitle;
 
   /// No description provided for @adminProductSaleSectionSubtitle.
@@ -6121,30 +6103,6 @@ abstract class AppLocalizations {
   /// **'Open Link'**
   String get openLinkLabel;
 
-  /// No description provided for @downloadNowLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get downloadNowLabel;
-
-  /// No description provided for @downloadLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get downloadLabel;
-
-  /// No description provided for @downloadReadyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to download'**
-  String get downloadReadyLabel;
-
-  /// No description provided for @downloadAfterPurchaseLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Available after purchase'**
-  String get downloadAfterPurchaseLabel;
-
   /// No description provided for @externalProductLabel.
   ///
   /// In en, this message translates to:
@@ -6175,59 +6133,11 @@ abstract class AppLocalizations {
   /// **'Could not open the link'**
   String get couldNotOpenLinkLabel;
 
-  /// No description provided for @invalidDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid download URL'**
-  String get invalidDownloadUrlLabel;
-
-  /// No description provided for @missingDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Missing download URL'**
-  String get missingDownloadUrlLabel;
-
-  /// No description provided for @couldNotStartDownloadLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not start the download'**
-  String get couldNotStartDownloadLabel;
-
-  /// No description provided for @adminDownloadableMustBeSimple.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable product must use Simple product type'**
-  String get adminDownloadableMustBeSimple;
-
-  /// No description provided for @adminDownloadableMustBeVirtual.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable product must be virtual'**
-  String get adminDownloadableMustBeVirtual;
-
-  /// No description provided for @adminDownloadUrlRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Download URL is required for downloadable product'**
-  String get adminDownloadUrlRequired;
-
   /// No description provided for @adminExternalUrlRequired.
   ///
   /// In en, this message translates to:
   /// **'External URL is required for external product'**
   String get adminExternalUrlRequired;
-
-  /// No description provided for @adminExternalCannotBeDownloadable.
-  ///
-  /// In en, this message translates to:
-  /// **'External product cannot be downloadable'**
-  String get adminExternalCannotBeDownloadable;
-
-  /// No description provided for @adminDownloadableRulesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable products are saved as Simple + Virtual and require a download URL.'**
-  String get adminDownloadableRulesHint;
 
   /// No description provided for @adminAllAttributeTypesAlreadyAdded.
   ///
@@ -7021,12 +6931,6 @@ abstract class AppLocalizations {
   /// **'Remove image'**
   String get removeImage;
 
-  /// No description provided for @availableAfterPurchaseLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Available after purchase'**
-  String get availableAfterPurchaseLabel;
-
   /// No description provided for @tapToZoomLabel.
   ///
   /// In en, this message translates to:
@@ -7218,6 +7122,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I\'ve paid'**
   String get paypalApprovalPaidBtn;
+
+  /// No description provided for @adminGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get adminGalleryTitle;
+
+  /// No description provided for @adminActionGallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your pictures once and use them anywhere'**
+  String get adminActionGallerySubtitle;
+
+  /// No description provided for @galleryUploadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload images'**
+  String get galleryUploadButton;
+
+  /// No description provided for @galleryUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get galleryUploading;
+
+  /// No description provided for @galleryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No images yet'**
+  String get galleryEmptyTitle;
+
+  /// No description provided for @galleryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your product pictures here, then attach them to products when you import.'**
+  String get galleryEmptyMessage;
+
+  /// No description provided for @galleryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image?'**
+  String get galleryDeleteTitle;
+
+  /// No description provided for @galleryDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It will no longer be available to attach to products.'**
+  String get galleryDeleteMessage;
+
+  /// No description provided for @galleryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get galleryDeleteConfirm;
+
+  /// No description provided for @galleryCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get galleryCancel;
+
+  /// No description provided for @galleryUploadedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images uploaded'**
+  String galleryUploadedCount(Object count);
+
+  /// No description provided for @gallerySomeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} could not be uploaded'**
+  String gallerySomeFailed(Object count);
+
+  /// No description provided for @galleryLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get galleryLoadMore;
+
+  /// No description provided for @galleryImageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images'**
+  String galleryImageCount(Object count);
+
+  /// No description provided for @galleryPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an image'**
+  String get galleryPickTitle;
+
+  /// No description provided for @galleryPickNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get galleryPickNone;
+
+  /// No description provided for @galleryPickEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gallery is empty. Upload images first.'**
+  String get galleryPickEmpty;
+
+  /// No description provided for @galleryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open gallery'**
+  String get galleryOpen;
+
+  /// No description provided for @excelPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products found'**
+  String get excelPreviewTitle;
+
+  /// No description provided for @excelPreviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products are ready to import'**
+  String excelPreviewSubtitle(Object count);
+
+  /// No description provided for @excelPreviewRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}'**
+  String excelPreviewRow(Object row);
+
+  /// No description provided for @excelPreviewChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get excelPreviewChooseImage;
+
+  /// No description provided for @excelPreviewChangeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get excelPreviewChangeImage;
+
+  /// No description provided for @excelPreviewRemoveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get excelPreviewRemoveImage;
+
+  /// No description provided for @excelPreviewNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No picture yet'**
+  String get excelPreviewNoImage;
+
+  /// No description provided for @excelPreviewRowHasIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs fixing'**
+  String get excelPreviewRowHasIssues;
+
+  /// No description provided for @excelPreviewImagesAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} of {total} products have a picture'**
+  String excelPreviewImagesAssigned(Object assigned, Object total);
+
+  /// No description provided for @excelPreviewNoProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products were found in this file.'**
+  String get excelPreviewNoProducts;
+
+  /// No description provided for @excelPreviewFixFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix the rows marked below, then upload the file again.'**
+  String get excelPreviewFixFirst;
+
+  /// No description provided for @excelPreviewNoShipping.
+  ///
+  /// In en, this message translates to:
+  /// **'No shipping'**
+  String get excelPreviewNoShipping;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
