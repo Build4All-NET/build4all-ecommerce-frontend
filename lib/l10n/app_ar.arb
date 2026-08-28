@@ -1466,5 +1466,7 @@
   "excelPreviewRowHasIssues": "بحاجة إلى تصحيح",
   "excelPreviewImagesAssigned": "{assigned} من أصل {total} منتج لديه صورة",
   "excelPreviewNoProducts": "لم نجد أي منتج في هذا الملف.",
-  "excelPreviewFixFirst": "صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى."
+  "excelPreviewFixFirst": "صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.",
+  "excelPreviewDigital": "منتج رقمي",
+  "excelPreviewNoShipping": "بدون شحن"
 }

@@ -3788,4 +3788,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelPreviewFixFirst => 'Fix the rows marked below, then upload the file again.';
+
+  @override
+  String get excelPreviewDigital => 'Digital';
+
+  @override
+  String get excelPreviewNoShipping => 'No shipping';
 }

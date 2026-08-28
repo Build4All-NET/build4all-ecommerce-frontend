@@ -3788,4 +3788,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelPreviewFixFirst => 'صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.';
+
+  @override
+  String get excelPreviewDigital => 'منتج رقمي';
+
+  @override
+  String get excelPreviewNoShipping => 'بدون شحن';
 }

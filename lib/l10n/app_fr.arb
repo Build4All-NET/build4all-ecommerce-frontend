@@ -1466,5 +1466,7 @@
   "excelPreviewRowHasIssues": "À corriger",
   "excelPreviewImagesAssigned": "{assigned} produits sur {total} ont une image",
   "excelPreviewNoProducts": "Aucun produit trouvé dans ce fichier.",
-  "excelPreviewFixFirst": "Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier."
+  "excelPreviewFixFirst": "Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.",
+  "excelPreviewDigital": "Numérique",
+  "excelPreviewNoShipping": "Sans livraison"
 }

@@ -1647,5 +1647,7 @@
   "excelPreviewRowHasIssues": "Needs fixing",
   "excelPreviewImagesAssigned": "{assigned} of {total} products have a picture",
   "excelPreviewNoProducts": "No products were found in this file.",
-  "excelPreviewFixFirst": "Fix the rows marked below, then upload the file again."
+  "excelPreviewFixFirst": "Fix the rows marked below, then upload the file again.",
+  "excelPreviewDigital": "Digital",
+  "excelPreviewNoShipping": "No shipping"
 }

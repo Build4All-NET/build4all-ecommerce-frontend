@@ -7392,6 +7392,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fix the rows marked below, then upload the file again.'**
   String get excelPreviewFixFirst;
+
+  /// No description provided for @excelPreviewDigital.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital'**
+  String get excelPreviewDigital;
+
+  /// No description provided for @excelPreviewNoShipping.
+  ///
+  /// In en, this message translates to:
+  /// **'No shipping'**
+  String get excelPreviewNoShipping;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

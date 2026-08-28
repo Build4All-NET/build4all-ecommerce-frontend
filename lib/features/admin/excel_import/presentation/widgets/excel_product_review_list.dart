@@ -125,6 +125,25 @@ class _ProductRow extends StatelessWidget {
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
+                    if (product.downloadable || product.virtualProduct) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (product.downloadable)
+                            _Badge(
+                              icon: Icons.download_outlined,
+                              label: l10n.excelPreviewDigital,
+                            ),
+                          if (product.virtualProduct && !product.downloadable)
+                            _Badge(
+                              icon: Icons.local_shipping_outlined,
+                              label: l10n.excelPreviewNoShipping,
+                            ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -193,7 +212,8 @@ class _ProductRow extends StatelessWidget {
     final parts = <String>[l10n.excelPreviewRow(product.row)];
 
     if (product.price != null) parts.add(_money(product.price!));
-    if (product.stock != null) parts.add('×${product.stock}');
+    // A digital product never runs out, so its quantity says nothing.
+    if (product.stock != null && !product.downloadable) parts.add('×${product.stock}');
     if (product.itemTypeName != null) parts.add(product.itemTypeName!);
     if (product.sku != null) parts.add(product.sku!);
 
@@ -261,6 +281,42 @@ class _Thumbnail extends StatelessWidget {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// A small chip marking what kind of product a row is.
+class _Badge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _Badge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSecondaryContainer,
+            ),
+          ),
+        ],
       ),
     );
   }

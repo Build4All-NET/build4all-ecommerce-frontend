@@ -3788,4 +3788,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelPreviewFixFirst => 'Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.';
+
+  @override
+  String get excelPreviewDigital => 'Numérique';
+
+  @override
+  String get excelPreviewNoShipping => 'Sans livraison';
 }
