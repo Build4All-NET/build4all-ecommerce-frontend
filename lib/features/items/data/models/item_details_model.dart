@@ -34,12 +34,9 @@ class ItemDetailsModel {
   final String? statusName;
 
   final String? productType;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
-  final bool canDownload;
   final String? accessMessage;
 
   ItemDetailsModel({
@@ -67,11 +64,8 @@ class ItemDetailsModel {
     this.statusCode,
     this.statusName,
     this.productType,
-    this.downloadable = false,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
-    this.canDownload = false,
     this.accessMessage,
   });
 
@@ -172,11 +166,8 @@ class ItemDetailsModel {
       statusCode: j['statusCode']?.toString(),
       statusName: j['statusName']?.toString(),
       productType: j['productType']?.toString(),
-      downloadable: parseBool(j['downloadable']),
-      downloadUrl: j['downloadUrl']?.toString(),
       externalUrl: j['externalUrl']?.toString(),
       buttonText: j['buttonText']?.toString(),
-      canDownload: parseBool(j['canDownload']),
       accessMessage: j['accessMessage']?.toString() ?? j['message']?.toString(),
     );
   }
@@ -207,11 +198,8 @@ class ItemDetailsModel {
       statusCode: statusCode,
       statusName: statusName,
       productType: productType,
-      downloadable: downloadable,
-      downloadUrl: downloadUrl,
       externalUrl: externalUrl,
       buttonText: buttonText,
-      canDownload: canDownload,
       accessMessage: accessMessage,
     );
   }

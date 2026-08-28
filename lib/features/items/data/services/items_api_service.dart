@@ -207,64 +207,6 @@ class ItemsApiService {
     return getById(id, token: token);
   }
 
-  Future<Map<String, dynamic>> getDownloadAccess(
-    int productId, {
-    required String token,
-  }) async {
-    if (!_isEcommerce) {
-      throw AppException('Download access is only available for products.');
-    }
-
-    _requireTokenForEcommerce(token, 'getDownloadAccess');
-
-    try {
-      final res = await _fetch.fetch(
-        HttpMethod.get,
-        '/api/products/$productId/download-access',
-        headers: _authHeaders(token),
-      );
-
-      return _readMapResponse(
-        res.data,
-        res.statusCode,
-        'product download access',
-      );
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AppException('Failed to load download access', original: e);
-    }
-  }
-
-  Future<Map<String, dynamic>> getDownload(
-    int productId, {
-    required String token,
-  }) async {
-    if (!_isEcommerce) {
-      throw AppException('Download is only available for products.');
-    }
-
-    _requireTokenForEcommerce(token, 'getDownload');
-
-    try {
-      final res = await _fetch.fetch(
-        HttpMethod.get,
-        '/api/products/$productId/download',
-        headers: _authHeaders(token),
-      );
-
-      return _readMapResponse(
-        res.data,
-        res.statusCode,
-        'product download',
-      );
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AppException('Failed to start download', original: e);
-    }
-  }
-
   Future<List<dynamic>> getInterestBased({
     required int userId,
     required String token,

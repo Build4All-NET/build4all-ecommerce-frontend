@@ -34,12 +34,6 @@ class ItemDetailsPage extends StatefulWidget {
 }
 
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
-  bool _downloadAccessLoading = false;
-  bool _downloadAccessLoaded = false;
-  bool _canDownload = false;
-  String? _downloadAccessMessage;
-  int? _downloadCheckedItemId;
-
   int _galleryIndex = 0;
   late final PageController _galleryController;
 
@@ -70,41 +64,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     return fallback ?? 'Something went wrong. Please try again.';
   }
 
-  Future<void> _loadDownloadAccess(int productId) async {
-    if (_downloadCheckedItemId == productId &&
-        (_downloadAccessLoaded || _downloadAccessLoading)) {
-      return;
-    }
-
-    final token = net.readAuthToken().trim();
-    if (token.isEmpty) return;
-
-    setState(() {
-      _downloadAccessLoading = true;
-      _downloadCheckedItemId = productId;
-    });
-
-    try {
-      final api = ItemsApiService();
-      final res = await api.getDownloadAccess(productId, token: token);
-
-      if (!mounted) return;
-      setState(() {
-        _canDownload = res['canDownload'] == true;
-        _downloadAccessMessage = res['message']?.toString();
-        _downloadAccessLoaded = true;
-        _downloadAccessLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _canDownload = false;
-        _downloadAccessLoaded = true;
-        _downloadAccessLoading = false;
-      });
-    }
-  }
-
   Future<void> _openExternalLink(BuildContext context, String rawUrl) async {
     final l10n = AppLocalizations.of(context)!;
     final url = rawUrl.trim();
@@ -125,49 +84,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
     if (!ok) {
       AppToast.error(context, l10n.couldNotOpenLinkLabel);
-    }
-  }
-
-  Future<void> _startProtectedDownload(
-    BuildContext context,
-    int productId,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    final token = net.readAuthToken().trim();
-
-    if (token.isEmpty) {
-      AppToast.error(context, l10n.cart_login_required_message);
-      return;
-    }
-
-    try {
-      final api = ItemsApiService();
-      final res = await api.getDownload(productId, token: token);
-      final url = (res['downloadUrl'] ?? '').toString().trim();
-
-      if (url.isEmpty) {
-        AppToast.error(context, l10n.missingDownloadUrlLabel);
-        return;
-      }
-
-      final uri = Uri.tryParse(url);
-      if (uri == null) {
-        AppToast.error(context, l10n.invalidDownloadUrlLabel);
-        return;
-      }
-
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!mounted) return;
-
-      if (!ok) {
-        AppToast.error(context, l10n.couldNotStartDownloadLabel);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppToast.error(
-        context,
-        _msg(l10n, e, fallback: 'Failed to start download. Please try again.'),
-      );
     }
   }
 
@@ -205,17 +121,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       create: (_) => ItemDetailsBloc(getItemDetails: usecase)
         ..add(ItemDetailsStarted(widget.itemId, token: token)),
       child: BlocConsumer<ItemDetailsBloc, ItemDetailsState>(
-        listener: (context, state) {
-          final d = state.details;
-          if (d == null) return;
-
-          final auth = context.read<AuthBloc>().state;
-          if (!auth.isLoggedIn) return;
-
-          if (d.downloadable) {
-            _loadDownloadAccess(d.id);
-          }
-        },
         builder: (context, state) {
           if (state.isLoading && state.details == null) {
             return const Scaffold(
@@ -268,8 +173,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           final bool isUpcoming = d.isUpcoming;
           final bool isExternal = d.isExternalProduct;
           final bool hasExternalUrl = d.hasExternalUrl;
-          final bool isDownloadable = d.downloadable;
-          final bool canDownloadNow = isDownloadable && _canDownload;
 
           final int? stock = d.stock;
           final bool isStockTracked = stock != null;
@@ -289,25 +192,19 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           }
           tag ??= d.isSaleActiveNow ? l10n.common_sale_tag : null;
 
-          final bool ctaDisabled = _downloadAccessLoading && isDownloadable
-              ? true
-              : isExternal
-                  ? !hasExternalUrl
-                  : canDownloadNow
-                      ? false
-                      : isUpcoming || outOfStock;
+          final bool ctaDisabled = isExternal
+              ? !hasExternalUrl
+              : isUpcoming || outOfStock;
 
           final String ctaText = isExternal
               ? (((d.buttonText ?? '').trim().isNotEmpty)
                     ? d.buttonText!.trim()
                     : l10n.openLabel)
-              : canDownloadNow
-                  ? l10n.downloadLabel
-                  : isUpcoming
-                      ? l10n.home_coming_soon_button
-                      : outOfStock
-                          ? l10n.outOfStock
-                          : l10n.cart_add_button;
+              : isUpcoming
+                  ? l10n.home_coming_soon_button
+                  : outOfStock
+                      ? l10n.outOfStock
+                      : l10n.cart_add_button;
 
           return Scaffold(
             appBar: AppBar(title: Text(d.name)),
@@ -537,78 +434,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     ),
                   ),
                 ],
-                if (isDownloadable && !canDownloadNow) ...[
-                  SizedBox(height: spacing.sm),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: spacing.md,
-                      vertical: spacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c.secondaryContainer.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: c.secondary.withOpacity(0.25),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.download_rounded,
-                          color: c.secondary,
-                          size: 18,
-                        ),
-                        SizedBox(width: spacing.sm),
-                        Expanded(
-                          child: Text(
-                            (_downloadAccessMessage ?? '').trim().isNotEmpty
-                                ? _downloadAccessMessage!
-                                : l10n.availableAfterPurchaseLabel,
-                            style: t.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: c.secondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (canDownloadNow) ...[
-                  SizedBox(height: spacing.sm),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: spacing.md,
-                      vertical: spacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c.secondaryContainer.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: c.secondary.withOpacity(0.25),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.file_download_outlined,
-                          color: c.secondary,
-                          size: 18,
-                        ),
-                        SizedBox(width: spacing.sm),
-                        Expanded(
-                          child: Text(
-                            l10n.downloadReadyLabel,
-                            style: t.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: c.secondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
                 if (isUpcoming) ...[
                   SizedBox(height: spacing.sm),
                   Container(
@@ -766,14 +591,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     label: l10n.productTypeLabel,
                     value: l10n.externalProductLabel,
                   ),
-                if (isDownloadable)
-                  _infoRow(
-                    context,
-                    label: l10n.downloadLabel,
-                    value: canDownloadNow
-                        ? l10n.downloadReadyLabel
-                        : l10n.availableAfterPurchaseLabel,
-                  ),
                 SizedBox(height: spacing.lg),
                 Text(
                   l10n.common_attributes_title,
@@ -811,11 +628,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                 context,
                                 d.externalUrl ?? '',
                               );
-                              return;
-                            }
-
-                            if (canDownloadNow) {
-                              await _startProtectedDownload(context, d.id);
                               return;
                             }
 
@@ -857,13 +669,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                               l10n.cart_item_added_snackbar,
                             );
                           },
-                    child: _downloadAccessLoading && isDownloadable
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(ctaText),
+                    child: Text(ctaText),
                   ),
                 ),
               ],

@@ -21,9 +21,6 @@ class ExcelProductPreview {
   /// — but a workbook filled in against the old one still carries it.
   final String? imageUrl;
 
-  /// True when this row is a digital product the buyer downloads.
-  final bool downloadable;
-
   /// True when this row needs no shipping.
   final bool virtualProduct;
 
@@ -40,7 +37,6 @@ class ExcelProductPreview {
     this.categoryName,
     this.itemTypeName,
     this.imageUrl,
-    this.downloadable = false,
     this.virtualProduct = false,
     this.valid = true,
     this.issues = const [],

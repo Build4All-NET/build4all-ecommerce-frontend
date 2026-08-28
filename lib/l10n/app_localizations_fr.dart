@@ -613,12 +613,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminProductVirtualLabel => 'Produit virtuel';
 
   @override
-  String get adminProductDownloadableLabel => 'Téléchargeable';
-
-  @override
-  String get adminProductDownloadUrlLabel => 'URL de téléchargement';
-
-  @override
   String get adminProductExternalUrlLabel => 'URL externe';
 
   @override
@@ -674,9 +668,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminProductSkuHint => 'Ex : SKU-123';
-
-  @override
-  String get adminProductDownloadUrlHint => 'https://...';
 
   @override
   String get adminProductExternalUrlHint => 'https://...';
@@ -1150,7 +1141,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminProductSectionConfigTitle => 'Configuration du produit';
 
   @override
-  String get adminProductSectionConfigSubtitle => 'Virtuel, téléchargeable, externe';
+  String get adminProductSectionConfigSubtitle => 'Virtuel et externe';
 
   @override
   String get adminProductSaleSectionSubtitle => 'Définir le prix promo et la durée';
@@ -3116,18 +3107,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get openLinkLabel => 'Ouvrir le lien';
 
   @override
-  String get downloadNowLabel => 'Télécharger';
-
-  @override
-  String get downloadLabel => 'Téléchargement';
-
-  @override
-  String get downloadReadyLabel => 'Prêt au téléchargement';
-
-  @override
-  String get downloadAfterPurchaseLabel => 'Disponible après achat';
-
-  @override
   String get externalProductLabel => 'Produit externe';
 
   @override
@@ -3143,31 +3122,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get couldNotOpenLinkLabel => 'Impossible d’ouvrir le lien';
 
   @override
-  String get invalidDownloadUrlLabel => 'URL de téléchargement invalide';
-
-  @override
-  String get missingDownloadUrlLabel => 'URL de téléchargement manquante';
-
-  @override
-  String get couldNotStartDownloadLabel => 'Impossible de démarrer le téléchargement';
-
-  @override
-  String get adminDownloadableMustBeSimple => 'Le produit téléchargeable doit être de type simple';
-
-  @override
-  String get adminDownloadableMustBeVirtual => 'Le produit téléchargeable doit être virtuel';
-
-  @override
-  String get adminDownloadUrlRequired => 'L’URL de téléchargement est obligatoire pour un produit téléchargeable';
-
-  @override
   String get adminExternalUrlRequired => 'L’URL externe est obligatoire pour un produit externe';
-
-  @override
-  String get adminExternalCannotBeDownloadable => 'Un produit externe ne peut pas être téléchargeable';
-
-  @override
-  String get adminDownloadableRulesHint => 'Les produits téléchargeables sont enregistrés comme Simple + Virtuel et nécessitent une URL de téléchargement.';
 
   @override
   String get adminAllAttributeTypesAlreadyAdded => 'Tous les types d’attributs disponibles sont déjà ajoutés';
@@ -3580,9 +3535,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get removeImage => 'Supprimer l’image';
 
   @override
-  String get availableAfterPurchaseLabel => 'Disponible après l’achat';
-
-  @override
   String get tapToZoomLabel => 'Appuyer pour agrandir';
 
   @override
@@ -3788,9 +3740,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelPreviewFixFirst => 'Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.';
-
-  @override
-  String get excelPreviewDigital => 'Numérique';
 
   @override
   String get excelPreviewNoShipping => 'Sans livraison';

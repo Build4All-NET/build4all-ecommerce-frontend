@@ -71,7 +71,6 @@ class ExcelValidationResultModel {
         categoryName: _text(m['categoryName']),
         itemTypeName: _text(m['itemTypeName']),
         imageUrl: _text(m['imageUrl']),
-        downloadable: m['downloadable'] == true,
         virtualProduct: m['virtualProduct'] == true,
         valid: m['valid'] != false,
         issues: _strings(m['issues']),

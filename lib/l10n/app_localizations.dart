@@ -1279,18 +1279,6 @@ abstract class AppLocalizations {
   /// **'Virtual product'**
   String get adminProductVirtualLabel;
 
-  /// No description provided for @adminProductDownloadableLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable'**
-  String get adminProductDownloadableLabel;
-
-  /// No description provided for @adminProductDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download URL'**
-  String get adminProductDownloadUrlLabel;
-
   /// No description provided for @adminProductExternalUrlLabel.
   ///
   /// In en, this message translates to:
@@ -1404,12 +1392,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ex: SKU-123'**
   String get adminProductSkuHint;
-
-  /// No description provided for @adminProductDownloadUrlHint.
-  ///
-  /// In en, this message translates to:
-  /// **'https://...'**
-  String get adminProductDownloadUrlHint;
 
   /// No description provided for @adminProductExternalUrlHint.
   ///
@@ -2356,7 +2338,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminProductSectionConfigSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Virtual, downloadable, external'**
+  /// **'Virtual and external'**
   String get adminProductSectionConfigSubtitle;
 
   /// No description provided for @adminProductSaleSectionSubtitle.
@@ -6121,30 +6103,6 @@ abstract class AppLocalizations {
   /// **'Open Link'**
   String get openLinkLabel;
 
-  /// No description provided for @downloadNowLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get downloadNowLabel;
-
-  /// No description provided for @downloadLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get downloadLabel;
-
-  /// No description provided for @downloadReadyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to download'**
-  String get downloadReadyLabel;
-
-  /// No description provided for @downloadAfterPurchaseLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Available after purchase'**
-  String get downloadAfterPurchaseLabel;
-
   /// No description provided for @externalProductLabel.
   ///
   /// In en, this message translates to:
@@ -6175,59 +6133,11 @@ abstract class AppLocalizations {
   /// **'Could not open the link'**
   String get couldNotOpenLinkLabel;
 
-  /// No description provided for @invalidDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid download URL'**
-  String get invalidDownloadUrlLabel;
-
-  /// No description provided for @missingDownloadUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Missing download URL'**
-  String get missingDownloadUrlLabel;
-
-  /// No description provided for @couldNotStartDownloadLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not start the download'**
-  String get couldNotStartDownloadLabel;
-
-  /// No description provided for @adminDownloadableMustBeSimple.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable product must use Simple product type'**
-  String get adminDownloadableMustBeSimple;
-
-  /// No description provided for @adminDownloadableMustBeVirtual.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable product must be virtual'**
-  String get adminDownloadableMustBeVirtual;
-
-  /// No description provided for @adminDownloadUrlRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Download URL is required for downloadable product'**
-  String get adminDownloadUrlRequired;
-
   /// No description provided for @adminExternalUrlRequired.
   ///
   /// In en, this message translates to:
   /// **'External URL is required for external product'**
   String get adminExternalUrlRequired;
-
-  /// No description provided for @adminExternalCannotBeDownloadable.
-  ///
-  /// In en, this message translates to:
-  /// **'External product cannot be downloadable'**
-  String get adminExternalCannotBeDownloadable;
-
-  /// No description provided for @adminDownloadableRulesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloadable products are saved as Simple + Virtual and require a download URL.'**
-  String get adminDownloadableRulesHint;
 
   /// No description provided for @adminAllAttributeTypesAlreadyAdded.
   ///
@@ -7021,12 +6931,6 @@ abstract class AppLocalizations {
   /// **'Remove image'**
   String get removeImage;
 
-  /// No description provided for @availableAfterPurchaseLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Available after purchase'**
-  String get availableAfterPurchaseLabel;
-
   /// No description provided for @tapToZoomLabel.
   ///
   /// In en, this message translates to:
@@ -7392,12 +7296,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fix the rows marked below, then upload the file again.'**
   String get excelPreviewFixFirst;
-
-  /// No description provided for @excelPreviewDigital.
-  ///
-  /// In en, this message translates to:
-  /// **'Digital'**
-  String get excelPreviewDigital;
 
   /// No description provided for @excelPreviewNoShipping.
   ///

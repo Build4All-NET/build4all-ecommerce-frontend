@@ -613,12 +613,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductVirtualLabel => 'منتج افتراضي';
 
   @override
-  String get adminProductDownloadableLabel => 'قابل للتحميل';
-
-  @override
-  String get adminProductDownloadUrlLabel => 'رابط التحميل';
-
-  @override
   String get adminProductExternalUrlLabel => 'رابط خارجي';
 
   @override
@@ -674,9 +668,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminProductSkuHint => 'مثال: SKU-123';
-
-  @override
-  String get adminProductDownloadUrlHint => 'https://...';
 
   @override
   String get adminProductExternalUrlHint => 'https://...';
@@ -1150,7 +1141,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductSectionConfigTitle => 'إعدادات المنتج';
 
   @override
-  String get adminProductSectionConfigSubtitle => 'افتراضي، قابل للتنزيل، خارجي';
+  String get adminProductSectionConfigSubtitle => 'افتراضي وخارجي';
 
   @override
   String get adminProductSaleSectionSubtitle => 'حدّد سعر التخفيض ومدته';
@@ -3116,18 +3107,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get openLinkLabel => 'فتح الرابط';
 
   @override
-  String get downloadNowLabel => 'تنزيل';
-
-  @override
-  String get downloadLabel => 'التنزيل';
-
-  @override
-  String get downloadReadyLabel => 'جاهز للتنزيل';
-
-  @override
-  String get downloadAfterPurchaseLabel => 'متاح بعد الشراء';
-
-  @override
   String get externalProductLabel => 'منتج خارجي';
 
   @override
@@ -3143,31 +3122,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get couldNotOpenLinkLabel => 'تعذر فتح الرابط';
 
   @override
-  String get invalidDownloadUrlLabel => 'رابط التنزيل غير صالح';
-
-  @override
-  String get missingDownloadUrlLabel => 'رابط التنزيل مفقود';
-
-  @override
-  String get couldNotStartDownloadLabel => 'تعذر بدء التنزيل';
-
-  @override
-  String get adminDownloadableMustBeSimple => 'المنتج القابل للتنزيل يجب أن يكون من النوع البسيط';
-
-  @override
-  String get adminDownloadableMustBeVirtual => 'المنتج القابل للتنزيل يجب أن يكون افتراضيًا';
-
-  @override
-  String get adminDownloadUrlRequired => 'رابط التنزيل مطلوب للمنتج القابل للتنزيل';
-
-  @override
   String get adminExternalUrlRequired => 'الرابط الخارجي مطلوب للمنتج الخارجي';
-
-  @override
-  String get adminExternalCannotBeDownloadable => 'المنتج الخارجي لا يمكن أن يكون قابلاً للتنزيل';
-
-  @override
-  String get adminDownloadableRulesHint => 'المنتجات القابلة للتنزيل تُحفظ كمنتج بسيط وافتراضي وتتطلب رابط تنزيل.';
 
   @override
   String get adminAllAttributeTypesAlreadyAdded => 'تمت إضافة جميع أنواع الخصائص المتاحة';
@@ -3580,9 +3535,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get removeImage => 'إزالة الصورة';
 
   @override
-  String get availableAfterPurchaseLabel => 'متاح بعد الشراء';
-
-  @override
   String get tapToZoomLabel => 'اضغط للتكبير';
 
   @override
@@ -3788,9 +3740,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelPreviewFixFirst => 'صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.';
-
-  @override
-  String get excelPreviewDigital => 'منتج رقمي';
 
   @override
   String get excelPreviewNoShipping => 'بدون شحن';

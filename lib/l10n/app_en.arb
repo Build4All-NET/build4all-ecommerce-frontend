@@ -204,8 +204,6 @@
   "adminProductTypeGrouped": "Grouped",
   "adminProductTypeExternal": "External",
   "adminProductVirtualLabel": "Virtual product",
-  "adminProductDownloadableLabel": "Downloadable",
-  "adminProductDownloadUrlLabel": "Download URL",
   "adminProductExternalUrlLabel": "External URL",
   "adminProductButtonTextLabel": "Button text",
   "adminProductButtonTextHint": "Buy now",
@@ -225,7 +223,6 @@
   "adminProductPickImage": "Pick image",
   "adminRemove": "Remove",
   "adminProductSkuHint": "Ex: SKU-123",
-  "adminProductDownloadUrlHint": "https://...",
   "adminProductExternalUrlHint": "https://...",
   "adminProductSaveButton": "Save product",
   "adminNoCategories": "No categories found",
@@ -383,7 +380,7 @@
   "adminProductImageSectionTitle": "Product image",
   "adminProductImageSectionSubtitle": "Upload product image",
   "adminProductSectionConfigTitle": "Product configuration",
-  "adminProductSectionConfigSubtitle": "Virtual, downloadable, external",
+  "adminProductSectionConfigSubtitle": "Virtual and external",
   "adminProductSaleSectionSubtitle": "Set sale price and duration",
   "adminProductAttributesSubtitle": "Add custom attributes",
   "cart_title": "Shopping Cart",
@@ -1214,24 +1211,12 @@
   "adminDisabledOnly": "Disabled only",
   "adminAllLabel": "All",
   "openLinkLabel": "Open Link",
-  "downloadNowLabel": "Download",
-  "downloadLabel": "Download",
-  "downloadReadyLabel": "Ready to download",
-  "downloadAfterPurchaseLabel": "Available after purchase",
   "externalProductLabel": "External product",
   "productTypeLabel": "Product type",
   "invalidExternalUrlLabel": "Invalid external URL",
   "missingExternalUrlLabel": "Missing external URL",
   "couldNotOpenLinkLabel": "Could not open the link",
-  "invalidDownloadUrlLabel": "Invalid download URL",
-  "missingDownloadUrlLabel": "Missing download URL",
-  "couldNotStartDownloadLabel": "Could not start the download",
-  "adminDownloadableMustBeSimple": "Downloadable product must use Simple product type",
-  "adminDownloadableMustBeVirtual": "Downloadable product must be virtual",
-  "adminDownloadUrlRequired": "Download URL is required for downloadable product",
   "adminExternalUrlRequired": "External URL is required for external product",
-  "adminExternalCannotBeDownloadable": "External product cannot be downloadable",
-  "adminDownloadableRulesHint": "Downloadable products are saved as Simple + Virtual and require a download URL.",
   "adminAllAttributeTypesAlreadyAdded": "All available attribute types are already added",
   "adminUploadFailed": "failed to pick image",
   "commonClear": "Clear",
@@ -1469,55 +1454,55 @@
     "description": "Admin restore confirm text"
   },
   "adminOrderSequenceLabel": "Order Seq",
-"adminOrderInternalIdLabel": "Internal ID",
-"adminPaymentMethodLabel": "Payment Method",
-"adminOrderCompleteTitle": "Mark Completed",
-"adminOrderCompleteBody": "This will mark the order as completed.",
-"adminOrderReopenTitle": "Reopen (Cancel + Unpay)",
-"adminOrderReopenBody": "This will cancel the order and reset payment back to UNPAID.",
-"adminOrderRestoreTitle": "Restore to Pending",
-"adminOrderRestoreBody": "This will restore the order back to Pending.",
-"commonSomethingWentWrongTryAgain": "Something went wrong. Please try again.",
-"orderDetailsInvoiceDownloadFailed": "Invoice download failed",
-"stripeWebhookSetupTitle": "Stripe webhook setup",
-"stripeWebhookSetupDescription": "To make payment status update correctly inside the app, create a Stripe webhook and select the required events below.",
-"stripeWebhookStep1": "1. Open your Stripe Dashboard.",
-"stripeWebhookStep2": "2. Go to Developers > Webhooks.",
-"stripeWebhookStep3": "3. Click “Add endpoint”.",
-"stripeWebhookStep4": "4. Paste the webhook URL shown below.",
-"stripeWebhookStep5": "5. Select these events:",
-"stripeWebhookStep6": "6. Click “Add endpoint”.",
-"stripeWebhookStep7": "7. Copy the Signing Secret from Stripe.",
-"stripeWebhookStep8": "8. Paste the Signing Secret in this payment configuration and save.",
-"stripeWebhookImportant": "Important: Without this webhook, Stripe may receive the payment, but the app may still show the order as unpaid.",
-"stripeWebhookUrlLabel": "Webhook URL",
-"stripeWebhookCopyButton": "Copy webhook URL",
-"stripeWebhookCopied": "Webhook URL copied",
-"stripeWebhookOpenStripe": "Open Stripe",
-"stripeWebhookMustTestFirst": "Please test Stripe connection and webhook before saving.",
-"connectionSucceeded": "Connection succeeded",
-"connectionFailed": "Connection failed",
-"paymentTestingConnection": "Testing…",
-"paymentTestConnection": "Test connection",
-"paymentOpenProviderDocs": "Open provider docs",
-"paymentOn": "On",
-"paymentOff": "Off",
-"paymentLearnMore": "Learn more",
-"paymentCouldNotOpenUrl": "Could not open the link.",
-"paymentInvalidNumber": "Invalid number: {field}",
-"@paymentInvalidNumber": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"paymentMissingRequiredField": "Missing required field: {field}",
-"@paymentMissingRequiredField": {
-  "placeholders": {
-    "field": {}
-  }
-},
-"subscriptionExpiredRenewRequired": "Your subscription has expired. Please renew it to continue managing your app.",
-"loginLabel": "Login",
+  "adminOrderInternalIdLabel": "Internal ID",
+  "adminPaymentMethodLabel": "Payment Method",
+  "adminOrderCompleteTitle": "Mark Completed",
+  "adminOrderCompleteBody": "This will mark the order as completed.",
+  "adminOrderReopenTitle": "Reopen (Cancel + Unpay)",
+  "adminOrderReopenBody": "This will cancel the order and reset payment back to UNPAID.",
+  "adminOrderRestoreTitle": "Restore to Pending",
+  "adminOrderRestoreBody": "This will restore the order back to Pending.",
+  "commonSomethingWentWrongTryAgain": "Something went wrong. Please try again.",
+  "orderDetailsInvoiceDownloadFailed": "Invoice download failed",
+  "stripeWebhookSetupTitle": "Stripe webhook setup",
+  "stripeWebhookSetupDescription": "To make payment status update correctly inside the app, create a Stripe webhook and select the required events below.",
+  "stripeWebhookStep1": "1. Open your Stripe Dashboard.",
+  "stripeWebhookStep2": "2. Go to Developers > Webhooks.",
+  "stripeWebhookStep3": "3. Click “Add endpoint”.",
+  "stripeWebhookStep4": "4. Paste the webhook URL shown below.",
+  "stripeWebhookStep5": "5. Select these events:",
+  "stripeWebhookStep6": "6. Click “Add endpoint”.",
+  "stripeWebhookStep7": "7. Copy the Signing Secret from Stripe.",
+  "stripeWebhookStep8": "8. Paste the Signing Secret in this payment configuration and save.",
+  "stripeWebhookImportant": "Important: Without this webhook, Stripe may receive the payment, but the app may still show the order as unpaid.",
+  "stripeWebhookUrlLabel": "Webhook URL",
+  "stripeWebhookCopyButton": "Copy webhook URL",
+  "stripeWebhookCopied": "Webhook URL copied",
+  "stripeWebhookOpenStripe": "Open Stripe",
+  "stripeWebhookMustTestFirst": "Please test Stripe connection and webhook before saving.",
+  "connectionSucceeded": "Connection succeeded",
+  "connectionFailed": "Connection failed",
+  "paymentTestingConnection": "Testing…",
+  "paymentTestConnection": "Test connection",
+  "paymentOpenProviderDocs": "Open provider docs",
+  "paymentOn": "On",
+  "paymentOff": "Off",
+  "paymentLearnMore": "Learn more",
+  "paymentCouldNotOpenUrl": "Could not open the link.",
+  "paymentInvalidNumber": "Invalid number: {field}",
+  "@paymentInvalidNumber": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "paymentMissingRequiredField": "Missing required field: {field}",
+  "@paymentMissingRequiredField": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "subscriptionExpiredRenewRequired": "Your subscription has expired. Please renew it to continue managing your app.",
+  "loginLabel": "Login",
   "adminAnnouncementsTitle": "Announcements",
   "adminAnnouncementsSubtitle": "Notify all users in this app",
   "adminAnnouncementsNotifyAllTitle": "Notify all users",
@@ -1548,74 +1533,83 @@
   "adminAnnouncementsTypeService": "Service",
   "adminAnnouncementsTypeMaintenance": "Maintenance",
   "adminAnnouncementsCreatedSuccess": "Announcement sent successfully",
-"adminAnnouncementsDeletedSuccess": "Announcement deleted successfully",
-"adminAnnouncementsEmptyTitle": "No announcements yet",
-"adminAnnouncementsEmptyMessage": "Create your first announcement to notify your users.",
-"adminAnnouncementsDeleteTitle": "Delete announcement?",
-"adminAnnouncementsDeleteMessage": "This announcement will be hidden from users.",
-"adminAnnouncementsCancel": "Cancel",
-"adminAnnouncementsDelete": "Delete",
-"adminAnnouncementsSentToUsers": "Sent to {count} users",
-"@adminAnnouncementsSentToUsers": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "adminAnnouncementsDeletedSuccess": "Announcement deleted successfully",
+  "adminAnnouncementsEmptyTitle": "No announcements yet",
+  "adminAnnouncementsEmptyMessage": "Create your first announcement to notify your users.",
+  "adminAnnouncementsDeleteTitle": "Delete announcement?",
+  "adminAnnouncementsDeleteMessage": "This announcement will be hidden from users.",
+  "adminAnnouncementsCancel": "Cancel",
+  "adminAnnouncementsDelete": "Delete",
+  "adminAnnouncementsSentToUsers": "Sent to {count} users",
+  "@adminAnnouncementsSentToUsers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
-"chooseImage": "Choose image",
-"removeImage": "Remove image",
-"availableAfterPurchaseLabel": "Available after purchase",
-"tapToZoomLabel": "Tap to zoom",
-"openLabel": "Open",
-"completeProfileFailed": "Failed to complete profile",
-"upgradeCompletePaypalTitle": "Complete PayPal payment",
-"upgradeCompletePaypalContent": "We've opened PayPal in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
-"upgradeCompleteCardTitle": "Complete card payment",
-"upgradeCompleteCardContent": "We've opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
-"upgradePendingConfirmationTitle": "Payment pending confirmation",
-"upgradeIvePaidButton": "I've paid",
-"upgradeGotItButton": "Got it",
-"upgradePendingSubmitted": "Your upgrade request has been submitted.",
-"upgradePendingSubmittedWithPlan": "Your request to upgrade to {planName} ({cycle}) has been submitted.",
-"@upgradePendingSubmittedWithPlan": {
-  "placeholders": {
-    "planName": { "type": "String" },
-    "cycle": { "type": "String" }
-  }
-},
-"upgradeAmountDue": "Amount due: {amount}",
-"@upgradeAmountDue": {
-  "placeholders": {
-    "amount": { "type": "String" }
-  }
-},
-"upgradePendingInstructions": "Please complete your {method}. Your subscription will be activated automatically once an administrator confirms the payment has been received.",
-"@upgradePendingInstructions": {
-  "placeholders": {
-    "method": { "type": "String" }
-  }
-},
-"upgradeCashPayment": "cash payment",
-"upgradeBankTransfer": "bank transfer",
-"adminStatusBreakdown": "Status breakdown",
-"adminProductCurrentGallery": "Current gallery",
-"adminProductNewUploads": "New uploads",
-"adminProductExistingLabel": "Existing",
-"adminProductImageCount": "{count} image(s)",
-"@adminProductImageCount": {
-  "placeholders": {
-    "count": { "type": "int" }
-  }
-},
-"navLabelHome": "Home",
-"navLabelExplore": "Explore",
-"navLabelCart": "Cart",
-"navLabelOrders": "Orders",
-"navLabelProfile": "Profile",
-"navLabelNotifications": "Notifications",
-"navLabelBookings": "Bookings",
-"excelImportConstraintViolation": "Your data is currently in use (linked to orders or carts) and can't be replaced.",
+  },
+  "chooseImage": "Choose image",
+  "removeImage": "Remove image",
+  "tapToZoomLabel": "Tap to zoom",
+  "openLabel": "Open",
+  "completeProfileFailed": "Failed to complete profile",
+  "upgradeCompletePaypalTitle": "Complete PayPal payment",
+  "upgradeCompletePaypalContent": "We've opened PayPal in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
+  "upgradeCompleteCardTitle": "Complete card payment",
+  "upgradeCompleteCardContent": "We've opened the secure card payment page in your browser. After you finish paying, come back here and tap \"I've paid\" so we can activate your plan.",
+  "upgradePendingConfirmationTitle": "Payment pending confirmation",
+  "upgradeIvePaidButton": "I've paid",
+  "upgradeGotItButton": "Got it",
+  "upgradePendingSubmitted": "Your upgrade request has been submitted.",
+  "upgradePendingSubmittedWithPlan": "Your request to upgrade to {planName} ({cycle}) has been submitted.",
+  "@upgradePendingSubmittedWithPlan": {
+    "placeholders": {
+      "planName": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeAmountDue": "Amount due: {amount}",
+  "@upgradeAmountDue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradePendingInstructions": "Please complete your {method}. Your subscription will be activated automatically once an administrator confirms the payment has been received.",
+  "@upgradePendingInstructions": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "upgradeCashPayment": "cash payment",
+  "upgradeBankTransfer": "bank transfer",
+  "adminStatusBreakdown": "Status breakdown",
+  "adminProductCurrentGallery": "Current gallery",
+  "adminProductNewUploads": "New uploads",
+  "adminProductExistingLabel": "Existing",
+  "adminProductImageCount": "{count} image(s)",
+  "@adminProductImageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navLabelHome": "Home",
+  "navLabelExplore": "Explore",
+  "navLabelCart": "Cart",
+  "navLabelOrders": "Orders",
+  "navLabelProfile": "Profile",
+  "navLabelNotifications": "Notifications",
+  "navLabelBookings": "Bookings",
+  "excelImportConstraintViolation": "Your data is currently in use (linked to orders or carts) and can't be replaced.",
   "paypalApprovalTitle": "Complete {provider} payment",
   "paypalApprovalBody": "We've opened the {provider} payment page in your browser. After you finish paying there, come back and tap “I've paid” so we can place your order.",
   "paypalApprovalPaidBtn": "I've paid",
@@ -1648,6 +1642,5 @@
   "excelPreviewImagesAssigned": "{assigned} of {total} products have a picture",
   "excelPreviewNoProducts": "No products were found in this file.",
   "excelPreviewFixFirst": "Fix the rows marked below, then upload the file again.",
-  "excelPreviewDigital": "Digital",
   "excelPreviewNoShipping": "No shipping"
 }

@@ -42,12 +42,9 @@ class ItemDetails {
   final String? statusName;
 
   final String? productType;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
-  final bool canDownload;
   final String? accessMessage;
 
   const ItemDetails({
@@ -75,11 +72,8 @@ class ItemDetails {
     this.statusCode,
     this.statusName,
     this.productType,
-    this.downloadable = false,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
-    this.canDownload = false,
     this.accessMessage,
   });
 
@@ -122,15 +116,10 @@ class ItemDetails {
 
   bool get hasExternalUrl => (externalUrl ?? '').trim().isNotEmpty;
 
-  bool get hasDownloadUrl => (downloadUrl ?? '').trim().isNotEmpty;
-
-  bool get isDownloadReady => downloadable && canDownload;
-
   String get resolvedButtonText {
     final t = (buttonText ?? '').trim();
     if (t.isNotEmpty) return t;
     if (isExternalProduct) return 'Open';
-    if (isDownloadReady) return 'Download';
     return 'Add to cart';
   }
 

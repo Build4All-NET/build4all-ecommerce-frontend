@@ -25,8 +25,6 @@ class ItemSummaryModel {
   final String? statusName;
 
   final String? productType;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
@@ -50,8 +48,6 @@ class ItemSummaryModel {
     this.statusCode,
     this.statusName,
     this.productType,
-    this.downloadable = false,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
   });
@@ -108,8 +104,6 @@ class ItemSummaryModel {
       statusCode: j['statusCode']?.toString(),
       statusName: j['statusName']?.toString(),
       productType: j['productType']?.toString(),
-      downloadable: parseBool(j['downloadable']),
-      downloadUrl: j['downloadUrl']?.toString(),
       externalUrl: j['externalUrl']?.toString(),
       buttonText: j['buttonText']?.toString(),
     );
@@ -137,8 +131,6 @@ class ItemSummaryModel {
       statusCode: statusCode,
       statusName: statusName,
       productType: productType,
-      downloadable: downloadable,
-      downloadUrl: downloadUrl,
       externalUrl: externalUrl,
       buttonText: buttonText,
     );

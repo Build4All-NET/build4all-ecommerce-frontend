@@ -43,8 +43,6 @@ class CreateProductRequest {
   final ProductTypeDto productType;
 
   final bool virtualProduct;
-  final bool downloadable;
-  final String? downloadUrl;
   final String? externalUrl;
   final String? buttonText;
 
@@ -69,8 +67,6 @@ class CreateProductRequest {
     this.sku,
     required this.productType,
     this.virtualProduct = false,
-    this.downloadable = false,
-    this.downloadUrl,
     this.externalUrl,
     this.buttonText,
     this.salePrice,
@@ -96,8 +92,6 @@ class CreateProductRequest {
       if (sku != null) 'sku': sku,
       'productType': productTypeDtoToApi(productType),
       'virtualProduct': virtualProduct,
-      'downloadable': downloadable,
-      if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (externalUrl != null) 'externalUrl': externalUrl,
       if (buttonText != null) 'buttonText': buttonText,
       if (salePrice != null) 'salePrice': salePrice,
