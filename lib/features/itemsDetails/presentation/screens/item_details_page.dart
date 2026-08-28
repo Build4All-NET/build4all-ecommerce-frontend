@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as net;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -54,14 +53,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     if (stock <= 0) return l10n.outOfStock;
     if (stock <= 10) return l10n.home_stock_left_label(stock);
     return null;
-  }
-
-  String _msg(AppLocalizations l10n, Object error, {String? fallback}) {
-    final mapped = ExceptionMapper.toMessage(error).trim();
-    if (mapped.isNotEmpty && mapped != 'Something went wrong.') {
-      return mapped;
-    }
-    return fallback ?? 'Something went wrong. Please try again.';
   }
 
   Future<void> _openExternalLink(BuildContext context, String rawUrl) async {
@@ -120,7 +111,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     return BlocProvider(
       create: (_) => ItemDetailsBloc(getItemDetails: usecase)
         ..add(ItemDetailsStarted(widget.itemId, token: token)),
-      child: BlocConsumer<ItemDetailsBloc, ItemDetailsState>(
+      child: BlocBuilder<ItemDetailsBloc, ItemDetailsState>(
         builder: (context, state) {
           if (state.isLoading && state.details == null) {
             return const Scaffold(
