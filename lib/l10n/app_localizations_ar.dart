@@ -3601,6 +3601,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminProductExistingLabel => 'موجود';
 
   @override
+  String get adminProductPickFromGallery => 'إضافة من المعرض';
+
+  @override
+  String get adminProductFromGalleryLabel => 'من المعرض';
+
+  @override
   String adminProductImageCount(int count) {
     return '$count صورة';
   }

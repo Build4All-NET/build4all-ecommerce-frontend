@@ -17,6 +17,8 @@ import 'package:build4front/features/catalog/data/services/currency_api_service.
 import 'package:build4front/features/catalog/data/services/item_status_api_service.dart';
 import 'package:build4front/features/catalog/data/services/item_type_api_service.dart';
 import 'package:build4front/features/catalog/domain/entities/item_type.dart';
+import 'package:build4front/features/admin/gallery/domain/entities/gallery_image.dart';
+import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -102,6 +104,7 @@ final List<XFile> _pickedImages = [];
 int _mainPickedImageIndex = 0;
 final Set<int> _removedExistingImageIds = <int>{};
 int? _selectedExistingMainImageId;
+final List<GalleryImage> _pickedGalleryImages = [];
 
   List<_CategoryOption> _categories = [];
   int? _selectedCategoryId;
@@ -220,6 +223,7 @@ int? _selectedExistingMainImageId;
 
   _removedExistingImageIds.clear();
 _pickedImages.clear();
+_pickedGalleryImages.clear();
 _mainPickedImageIndex = 0;
 _selectedExistingMainImageId = p.mainImage?.id;
   }
@@ -293,6 +297,26 @@ void _setPickedMainImage(int index) {
   setState(() {
     _mainPickedImageIndex = index;
     _selectedExistingMainImageId = null;
+  });
+}
+
+Future<void> _pickFromGallery() async {
+  final result = await GalleryPickerSheet.show(
+    context,
+    getToken: () => AdminTokenStore().getToken(),
+  );
+
+  if (result == null || result.isCleared) return;
+
+  final image = result.image!;
+  if (_pickedGalleryImages.any((g) => g.id == image.id)) return;
+
+  setState(() => _pickedGalleryImages.add(image));
+}
+
+void _removePickedGalleryImage(GalleryImage image) {
+  setState(() {
+    _pickedGalleryImages.removeWhere((g) => g.id == image.id);
   });
 }
 
@@ -1188,6 +1212,7 @@ void _setExistingMainImage(ProductImage image) {
   saleEnd: saleEndText,
   attributes: attrs,
   mainImageIndex: _pickedImages.isNotEmpty ? _mainPickedImageIndex : null,
+  galleryImageIds: _pickedGalleryImages.map((g) => g.id).toList(),
 );
 
         await _createProduct(req);
@@ -1217,6 +1242,8 @@ void _setExistingMainImage(ProductImage image) {
     'mainImageId': _selectedExistingMainImageId,
   if (_removedExistingImageIds.isNotEmpty)
     'removeImageIds': _removedExistingImageIds.toList(),
+  if (_pickedGalleryImages.isNotEmpty)
+    'galleryImageIds': _pickedGalleryImages.map((g) => g.id).toList(),
 },);
       }
 
@@ -1351,8 +1378,11 @@ void _setExistingMainImage(ProductImage image) {
   mainPickedImageIndex: _mainPickedImageIndex,
   existingImages: _existingGalleryImages,
   selectedExistingMainImageId: _selectedExistingMainImageId,
+  galleryImages: _pickedGalleryImages,
   onPickImages: _pickImages,
+  onPickFromGallery: _pickFromGallery,
   onRemovePickedImage: _removePickedImageAt,
+  onRemoveGalleryImage: _removePickedGalleryImage,
   onSetPickedMainImage: _setPickedMainImage,
   onToggleExistingImageRemoval: _toggleExistingImageRemoval,
   onSetExistingMainImage: _setExistingMainImage,
@@ -1857,8 +1887,12 @@ class AdminProductImageSection extends StatelessWidget {
   final List<ProductImage> existingImages;
   final int? selectedExistingMainImageId;
 
+  final List<GalleryImage> galleryImages;
+
   final VoidCallback onPickImages;
+  final VoidCallback onPickFromGallery;
   final ValueChanged<int> onRemovePickedImage;
+  final ValueChanged<GalleryImage> onRemoveGalleryImage;
   final ValueChanged<int> onSetPickedMainImage;
   final ValueChanged<ProductImage> onToggleExistingImageRemoval;
   final ValueChanged<ProductImage> onSetExistingMainImage;
@@ -1872,8 +1906,11 @@ class AdminProductImageSection extends StatelessWidget {
     required this.mainPickedImageIndex,
     required this.existingImages,
     required this.selectedExistingMainImageId,
+    required this.galleryImages,
     required this.onPickImages,
+    required this.onPickFromGallery,
     required this.onRemovePickedImage,
+    required this.onRemoveGalleryImage,
     required this.onSetPickedMainImage,
     required this.onToggleExistingImageRemoval,
     required this.onSetExistingMainImage,
@@ -1982,6 +2019,7 @@ class AdminProductImageSection extends StatelessWidget {
 
     final bool hasExistingImages = existingImages.isNotEmpty;
     final bool hasPickedImages = pickedImages.isNotEmpty;
+    final bool hasGalleryImages = galleryImages.isNotEmpty;
 
     return AdminFormSectionCard(
       tokens: tokens,
@@ -1991,14 +2029,27 @@ class AdminProductImageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          OutlinedButton.icon(
-            onPressed: onPickImages,
-            icon: const Icon(Icons.collections_outlined),
-            label: Text(l.adminProductPickImage),
+          Wrap(
+            spacing: spacing.sm,
+            runSpacing: spacing.sm,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onPickImages,
+                icon: const Icon(Icons.collections_outlined),
+                label: Text(l.adminProductPickImage),
+              ),
+              OutlinedButton.icon(
+                onPressed: onPickFromGallery,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(l.adminProductPickFromGallery),
+              ),
+            ],
           ),
           SizedBox(height: spacing.sm),
           Text(
-            l.adminProductImageCount(existingImages.length + pickedImages.length),
+            l.adminProductImageCount(
+              existingImages.length + pickedImages.length + galleryImages.length,
+            ),
             style: text.bodySmall.copyWith(color: c.muted),
           ),
           if (hasExistingImages) ...[
@@ -2077,7 +2128,38 @@ class AdminProductImageSection extends StatelessWidget {
               ),
             ),
           ],
-          if (!hasExistingImages && !hasPickedImages) ...[
+          if (hasGalleryImages) ...[
+            SizedBox(height: spacing.md),
+            Text(
+              l.adminProductFromGalleryLabel,
+              style: text.titleMedium,
+            ),
+            SizedBox(height: spacing.sm),
+            SizedBox(
+              height: 280,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: galleryImages.length,
+                separatorBuilder: (_, __) => SizedBox(width: spacing.sm),
+                itemBuilder: (context, index) {
+                  final image = galleryImages[index];
+
+                  return buildCard(
+                    imageWidget: Image.network(
+                      image.url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(child: placeholderImage()),
+                    ),
+                    isMain: false,
+                    footerLabel: l.adminProductFromGalleryLabel,
+                    onSetMain: null,
+                    onRemove: () => onRemoveGalleryImage(image),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (!hasExistingImages && !hasPickedImages && !hasGalleryImages) ...[
             SizedBox(height: spacing.md),
             Container(
               height: 170,

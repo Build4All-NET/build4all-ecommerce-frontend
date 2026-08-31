@@ -7051,6 +7051,18 @@ abstract class AppLocalizations {
   /// **'Existing'**
   String get adminProductExistingLabel;
 
+  /// No description provided for @adminProductPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from gallery'**
+  String get adminProductPickFromGallery;
+
+  /// No description provided for @adminProductFromGalleryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From gallery'**
+  String get adminProductFromGalleryLabel;
+
   /// No description provided for @adminProductImageCount.
   ///
   /// In en, this message translates to:
