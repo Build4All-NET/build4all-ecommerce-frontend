@@ -778,13 +778,24 @@ jobs:
               print("Resolved absolute LOGO_URL:", logo_url)
 
           if logo_url:
-              try:
-                  print("Downloading logo from:", logo_url)
-                  urllib.request.urlretrieve(logo_url, "assets/branding/logo.png")
-                  shutil.copyfile("assets/branding/logo.png","assets/branding/launcher.png")
-                  shutil.copyfile("assets/branding/logo.png","assets/branding/splash.png")
-              except Exception as e:
-                  print("⚠️ Failed to download logo:", e)
+              print("Downloading logo from:", logo_url)
+              req = urllib.request.Request(
+                  logo_url,
+                  headers={"User-Agent": "Mozilla/5.0 (compatible; Build4AllCI/1.0)"},
+              )
+              # Uncaught on purpose: a logo that fails to download must fail the
+              # build loudly, not silently ship the placeholder icon/splash from
+              # the repo while looking like a successful run.
+              with urllib.request.urlopen(req, timeout=20) as r:
+                  data = r.read()
+              if len(data) < 100:
+                  raise SystemExit(f"Downloaded logo is suspiciously small ({len(data)} bytes) — not a real image.")
+              pathlib.Path("assets/branding/logo.png").write_bytes(data)
+              shutil.copyfile("assets/branding/logo.png","assets/branding/launcher.png")
+              shutil.copyfile("assets/branding/logo.png","assets/branding/splash.png")
+              print(f"✅ Logo saved ({len(data)} bytes)")
+          else:
+              print("⚠️ No LOGO_URL — using the repo's placeholder branding image.")
 
           values_dir = pathlib.Path("android/app/src/main/res/values")
           values_dir.mkdir(parents=True, exist_ok=True)

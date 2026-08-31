@@ -780,12 +780,24 @@ jobs:
           if logo_url and logo_url.startswith("/") and api_base:
               logo_url = api_base + logo_url
           if logo_url:
-              try:
-                  urllib.request.urlretrieve(logo_url, "assets/branding/logo.png")
-                  shutil.copyfile("assets/branding/logo.png","assets/branding/launcher.png")
-                  shutil.copyfile("assets/branding/logo.png","assets/branding/splash.png")
-              except Exception:
-                  pass
+              print("Downloading logo from:", logo_url)
+              req = urllib.request.Request(
+                  logo_url,
+                  headers={"User-Agent": "Mozilla/5.0 (compatible; Build4AllCI/1.0)"},
+              )
+              # Uncaught on purpose: a logo that fails to download must fail the
+              # build loudly, not silently ship the placeholder icon/splash from
+              # the repo while looking like a successful run.
+              with urllib.request.urlopen(req, timeout=20) as r:
+                  data = r.read()
+              if len(data) < 100:
+                  raise SystemExit(f"Downloaded logo is suspiciously small ({len(data)} bytes) — not a real image.")
+              pathlib.Path("assets/branding/logo.png").write_bytes(data)
+              shutil.copyfile("assets/branding/logo.png","assets/branding/launcher.png")
+              shutil.copyfile("assets/branding/logo.png","assets/branding/splash.png")
+              print(f"✅ Logo saved ({len(data)} bytes)")
+          else:
+              print("⚠️ No LOGO_URL — using the repo's placeholder branding image.")
           PY
           flutter pub get
           flutter pub run flutter_launcher_icons || true
