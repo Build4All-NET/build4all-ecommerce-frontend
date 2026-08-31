@@ -258,14 +258,17 @@ class _Thumbnail extends StatelessWidget {
                 child: Image.network(
                   url!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.broken_image_outlined,
-                        size: 20, color: scheme.outline),
-                  ),
+                  errorBuilder: (_, __, ___) {
+                    debugPrint('Excel preview image failed to load: $url');
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.broken_image_outlined,
+                          size: 20, color: scheme.outline),
+                    );
+                  },
                 ),
               ),
       ),

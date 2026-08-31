@@ -1,4 +1,4 @@
-import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 
 import '../../domain/entities/gallery_image.dart';
 import '../../domain/entities/gallery_page.dart';
@@ -65,7 +65,7 @@ class GalleryRepositoryImpl implements GalleryRepository {
 
       out.add(GalleryImage(
         id: parsed.id,
-        url: absoluteUrl(parsed.url),
+        url: g.resolveUrl(parsed.url),
         fileName: parsed.fileName,
         sizeBytes: parsed.sizeBytes,
       ));
@@ -83,15 +83,5 @@ class GalleryRepositoryImpl implements GalleryRepository {
     if (v is int) return v;
     if (v is num) return v.toInt();
     return int.tryParse(v.toString());
-  }
-
-  /// R2 hands back a full address; local storage hands back a server path. Both
-  /// are resolved here so nothing downstream has to know which one it is holding.
-  static String absoluteUrl(String url) {
-    final trimmed = url.trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-    return '${Env.apiBaseUrl}$trimmed';
   }
 }
