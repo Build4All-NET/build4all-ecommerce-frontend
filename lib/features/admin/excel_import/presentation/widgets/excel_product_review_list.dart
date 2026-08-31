@@ -258,8 +258,9 @@ class _Thumbnail extends StatelessWidget {
                 child: Image.network(
                   url!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (_, error, ___) {
                     debugPrint('Excel preview image failed to load: $url');
+                    debugPrint('Error: $error');
                     return DecoratedBox(
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,

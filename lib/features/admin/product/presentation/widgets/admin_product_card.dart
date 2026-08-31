@@ -565,8 +565,9 @@ class AdminProductCard extends StatelessWidget {
                           ? Image.network(
                               imageUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) {
+                              errorBuilder: (_, error, ___) {
                                 debugPrint('Product image failed to load: $imageUrl');
+                                debugPrint('Error: $error');
                                 return _buildImagePlaceholder(colors);
                               },
                             )
