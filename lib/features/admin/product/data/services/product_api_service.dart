@@ -95,6 +95,12 @@ class ProductApiService {
       map.remove('removeImageIds');
     }
 
+    final galleryImageIds = map['galleryImageIds'];
+    if (galleryImageIds is List) {
+      map['galleryImageIdsJson'] = jsonEncode(galleryImageIds);
+      map.remove('galleryImageIds');
+    }
+
     map.removeWhere((key, value) => value == null);
     return map;
   }

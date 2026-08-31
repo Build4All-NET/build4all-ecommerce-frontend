@@ -55,6 +55,9 @@ class CreateProductRequest {
   /// new: which uploaded image index should become main
   final int? mainImageIndex;
 
+  /// Gallery images picked instead of uploading a new file.
+  final List<int> galleryImageIds;
+
   CreateProductRequest({
     this.itemTypeId,
     this.categoryId,
@@ -74,6 +77,7 @@ class CreateProductRequest {
     this.saleEnd,
     this.attributes = const [],
     this.mainImageIndex,
+    this.galleryImageIds = const [],
   }) : assert(
           itemTypeId != null || categoryId != null,
           'Either itemTypeId or categoryId must be provided',
@@ -98,6 +102,7 @@ class CreateProductRequest {
       if (saleStart != null) 'saleStart': saleStart,
       if (saleEnd != null) 'saleEnd': saleEnd,
       if (mainImageIndex != null) 'mainImageIndex': mainImageIndex,
+      if (galleryImageIds.isNotEmpty) 'galleryImageIds': galleryImageIds,
       if (attributes.isNotEmpty)
         'attributes': attributes.map((e) => e.toJson()).toList(),
     };

@@ -1288,6 +1288,8 @@
   "adminProductCurrentGallery": "المعرض الحالي",
   "adminProductNewUploads": "تحميلات جديدة",
   "adminProductExistingLabel": "موجود",
+  "adminProductPickFromGallery": "إضافة من المعرض",
+  "adminProductFromGalleryLabel": "من المعرض",
   "adminProductImageCount": "{count} صورة",
   "@adminProductImageCount": {
     "placeholders": {
