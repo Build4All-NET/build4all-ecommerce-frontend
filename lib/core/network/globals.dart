@@ -149,17 +149,6 @@ void makeDefaultDio(String baseUrl) {
   // Then inject ownerProjectLinkId / auth header.
   d.interceptors.add(OwnerInjector());
 
-  if (kDebugMode) {
-    d.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: false,
-        responseHeader: false,
-      ),
-    );
-  }
-
   appDio = d;
 
   // If token already set before init, copy it into dio headers
