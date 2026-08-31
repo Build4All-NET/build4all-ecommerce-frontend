@@ -38,10 +38,13 @@ class GalleryImageTile extends StatelessWidget {
             child: Image.network(
               image.url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => ColoredBox(
-                color: scheme.surfaceContainerHighest,
-                child: Icon(Icons.broken_image_outlined, color: scheme.outline),
-              ),
+              errorBuilder: (_, __, ___) {
+                debugPrint('Gallery image failed to load: ${image.url}');
+                return ColoredBox(
+                  color: scheme.surfaceContainerHighest,
+                  child: Icon(Icons.broken_image_outlined, color: scheme.outline),
+                );
+              },
               loadingBuilder: (context, child, progress) {
                 if (progress == null) return child;
                 return ColoredBox(

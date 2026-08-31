@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/core/config/env.dart';
 import 'package:build4front/core/exceptions/app_exception.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/admin/product/presentation/sections/admin_product_status_section.dart';
@@ -553,12 +554,7 @@ void _setExistingMainImage(ProductImage image) {
 
   String? _resolveImageUrl(String? url) {
     if (url == null || url.trim().isEmpty) return null;
-
-    final trimmed = url.trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-    return '${Env.apiBaseUrl}$trimmed';
+    return g.resolveUrl(url);
   }
 
   Future<bool> _confirmDelete({
@@ -2031,8 +2027,10 @@ class AdminProductImageSection extends StatelessWidget {
                         ? Image.network(
                             url,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                Center(child: placeholderImage()),
+                            errorBuilder: (_, __, ___) {
+                              debugPrint('Product image failed to load: $url');
+                              return Center(child: placeholderImage());
+                            },
                           )
                         : Center(child: placeholderImage()),
                     isMain: isMain,

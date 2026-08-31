@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:build4front/core/config/env.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 
@@ -27,13 +27,7 @@ class AdminProductCard extends StatelessWidget {
 
   String? _resolveImageUrl(String? url) {
     if (url == null || url.trim().isEmpty) return null;
-
-    final trimmed = url.trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-
-    return '${Env.apiBaseUrl}$trimmed';
+    return g.resolveUrl(url);
   }
 
   String _moneyStrict(num value, {int decimals = 2}) {
@@ -571,8 +565,10 @@ class AdminProductCard extends StatelessWidget {
                           ? Image.network(
                               imageUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _buildImagePlaceholder(colors),
+                              errorBuilder: (_, __, ___) {
+                                debugPrint('Product image failed to load: $imageUrl');
+                                return _buildImagePlaceholder(colors);
+                              },
                             )
                           : _buildImagePlaceholder(colors),
                       Container(
