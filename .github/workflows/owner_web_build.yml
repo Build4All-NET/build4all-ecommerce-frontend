@@ -498,10 +498,17 @@ jobs:
           if logo_url:
               try:
                   print("Downloading logo:", logo_url)
+                  req = urllib.request.Request(
+                      logo_url,
+                      headers={"User-Agent": "Mozilla/5.0 (compatible; Build4AllCI/1.0)"},
+                  )
                   # Bounded: an API host the runner cannot reach (a LAN address,
                   # a stopped server) must cost seconds, not stall the job.
-                  with urllib.request.urlopen(logo_url, timeout=15) as r:
-                      (web / "favicon.png").write_bytes(r.read())
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      logo_data = r.read()
+                  if len(logo_data) < 100:
+                      raise ValueError(f"downloaded logo is suspiciously small ({len(logo_data)} bytes)")
+                  (web / "favicon.png").write_bytes(logo_data)
                   for name in ("Icon-192.png", "Icon-512.png",
                                "Icon-maskable-192.png", "Icon-maskable-512.png"):
                       (icons / name).write_bytes((web / "favicon.png").read_bytes())
