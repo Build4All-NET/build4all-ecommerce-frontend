@@ -2027,8 +2027,9 @@ class AdminProductImageSection extends StatelessWidget {
                         ? Image.network(
                             url,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
+                            errorBuilder: (_, error, ___) {
                               debugPrint('Product image failed to load: $url');
+                              debugPrint('Error: $error');
                               return Center(child: placeholderImage());
                             },
                           )
