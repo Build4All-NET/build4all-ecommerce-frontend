@@ -236,15 +236,19 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                       images: galleryImages,
                                       initialIndex: index,
                                     ),
-                                    child: Image.network(
-                                      galleryImages[index],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: c.errorContainer.withOpacity(0.2),
-                                        child: Icon(
-                                          Icons.broken_image_outlined,
-                                          color: c.error,
-                                          size: 44,
+                                    child: Container(
+                                      color: c.primary.withOpacity(0.05),
+                                      child: Image.network(
+                                        galleryImages[index],
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          color:
+                                              c.errorContainer.withOpacity(0.2),
+                                          child: Icon(
+                                            Icons.broken_image_outlined,
+                                            color: c.error,
+                                            size: 44,
+                                          ),
                                         ),
                                       ),
                                     ),
