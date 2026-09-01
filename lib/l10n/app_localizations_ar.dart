@@ -1045,6 +1045,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminPickFromCamera => 'الكاميرا';
 
   @override
+  String get adminPickFromAppGallery => 'من معرض صوري';
+
+  @override
   String get adminHomeBannerSortLabel => 'ترتيب العرض';
 
   @override

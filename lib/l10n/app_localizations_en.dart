@@ -1045,6 +1045,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminPickFromCamera => 'Camera';
 
   @override
+  String get adminPickFromAppGallery => 'From your gallery';
+
+  @override
   String get adminHomeBannerSortLabel => 'Sort order';
 
   @override

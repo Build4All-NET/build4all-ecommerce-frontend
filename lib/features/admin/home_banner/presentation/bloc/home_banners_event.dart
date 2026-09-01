@@ -7,13 +7,15 @@ class LoadAdminBanners extends HomeBannersEvent {
 
 class CreateBannerEvent extends HomeBannersEvent {
   final Map<String, dynamic> body;
-  final String imagePath;
+  final String? imagePath;
+  final String? galleryImageUrl;
   final String token;
 
   CreateBannerEvent({
     required this.body,
-    required this.imagePath,
     required this.token,
+    this.imagePath,
+    this.galleryImageUrl,
   });
 }
 
@@ -21,6 +23,7 @@ class UpdateBannerEvent extends HomeBannersEvent {
   final int id;
   final Map<String, dynamic> body;
   final String? imagePath;
+  final String? galleryImageUrl;
   final String token;
 
   UpdateBannerEvent({
@@ -28,6 +31,7 @@ class UpdateBannerEvent extends HomeBannersEvent {
     required this.body,
     required this.token,
     this.imagePath,
+    this.galleryImageUrl,
   });
 }
 

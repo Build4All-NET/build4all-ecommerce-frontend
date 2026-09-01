@@ -24,6 +24,7 @@ class OwnerAnnouncementApiService {
     required String announcementType,
     int? targetId,
     String? imagePath,
+    String? galleryImageUrl,
   }) async {
     final ownerProjectLinkId = _ownerProjectLinkId;
 
@@ -42,6 +43,7 @@ class OwnerAnnouncementApiService {
       announcementType: announcementType,
       targetId: targetId,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
       tokenOverride: null,
     );
 
@@ -55,6 +57,7 @@ class OwnerAnnouncementApiService {
     required String announcementType,
     required int? targetId,
     required String? imagePath,
+    required String? galleryImageUrl,
     required String? tokenOverride,
   }) async {
     final formData = await _buildCreateAnnouncementFormData(
@@ -64,6 +67,7 @@ class OwnerAnnouncementApiService {
       announcementType: announcementType,
       targetId: targetId,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
 
     return _dio.post(
@@ -80,6 +84,7 @@ class OwnerAnnouncementApiService {
               announcementType: announcementType,
               targetId: targetId,
               imagePath: imagePath,
+              galleryImageUrl: galleryImageUrl,
               tokenOverride: newToken,
             );
           },
@@ -95,6 +100,7 @@ class OwnerAnnouncementApiService {
     required String announcementType,
     required int? targetId,
     required String? imagePath,
+    required String? galleryImageUrl,
   }) async {
     final Map<String, dynamic> body = {
       'ownerProjectLinkId': ownerProjectLinkId.toString(),
@@ -113,6 +119,8 @@ class OwnerAnnouncementApiService {
       final cleanPath = imagePath.trim();
 
       body['image'] = await multipartFromXFile(XFile(cleanPath));
+    } else if (galleryImageUrl != null && galleryImageUrl.trim().isNotEmpty) {
+      body['imageUrl'] = galleryImageUrl.trim();
     }
 
     return FormData.fromMap(body);

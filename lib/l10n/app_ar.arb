@@ -1364,6 +1364,7 @@
   "adminUntitled": "بدون عنوان",
   "adminPickFromGallery": "المعرض",
   "adminPickFromCamera": "الكاميرا",
+  "adminPickFromAppGallery": "من معرض صوري",
   "adminActiveLabel": "نشط",
   "adminNoOptions": "لا توجد خيارات",
   "adminUploadFailed": "تعذّر اختيار الصورة",

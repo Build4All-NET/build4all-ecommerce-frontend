@@ -336,6 +336,7 @@
   "adminHomeBannerImageRequired": "L’image est obligatoire",
   "adminPickFromGallery": "Galerie",
   "adminPickFromCamera": "Caméra",
+  "adminPickFromAppGallery": "Depuis votre galerie",
   "adminHomeBannerSortLabel": "Ordre de tri",
   "adminHomeBannerLoadingTargets": "Chargement des cibles...",
   "adminHomeBannerTargetTypeHint": "Sélectionner le type de cible",

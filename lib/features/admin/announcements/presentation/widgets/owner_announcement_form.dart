@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/features/admin/gallery/domain/entities/gallery_image.dart';
+import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -17,6 +19,7 @@ class OwnerAnnouncementForm extends StatefulWidget {
     required String announcementType,
     int? targetId,
     String? imagePath,
+    String? galleryImageUrl,
   }) onSubmit;
 
   const OwnerAnnouncementForm({
@@ -39,6 +42,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
   String _type = 'GENERAL';
   File? _imageFile;
+  GalleryImage? _galleryImage;
 
   bool _loadingTargets = false;
   String? _targetError;
@@ -225,6 +229,21 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
     setState(() {
       _imageFile = File(picked.path);
+      _galleryImage = null;
+    });
+  }
+
+  Future<void> _pickFromAppGallery() async {
+    final result = await GalleryPickerSheet.show(
+      context,
+      getToken: () => _tokenStore.getToken(),
+    );
+
+    if (result == null || result.isCleared) return;
+
+    setState(() {
+      _galleryImage = result.image;
+      _imageFile = null;
     });
   }
 
@@ -237,6 +256,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
       announcementType: _type,
       targetId: _needsProductTarget ? _selectedTargetId : null,
       imagePath: _imageFile?.path,
+      galleryImageUrl: _galleryImage?.url,
     );
 
     _titleCtrl.clear();
@@ -245,6 +265,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     setState(() {
       _type = 'GENERAL';
       _imageFile = null;
+      _galleryImage = null;
       _selectedTargetId = null;
       _targetOptions = [];
       _targetError = null;
@@ -482,10 +503,21 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
             SizedBox(height: spacing.md),
 
-            OutlinedButton.icon(
-              onPressed: widget.submitting ? null : _pickImage,
-              icon: const Icon(Icons.image_outlined),
-              label: Text(l10n.chooseImage),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: widget.submitting ? null : _pickImage,
+                  icon: const Icon(Icons.image_outlined),
+                  label: Text(l10n.chooseImage),
+                ),
+                OutlinedButton.icon(
+                  onPressed: widget.submitting ? null : _pickFromAppGallery,
+                  icon: const Icon(Icons.collections_outlined),
+                  label: Text(l10n.adminPickFromAppGallery),
+                ),
+              ],
             ),
 
             if (_imageFile != null) ...[
@@ -504,6 +536,32 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
                     ? null
                     : () {
                         setState(() => _imageFile = null);
+                      },
+                icon: const Icon(Icons.close_rounded),
+                label: Text(l10n.removeImage),
+              ),
+            ] else if (_galleryImage != null) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.network(
+                  _galleryImage!.url,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 150,
+                    color: colors.background,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.broken_image_outlined, color: colors.muted),
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: widget.submitting
+                    ? null
+                    : () {
+                        setState(() => _galleryImage = null);
                       },
                 icon: const Icon(Icons.close_rounded),
                 label: Text(l10n.removeImage),

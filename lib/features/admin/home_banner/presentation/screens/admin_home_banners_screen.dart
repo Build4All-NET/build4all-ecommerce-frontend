@@ -133,13 +133,15 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
 
     final body = Map<String, dynamic>.from(res['body'] ?? {});
     final imagePath = (res['imagePath'] ?? '').toString().trim();
+    final galleryImageUrl = (res['galleryImageUrl'] ?? '').toString().trim();
 
-    if (imagePath.isEmpty) return;
+    if (imagePath.isEmpty && galleryImageUrl.isEmpty) return;
 
     context.read<HomeBannersBloc>().add(
       CreateBannerEvent(
         body: body,
-        imagePath: imagePath,
+        imagePath: imagePath.isEmpty ? null : imagePath,
+        galleryImageUrl: galleryImageUrl.isEmpty ? null : galleryImageUrl,
         token: token,
       ),
     );
@@ -168,12 +170,18 @@ class _AdminHomeBannersViewState extends State<_AdminHomeBannersView> {
     final imagePath = (imagePathRaw == null || imagePathRaw.trim().isEmpty)
         ? null
         : imagePathRaw.trim();
+    final galleryImageUrlRaw = res['galleryImageUrl']?.toString();
+    final galleryImageUrl =
+        (galleryImageUrlRaw == null || galleryImageUrlRaw.trim().isEmpty)
+            ? null
+            : galleryImageUrlRaw.trim();
 
     context.read<HomeBannersBloc>().add(
       UpdateBannerEvent(
         id: banner.id,
         body: body,
         imagePath: imagePath,
+        galleryImageUrl: galleryImageUrl,
         token: token,
       ),
     );

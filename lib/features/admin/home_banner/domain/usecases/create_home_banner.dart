@@ -8,8 +8,14 @@ class CreateHomeBanner {
   Future<HomeBanner> call({
     required Map<String, dynamic> body,
     required String token,
-    required String imagePath,
+    String? imagePath,
+    String? galleryImageUrl,
   }) {
-    return repo.createWithImage(body: body, token: token, imagePath: imagePath);
+    return repo.createWithImage(
+      body: body,
+      token: token,
+      imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
+    );
   }
 }

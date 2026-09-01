@@ -12,7 +12,8 @@ abstract class HomeBannerRepository {
   Future<HomeBanner> createWithImage({
     required Map<String, dynamic> body,
     required String token,
-    required String imagePath,
+    String? imagePath,
+    String? galleryImageUrl,
   });
 
   Future<HomeBanner> updateWithImage({
@@ -20,6 +21,7 @@ abstract class HomeBannerRepository {
     required Map<String, dynamic> body,
     required String token,
     String? imagePath,
+    String? galleryImageUrl,
   });
 
   Future<void> delete({required int id, required String token});

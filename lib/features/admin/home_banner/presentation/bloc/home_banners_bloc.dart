@@ -52,7 +52,12 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
   ) async {
     emit(state.copyWith(error: null));
     try {
-      await create(body: e.body, token: e.token, imagePath: e.imagePath);
+      await create(
+        body: e.body,
+        token: e.token,
+        imagePath: e.imagePath,
+        galleryImageUrl: e.galleryImageUrl,
+      );
       add(LoadAdminBanners(token: e.token));
     } catch (err) {
       emit(state.copyWith(
@@ -72,6 +77,7 @@ class HomeBannersBloc extends Bloc<HomeBannersEvent, HomeBannersState> {
         body: e.body,
         token: e.token,
         imagePath: e.imagePath,
+        galleryImageUrl: e.galleryImageUrl,
       );
       add(LoadAdminBanners(token: e.token));
     } catch (err) {

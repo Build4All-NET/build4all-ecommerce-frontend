@@ -10,12 +10,14 @@ class UpdateHomeBanner {
     required Map<String, dynamic> body,
     required String token,
     String? imagePath,
+    String? galleryImageUrl,
   }) {
     return repo.updateWithImage(
       id: id,
       body: body,
       token: token,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
   }
 }

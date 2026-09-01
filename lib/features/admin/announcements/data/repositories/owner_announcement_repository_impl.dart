@@ -17,6 +17,7 @@ class OwnerAnnouncementRepositoryImpl implements OwnerAnnouncementRepository {
     required String announcementType,
     int? targetId,
     String? imagePath,
+    String? galleryImageUrl,
   }) async {
     final response = await api.createAnnouncement(
       title: title,
@@ -24,6 +25,7 @@ class OwnerAnnouncementRepositoryImpl implements OwnerAnnouncementRepository {
       announcementType: announcementType,
       targetId: targetId,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
 
     if (response['success'] == false) {
