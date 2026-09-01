@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/admin/gallery/domain/entities/gallery_image.dart';
@@ -7,6 +5,7 @@ import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/l10n/app_localizations.dart';
+import 'package:build4front/shared/widgets/x_file_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,7 +40,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
   final AdminTokenStore _tokenStore = const AdminTokenStore();
 
   String _type = 'GENERAL';
-  File? _imageFile;
+  XFile? _imageFile;
   GalleryImage? _galleryImage;
 
   bool _loadingTargets = false;
@@ -228,7 +227,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     if (picked == null) return;
 
     setState(() {
-      _imageFile = File(picked.path);
+      _imageFile = picked;
       _galleryImage = null;
     });
   }
@@ -524,7 +523,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.file(
+                child: XFileImage(
                   _imageFile!,
                   height: 150,
                   width: double.infinity,

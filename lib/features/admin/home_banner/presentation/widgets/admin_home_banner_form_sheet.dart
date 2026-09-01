@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:build4front/core/exceptions/exception_mapper.dart';
 import 'package:build4front/core/network/globals.dart' as Env;
 import 'package:build4front/core/utils/upload_safe_image_normalizer.dart';
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
+import 'package:build4front/shared/widgets/x_file_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -562,8 +561,8 @@ class _BannerImagePickerBlock extends StatelessWidget {
     if (imagePath != null && imagePath!.isNotEmpty) {
       preview = ClipRRect(
         borderRadius: BorderRadius.circular(tokens.card.radius),
-        child: Image.file(
-          File(imagePath!),
+        child: XFileImage(
+          XFile(imagePath!),
           height: 160,
           width: double.infinity,
           fit: BoxFit.cover,
