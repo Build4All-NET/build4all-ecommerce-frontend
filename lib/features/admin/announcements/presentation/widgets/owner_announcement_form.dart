@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
@@ -42,6 +43,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
   String _type = 'GENERAL';
   File? _imageFile;
+  Uint8List? _imageBytes;
   GalleryImage? _galleryImage;
 
   bool _loadingTargets = false;
@@ -227,8 +229,13 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
     if (picked == null) return;
 
+    final bytes = await picked.readAsBytes();
+
+    if (!mounted) return;
+
     setState(() {
       _imageFile = File(picked.path);
+      _imageBytes = bytes;
       _galleryImage = null;
     });
   }
@@ -244,6 +251,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     setState(() {
       _galleryImage = result.image;
       _imageFile = null;
+      _imageBytes = null;
     });
   }
 
@@ -265,6 +273,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     setState(() {
       _type = 'GENERAL';
       _imageFile = null;
+      _imageBytes = null;
       _galleryImage = null;
       _selectedTargetId = null;
       _targetOptions = [];
@@ -520,12 +529,12 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
               ],
             ),
 
-            if (_imageFile != null) ...[
+            if (_imageFile != null && _imageBytes != null) ...[
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.file(
-                  _imageFile!,
+                child: Image.memory(
+                  _imageBytes!,
                   height: 150,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -535,7 +544,10 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
                 onPressed: widget.submitting
                     ? null
                     : () {
-                        setState(() => _imageFile = null);
+                        setState(() {
+                          _imageFile = null;
+                          _imageBytes = null;
+                        });
                       },
                 icon: const Icon(Icons.close_rounded),
                 label: Text(l10n.removeImage),
