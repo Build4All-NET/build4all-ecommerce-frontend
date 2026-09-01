@@ -348,6 +348,7 @@
   "adminHomeBannerImageRequired": "Image is required",
   "adminPickFromGallery": "Gallery",
   "adminPickFromCamera": "Camera",
+  "adminPickFromAppGallery": "From your gallery",
   "adminHomeBannerSortLabel": "Sort order",
   "adminHomeBannerLoadingTargets": "Loading targets...",
   "adminHomeBannerTargetTypeHint": "Select target type",

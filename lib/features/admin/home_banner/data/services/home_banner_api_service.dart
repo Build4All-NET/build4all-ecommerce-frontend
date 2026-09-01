@@ -36,17 +36,22 @@ class HomeBannerApiService {
   Future<Map<String, dynamic>> createWithImage({
     required Map<String, dynamic> body,
     required String authToken,
-    required String imagePath,
+    String? imagePath,
+    String? galleryImageUrl,
   }) async {
-    final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
-      imagePath,
-      preferredName: 'home_banner_upload',
-    );
+    final map = {...body};
 
-    final form = FormData.fromMap({
-      ...body,
-      'image': await multipartFromXFile(XFile(safeImagePath)),
-    });
+    if (imagePath != null && imagePath.isNotEmpty) {
+      final safeImagePath = await UploadSafeImageNormalizer.normalizeImagePath(
+        imagePath,
+        preferredName: 'home_banner_upload',
+      );
+      map['image'] = await multipartFromXFile(XFile(safeImagePath));
+    } else if (galleryImageUrl != null && galleryImageUrl.isNotEmpty) {
+      map['imageUrl'] = galleryImageUrl;
+    }
+
+    final form = FormData.fromMap(map);
 
     final res = await _dio.post(
       '$_baseUrl/with-image',
@@ -65,6 +70,7 @@ class HomeBannerApiService {
     required Map<String, dynamic> body,
     required String authToken,
     String? imagePath,
+    String? galleryImageUrl,
   }) async {
     final map = {...body};
 
@@ -74,6 +80,8 @@ class HomeBannerApiService {
         preferredName: 'home_banner_update_upload',
       );
       map['image'] = await multipartFromXFile(XFile(safeImagePath));
+    } else if (galleryImageUrl != null && galleryImageUrl.isNotEmpty) {
+      map['imageUrl'] = galleryImageUrl;
     }
 
     final form = FormData.fromMap(map);

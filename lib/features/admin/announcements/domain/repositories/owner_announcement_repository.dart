@@ -7,6 +7,7 @@ abstract class OwnerAnnouncementRepository {
     required String announcementType,
     int? targetId,
     String? imagePath,
+    String? galleryImageUrl,
   });
 
   Future<List<OwnerAnnouncement>> getAnnouncements();

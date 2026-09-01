@@ -12,6 +12,7 @@ class CreateOwnerAnnouncement {
     required String announcementType,
     int? targetId,
     String? imagePath,
+    String? galleryImageUrl,
   }) {
     return repository.createAnnouncement(
       title: title,
@@ -19,6 +20,7 @@ class CreateOwnerAnnouncement {
       announcementType: announcementType,
       targetId: targetId,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
   }
 }

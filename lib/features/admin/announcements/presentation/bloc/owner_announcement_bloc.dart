@@ -74,6 +74,7 @@ class OwnerAnnouncementBloc
       announcementType: event.announcementType,
       targetId: event.targetId,
       imagePath: event.imagePath,
+      galleryImageUrl: event.galleryImageUrl,
     );
 
     final updated = [created, ...state.announcements];

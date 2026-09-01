@@ -139,6 +139,7 @@ class _OwnerAnnouncementsScreenState extends State<OwnerAnnouncementsScreen> {
     required announcementType,
     targetId,
     imagePath,
+    galleryImageUrl,
   }) {
     context.read<OwnerAnnouncementBloc>().add(
           CreateOwnerAnnouncementRequested(
@@ -147,6 +148,7 @@ class _OwnerAnnouncementsScreenState extends State<OwnerAnnouncementsScreen> {
             announcementType: announcementType,
             targetId: targetId,
             imagePath: imagePath,
+            galleryImageUrl: galleryImageUrl,
           ),
         );
   },

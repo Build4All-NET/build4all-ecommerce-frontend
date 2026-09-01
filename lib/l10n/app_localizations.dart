@@ -2143,6 +2143,12 @@ abstract class AppLocalizations {
   /// **'Camera'**
   String get adminPickFromCamera;
 
+  /// No description provided for @adminPickFromAppGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'From your gallery'**
+  String get adminPickFromAppGallery;
+
   /// No description provided for @adminHomeBannerSortLabel.
   ///
   /// In en, this message translates to:

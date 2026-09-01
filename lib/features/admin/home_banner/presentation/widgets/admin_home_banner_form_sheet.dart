@@ -11,6 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
+import 'package:build4front/features/admin/gallery/domain/entities/gallery_image.dart';
+import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
 
 import 'package:build4front/common/widgets/app_search_field.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
@@ -51,6 +53,7 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
 
   String? _imagePath;
   String? _existingImageUrl;
+  GalleryImage? _galleryImage;
 
   HomeBannerTargetTypeUi _targetType = HomeBannerTargetTypeUi.none;
 
@@ -223,9 +226,26 @@ class _AdminHomeBannerFormSheetState extends State<AdminHomeBannerFormSheet> {
   if (normalizedPath == null || normalizedPath.isEmpty) return;
   setState(() {
     _imagePath = normalizedPath;
+    _galleryImage = null;
     _imageError = null;
   });
 }
+
+Future<void> _pickFromAppGallery() async {
+  final result = await GalleryPickerSheet.show(
+    context,
+    getToken: () => AdminTokenStore().getToken(),
+  );
+
+  if (result == null || result.isCleared) return;
+
+  setState(() {
+    _galleryImage = result.image;
+    _imagePath = null;
+    _imageError = null;
+  });
+}
+
 Future<void> _pickFromCamera() async {
   final normalizedPath = await UploadSafeImageNormalizer.pickNormalizedImage(
     picker: _picker,
@@ -238,6 +258,7 @@ Future<void> _pickFromCamera() async {
   if (normalizedPath == null || normalizedPath.isEmpty) return;
   setState(() {
     _imagePath = normalizedPath;
+    _galleryImage = null;
     _imageError = null;
   });
 }
@@ -245,6 +266,7 @@ Future<void> _pickFromCamera() async {
   void _clearPickedImage() {
     setState(() {
       _imagePath = null;
+      _galleryImage = null;
     });
   }
 
@@ -291,7 +313,9 @@ Future<void> _pickFromCamera() async {
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) return;
 
-    if (!_isEdit && (_imagePath == null || _imagePath!.trim().isEmpty)) {
+    if (!_isEdit &&
+        (_imagePath == null || _imagePath!.trim().isEmpty) &&
+        _galleryImage == null) {
       setState(() {
         _imageError = 'Image is required';
       });
@@ -317,6 +341,7 @@ Future<void> _pickFromCamera() async {
     Navigator.pop(context, {
       'body': _buildBody(),
       'imagePath': _imagePath,
+      'galleryImageUrl': _galleryImage?.url,
     });
   }
 
@@ -356,9 +381,11 @@ Future<void> _pickFromCamera() async {
                 _BannerImagePickerBlock(
                   imagePath: _imagePath,
                   existingUrl: _existingImageUrl,
+                  galleryImage: _galleryImage,
                   errorText: _imageError,
                   onPickGallery: _pickFromGallery,
                   onPickCamera: _pickFromCamera,
+                  onPickFromAppGallery: _pickFromAppGallery,
                   onClear: _clearPickedImage,
                 ),
 
@@ -504,17 +531,21 @@ class _FormInputField extends StatelessWidget {
 class _BannerImagePickerBlock extends StatelessWidget {
   final String? imagePath;
   final String? existingUrl;
+  final GalleryImage? galleryImage;
   final String? errorText;
   final VoidCallback onPickGallery;
   final VoidCallback onPickCamera;
+  final VoidCallback onPickFromAppGallery;
   final VoidCallback onClear;
 
   const _BannerImagePickerBlock({
     required this.imagePath,
     required this.existingUrl,
+    required this.galleryImage,
     required this.errorText,
     required this.onPickGallery,
     required this.onPickCamera,
+    required this.onPickFromAppGallery,
     required this.onClear,
   });
 
@@ -536,6 +567,17 @@ class _BannerImagePickerBlock extends StatelessWidget {
           height: 160,
           width: double.infinity,
           fit: BoxFit.cover,
+        ),
+      );
+    } else if (galleryImage != null) {
+      preview = ClipRRect(
+        borderRadius: BorderRadius.circular(tokens.card.radius),
+        child: Image.network(
+          galleryImage!.url,
+          height: 160,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(c),
         ),
       );
     } else if ((existingUrl ?? '').trim().isNotEmpty) {
@@ -589,7 +631,13 @@ class _BannerImagePickerBlock extends StatelessWidget {
                 icon: const Icon(Icons.camera_alt_outlined),
                 label: Text(l.adminPickFromCamera ?? 'Camera'),
               ),
-              if (imagePath != null && imagePath!.isNotEmpty)
+              OutlinedButton.icon(
+                onPressed: onPickFromAppGallery,
+                icon: const Icon(Icons.collections_outlined),
+                label: Text(l.adminPickFromAppGallery),
+              ),
+              if ((imagePath != null && imagePath!.isNotEmpty) ||
+                  galleryImage != null)
                 TextButton.icon(
                   onPressed: onClear,
                   icon: Icon(Icons.close, color: c.danger),

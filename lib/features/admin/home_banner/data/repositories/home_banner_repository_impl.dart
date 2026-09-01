@@ -28,12 +28,14 @@ class HomeBannerRepositoryImpl implements HomeBannerRepository {
   Future<HomeBanner> createWithImage({
     required Map<String, dynamic> body,
     required String token,
-    required String imagePath,
+    String? imagePath,
+    String? galleryImageUrl,
   }) async {
     final json = await api.createWithImage(
       body: body,
       authToken: token,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
     return HomeBannerModel.fromJson(json);
   }
@@ -44,12 +46,14 @@ class HomeBannerRepositoryImpl implements HomeBannerRepository {
     required Map<String, dynamic> body,
     required String token,
     String? imagePath,
+    String? galleryImageUrl,
   }) async {
     final json = await api.updateWithImage(
       id: id,
       body: body,
       authToken: token,
       imagePath: imagePath,
+      galleryImageUrl: galleryImageUrl,
     );
     return HomeBannerModel.fromJson(json);
   }

@@ -14,6 +14,7 @@ class CreateOwnerAnnouncementRequested extends OwnerAnnouncementEvent {
   final String announcementType;
   final int? targetId;
   final String? imagePath;
+  final String? galleryImageUrl;
 
   const CreateOwnerAnnouncementRequested({
     required this.title,
@@ -21,6 +22,7 @@ class CreateOwnerAnnouncementRequested extends OwnerAnnouncementEvent {
     required this.announcementType,
     this.targetId,
     this.imagePath,
+    this.galleryImageUrl,
   });
 }
 
