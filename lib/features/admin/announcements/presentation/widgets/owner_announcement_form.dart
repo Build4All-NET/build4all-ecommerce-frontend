@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/admin/gallery/domain/entities/gallery_image.dart';
@@ -8,6 +5,7 @@ import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_
 import 'package:build4front/features/admin/product/data/services/product_api_service.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/l10n/app_localizations.dart';
+import 'package:build4front/shared/widgets/x_file_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -42,8 +40,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
   final AdminTokenStore _tokenStore = const AdminTokenStore();
 
   String _type = 'GENERAL';
-  File? _imageFile;
-  Uint8List? _imageBytes;
+  XFile? _imageFile;
   GalleryImage? _galleryImage;
 
   bool _loadingTargets = false;
@@ -229,13 +226,8 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
 
     if (picked == null) return;
 
-    final bytes = await picked.readAsBytes();
-
-    if (!mounted) return;
-
     setState(() {
-      _imageFile = File(picked.path);
-      _imageBytes = bytes;
+      _imageFile = picked;
       _galleryImage = null;
     });
   }
@@ -251,7 +243,6 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     setState(() {
       _galleryImage = result.image;
       _imageFile = null;
-      _imageBytes = null;
     });
   }
 
@@ -273,7 +264,6 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
     setState(() {
       _type = 'GENERAL';
       _imageFile = null;
-      _imageBytes = null;
       _galleryImage = null;
       _selectedTargetId = null;
       _targetOptions = [];
@@ -529,12 +519,12 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
               ],
             ),
 
-            if (_imageFile != null && _imageBytes != null) ...[
+            if (_imageFile != null) ...[
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.memory(
-                  _imageBytes!,
+                child: XFileImage(
+                  _imageFile!,
                   height: 150,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -544,10 +534,7 @@ class _OwnerAnnouncementFormState extends State<OwnerAnnouncementForm> {
                 onPressed: widget.submitting
                     ? null
                     : () {
-                        setState(() {
-                          _imageFile = null;
-                          _imageBytes = null;
-                        });
+                        setState(() => _imageFile = null);
                       },
                 icon: const Icon(Icons.close_rounded),
                 label: Text(l10n.removeImage),
