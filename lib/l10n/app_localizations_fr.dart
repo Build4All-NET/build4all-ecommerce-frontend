@@ -3875,4 +3875,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelDescriptionsHint => 'Vous pouvez quitter cette page, cela continue.';
+
+  @override
+  String get excelReasonAgreed => 'Le titre et les valeurs concordent';
+
+  @override
+  String get excelReasonFromValues => 'Lu à partir des valeurs de cette colonne';
+
+  @override
+  String get excelReasonFromHeading => 'Le titre l\'indique, mais les valeurs sont ambiguës';
+
+  @override
+  String get excelReasonFromAssistant => 'L\'assistant a reconnu cette colonne';
+
+  @override
+  String excelReasonDisputed(Object assistant, Object values) {
+    return 'L\'assistant dit $assistant, les valeurs ressemblent plutôt à $values';
+  }
+
+  @override
+  String get excelReasonNoMatch => 'Rien dans le catalogue ne correspond à cette colonne';
+
+  @override
+  String excelColumnsUsed(Object count) {
+    return '$count colonnes seront importées';
+  }
+
+  @override
+  String excelColumnsIgnoredShow(Object count) {
+    return '$count colonnes seront ignorées';
+  }
+
+  @override
+  String get excelColumnsAllRead => 'Tout est bon — rien à vérifier.';
 }

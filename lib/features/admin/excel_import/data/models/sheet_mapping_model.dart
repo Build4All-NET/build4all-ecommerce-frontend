@@ -40,7 +40,10 @@ class SheetMappingModel {
       header: (json['header'] ?? '').toString(),
       field: ProductField.fromWire(json['field']?.toString()),
       confidence: _double(json['confidence']),
-      reason: (json['reason'] ?? '').toString(),
+      reason: ColumnGuessReason.fromWire(json['reason']?.toString()),
+      disputedWith: json['disputedWith'] == null
+          ? null
+          : ProductField.fromWire(json['disputedWith'].toString()),
     );
   }
 

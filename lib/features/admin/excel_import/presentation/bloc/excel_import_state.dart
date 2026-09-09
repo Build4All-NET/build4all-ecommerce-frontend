@@ -182,11 +182,6 @@ class ExcelImportState extends Equatable {
     return sheets.first;
   }
 
-  /// Columns the server was unsure about, which is what the owner should look at
-  /// before anything is written.
-  List<ColumnGuess> get columnsToCheck =>
-      selectedSheet?.columns.where((c) => c.needsAttention).toList() ?? const [];
-
   bool get canReadOwnFile => file != null && !readingOwnFile && !importing;
 
   bool get canImportOwnFile =>

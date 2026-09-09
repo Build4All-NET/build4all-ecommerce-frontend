@@ -7542,6 +7542,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can leave this page — it keeps going.'**
   String get excelDescriptionsHint;
+
+  /// No description provided for @excelReasonAgreed.
+  ///
+  /// In en, this message translates to:
+  /// **'The heading and the values agree'**
+  String get excelReasonAgreed;
+
+  /// No description provided for @excelReasonFromValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Read from the values in this column'**
+  String get excelReasonFromValues;
+
+  /// No description provided for @excelReasonFromHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'The heading says so, but the values are unclear'**
+  String get excelReasonFromHeading;
+
+  /// No description provided for @excelReasonFromAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant recognised this column'**
+  String get excelReasonFromAssistant;
+
+  /// No description provided for @excelReasonDisputed.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant says {assistant}, the values look more like {values}'**
+  String excelReasonDisputed(Object assistant, Object values);
+
+  /// No description provided for @excelReasonNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in the catalogue matches this column'**
+  String get excelReasonNoMatch;
+
+  /// No description provided for @excelColumnsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} columns we will import'**
+  String excelColumnsUsed(Object count);
+
+  /// No description provided for @excelColumnsIgnoredShow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} columns we will skip'**
+  String excelColumnsIgnoredShow(Object count);
+
+  /// No description provided for @excelColumnsAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'All good — nothing to check.'**
+  String get excelColumnsAllRead;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

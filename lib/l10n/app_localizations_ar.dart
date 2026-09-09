@@ -3875,4 +3875,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelDescriptionsHint => 'فيك تطلع من هالصفحة، بيكمّل لحاله.';
+
+  @override
+  String get excelReasonAgreed => 'العنوان والقيم متفقين';
+
+  @override
+  String get excelReasonFromValues => 'مقروءة من القيم يلي بهالعمود';
+
+  @override
+  String get excelReasonFromHeading => 'العنوان بيقول هيك، بس القيم مش واضحة';
+
+  @override
+  String get excelReasonFromAssistant => 'المساعد عرف هالعمود';
+
+  @override
+  String excelReasonDisputed(Object assistant, Object values) {
+    return 'المساعد بيقول $assistant، بس القيم شكلها $values';
+  }
+
+  @override
+  String get excelReasonNoMatch => 'ما في شي عنا بيقابل هالعمود';
+
+  @override
+  String excelColumnsUsed(Object count) {
+    return '$count عمود رح ننزّلهن';
+  }
+
+  @override
+  String excelColumnsIgnoredShow(Object count) {
+    return '$count عمود رح نتركهن';
+  }
+
+  @override
+  String get excelColumnsAllRead => 'كلشي تمام — ما في شي بدو تدقيق.';
 }

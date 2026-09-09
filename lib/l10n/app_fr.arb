@@ -1552,5 +1552,38 @@
       }
     }
   },
-  "excelDescriptionsHint": "Vous pouvez quitter cette page, cela continue."
+  "excelDescriptionsHint": "Vous pouvez quitter cette page, cela continue.",
+  "excelReasonAgreed": "Le titre et les valeurs concordent",
+  "excelReasonFromValues": "Lu à partir des valeurs de cette colonne",
+  "excelReasonFromHeading": "Le titre l'indique, mais les valeurs sont ambiguës",
+  "excelReasonFromAssistant": "L'assistant a reconnu cette colonne",
+  "excelReasonDisputed": "L'assistant dit {assistant}, les valeurs ressemblent plutôt à {values}",
+  "@excelReasonDisputed": {
+    "placeholders": {
+      "assistant": {
+        "type": "Object"
+      },
+      "values": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelReasonNoMatch": "Rien dans le catalogue ne correspond à cette colonne",
+  "excelColumnsUsed": "{count} colonnes seront importées",
+  "@excelColumnsUsed": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsIgnoredShow": "{count} colonnes seront ignorées",
+  "@excelColumnsIgnoredShow": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsAllRead": "Tout est bon — rien à vérifier."
 }

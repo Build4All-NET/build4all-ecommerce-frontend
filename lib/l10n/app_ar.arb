@@ -1552,5 +1552,38 @@
       }
     }
   },
-  "excelDescriptionsHint": "فيك تطلع من هالصفحة، بيكمّل لحاله."
+  "excelDescriptionsHint": "فيك تطلع من هالصفحة، بيكمّل لحاله.",
+  "excelReasonAgreed": "العنوان والقيم متفقين",
+  "excelReasonFromValues": "مقروءة من القيم يلي بهالعمود",
+  "excelReasonFromHeading": "العنوان بيقول هيك، بس القيم مش واضحة",
+  "excelReasonFromAssistant": "المساعد عرف هالعمود",
+  "excelReasonDisputed": "المساعد بيقول {assistant}، بس القيم شكلها {values}",
+  "@excelReasonDisputed": {
+    "placeholders": {
+      "assistant": {
+        "type": "Object"
+      },
+      "values": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelReasonNoMatch": "ما في شي عنا بيقابل هالعمود",
+  "excelColumnsUsed": "{count} عمود رح ننزّلهن",
+  "@excelColumnsUsed": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsIgnoredShow": "{count} عمود رح نتركهن",
+  "@excelColumnsIgnoredShow": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsAllRead": "كلشي تمام — ما في شي بدو تدقيق."
 }

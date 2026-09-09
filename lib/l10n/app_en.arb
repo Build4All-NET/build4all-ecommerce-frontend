@@ -1733,5 +1733,38 @@
       }
     }
   },
-  "excelDescriptionsHint": "You can leave this page — it keeps going."
+  "excelDescriptionsHint": "You can leave this page — it keeps going.",
+  "excelReasonAgreed": "The heading and the values agree",
+  "excelReasonFromValues": "Read from the values in this column",
+  "excelReasonFromHeading": "The heading says so, but the values are unclear",
+  "excelReasonFromAssistant": "The assistant recognised this column",
+  "excelReasonDisputed": "The assistant says {assistant}, the values look more like {values}",
+  "@excelReasonDisputed": {
+    "placeholders": {
+      "assistant": {
+        "type": "Object"
+      },
+      "values": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelReasonNoMatch": "Nothing in the catalogue matches this column",
+  "excelColumnsUsed": "{count} columns we will import",
+  "@excelColumnsUsed": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsIgnoredShow": "{count} columns we will skip",
+  "@excelColumnsIgnoredShow": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelColumnsAllRead": "All good — nothing to check."
 }
