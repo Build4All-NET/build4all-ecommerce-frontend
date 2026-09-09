@@ -44,9 +44,12 @@ class ExcelColumnMappingCard extends StatefulWidget {
     }
   }
 
-  /// Why a column was read this way, in the owner's language.
-  static String reasonFor(AppLocalizations l10n, ColumnGuess column) {
+  /// Why a column was read this way, in the owner's language, or null when the
+  /// server gave a reason this app does not know.
+  static String? reasonFor(AppLocalizations l10n, ColumnGuess column) {
     switch (column.reason) {
+      case null:
+        return null;
       case ColumnGuessReason.agreed:
         return l10n.excelReasonAgreed;
       case ColumnGuessReason.fromValues:
@@ -230,6 +233,8 @@ class _ColumnRow extends StatelessWidget {
         ? l10n.excelOwnFileNoHeading
         : column.header.trim();
 
+    final reason = ExcelColumnMappingCard.reasonFor(l10n, column);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -262,10 +267,10 @@ class _ColumnRow extends StatelessWidget {
                 ),
                 // Only where the owner might disagree. On a column both signals
                 // settled, the reason is noise.
-                if (column.needsAttention) ...[
+                if (column.needsAttention && reason != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    ExcelColumnMappingCard.reasonFor(l10n, column),
+                    reason,
                     style: Theme.of(context)
                         .textTheme
                         .labelSmall

@@ -18,14 +18,21 @@ enum ColumnGuessReason {
 
   const ColumnGuessReason(this.wireName);
 
-  static ColumnGuessReason fromWire(String? value) {
-    if (value == null) return ColumnGuessReason.noMatch;
+  /// The reason the server sent, or null when it sent something this app does
+  /// not know.
+  ///
+  /// Null rather than a guess: a backend older or newer than this app would
+  /// otherwise have every column explained by whichever reason we picked as the
+  /// fallback, and an explanation that contradicts the field above it is worse
+  /// than no explanation at all.
+  static ColumnGuessReason? fromWire(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
 
     final normalized = value.trim().toUpperCase();
     for (final reason in ColumnGuessReason.values) {
       if (reason.wireName == normalized) return reason;
     }
-    return ColumnGuessReason.noMatch;
+    return null;
   }
 }
 
@@ -43,8 +50,9 @@ class ColumnGuess extends Equatable {
   final double confidence;
 
   /// Why, as a code the app puts into words, so the owner reads it in their own
-  /// language rather than in the server's.
-  final ColumnGuessReason reason;
+  /// language rather than in the server's. Null when the server said something
+  /// this app does not recognise.
+  final ColumnGuessReason? reason;
 
   /// When the assistant and the values disagree, what the values made of the
   /// column -- shown alongside so the owner can see both readings.
@@ -55,7 +63,7 @@ class ColumnGuess extends Equatable {
     required this.header,
     required this.field,
     required this.confidence,
-    required this.reason,
+    this.reason,
     this.disputedWith,
   });
 
