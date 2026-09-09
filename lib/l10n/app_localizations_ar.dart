@@ -3752,4 +3752,103 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelPreviewNoShipping => 'بدون شحن';
+
+  @override
+  String get excelSourceTitle => 'وين منتجاتك هلق؟';
+
+  @override
+  String get excelSourceOwnFile => 'عندي ملف من نظام تاني';
+
+  @override
+  String get excelSourceOwnFileHint => 'ارفعه متل ما هو. نحنا منقراه عنك.';
+
+  @override
+  String get excelSourceTemplate => 'استعمل قالب Build4All';
+
+  @override
+  String get excelSourceTemplateHint => 'حمّل الملف تبعنا وعبّيه.';
+
+  @override
+  String get excelOwnFileReadBtn => 'اقرا الملف تبعي';
+
+  @override
+  String get excelOwnFileSheetTitle => 'أي ورقة فيها منتجاتك؟';
+
+  @override
+  String excelOwnFileSheetRows(Object count) {
+    return '$count سطر';
+  }
+
+  @override
+  String get excelOwnFileColumnsTitle => 'هيك قرينا الملف تبعك';
+
+  @override
+  String get excelOwnFileColumnsSubtitle => 'تطلّع ع كل عمود وغيّر إذا في شي غلط.';
+
+  @override
+  String get excelOwnFileNoHeading => '(بلا عنوان)';
+
+  @override
+  String get excelOwnFileReadWithAi => 'متأكد منها مع المساعد';
+
+  @override
+  String get excelOwnFileReadFromData => 'مقروءة من القيم يلي بالملف';
+
+  @override
+  String excelOwnFileNeedsCheck(Object count) {
+    return '$count عمود بدهن تدقيق';
+  }
+
+  @override
+  String get excelOwnFileCategoryLabel => 'حط هالمنتجات تحت';
+
+  @override
+  String get excelOwnFileCategoryHint => 'مثلاً: شنط';
+
+  @override
+  String get excelOwnFileNeedsName => 'اختار أي عمود فيه أسامي المنتجات.';
+
+  @override
+  String get excelOwnFileImportBtn => 'نزّل هالمنتجات';
+
+  @override
+  String get excelMatchTitle => 'منتجات عندك من قبل';
+
+  @override
+  String get excelMatchUpdate => 'عدّلن من هالملف';
+
+  @override
+  String get excelMatchKeep => 'خلّيهن متل ما هنّ';
+
+  @override
+  String get excelMatchExplain => 'منقارن بالكود، فهيك إذا رفعت نفس الملف مرتين ما بينعاد المنتج.';
+
+  @override
+  String get excelFieldName => 'اسم المنتج';
+
+  @override
+  String get excelFieldSku => 'كود / باركود';
+
+  @override
+  String get excelFieldPrice => 'السعر';
+
+  @override
+  String get excelFieldStock => 'الكمية';
+
+  @override
+  String get excelFieldDescription => 'الوصف';
+
+  @override
+  String get excelFieldCategory => 'الفئة';
+
+  @override
+  String get excelFieldImage => 'رابط الصورة';
+
+  @override
+  String get excelFieldIgnore => 'ما تنزّلها';
+
+  @override
+  String excelImportCounts(Object added, Object updated, Object skipped) {
+    return '$added انضافوا · $updated تعدّلوا · $skipped انتركوا';
+  }
 }

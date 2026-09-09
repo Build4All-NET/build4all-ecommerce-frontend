@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "fr",
   "appTitle": "App",
   "contactSupportTitle": "Contacter le support",
@@ -1464,5 +1464,63 @@
   "excelPreviewImagesAssigned": "{assigned} produits sur {total} ont une image",
   "excelPreviewNoProducts": "Aucun produit trouvé dans ce fichier.",
   "excelPreviewFixFirst": "Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.",
-  "excelPreviewNoShipping": "Sans livraison"
+  "excelPreviewNoShipping": "Sans livraison",
+  "excelSourceTitle": "Où sont vos produits ?",
+  "excelSourceOwnFile": "J'ai un fichier d'un autre système",
+  "excelSourceOwnFileHint": "Envoyez-le tel quel. Nous le lisons pour vous.",
+  "excelSourceTemplate": "Utiliser le modèle Build4All",
+  "excelSourceTemplateHint": "Téléchargez notre feuille et remplissez-la.",
+  "excelOwnFileReadBtn": "Lire mon fichier",
+  "excelOwnFileSheetTitle": "Quelle feuille contient vos produits ?",
+  "excelOwnFileSheetRows": "{count} lignes",
+  "@excelOwnFileSheetRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileColumnsTitle": "Voici comment nous avons lu votre fichier",
+  "excelOwnFileColumnsSubtitle": "Vérifiez chaque colonne et corrigez ce qui ne va pas.",
+  "excelOwnFileNoHeading": "(sans titre)",
+  "excelOwnFileReadWithAi": "Vérifié avec l'assistant",
+  "excelOwnFileReadFromData": "Lu à partir des valeurs de votre fichier",
+  "excelOwnFileNeedsCheck": "{count} colonnes à vérifier",
+  "@excelOwnFileNeedsCheck": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileCategoryLabel": "Regrouper ces produits sous",
+  "excelOwnFileCategoryHint": "ex. Sacs",
+  "excelOwnFileNeedsName": "Choisissez la colonne qui contient les noms des produits.",
+  "excelOwnFileImportBtn": "Importer ces produits",
+  "excelMatchTitle": "Produits que vous avez déjà",
+  "excelMatchUpdate": "Les mettre à jour depuis ce fichier",
+  "excelMatchKeep": "Les laisser tels quels",
+  "excelMatchExplain": "Comparés par leur code : réimporter le même fichier ne duplique jamais un produit.",
+  "excelFieldName": "Nom du produit",
+  "excelFieldSku": "Code / code-barres",
+  "excelFieldPrice": "Prix",
+  "excelFieldStock": "Quantité",
+  "excelFieldDescription": "Description",
+  "excelFieldCategory": "Catégorie",
+  "excelFieldImage": "Lien de l'image",
+  "excelFieldIgnore": "Ne pas importer",
+  "excelImportCounts": "{added} ajoutés · {updated} mis à jour · {skipped} inchangés",
+  "@excelImportCounts": {
+    "placeholders": {
+      "added": {
+        "type": "Object"
+      },
+      "updated": {
+        "type": "Object"
+      },
+      "skipped": {
+        "type": "Object"
+      }
+    }
+  }
 }

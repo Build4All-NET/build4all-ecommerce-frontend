@@ -9,6 +9,8 @@ class ExcelImportResultModel {
   final int insertedCategories;
   final int insertedItemTypes;
   final int insertedProducts;
+  final int updatedProducts;
+  final int skippedProducts;
   final int insertedTaxRules;
   final int insertedShippingMethods;
   final int insertedCoupons;
@@ -25,6 +27,8 @@ class ExcelImportResultModel {
     required this.insertedCategories,
     required this.insertedItemTypes,
     required this.insertedProducts,
+    this.updatedProducts = 0,
+    this.skippedProducts = 0,
     required this.insertedTaxRules,
     required this.insertedShippingMethods,
     required this.insertedCoupons,
@@ -50,6 +54,8 @@ class ExcelImportResultModel {
       insertedCategories: _i('insertedCategories'),
       insertedItemTypes: _i('insertedItemTypes'),
       insertedProducts: _i('insertedProducts'),
+      updatedProducts: _i('updatedProducts'),
+      skippedProducts: _i('skippedProducts'),
       insertedTaxRules: _i('insertedTaxRules'),
       insertedShippingMethods: _i('insertedShippingMethods'),
       insertedCoupons: _i('insertedCoupons'),

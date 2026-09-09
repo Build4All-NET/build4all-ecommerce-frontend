@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "en",
   "appTitle": "App",
   "loginTitle": "Log in",
@@ -1645,5 +1645,63 @@
   "excelPreviewImagesAssigned": "{assigned} of {total} products have a picture",
   "excelPreviewNoProducts": "No products were found in this file.",
   "excelPreviewFixFirst": "Fix the rows marked below, then upload the file again.",
-  "excelPreviewNoShipping": "No shipping"
+  "excelPreviewNoShipping": "No shipping",
+  "excelSourceTitle": "Where are your products now?",
+  "excelSourceOwnFile": "I have a file from another system",
+  "excelSourceOwnFileHint": "Upload it as it is. We will read it for you.",
+  "excelSourceTemplate": "Use the Build4All template",
+  "excelSourceTemplateHint": "Download our sheet and fill it in.",
+  "excelOwnFileReadBtn": "Read my file",
+  "excelOwnFileSheetTitle": "Which sheet holds your products?",
+  "excelOwnFileSheetRows": "{count} rows",
+  "@excelOwnFileSheetRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileColumnsTitle": "This is how we read your file",
+  "excelOwnFileColumnsSubtitle": "Check each column and change anything we got wrong.",
+  "excelOwnFileNoHeading": "(no heading)",
+  "excelOwnFileReadWithAi": "Checked with the assistant",
+  "excelOwnFileReadFromData": "Read from the values in your file",
+  "excelOwnFileNeedsCheck": "{count} columns to check",
+  "@excelOwnFileNeedsCheck": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileCategoryLabel": "Group these products under",
+  "excelOwnFileCategoryHint": "e.g. Bags",
+  "excelOwnFileNeedsName": "Pick which column holds the product names.",
+  "excelOwnFileImportBtn": "Import these products",
+  "excelMatchTitle": "Products you already have",
+  "excelMatchUpdate": "Update them from this file",
+  "excelMatchKeep": "Leave them as they are",
+  "excelMatchExplain": "Matched by their code, so importing the same file twice never duplicates a product.",
+  "excelFieldName": "Product name",
+  "excelFieldSku": "Code / barcode",
+  "excelFieldPrice": "Price",
+  "excelFieldStock": "Quantity",
+  "excelFieldDescription": "Description",
+  "excelFieldCategory": "Category",
+  "excelFieldImage": "Image link",
+  "excelFieldIgnore": "Do not import",
+  "excelImportCounts": "{added} added · {updated} updated · {skipped} left alone",
+  "@excelImportCounts": {
+    "placeholders": {
+      "added": {
+        "type": "Object"
+      },
+      "updated": {
+        "type": "Object"
+      },
+      "skipped": {
+        "type": "Object"
+      }
+    }
+  }
 }
