@@ -17,7 +17,15 @@ class ExcelImportApiService {
     return t.toLowerCase().startsWith('bearer ') ? t.substring(7).trim() : t;
   }
 
-  Future<Options> _auth() async {
+  /// How long an import is given to answer.
+  ///
+  /// The shared client allows a minute, which is right for a screen waiting on
+  /// a list and wrong here: writing a catalogue of a thousand products is one
+  /// request that legitimately takes minutes, and cutting it off leaves the
+  /// owner staring at a timeout while the server finishes the work anyway.
+  static const Duration _importTimeout = Duration(minutes: 10);
+
+  Future<Options> _auth({Duration? receiveTimeout}) async {
     final token = await getToken();
 
     return Options(
@@ -28,6 +36,8 @@ class ExcelImportApiService {
       contentType: 'multipart/form-data',
       responseType: ResponseType.json,
       receiveDataWhenStatusError: true,
+      sendTimeout: receiveTimeout,
+      receiveTimeout: receiveTimeout,
     );
   }
 
@@ -183,7 +193,7 @@ class ExcelImportApiService {
             ),
         },
         data: form,
-        options: await _auth(),
+        options: await _auth(receiveTimeout: _importTimeout),
       );
 
       return _normalizeResponse(res);
@@ -208,7 +218,7 @@ class ExcelImportApiService {
       final res = await _dio.post(
         '/api/admin/import/excel/suggest-mapping',
         data: form,
-        options: await _auth(),
+        options: await _auth(receiveTimeout: _importTimeout),
       );
 
       // The endpoint answers with a bare list of sheets, which _normalizeResponse
@@ -259,7 +269,7 @@ class ExcelImportApiService {
             ),
         },
         data: form,
-        options: await _auth(),
+        options: await _auth(receiveTimeout: _importTimeout),
       );
 
       return _normalizeResponse(res);
