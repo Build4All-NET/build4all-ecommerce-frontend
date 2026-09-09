@@ -3752,4 +3752,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelPreviewNoShipping => 'No shipping';
+
+  @override
+  String get excelSourceTitle => 'Where are your products now?';
+
+  @override
+  String get excelSourceOwnFile => 'I have a file from another system';
+
+  @override
+  String get excelSourceOwnFileHint => 'Upload it as it is. We will read it for you.';
+
+  @override
+  String get excelSourceTemplate => 'Use the Build4All template';
+
+  @override
+  String get excelSourceTemplateHint => 'Download our sheet and fill it in.';
+
+  @override
+  String get excelOwnFileReadBtn => 'Read my file';
+
+  @override
+  String get excelOwnFileSheetTitle => 'Which sheet holds your products?';
+
+  @override
+  String excelOwnFileSheetRows(Object count) {
+    return '$count rows';
+  }
+
+  @override
+  String get excelOwnFileColumnsTitle => 'This is how we read your file';
+
+  @override
+  String get excelOwnFileColumnsSubtitle => 'Check each column and change anything we got wrong.';
+
+  @override
+  String get excelOwnFileNoHeading => '(no heading)';
+
+  @override
+  String get excelOwnFileReadWithAi => 'Checked with the assistant';
+
+  @override
+  String get excelOwnFileReadFromData => 'Read from the values in your file';
+
+  @override
+  String excelOwnFileNeedsCheck(Object count) {
+    return '$count columns to check';
+  }
+
+  @override
+  String get excelOwnFileCategoryLabel => 'Group these products under';
+
+  @override
+  String get excelOwnFileCategoryHint => 'e.g. Bags';
+
+  @override
+  String get excelOwnFileNeedsName => 'Pick which column holds the product names.';
+
+  @override
+  String get excelOwnFileImportBtn => 'Import these products';
+
+  @override
+  String get excelMatchTitle => 'Products you already have';
+
+  @override
+  String get excelMatchUpdate => 'Update them from this file';
+
+  @override
+  String get excelMatchKeep => 'Leave them as they are';
+
+  @override
+  String get excelMatchExplain => 'Matched by their code, so importing the same file twice never duplicates a product.';
+
+  @override
+  String get excelFieldName => 'Product name';
+
+  @override
+  String get excelFieldSku => 'Code / barcode';
+
+  @override
+  String get excelFieldPrice => 'Price';
+
+  @override
+  String get excelFieldStock => 'Quantity';
+
+  @override
+  String get excelFieldDescription => 'Description';
+
+  @override
+  String get excelFieldCategory => 'Category';
+
+  @override
+  String get excelFieldImage => 'Image link';
+
+  @override
+  String get excelFieldIgnore => 'Do not import';
+
+  @override
+  String excelImportCounts(Object added, Object updated, Object skipped) {
+    return '$added added · $updated updated · $skipped left alone';
+  }
+
+  @override
+  String get excelDescriptionsTitle => 'Products with nothing written about them';
+
+  @override
+  String excelDescriptionsCount(Object count) {
+    return '$count products have no description';
+  }
+
+  @override
+  String get excelDescriptionsWriteBtn => 'Let the assistant write them';
+
+  @override
+  String excelDescriptionsRunning(Object written, Object total) {
+    return 'Writing… $written of $total';
+  }
+
+  @override
+  String excelDescriptionsDone(Object written) {
+    return '$written descriptions written';
+  }
+
+  @override
+  String get excelDescriptionsHint => 'You can leave this page — it keeps going.';
 }

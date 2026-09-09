@@ -1,5 +1,7 @@
-import 'package:file_picker/file_picker.dart';
+import 'dart:async';
 import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +10,10 @@ import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../data/services/template_saver.dart';
 import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/usecases/download_excel_template.dart';
+import '../../domain/usecases/get_descriptions_status.dart';
+import '../../domain/usecases/import_foreign_file.dart';
+import '../../domain/usecases/write_missing_descriptions.dart';
+import '../../domain/usecases/suggest_column_mapping.dart';
 import '../../domain/usecases/import_excel_file.dart';
 import '../../domain/usecases/validate_excel_file.dart';
 import 'excel_import_event.dart';
@@ -17,11 +23,19 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final ValidateExcelFile validateUc;
   final ImportExcelFile importUc;
   final DownloadExcelTemplate? downloadTemplateUc;
+  final SuggestColumnMapping? suggestMappingUc;
+  final ImportForeignFile? importForeignUc;
+  final GetDescriptionsStatus? descriptionsStatusUc;
+  final WriteMissingDescriptions? writeDescriptionsUc;
 
   ExcelImportBloc({
     required this.validateUc,
     required this.importUc,
     this.downloadTemplateUc,
+    this.suggestMappingUc,
+    this.importForeignUc,
+    this.descriptionsStatusUc,
+    this.writeDescriptionsUc,
   }) : super(ExcelImportState.initial()) {
     on<ExcelPickFilePressed>(_pickFile);
     on<ExcelValidatePressed>(_validate);
@@ -31,7 +45,28 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelDownloadTemplatePressed>(_downloadTemplate);
     on<ExcelProductImageAssigned>(_assignImage);
     on<ExcelProductImageCleared>(_clearImage);
+    on<ExcelSourceChanged>(_changeSource);
+    on<ExcelReadOwnFilePressed>(_readOwnFile);
+    on<ExcelSheetSelected>(_selectSheet);
+    on<ExcelColumnFieldChanged>(_changeColumnField);
+    on<ExcelForeignCategoryChanged>(_changeForeignCategory);
+    on<ExcelMatchModeChanged>(_changeMatchMode);
+    on<ExcelForeignImportPressed>(_importForeign);
+    on<ExcelDescriptionsChecked>(_checkDescriptions);
+    on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
+
+  /// How often the assistant's progress is read back.
+  ///
+  /// Slow enough not to hammer the server over a job that takes minutes,
+  /// often enough that the owner sees the count move.
+  static const Duration _descriptionPollInterval = Duration(seconds: 5);
+
+  /// How long to keep watching before leaving it to the owner to refresh.
+  ///
+  /// A job that outlives this is still running on the server; only this
+  /// screen stops following it.
+  static const Duration _descriptionPollLimit = Duration(minutes: 20);
 
   Future<void> _pickFile(
     ExcelPickFilePressed event,
@@ -42,9 +77,12 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     try {
       // withData so the bytes come back on every platform. The browser never
       // exposes a path for a picked file, and reading one there throws.
+      // CSV as well as xlsx: a till or accounting package exports whichever
+      // its own author picked, and refusing one of them at the file picker is a
+      // dead end the owner cannot work around.
       final res = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['xlsx'],
+        allowedExtensions: const ['xlsx', 'csv'],
         withData: true,
       );
 
@@ -61,8 +99,10 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         file: PickedExcelFile(name: picked.name, bytes: bytes),
         clearValidation: true,
         clearResult: true,
-        // Row numbers only mean something against the file they came from.
+        // Row numbers and column guesses only mean something against the file
+        // they came from.
         clearRowImages: true,
+        clearSheets: true,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -187,5 +227,180 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   ) {
     final next = Map<int, ExcelRowImage>.from(state.rowImages)..remove(event.row);
     emit(state.copyWith(rowImages: next));
+  }
+
+  void _changeSource(
+    ExcelSourceChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    if (event.source == state.source) return;
+
+    // Everything read so far belongs to the other way of working; keeping it
+    // would leave the owner looking at a review of a file they are no longer
+    // importing.
+    emit(state.copyWith(
+      source: event.source,
+      clearSheets: true,
+      clearValidation: true,
+      clearResult: true,
+      clearError: true,
+    ));
+  }
+
+  Future<void> _readOwnFile(
+    ExcelReadOwnFilePressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (!state.canReadOwnFile || suggestMappingUc == null) return;
+
+    emit(state.copyWith(
+      readingOwnFile: true,
+      clearError: true,
+      clearResult: true,
+      clearSheets: true,
+    ));
+
+    try {
+      final sheets = await suggestMappingUc!(state.file!);
+
+      emit(state.copyWith(
+        readingOwnFile: false,
+        sheets: sheets,
+        selectedSheetName: sheets.isEmpty ? null : sheets.first.sheetName,
+        // The sheet's own name is the likeliest group for its products: in a
+        // file kept by hand the tab is usually already the category.
+        foreignCategoryName: sheets.isEmpty ? '' : sheets.first.sheetName,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        readingOwnFile: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  void _selectSheet(
+    ExcelSheetSelected event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(
+      selectedSheetName: event.sheetName,
+      foreignCategoryName: event.sheetName,
+    ));
+  }
+
+  void _changeColumnField(
+    ExcelColumnFieldChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    final selected = state.selectedSheet;
+    if (selected == null) return;
+
+    final corrected = selected.copyWithColumn(event.columnIndex, event.field);
+
+    emit(state.copyWith(sheets: [
+      for (final sheet in state.sheets)
+        if (sheet.sheetName == selected.sheetName) corrected else sheet,
+    ]));
+  }
+
+  void _changeForeignCategory(
+    ExcelForeignCategoryChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(foreignCategoryName: event.categoryName));
+  }
+
+  void _changeMatchMode(
+    ExcelMatchModeChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(matchMode: event.matchMode));
+  }
+
+  Future<void> _importForeign(
+    ExcelForeignImportPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (!state.canImportOwnFile || importForeignUc == null) return;
+
+    final sheet = state.selectedSheet!;
+
+    emit(state.copyWith(importing: true, clearError: true));
+
+    try {
+      final result = await importForeignUc!(
+        file: state.file!,
+        sheetName: sheet.sheetName,
+        columns: sheet.wireColumns,
+        categoryName: state.foreignCategoryName,
+        matchMode: state.matchMode,
+        imageAssignments: state.imageAssignments,
+      );
+
+      emit(state.copyWith(importing: false, result: result));
+    } catch (e) {
+      emit(state.copyWith(
+        importing: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  Future<void> _checkDescriptions(
+    ExcelDescriptionsChecked event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (descriptionsStatusUc == null) return;
+
+    try {
+      emit(state.copyWith(descriptions: await descriptionsStatusUc!()));
+    } catch (_) {
+      // Not being able to offer this is not worth an error over the import the
+      // owner just completed successfully.
+    }
+  }
+
+  Future<void> _writeDescriptions(
+    ExcelWriteDescriptionsPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (writeDescriptionsUc == null || state.descriptions.running) return;
+
+    try {
+      emit(state.copyWith(
+        descriptions: await writeDescriptionsUc!(state.descriptions),
+        clearError: true,
+      ));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: ExceptionMapper.toMessage(e)));
+      return;
+    }
+
+    await _followDescriptions(emit);
+  }
+
+  /// Reads the assistant's progress back until it finishes.
+  ///
+  /// The work runs on the server and does not need this screen; watching it only
+  /// means the owner can see the count move instead of guessing.
+  Future<void> _followDescriptions(Emitter<ExcelImportState> emit) async {
+    if (descriptionsStatusUc == null) return;
+
+    final startedAt = DateTime.now();
+
+    while (state.descriptions.running && !isClosed && !emit.isDone) {
+      if (DateTime.now().difference(startedAt) > _descriptionPollLimit) return;
+
+      await Future<void>.delayed(_descriptionPollInterval);
+      if (isClosed || emit.isDone) return;
+
+      try {
+        emit(state.copyWith(descriptions: await descriptionsStatusUc!()));
+      } catch (_) {
+        // One unanswered poll is not a reason to stop watching a job that is
+        // still running perfectly well on the server.
+      }
+    }
   }
 }

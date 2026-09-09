@@ -1,4 +1,3 @@
-
 import 'package:build4front/common/widgets/app_toast.dart';
 import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
@@ -9,14 +8,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_filex/open_filex.dart';
 
+import '../../domain/entities/product_field.dart';
 import '../bloc/excel_import_bloc.dart';
 import '../bloc/excel_import_event.dart';
 import '../bloc/excel_import_state.dart';
 import '../widgets/excel_counts_card.dart';
+import '../widgets/excel_descriptions_card.dart';
 import '../widgets/excel_issues_list.dart';
 import '../widgets/excel_file_card.dart';
 import '../widgets/excel_product_review_list.dart';
+import '../widgets/excel_column_mapping_card.dart';
+import '../widgets/excel_match_mode_card.dart';
 import '../widgets/excel_replace_card.dart';
+import '../widgets/excel_sheet_picker_card.dart';
+import '../widgets/excel_source_card.dart';
 
 class AdminExcelImportScreen extends StatelessWidget {
   const AdminExcelImportScreen({super.key});
@@ -66,7 +71,25 @@ class AdminExcelImportScreen extends StatelessWidget {
         }
 
         if (state.result != null) {
-          AppToast.success(context, state.result!.message);
+          final result = state.result!;
+
+          // "42 products imported" hides the thing an owner re-importing their
+          // catalogue most needs to know: how many were updated rather than
+          // added, and how many were left alone.
+          AppToast.success(
+            context,
+            l10n.excelImportCounts(
+              result.insertedProducts,
+              result.updatedProducts,
+              result.skippedProducts,
+            ),
+          );
+
+          // A catalogue from a till arrives as names and prices. Asked for only
+          // now, because before the import there is nothing to describe.
+          context
+              .read<ExcelImportBloc>()
+              .add(const ExcelDescriptionsChecked());
         }
 
         // ✅ After download: show toast + open file
@@ -96,6 +119,94 @@ class AdminExcelImportScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  ExcelSourceCard(
+                    source: state.source,
+                    onChanged: (source) => context
+                        .read<ExcelImportBloc>()
+                        .add(ExcelSourceChanged(source)),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ===== Bringing a file from another system =====
+                  if (state.source == ExcelImportSource.ownFile) ...[
+                    ExcelFileCard(
+                      file: state.file,
+                      isPicking: state.picking,
+                      onPick: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelPickFilePressed()),
+                    ),
+                    const SizedBox(height: 12),
+                    PrimaryButton(
+                      label: state.readingOwnFile
+                          ? l10n.loadingLabel
+                          : l10n.excelOwnFileReadBtn,
+                      isLoading: state.readingOwnFile,
+                      onPressed: state.canReadOwnFile
+                          ? () => context
+                              .read<ExcelImportBloc>()
+                              .add(const ExcelReadOwnFilePressed())
+                          : null,
+                    ),
+
+                    if (state.selectedSheet != null) ...[
+                      const SizedBox(height: 12),
+                      ExcelSheetPickerCard(
+                        sheets: state.sheets,
+                        selectedSheetName: state.selectedSheetName,
+                        onSheetSelected: (name) => context
+                            .read<ExcelImportBloc>()
+                            .add(ExcelSheetSelected(name)),
+                      ),
+                      if (state.sheets.length > 1) const SizedBox(height: 12),
+
+                      ExcelColumnMappingCard(
+                        sheet: state.selectedSheet!,
+                        onFieldChanged: (columnIndex, field) => context
+                            .read<ExcelImportBloc>()
+                            .add(ExcelColumnFieldChanged(
+                              columnIndex: columnIndex,
+                              field: field,
+                            )),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Only asked when the file names no group itself: a till
+                      // exports products, not a shop's structure.
+                      if (!state.selectedSheet!.columns
+                          .any((c) => c.field == ProductField.category))
+                        _ForeignCategoryField(
+                          value: state.foreignCategoryName,
+                          resetKey: state.selectedSheet!.sheetName,
+                          onChanged: (name) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelForeignCategoryChanged(name)),
+                        ),
+
+                      const SizedBox(height: 12),
+                      ExcelMatchModeCard(
+                        matchMode: state.matchMode,
+                        onChanged: (mode) => context
+                            .read<ExcelImportBloc>()
+                            .add(ExcelMatchModeChanged(mode)),
+                      ),
+                      const SizedBox(height: 12),
+                      PrimaryButton(
+                        label: state.importing
+                            ? l10n.loadingLabel
+                            : l10n.excelOwnFileImportBtn,
+                        isLoading: state.importing,
+                        onPressed: state.canImportOwnFile
+                            ? () => context
+                                .read<ExcelImportBloc>()
+                                .add(const ExcelForeignImportPressed())
+                            : null,
+                      ),
+                    ],
+                  ],
+
+                  // ===== Filling in the template we provide =====
+                  if (state.source == ExcelImportSource.template) ...[
                   // ===== Header / helper text =====
                   _SectionHeader(
                     title: l10n.adminExcelStep1Title,
@@ -252,6 +363,18 @@ class AdminExcelImportScreen extends StatelessWidget {
                     ),
                   ],
 
+                  ],
+
+                  if (state.descriptions.worthOffering) ...[
+                    const SizedBox(height: 20),
+                    ExcelDescriptionsCard(
+                      job: state.descriptions,
+                      onWrite: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelWriteDescriptionsPressed()),
+                    ),
+                  ],
+
                   const SizedBox(height: 24),
 
                   Text(
@@ -359,6 +482,45 @@ class _InfoCard extends StatelessWidget {
             onPressed: onAction,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Where the owner names the group their imported products fall under.
+///
+/// Prefilled with the sheet's own name rather than left blank: in a file kept by
+/// hand the tab is usually already the category, and an owner who agrees with
+/// that has nothing to type.
+class _ForeignCategoryField extends StatelessWidget {
+  final String value;
+
+  /// Changes only when the owner switches sheets, which is the one moment the
+  /// field should forget what it holds.
+  final String resetKey;
+
+  final ValueChanged<String> onChanged;
+
+  const _ForeignCategoryField({
+    required this.value,
+    required this.resetKey,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return TextFormField(
+      // Keyed on the sheet rather than on the text: keying on the text would
+      // rebuild the field at every keystroke and throw the cursor to the start.
+      key: ValueKey(resetKey),
+      initialValue: value,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: l10n.excelOwnFileCategoryLabel,
+        hintText: l10n.excelOwnFileCategoryHint,
+        filled: true,
       ),
     );
   }

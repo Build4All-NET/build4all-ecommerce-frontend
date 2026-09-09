@@ -2,9 +2,13 @@ import '../../domain/entities/picked_excel_file.dart';
 
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/excel_validation_result.dart';
+import '../../domain/entities/description_job.dart';
+import '../../domain/entities/sheet_mapping.dart';
 import '../../domain/repositories/excel_import_repository.dart';
 import '../models/excel_import_result_model.dart';
 import '../models/excel_validation_result_model.dart';
+import '../models/description_job_model.dart';
+import '../models/sheet_mapping_model.dart';
 import '../services/excel_import_api_service.dart';
 
 class ExcelImportRepositoryImpl implements ExcelImportRepository {
@@ -89,6 +93,8 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       insertedCategories: m.insertedCategories,
       insertedItemTypes: m.insertedItemTypes,
       insertedProducts: m.insertedProducts,
+      updatedProducts: m.updatedProducts,
+      skippedProducts: m.skippedProducts,
       insertedTaxRules: m.insertedTaxRules,
       insertedShippingMethods: m.insertedShippingMethods,
       insertedCoupons: m.insertedCoupons,
@@ -98,5 +104,97 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
   }
 
   @override
+  Future<List<SheetMapping>> suggestMapping(PickedExcelFile file) async {
+    final raw = await api.suggestMapping(file);
+    _throwIfFailed(raw, 'We could not read that file. Please try another one.');
+
+    return SheetMappingModel.listFromJson(raw['sheets']);
+  }
+
+  @override
+  Future<ExcelImportResult> importForeignFile({
+    required PickedExcelFile file,
+    required String sheetName,
+    required Map<int, String> columns,
+    String? categoryName,
+    required String matchMode,
+    Map<int, int> imageAssignments = const {},
+  }) async {
+    final raw = await api.importForeign(
+      file: file,
+      sheetName: sheetName,
+      columns: columns,
+      categoryName: categoryName,
+      matchMode: matchMode,
+      imageAssignments: imageAssignments,
+    );
+
+    final m = ExcelImportResultModel.fromJson(raw);
+    if (!m.success) {
+      throw Exception(
+        m.message.isNotEmpty ? m.message : 'Import failed. Please try again.',
+      );
+    }
+
+    return ExcelImportResult(
+      success: m.success,
+      message: m.message,
+      projectId: m.projectId,
+      slug: m.slug,
+      insertedCategories: m.insertedCategories,
+      insertedItemTypes: m.insertedItemTypes,
+      insertedProducts: m.insertedProducts,
+      updatedProducts: m.updatedProducts,
+      skippedProducts: m.skippedProducts,
+      insertedTaxRules: m.insertedTaxRules,
+      insertedShippingMethods: m.insertedShippingMethods,
+      insertedCoupons: m.insertedCoupons,
+      errors: m.errors,
+      warnings: m.warnings,
+    );
+  }
+
+  @override
+  Future<DescriptionJob> descriptionsStatus() async {
+    final raw = await api.descriptionsStatus();
+
+    // A failure here should not break the import screen: the offer simply is
+    // not made, which is what "none" says.
+    if (raw['success'] != true) return DescriptionJob.none;
+
+    return DescriptionJobModel.fromJson(raw);
+  }
+
+  @override
+  Future<DescriptionJob> startDescriptions(DescriptionJob current) async {
+    final raw = await api.startDescriptions();
+    _throwIfFailed(raw, 'Could not start writing the descriptions.');
+
+    return DescriptionJobModel.fromStartJson(raw, current);
+  }
+
+  @override
   Future<List<int>?> downloadTemplate() => api.downloadTemplate();
+
+  /// Turns a failed call into the server's own message.
+  ///
+  /// A request can fail before the file is ever opened -- auth, plan limits, an
+  /// unreachable server -- and those responses carry no content. Reading them as
+  /// an empty answer would show the owner a file with no columns and no reason.
+  void _throwIfFailed(Map<String, dynamic> raw, String fallback) {
+    final status = raw['statusCode'] as int?;
+    final httpOk = status == null || (status >= 200 && status < 300);
+    if (httpOk && raw['success'] == true) return;
+
+    final errors = raw['errors'];
+    final firstError =
+        (errors is List && errors.isNotEmpty) ? errors.first.toString() : null;
+
+    final message = [raw['message']?.toString(), firstError].firstWhere(
+      (s) => s != null && s.trim().isNotEmpty,
+      orElse: () => fallback,
+    );
+
+    throw Exception(message);
+  }
 }

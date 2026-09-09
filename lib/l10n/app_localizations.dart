@@ -7320,6 +7320,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No shipping'**
   String get excelPreviewNoShipping;
+
+  /// No description provided for @excelSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are your products now?'**
+  String get excelSourceTitle;
+
+  /// No description provided for @excelSourceOwnFile.
+  ///
+  /// In en, this message translates to:
+  /// **'I have a file from another system'**
+  String get excelSourceOwnFile;
+
+  /// No description provided for @excelSourceOwnFileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload it as it is. We will read it for you.'**
+  String get excelSourceOwnFileHint;
+
+  /// No description provided for @excelSourceTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Build4All template'**
+  String get excelSourceTemplate;
+
+  /// No description provided for @excelSourceTemplateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Download our sheet and fill it in.'**
+  String get excelSourceTemplateHint;
+
+  /// No description provided for @excelOwnFileReadBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Read my file'**
+  String get excelOwnFileReadBtn;
+
+  /// No description provided for @excelOwnFileSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which sheet holds your products?'**
+  String get excelOwnFileSheetTitle;
+
+  /// No description provided for @excelOwnFileSheetRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows'**
+  String excelOwnFileSheetRows(Object count);
+
+  /// No description provided for @excelOwnFileColumnsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is how we read your file'**
+  String get excelOwnFileColumnsTitle;
+
+  /// No description provided for @excelOwnFileColumnsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check each column and change anything we got wrong.'**
+  String get excelOwnFileColumnsSubtitle;
+
+  /// No description provided for @excelOwnFileNoHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'(no heading)'**
+  String get excelOwnFileNoHeading;
+
+  /// No description provided for @excelOwnFileReadWithAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked with the assistant'**
+  String get excelOwnFileReadWithAi;
+
+  /// No description provided for @excelOwnFileReadFromData.
+  ///
+  /// In en, this message translates to:
+  /// **'Read from the values in your file'**
+  String get excelOwnFileReadFromData;
+
+  /// No description provided for @excelOwnFileNeedsCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} columns to check'**
+  String excelOwnFileNeedsCheck(Object count);
+
+  /// No description provided for @excelOwnFileCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group these products under'**
+  String get excelOwnFileCategoryLabel;
+
+  /// No description provided for @excelOwnFileCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Bags'**
+  String get excelOwnFileCategoryHint;
+
+  /// No description provided for @excelOwnFileNeedsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick which column holds the product names.'**
+  String get excelOwnFileNeedsName;
+
+  /// No description provided for @excelOwnFileImportBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Import these products'**
+  String get excelOwnFileImportBtn;
+
+  /// No description provided for @excelMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products you already have'**
+  String get excelMatchTitle;
+
+  /// No description provided for @excelMatchUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update them from this file'**
+  String get excelMatchUpdate;
+
+  /// No description provided for @excelMatchKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave them as they are'**
+  String get excelMatchKeep;
+
+  /// No description provided for @excelMatchExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched by their code, so importing the same file twice never duplicates a product.'**
+  String get excelMatchExplain;
+
+  /// No description provided for @excelFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name'**
+  String get excelFieldName;
+
+  /// No description provided for @excelFieldSku.
+  ///
+  /// In en, this message translates to:
+  /// **'Code / barcode'**
+  String get excelFieldSku;
+
+  /// No description provided for @excelFieldPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get excelFieldPrice;
+
+  /// No description provided for @excelFieldStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get excelFieldStock;
+
+  /// No description provided for @excelFieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get excelFieldDescription;
+
+  /// No description provided for @excelFieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get excelFieldCategory;
+
+  /// No description provided for @excelFieldImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image link'**
+  String get excelFieldImage;
+
+  /// No description provided for @excelFieldIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not import'**
+  String get excelFieldIgnore;
+
+  /// No description provided for @excelImportCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added · {updated} updated · {skipped} left alone'**
+  String excelImportCounts(Object added, Object updated, Object skipped);
+
+  /// No description provided for @excelDescriptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products with nothing written about them'**
+  String get excelDescriptionsTitle;
+
+  /// No description provided for @excelDescriptionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products have no description'**
+  String excelDescriptionsCount(Object count);
+
+  /// No description provided for @excelDescriptionsWriteBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Let the assistant write them'**
+  String get excelDescriptionsWriteBtn;
+
+  /// No description provided for @excelDescriptionsRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing… {written} of {total}'**
+  String excelDescriptionsRunning(Object written, Object total);
+
+  /// No description provided for @excelDescriptionsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{written} descriptions written'**
+  String excelDescriptionsDone(Object written);
+
+  /// No description provided for @excelDescriptionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this page — it keeps going.'**
+  String get excelDescriptionsHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

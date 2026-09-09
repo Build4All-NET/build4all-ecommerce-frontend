@@ -3752,4 +3752,127 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelPreviewNoShipping => 'Sans livraison';
+
+  @override
+  String get excelSourceTitle => 'Où sont vos produits ?';
+
+  @override
+  String get excelSourceOwnFile => 'J\'ai un fichier d\'un autre système';
+
+  @override
+  String get excelSourceOwnFileHint => 'Envoyez-le tel quel. Nous le lisons pour vous.';
+
+  @override
+  String get excelSourceTemplate => 'Utiliser le modèle Build4All';
+
+  @override
+  String get excelSourceTemplateHint => 'Téléchargez notre feuille et remplissez-la.';
+
+  @override
+  String get excelOwnFileReadBtn => 'Lire mon fichier';
+
+  @override
+  String get excelOwnFileSheetTitle => 'Quelle feuille contient vos produits ?';
+
+  @override
+  String excelOwnFileSheetRows(Object count) {
+    return '$count lignes';
+  }
+
+  @override
+  String get excelOwnFileColumnsTitle => 'Voici comment nous avons lu votre fichier';
+
+  @override
+  String get excelOwnFileColumnsSubtitle => 'Vérifiez chaque colonne et corrigez ce qui ne va pas.';
+
+  @override
+  String get excelOwnFileNoHeading => '(sans titre)';
+
+  @override
+  String get excelOwnFileReadWithAi => 'Vérifié avec l\'assistant';
+
+  @override
+  String get excelOwnFileReadFromData => 'Lu à partir des valeurs de votre fichier';
+
+  @override
+  String excelOwnFileNeedsCheck(Object count) {
+    return '$count colonnes à vérifier';
+  }
+
+  @override
+  String get excelOwnFileCategoryLabel => 'Regrouper ces produits sous';
+
+  @override
+  String get excelOwnFileCategoryHint => 'ex. Sacs';
+
+  @override
+  String get excelOwnFileNeedsName => 'Choisissez la colonne qui contient les noms des produits.';
+
+  @override
+  String get excelOwnFileImportBtn => 'Importer ces produits';
+
+  @override
+  String get excelMatchTitle => 'Produits que vous avez déjà';
+
+  @override
+  String get excelMatchUpdate => 'Les mettre à jour depuis ce fichier';
+
+  @override
+  String get excelMatchKeep => 'Les laisser tels quels';
+
+  @override
+  String get excelMatchExplain => 'Comparés par leur code : réimporter le même fichier ne duplique jamais un produit.';
+
+  @override
+  String get excelFieldName => 'Nom du produit';
+
+  @override
+  String get excelFieldSku => 'Code / code-barres';
+
+  @override
+  String get excelFieldPrice => 'Prix';
+
+  @override
+  String get excelFieldStock => 'Quantité';
+
+  @override
+  String get excelFieldDescription => 'Description';
+
+  @override
+  String get excelFieldCategory => 'Catégorie';
+
+  @override
+  String get excelFieldImage => 'Lien de l\'image';
+
+  @override
+  String get excelFieldIgnore => 'Ne pas importer';
+
+  @override
+  String excelImportCounts(Object added, Object updated, Object skipped) {
+    return '$added ajoutés · $updated mis à jour · $skipped inchangés';
+  }
+
+  @override
+  String get excelDescriptionsTitle => 'Produits sans description';
+
+  @override
+  String excelDescriptionsCount(Object count) {
+    return '$count produits sans description';
+  }
+
+  @override
+  String get excelDescriptionsWriteBtn => 'Laisser l\'assistant les rédiger';
+
+  @override
+  String excelDescriptionsRunning(Object written, Object total) {
+    return 'Rédaction… $written sur $total';
+  }
+
+  @override
+  String excelDescriptionsDone(Object written) {
+    return '$written descriptions rédigées';
+  }
+
+  @override
+  String get excelDescriptionsHint => 'Vous pouvez quitter cette page, cela continue.';
 }

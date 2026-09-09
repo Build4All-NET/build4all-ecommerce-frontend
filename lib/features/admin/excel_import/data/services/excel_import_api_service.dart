@@ -17,7 +17,15 @@ class ExcelImportApiService {
     return t.toLowerCase().startsWith('bearer ') ? t.substring(7).trim() : t;
   }
 
-  Future<Options> _auth() async {
+  /// How long an import is given to answer.
+  ///
+  /// The shared client allows a minute, which is right for a screen waiting on
+  /// a list and wrong here: writing a catalogue of a thousand products is one
+  /// request that legitimately takes minutes, and cutting it off leaves the
+  /// owner staring at a timeout while the server finishes the work anyway.
+  static const Duration _importTimeout = Duration(minutes: 10);
+
+  Future<Options> _auth({Duration? receiveTimeout}) async {
     final token = await getToken();
 
     return Options(
@@ -28,6 +36,8 @@ class ExcelImportApiService {
       contentType: 'multipart/form-data',
       responseType: ResponseType.json,
       receiveDataWhenStatusError: true,
+      sendTimeout: receiveTimeout,
+      receiveTimeout: receiveTimeout,
     );
   }
 
@@ -183,12 +193,124 @@ class ExcelImportApiService {
             ),
         },
         data: form,
-        options: await _auth(),
+        options: await _auth(receiveTimeout: _importTimeout),
       );
 
       return _normalizeResponse(res);
     } on DioException catch (e) {
       return _fromDioError(e, fallbackMessage: 'Import request failed.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Asks the server what the owner's own file appears to contain.
+  ///
+  /// The way in for an owner arriving from another system: they upload the
+  /// export as it came instead of retyping it into our template. Nothing is
+  /// created by this call -- the answer is a proposal for them to confirm.
+  Future<Map<String, dynamic>> suggestMapping(PickedExcelFile file) async {
+    final form = FormData.fromMap({
+      'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
+    });
+
+    try {
+      final res = await _dio.post(
+        '/api/admin/import/excel/suggest-mapping',
+        data: form,
+        options: await _auth(receiveTimeout: _importTimeout),
+      );
+
+      // The endpoint answers with a bare list of sheets, which _normalizeResponse
+      // is not shaped for; wrap it so callers see the usual success envelope.
+      final status = res.statusCode;
+      final ok = status != null && status >= 200 && status < 300;
+
+      return ok
+          ? {'success': true, 'sheets': res.data, 'statusCode': status}
+          : _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not read the file.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Imports the owner's own file, read the way they confirmed.
+  ///
+  /// The column choices are sent rather than guessed again so what is written is
+  /// what the owner saw and agreed to.
+  Future<Map<String, dynamic>> importForeign({
+    required PickedExcelFile file,
+    required String sheetName,
+    required Map<int, String> columns,
+    String? categoryName,
+    required String matchMode,
+    Map<int, int> imageAssignments = const {},
+  }) async {
+    final form = FormData.fromMap({
+      'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
+    });
+
+    try {
+      final res = await _dio.post(
+        '/api/admin/import/excel/foreign',
+        queryParameters: {
+          'sheetName': sheetName,
+          'columns': jsonEncode(
+            columns.map((column, field) => MapEntry(column.toString(), field)),
+          ),
+          if (categoryName != null && categoryName.trim().isNotEmpty)
+            'categoryName': categoryName.trim(),
+          'matchMode': matchMode,
+          if (imageAssignments.isNotEmpty)
+            'imageAssignments': jsonEncode(
+              imageAssignments.map((row, id) => MapEntry(row.toString(), id)),
+            ),
+        },
+        data: form,
+        options: await _auth(receiveTimeout: _importTimeout),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Import request failed.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// How many products have nothing written about them, and whether the
+  /// assistant is already writing.
+  Future<Map<String, dynamic>> descriptionsStatus() async {
+    try {
+      final res = await _dio.get(
+        '/api/admin/ai/product-descriptions',
+        options: await _auth(),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not check descriptions.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Starts writing them.
+  ///
+  /// Answers at once: the work outlives the request by minutes, and its progress
+  /// is read back from [descriptionsStatus].
+  Future<Map<String, dynamic>> startDescriptions() async {
+    try {
+      final res = await _dio.post(
+        '/api/admin/ai/product-descriptions',
+        options: await _auth(),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not start writing.');
     } catch (e) {
       return _fail('Something went wrong. Please try again.');
     }

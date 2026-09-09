@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ar",
   "appTitle": "التطبيق",
   "contactSupportTitle": "التواصل مع الدعم",
@@ -1464,5 +1464,93 @@
   "excelPreviewImagesAssigned": "{assigned} من أصل {total} منتج لديه صورة",
   "excelPreviewNoProducts": "لم نجد أي منتج في هذا الملف.",
   "excelPreviewFixFirst": "صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.",
-  "excelPreviewNoShipping": "بدون شحن"
+  "excelPreviewNoShipping": "بدون شحن",
+  "excelSourceTitle": "وين منتجاتك هلق؟",
+  "excelSourceOwnFile": "عندي ملف من نظام تاني",
+  "excelSourceOwnFileHint": "ارفعه متل ما هو. نحنا منقراه عنك.",
+  "excelSourceTemplate": "استعمل قالب Build4All",
+  "excelSourceTemplateHint": "حمّل الملف تبعنا وعبّيه.",
+  "excelOwnFileReadBtn": "اقرا الملف تبعي",
+  "excelOwnFileSheetTitle": "أي ورقة فيها منتجاتك؟",
+  "excelOwnFileSheetRows": "{count} سطر",
+  "@excelOwnFileSheetRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileColumnsTitle": "هيك قرينا الملف تبعك",
+  "excelOwnFileColumnsSubtitle": "تطلّع ع كل عمود وغيّر إذا في شي غلط.",
+  "excelOwnFileNoHeading": "(بلا عنوان)",
+  "excelOwnFileReadWithAi": "متأكد منها مع المساعد",
+  "excelOwnFileReadFromData": "مقروءة من القيم يلي بالملف",
+  "excelOwnFileNeedsCheck": "{count} عمود بدهن تدقيق",
+  "@excelOwnFileNeedsCheck": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelOwnFileCategoryLabel": "حط هالمنتجات تحت",
+  "excelOwnFileCategoryHint": "مثلاً: شنط",
+  "excelOwnFileNeedsName": "اختار أي عمود فيه أسامي المنتجات.",
+  "excelOwnFileImportBtn": "نزّل هالمنتجات",
+  "excelMatchTitle": "منتجات عندك من قبل",
+  "excelMatchUpdate": "عدّلن من هالملف",
+  "excelMatchKeep": "خلّيهن متل ما هنّ",
+  "excelMatchExplain": "منقارن بالكود، فهيك إذا رفعت نفس الملف مرتين ما بينعاد المنتج.",
+  "excelFieldName": "اسم المنتج",
+  "excelFieldSku": "كود / باركود",
+  "excelFieldPrice": "السعر",
+  "excelFieldStock": "الكمية",
+  "excelFieldDescription": "الوصف",
+  "excelFieldCategory": "الفئة",
+  "excelFieldImage": "رابط الصورة",
+  "excelFieldIgnore": "ما تنزّلها",
+  "excelImportCounts": "{added} انضافوا · {updated} تعدّلوا · {skipped} انتركوا",
+  "@excelImportCounts": {
+    "placeholders": {
+      "added": {
+        "type": "Object"
+      },
+      "updated": {
+        "type": "Object"
+      },
+      "skipped": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsTitle": "منتجات ما فيها وصف",
+  "excelDescriptionsCount": "{count} منتج بلا وصف",
+  "@excelDescriptionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsWriteBtn": "خلي المساعد يكتبهن",
+  "excelDescriptionsRunning": "عم يكتب… {written} من {total}",
+  "@excelDescriptionsRunning": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsDone": "انكتب {written} وصف",
+  "@excelDescriptionsDone": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsHint": "فيك تطلع من هالصفحة، بيكمّل لحاله."
 }
