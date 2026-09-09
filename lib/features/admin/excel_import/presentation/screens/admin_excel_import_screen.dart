@@ -14,6 +14,7 @@ import '../bloc/excel_import_event.dart';
 import '../bloc/excel_import_state.dart';
 import '../widgets/excel_counts_card.dart';
 import '../widgets/excel_descriptions_card.dart';
+import '../widgets/excel_foreign_review_list.dart';
 import '../widgets/excel_issues_list.dart';
 import '../widgets/excel_file_card.dart';
 import '../widgets/excel_product_review_list.dart';
@@ -191,17 +192,61 @@ class AdminExcelImportScreen extends StatelessWidget {
                             .add(ExcelMatchModeChanged(mode)),
                       ),
                       const SizedBox(height: 12),
+
+                      // Between agreeing to the columns and living with the
+                      // result: the owner looks at the products themselves.
                       PrimaryButton(
-                        label: state.importing
+                        label: state.previewing
                             ? l10n.loadingLabel
-                            : l10n.excelOwnFileImportBtn,
-                        isLoading: state.importing,
-                        onPressed: state.canImportOwnFile
+                            : l10n.excelPreviewReadyBtn,
+                        isLoading: state.previewing,
+                        onPressed: state.canPreviewOwnFile
                             ? () => context
                                 .read<ExcelImportBloc>()
-                                .add(const ExcelForeignImportPressed())
+                                .add(const ExcelPreviewForeignPressed())
                             : null,
                       ),
+
+                      if (!state.preview.isEmpty) ...[
+                        const SizedBox(height: 12),
+                        ExcelForeignReviewList(
+                          preview: state.preview,
+                          visible: state.visiblePreviewProducts,
+                          rowEdits: state.rowEdits,
+                          rowImages: state.rowImages,
+                          issuesOnly: state.previewIssuesOnly,
+                          query: state.previewQuery,
+                          priceOf: state.priceFor,
+                          stockOf: state.stockFor,
+                          onPriceChanged: (row, price) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelRowPriceChanged(row: row, price: price)),
+                          onStockChanged: (row, stock) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelRowStockChanged(row: row, stock: stock)),
+                          onPickImage: (product) =>
+                              _pickImageForRow(context, product.row),
+                          onFilterChanged: (issuesOnly) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelPreviewFilterChanged(issuesOnly)),
+                          onQueryChanged: (query) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelPreviewSearchChanged(query)),
+                        ),
+
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          label: state.importing
+                              ? l10n.loadingLabel
+                              : l10n.excelOwnFileImportBtn,
+                          isLoading: state.importing,
+                          onPressed: state.canImportOwnFile
+                              ? () => context
+                                  .read<ExcelImportBloc>()
+                                  .add(const ExcelForeignImportPressed())
+                              : null,
+                        ),
+                      ],
                     ],
                   ],
 

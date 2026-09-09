@@ -5,6 +5,7 @@ import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/excel_product_preview.dart';
 import '../../domain/entities/description_job.dart';
 import '../../domain/entities/excel_validation_result.dart';
+import '../../domain/entities/foreign_preview.dart';
 import '../../domain/entities/sheet_mapping.dart';
 
 /// Where the owner's products are coming from.
@@ -61,6 +62,25 @@ class ExcelImportState extends Equatable {
   /// assistant has got with them.
   final DescriptionJob descriptions;
 
+  /// True while the server is working out what the import would create.
+  final bool previewing;
+
+  /// What the import would create, as the owner is reviewing it.
+  final ForeignPreview preview;
+
+  /// Prices and quantities the owner typed, by row.
+  ///
+  /// Held apart from the preview because the preview is what the server said and
+  /// these are what the owner decided: asking for the preview again never
+  /// discards their corrections.
+  final Map<int, RowEdit> rowEdits;
+
+  /// Whether the list is narrowed to the products with something missing.
+  final bool previewIssuesOnly;
+
+  /// What the owner is searching the list for.
+  final String previewQuery;
+
   const ExcelImportState({
     required this.picking,
     required this.validating,
@@ -81,6 +101,11 @@ class ExcelImportState extends Equatable {
     this.foreignCategoryName = '',
     this.matchMode = matchModeUpdate,
     this.descriptions = DescriptionJob.none,
+    this.previewing = false,
+    this.preview = ForeignPreview.empty,
+    this.rowEdits = const {},
+    this.previewIssuesOnly = false,
+    this.previewQuery = '',
   });
 
   /// Overwrite the product a repeated code names -- what an owner re-exporting
@@ -115,6 +140,11 @@ class ExcelImportState extends Equatable {
     String? foreignCategoryName,
     String? matchMode,
     DescriptionJob? descriptions,
+    bool? previewing,
+    ForeignPreview? preview,
+    Map<int, RowEdit>? rowEdits,
+    bool? previewIssuesOnly,
+    String? previewQuery,
     bool? downloadingTemplate,
     PickedExcelFile? file,
     ExcelValidationResult? validation,
@@ -130,6 +160,7 @@ class ExcelImportState extends Equatable {
     bool clearTemplatePath = false,
     bool clearRowImages = false,
     bool clearSheets = false,
+    bool clearPreview = false,
   }) {
     return ExcelImportState(
       picking: picking ?? this.picking,
@@ -154,6 +185,13 @@ class ExcelImportState extends Equatable {
       foreignCategoryName: foreignCategoryName ?? this.foreignCategoryName,
       matchMode: matchMode ?? this.matchMode,
       descriptions: descriptions ?? this.descriptions,
+      previewing: previewing ?? this.previewing,
+      preview: clearPreview
+          ? ForeignPreview.empty
+          : (preview ?? this.preview),
+      rowEdits: clearPreview ? const {} : (rowEdits ?? this.rowEdits),
+      previewIssuesOnly: previewIssuesOnly ?? this.previewIssuesOnly,
+      previewQuery: previewQuery ?? this.previewQuery,
     );
   }
 
@@ -184,12 +222,74 @@ class ExcelImportState extends Equatable {
 
   bool get canReadOwnFile => file != null && !readingOwnFile && !importing;
 
+  bool get canPreviewOwnFile =>
+      file != null &&
+      selectedSheet != null &&
+      selectedSheet!.hasName &&
+      !previewing &&
+      !importing;
+
+  /// Only once the owner has seen what they are about to create.
   bool get canImportOwnFile =>
       file != null &&
       selectedSheet != null &&
       selectedSheet!.hasName &&
+      !preview.isEmpty &&
       !importing &&
+      !previewing &&
       !readingOwnFile;
+
+  /// The products the review list should show, after the filter and the search.
+  List<ExcelProductPreview> get visiblePreviewProducts {
+    final query = previewQuery.trim().toLowerCase();
+
+    return preview.products.where((product) {
+      if (previewIssuesOnly && product.valid) return false;
+      if (query.isEmpty) return true;
+
+      return product.name.toLowerCase().contains(query) ||
+          (product.sku ?? '').toLowerCase().contains(query);
+    }).toList();
+  }
+
+  /// The price for a row as it stands: what the owner typed, else what the file
+  /// said.
+  String priceFor(ExcelProductPreview product) {
+    final edited = rowEdits[product.row]?.price;
+    if (edited != null) return edited;
+
+    return product.price == null ? '' : _plain(product.price!);
+  }
+
+  String stockFor(ExcelProductPreview product) {
+    final edited = rowEdits[product.row]?.stock;
+    if (edited != null) return edited;
+
+    return product.stock == null ? '' : product.stock.toString();
+  }
+
+  /// The corrections in the shape the import call sends them.
+  Map<int, Map<String, Object>> get rowEditPayload {
+    final payload = <int, Map<String, Object>>{};
+
+    rowEdits.forEach((row, edit) {
+      final fields = <String, Object>{};
+      if (edit.price != null && edit.price!.trim().isNotEmpty) {
+        fields['price'] = edit.price!.trim();
+      }
+      if (edit.stock != null && edit.stock!.trim().isNotEmpty) {
+        fields['stock'] = edit.stock!.trim();
+      }
+      if (fields.isNotEmpty) payload[row] = fields;
+    });
+
+    return payload;
+  }
+
+  /// Trailing zeros off a whole price, so a field the owner has not touched
+  /// reads "25" rather than "25.0".
+  static String _plain(double value) =>
+      value == value.roundToDouble() ? value.toStringAsFixed(0) : value.toString();
 
   bool get canValidate => file != null && !validating && !importing;
   bool get canImport =>
@@ -220,6 +320,11 @@ class ExcelImportState extends Equatable {
         foreignCategoryName,
         matchMode,
         descriptions,
+        previewing,
+        preview,
+        rowEdits,
+        previewIssuesOnly,
+        previewQuery,
       ];
 }
 
@@ -233,4 +338,22 @@ class ExcelRowImage extends Equatable {
 
   @override
   List<Object?> get props => [id, url];
+}
+
+/// What the owner typed for one row of the review list.
+///
+/// Text rather than numbers: a field the owner is halfway through typing is not
+/// a number yet, and turning "25." into 25 while their cursor is still in it is
+/// how a price field fights back.
+class RowEdit extends Equatable {
+  final String? price;
+  final String? stock;
+
+  const RowEdit({this.price, this.stock});
+
+  RowEdit copyWith({String? price, String? stock}) =>
+      RowEdit(price: price ?? this.price, stock: stock ?? this.stock);
+
+  @override
+  List<Object?> get props => [price, stock];
 }

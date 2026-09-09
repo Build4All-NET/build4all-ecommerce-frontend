@@ -3,11 +3,13 @@ import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/excel_validation_result.dart';
 import '../../domain/entities/description_job.dart';
+import '../../domain/entities/foreign_preview.dart';
 import '../../domain/entities/sheet_mapping.dart';
 import '../../domain/repositories/excel_import_repository.dart';
 import '../models/excel_import_result_model.dart';
 import '../models/excel_validation_result_model.dart';
 import '../models/description_job_model.dart';
+import '../models/foreign_preview_model.dart';
 import '../models/sheet_mapping_model.dart';
 import '../services/excel_import_api_service.dart';
 
@@ -112,12 +114,31 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
   }
 
   @override
+  Future<ForeignPreview> previewForeignFile({
+    required PickedExcelFile file,
+    required String sheetName,
+    required Map<int, String> columns,
+    String? categoryName,
+  }) async {
+    final raw = await api.previewForeign(
+      file: file,
+      sheetName: sheetName,
+      columns: columns,
+      categoryName: categoryName,
+    );
+    _throwIfFailed(raw, 'We could not read the products from that file.');
+
+    return ForeignPreviewModel.fromJson(raw);
+  }
+
+  @override
   Future<ExcelImportResult> importForeignFile({
     required PickedExcelFile file,
     required String sheetName,
     required Map<int, String> columns,
     String? categoryName,
     required String matchMode,
+    Map<int, Map<String, Object>> rowEdits = const {},
     Map<int, int> imageAssignments = const {},
   }) async {
     final raw = await api.importForeign(
@@ -126,6 +147,7 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       columns: columns,
       categoryName: categoryName,
       matchMode: matchMode,
+      rowEdits: rowEdits,
       imageAssignments: imageAssignments,
     );
 

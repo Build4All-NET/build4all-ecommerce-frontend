@@ -3908,4 +3908,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelColumnsAllRead => 'All good — nothing to check.';
+
+  @override
+  String get excelPreviewStepTitle => 'Check your products';
+
+  @override
+  String get excelPreviewReadyBtn => 'Show me the products';
+
+  @override
+  String excelPreviewFound(Object count) {
+    return '$count products ready';
+  }
+
+  @override
+  String excelPreviewNeedsPrice(Object count) {
+    return '$count have no price';
+  }
+
+  @override
+  String excelPreviewSkippedRows(Object count) {
+    return '$count rows have no name and will not be imported';
+  }
+
+  @override
+  String get excelPreviewShowAll => 'All';
+
+  @override
+  String get excelPreviewShowIssues => 'Needs attention';
+
+  @override
+  String get excelPreviewSearchHint => 'Search by name or code';
+
+  @override
+  String get excelPreviewPriceLabel => 'Price';
+
+  @override
+  String get excelPreviewStockLabel => 'Qty';
+
+  @override
+  String get excelPreviewPickImage => 'Photo';
+
+  @override
+  String get excelPreviewNoResults => 'Nothing matches that.';
+
+  @override
+  String excelPreviewImagesGiven(Object done, Object total) {
+    return '$done of $total have a picture';
+  }
 }

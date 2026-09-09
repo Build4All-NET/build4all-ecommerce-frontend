@@ -1585,5 +1585,49 @@
       }
     }
   },
-  "excelColumnsAllRead": "Tout est bon — rien à vérifier."
+  "excelColumnsAllRead": "Tout est bon — rien à vérifier.",
+  "excelPreviewStepTitle": "Vérifiez vos produits",
+  "excelPreviewReadyBtn": "Afficher les produits",
+  "excelPreviewFound": "{count} produits prêts",
+  "@excelPreviewFound": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewNeedsPrice": "{count} sans prix",
+  "@excelPreviewNeedsPrice": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewSkippedRows": "{count} lignes sans nom ne seront pas importées",
+  "@excelPreviewSkippedRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewShowAll": "Tous",
+  "excelPreviewShowIssues": "À vérifier",
+  "excelPreviewSearchHint": "Rechercher par nom ou code",
+  "excelPreviewPriceLabel": "Prix",
+  "excelPreviewStockLabel": "Qté",
+  "excelPreviewPickImage": "Photo",
+  "excelPreviewNoResults": "Aucun résultat.",
+  "excelPreviewImagesGiven": "{done} sur {total} ont une photo",
+  "@excelPreviewImagesGiven": {
+    "placeholders": {
+      "done": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  }
 }

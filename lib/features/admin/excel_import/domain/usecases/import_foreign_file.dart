@@ -14,6 +14,7 @@ class ImportForeignFile {
     required Map<int, String> columns,
     String? categoryName,
     required String matchMode,
+    Map<int, Map<String, Object>> rowEdits = const {},
     Map<int, int> imageAssignments = const {},
   }) {
     return repo.importForeignFile(
@@ -22,6 +23,7 @@ class ImportForeignFile {
       columns: columns,
       categoryName: categoryName,
       matchMode: matchMode,
+      rowEdits: rowEdits,
       imageAssignments: imageAssignments,
     );
   }

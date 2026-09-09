@@ -3908,4 +3908,51 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelColumnsAllRead => 'كلشي تمام — ما في شي بدو تدقيق.';
+
+  @override
+  String get excelPreviewStepTitle => 'دقّق ع منتجاتك';
+
+  @override
+  String get excelPreviewReadyBtn => 'فرجيني المنتجات';
+
+  @override
+  String excelPreviewFound(Object count) {
+    return '$count منتج جاهز';
+  }
+
+  @override
+  String excelPreviewNeedsPrice(Object count) {
+    return '$count بلا سعر';
+  }
+
+  @override
+  String excelPreviewSkippedRows(Object count) {
+    return '$count سطر بلا اسم وما رح ينزلوا';
+  }
+
+  @override
+  String get excelPreviewShowAll => 'الكل';
+
+  @override
+  String get excelPreviewShowIssues => 'بدهن تدقيق';
+
+  @override
+  String get excelPreviewSearchHint => 'دوّر بالاسم أو الكود';
+
+  @override
+  String get excelPreviewPriceLabel => 'السعر';
+
+  @override
+  String get excelPreviewStockLabel => 'الكمية';
+
+  @override
+  String get excelPreviewPickImage => 'صورة';
+
+  @override
+  String get excelPreviewNoResults => 'ما في شي بيطابق.';
+
+  @override
+  String excelPreviewImagesGiven(Object done, Object total) {
+    return '$done من $total إلهن صورة';
+  }
 }

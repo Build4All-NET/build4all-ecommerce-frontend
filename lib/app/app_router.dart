@@ -6,6 +6,7 @@ import 'package:build4front/features/admin/excel_import/domain/usecases/download
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_excel_file.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/get_descriptions_status.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_foreign_file.dart';
+import 'package:build4front/features/admin/excel_import/domain/usecases/preview_foreign_file.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/write_missing_descriptions.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/suggest_column_mapping.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/validate_excel_file.dart';
@@ -297,6 +298,7 @@ class AppRouter {
                   downloadTemplateUc: DownloadExcelTemplate(repo),
                   suggestMappingUc: SuggestColumnMapping(repo),
                   importForeignUc: ImportForeignFile(repo),
+                  previewForeignUc: PreviewForeignFile(repo),
                   descriptionsStatusUc: GetDescriptionsStatus(repo),
                   writeDescriptionsUc: WriteMissingDescriptions(repo),
                 ),

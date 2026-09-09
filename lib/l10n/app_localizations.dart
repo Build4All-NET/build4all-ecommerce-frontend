@@ -7596,6 +7596,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All good — nothing to check.'**
   String get excelColumnsAllRead;
+
+  /// No description provided for @excelPreviewStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your products'**
+  String get excelPreviewStepTitle;
+
+  /// No description provided for @excelPreviewReadyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me the products'**
+  String get excelPreviewReadyBtn;
+
+  /// No description provided for @excelPreviewFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products ready'**
+  String excelPreviewFound(Object count);
+
+  /// No description provided for @excelPreviewNeedsPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} have no price'**
+  String excelPreviewNeedsPrice(Object count);
+
+  /// No description provided for @excelPreviewSkippedRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows have no name and will not be imported'**
+  String excelPreviewSkippedRows(Object count);
+
+  /// No description provided for @excelPreviewShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get excelPreviewShowAll;
+
+  /// No description provided for @excelPreviewShowIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get excelPreviewShowIssues;
+
+  /// No description provided for @excelPreviewSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or code'**
+  String get excelPreviewSearchHint;
+
+  /// No description provided for @excelPreviewPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get excelPreviewPriceLabel;
+
+  /// No description provided for @excelPreviewStockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get excelPreviewStockLabel;
+
+  /// No description provided for @excelPreviewPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get excelPreviewPickImage;
+
+  /// No description provided for @excelPreviewNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches that.'**
+  String get excelPreviewNoResults;
+
+  /// No description provided for @excelPreviewImagesGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} have a picture'**
+  String excelPreviewImagesGiven(Object done, Object total);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

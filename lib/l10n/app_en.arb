@@ -1766,5 +1766,49 @@
       }
     }
   },
-  "excelColumnsAllRead": "All good — nothing to check."
+  "excelColumnsAllRead": "All good — nothing to check.",
+  "excelPreviewStepTitle": "Check your products",
+  "excelPreviewReadyBtn": "Show me the products",
+  "excelPreviewFound": "{count} products ready",
+  "@excelPreviewFound": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewNeedsPrice": "{count} have no price",
+  "@excelPreviewNeedsPrice": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewSkippedRows": "{count} rows have no name and will not be imported",
+  "@excelPreviewSkippedRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewShowAll": "All",
+  "excelPreviewShowIssues": "Needs attention",
+  "excelPreviewSearchHint": "Search by name or code",
+  "excelPreviewPriceLabel": "Price",
+  "excelPreviewStockLabel": "Qty",
+  "excelPreviewPickImage": "Photo",
+  "excelPreviewNoResults": "Nothing matches that.",
+  "excelPreviewImagesGiven": "{done} of {total} have a picture",
+  "@excelPreviewImagesGiven": {
+    "placeholders": {
+      "done": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  }
 }

@@ -236,6 +236,40 @@ class ExcelImportApiService {
     }
   }
 
+  /// What importing the owner's own file would create, without creating it.
+  Future<Map<String, dynamic>> previewForeign({
+    required PickedExcelFile file,
+    required String sheetName,
+    required Map<int, String> columns,
+    String? categoryName,
+  }) async {
+    final form = FormData.fromMap({
+      'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
+    });
+
+    try {
+      final res = await _dio.post(
+        '/api/admin/import/excel/foreign/preview',
+        queryParameters: {
+          'sheetName': sheetName,
+          'columns': jsonEncode(
+            columns.map((column, field) => MapEntry(column.toString(), field)),
+          ),
+          if (categoryName != null && categoryName.trim().isNotEmpty)
+            'categoryName': categoryName.trim(),
+        },
+        data: form,
+        options: await _auth(receiveTimeout: _importTimeout),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not read the products.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
   /// Imports the owner's own file, read the way they confirmed.
   ///
   /// The column choices are sent rather than guessed again so what is written is
@@ -246,6 +280,7 @@ class ExcelImportApiService {
     required Map<int, String> columns,
     String? categoryName,
     required String matchMode,
+    Map<int, Map<String, Object>> rowEdits = const {},
     Map<int, int> imageAssignments = const {},
   }) async {
     final form = FormData.fromMap({
@@ -263,6 +298,11 @@ class ExcelImportApiService {
           if (categoryName != null && categoryName.trim().isNotEmpty)
             'categoryName': categoryName.trim(),
           'matchMode': matchMode,
+          // What the owner typed while looking at each product, keyed by its row.
+          if (rowEdits.isNotEmpty)
+            'rowEdits': jsonEncode(
+              rowEdits.map((row, edit) => MapEntry(row.toString(), edit)),
+            ),
           if (imageAssignments.isNotEmpty)
             'imageAssignments': jsonEncode(
               imageAssignments.map((row, id) => MapEntry(row.toString(), id)),

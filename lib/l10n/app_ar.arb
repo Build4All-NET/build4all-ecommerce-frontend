@@ -1585,5 +1585,49 @@
       }
     }
   },
-  "excelColumnsAllRead": "كلشي تمام — ما في شي بدو تدقيق."
+  "excelColumnsAllRead": "كلشي تمام — ما في شي بدو تدقيق.",
+  "excelPreviewStepTitle": "دقّق ع منتجاتك",
+  "excelPreviewReadyBtn": "فرجيني المنتجات",
+  "excelPreviewFound": "{count} منتج جاهز",
+  "@excelPreviewFound": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewNeedsPrice": "{count} بلا سعر",
+  "@excelPreviewNeedsPrice": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewSkippedRows": "{count} سطر بلا اسم وما رح ينزلوا",
+  "@excelPreviewSkippedRows": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewShowAll": "الكل",
+  "excelPreviewShowIssues": "بدهن تدقيق",
+  "excelPreviewSearchHint": "دوّر بالاسم أو الكود",
+  "excelPreviewPriceLabel": "السعر",
+  "excelPreviewStockLabel": "الكمية",
+  "excelPreviewPickImage": "صورة",
+  "excelPreviewNoResults": "ما في شي بيطابق.",
+  "excelPreviewImagesGiven": "{done} من {total} إلهن صورة",
+  "@excelPreviewImagesGiven": {
+    "placeholders": {
+      "done": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  }
 }

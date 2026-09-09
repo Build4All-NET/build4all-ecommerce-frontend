@@ -50,6 +50,12 @@ class ExcelValidationResultModel {
     );
   }
 
+  /// The product rows of a response, whichever endpoint sent them.
+  ///
+  /// Public because the preview of an owner's own file returns the same shape:
+  /// one parser and one row widget for both ways in, rather than two that drift.
+  static List<ExcelProductPreview> productPreviewsFrom(dynamic raw) => _previews(raw);
+
   static List<ExcelProductPreview> _previews(dynamic raw) {
     if (raw is! List) return const [];
 

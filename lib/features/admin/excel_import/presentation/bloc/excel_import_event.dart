@@ -134,3 +134,48 @@ class ExcelDescriptionsChecked extends ExcelImportEvent {
 class ExcelWriteDescriptionsPressed extends ExcelImportEvent {
   const ExcelWriteDescriptionsPressed();
 }
+
+/// Asks what the import would create, before it creates it.
+class ExcelPreviewForeignPressed extends ExcelImportEvent {
+  const ExcelPreviewForeignPressed();
+}
+
+/// Corrects the price of one product on the review list.
+class ExcelRowPriceChanged extends ExcelImportEvent {
+  final int row;
+  final String price;
+
+  const ExcelRowPriceChanged({required this.row, required this.price});
+
+  @override
+  List<Object?> get props => [row, price];
+}
+
+/// Corrects the quantity of one product on the review list.
+class ExcelRowStockChanged extends ExcelImportEvent {
+  final int row;
+  final String stock;
+
+  const ExcelRowStockChanged({required this.row, required this.stock});
+
+  @override
+  List<Object?> get props => [row, stock];
+}
+
+/// Narrows the review list to the products with something missing.
+class ExcelPreviewFilterChanged extends ExcelImportEvent {
+  final bool issuesOnly;
+  const ExcelPreviewFilterChanged(this.issuesOnly);
+
+  @override
+  List<Object?> get props => [issuesOnly];
+}
+
+/// Narrows the review list by name or code.
+class ExcelPreviewSearchChanged extends ExcelImportEvent {
+  final String query;
+  const ExcelPreviewSearchChanged(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}

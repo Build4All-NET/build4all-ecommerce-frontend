@@ -3908,4 +3908,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelColumnsAllRead => 'Tout est bon — rien à vérifier.';
+
+  @override
+  String get excelPreviewStepTitle => 'Vérifiez vos produits';
+
+  @override
+  String get excelPreviewReadyBtn => 'Afficher les produits';
+
+  @override
+  String excelPreviewFound(Object count) {
+    return '$count produits prêts';
+  }
+
+  @override
+  String excelPreviewNeedsPrice(Object count) {
+    return '$count sans prix';
+  }
+
+  @override
+  String excelPreviewSkippedRows(Object count) {
+    return '$count lignes sans nom ne seront pas importées';
+  }
+
+  @override
+  String get excelPreviewShowAll => 'Tous';
+
+  @override
+  String get excelPreviewShowIssues => 'À vérifier';
+
+  @override
+  String get excelPreviewSearchHint => 'Rechercher par nom ou code';
+
+  @override
+  String get excelPreviewPriceLabel => 'Prix';
+
+  @override
+  String get excelPreviewStockLabel => 'Qté';
+
+  @override
+  String get excelPreviewPickImage => 'Photo';
+
+  @override
+  String get excelPreviewNoResults => 'Aucun résultat.';
+
+  @override
+  String excelPreviewImagesGiven(Object done, Object total) {
+    return '$done sur $total ont une photo';
+  }
 }

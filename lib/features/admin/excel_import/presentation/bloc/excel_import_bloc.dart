@@ -12,6 +12,7 @@ import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/usecases/download_excel_template.dart';
 import '../../domain/usecases/get_descriptions_status.dart';
 import '../../domain/usecases/import_foreign_file.dart';
+import '../../domain/usecases/preview_foreign_file.dart';
 import '../../domain/usecases/write_missing_descriptions.dart';
 import '../../domain/usecases/suggest_column_mapping.dart';
 import '../../domain/usecases/import_excel_file.dart';
@@ -25,6 +26,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final DownloadExcelTemplate? downloadTemplateUc;
   final SuggestColumnMapping? suggestMappingUc;
   final ImportForeignFile? importForeignUc;
+  final PreviewForeignFile? previewForeignUc;
   final GetDescriptionsStatus? descriptionsStatusUc;
   final WriteMissingDescriptions? writeDescriptionsUc;
 
@@ -34,6 +36,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     this.downloadTemplateUc,
     this.suggestMappingUc,
     this.importForeignUc,
+    this.previewForeignUc,
     this.descriptionsStatusUc,
     this.writeDescriptionsUc,
   }) : super(ExcelImportState.initial()) {
@@ -52,6 +55,11 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelForeignCategoryChanged>(_changeForeignCategory);
     on<ExcelMatchModeChanged>(_changeMatchMode);
     on<ExcelForeignImportPressed>(_importForeign);
+    on<ExcelPreviewForeignPressed>(_previewForeign);
+    on<ExcelRowPriceChanged>(_changeRowPrice);
+    on<ExcelRowStockChanged>(_changeRowStock);
+    on<ExcelPreviewFilterChanged>(_changePreviewFilter);
+    on<ExcelPreviewSearchChanged>(_changePreviewSearch);
     on<ExcelDescriptionsChecked>(_checkDescriptions);
     on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
@@ -298,10 +306,15 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
 
     final corrected = selected.copyWithColumn(event.columnIndex, event.field);
 
-    emit(state.copyWith(sheets: [
-      for (final sheet in state.sheets)
-        if (sheet.sheetName == selected.sheetName) corrected else sheet,
-    ]));
+    // The preview was built from the old reading, so it no longer describes what
+    // an import would create. The owner asks for it again.
+    emit(state.copyWith(
+      sheets: [
+        for (final sheet in state.sheets)
+          if (sheet.sheetName == selected.sheetName) corrected else sheet,
+      ],
+      clearPreview: true,
+    ));
   }
 
   void _changeForeignCategory(
@@ -335,6 +348,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         columns: sheet.wireColumns,
         categoryName: state.foreignCategoryName,
         matchMode: state.matchMode,
+        rowEdits: state.rowEditPayload,
         imageAssignments: state.imageAssignments,
       );
 
@@ -402,5 +416,68 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         // still running perfectly well on the server.
       }
     }
+  }
+
+  Future<void> _previewForeign(
+    ExcelPreviewForeignPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (!state.canPreviewOwnFile || previewForeignUc == null) return;
+
+    final sheet = state.selectedSheet!;
+
+    emit(state.copyWith(previewing: true, clearError: true, clearResult: true));
+
+    try {
+      final preview = await previewForeignUc!(
+        file: state.file!,
+        sheetName: sheet.sheetName,
+        columns: sheet.wireColumns,
+        categoryName: state.foreignCategoryName,
+      );
+
+      emit(state.copyWith(previewing: false, preview: preview));
+    } catch (e) {
+      emit(state.copyWith(
+        previewing: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  void _changeRowPrice(
+    ExcelRowPriceChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(rowEdits: {
+      ...state.rowEdits,
+      event.row: (state.rowEdits[event.row] ?? const RowEdit())
+          .copyWith(price: event.price),
+    }));
+  }
+
+  void _changeRowStock(
+    ExcelRowStockChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(rowEdits: {
+      ...state.rowEdits,
+      event.row: (state.rowEdits[event.row] ?? const RowEdit())
+          .copyWith(stock: event.stock),
+    }));
+  }
+
+  void _changePreviewFilter(
+    ExcelPreviewFilterChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(previewIssuesOnly: event.issuesOnly));
+  }
+
+  void _changePreviewSearch(
+    ExcelPreviewSearchChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(previewQuery: event.query));
   }
 }

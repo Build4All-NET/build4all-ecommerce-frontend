@@ -2,6 +2,7 @@ import '../entities/picked_excel_file.dart';
 import '../entities/excel_import_result.dart';
 import '../entities/excel_validation_result.dart';
 import '../entities/description_job.dart';
+import '../entities/foreign_preview.dart';
 import '../entities/sheet_mapping.dart';
 
 abstract class ExcelImportRepository {
@@ -21,6 +22,14 @@ abstract class ExcelImportRepository {
   /// A proposal only: nothing is created until the owner confirms it.
   Future<List<SheetMapping>> suggestMapping(PickedExcelFile file);
 
+  /// What importing the owner's own file would create, without creating it.
+  Future<ForeignPreview> previewForeignFile({
+    required PickedExcelFile file,
+    required String sheetName,
+    required Map<int, String> columns,
+    String? categoryName,
+  });
+
   /// Imports the owner's own file, read the way they confirmed.
   Future<ExcelImportResult> importForeignFile({
     required PickedExcelFile file,
@@ -28,6 +37,11 @@ abstract class ExcelImportRepository {
     required Map<int, String> columns,
     String? categoryName,
     required String matchMode,
+
+    /// Prices and quantities the owner typed on the review screen, by row.
+    Map<int, Map<String, Object>> rowEdits,
+
+    /// Gallery image id chosen for each product, by row.
     Map<int, int> imageAssignments,
   });
 
