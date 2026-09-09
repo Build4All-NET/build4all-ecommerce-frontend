@@ -7506,6 +7506,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{added} added · {updated} updated · {skipped} left alone'**
   String excelImportCounts(Object added, Object updated, Object skipped);
+
+  /// No description provided for @excelDescriptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products with nothing written about them'**
+  String get excelDescriptionsTitle;
+
+  /// No description provided for @excelDescriptionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products have no description'**
+  String excelDescriptionsCount(Object count);
+
+  /// No description provided for @excelDescriptionsWriteBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Let the assistant write them'**
+  String get excelDescriptionsWriteBtn;
+
+  /// No description provided for @excelDescriptionsRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing… {written} of {total}'**
+  String excelDescriptionsRunning(Object written, Object total);
+
+  /// No description provided for @excelDescriptionsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{written} descriptions written'**
+  String excelDescriptionsDone(Object written);
+
+  /// No description provided for @excelDescriptionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this page — it keeps going.'**
+  String get excelDescriptionsHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

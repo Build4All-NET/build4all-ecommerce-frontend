@@ -280,6 +280,42 @@ class ExcelImportApiService {
     }
   }
 
+  /// How many products have nothing written about them, and whether the
+  /// assistant is already writing.
+  Future<Map<String, dynamic>> descriptionsStatus() async {
+    try {
+      final res = await _dio.get(
+        '/api/admin/ai/product-descriptions',
+        options: await _auth(),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not check descriptions.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Starts writing them.
+  ///
+  /// Answers at once: the work outlives the request by minutes, and its progress
+  /// is read back from [descriptionsStatus].
+  Future<Map<String, dynamic>> startDescriptions() async {
+    try {
+      final res = await _dio.post(
+        '/api/admin/ai/product-descriptions',
+        options: await _auth(),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not start writing.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
   /// Fetches the blank workbook from the backend.
   ///
   /// The template used to ship inside the app, which meant a change to the

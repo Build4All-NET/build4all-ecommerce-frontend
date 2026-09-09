@@ -1522,5 +1522,35 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelDescriptionsTitle": "Produits sans description",
+  "excelDescriptionsCount": "{count} produits sans description",
+  "@excelDescriptionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsWriteBtn": "Laisser l'assistant les rédiger",
+  "excelDescriptionsRunning": "Rédaction… {written} sur {total}",
+  "@excelDescriptionsRunning": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsDone": "{written} descriptions rédigées",
+  "@excelDescriptionsDone": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsHint": "Vous pouvez quitter cette page, cela continue."
 }

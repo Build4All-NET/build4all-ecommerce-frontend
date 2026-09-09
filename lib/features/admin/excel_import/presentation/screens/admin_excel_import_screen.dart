@@ -13,6 +13,7 @@ import '../bloc/excel_import_bloc.dart';
 import '../bloc/excel_import_event.dart';
 import '../bloc/excel_import_state.dart';
 import '../widgets/excel_counts_card.dart';
+import '../widgets/excel_descriptions_card.dart';
 import '../widgets/excel_issues_list.dart';
 import '../widgets/excel_file_card.dart';
 import '../widgets/excel_product_review_list.dart';
@@ -83,6 +84,12 @@ class AdminExcelImportScreen extends StatelessWidget {
               result.skippedProducts,
             ),
           );
+
+          // A catalogue from a till arrives as names and prices. Asked for only
+          // now, because before the import there is nothing to describe.
+          context
+              .read<ExcelImportBloc>()
+              .add(const ExcelDescriptionsChecked());
         }
 
         // ✅ After download: show toast + open file
@@ -356,6 +363,16 @@ class AdminExcelImportScreen extends StatelessWidget {
                     ),
                   ],
 
+                  ],
+
+                  if (state.descriptions.worthOffering) ...[
+                    const SizedBox(height: 20),
+                    ExcelDescriptionsCard(
+                      job: state.descriptions,
+                      onWrite: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelWriteDescriptionsPressed()),
+                    ),
                   ],
 
                   const SizedBox(height: 24),

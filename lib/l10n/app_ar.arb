@@ -1522,5 +1522,35 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelDescriptionsTitle": "منتجات ما فيها وصف",
+  "excelDescriptionsCount": "{count} منتج بلا وصف",
+  "@excelDescriptionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsWriteBtn": "خلي المساعد يكتبهن",
+  "excelDescriptionsRunning": "عم يكتب… {written} من {total}",
+  "@excelDescriptionsRunning": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsDone": "انكتب {written} وصف",
+  "@excelDescriptionsDone": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsHint": "فيك تطلع من هالصفحة، بيكمّل لحاله."
 }

@@ -1,5 +1,7 @@
-import 'package:file_picker/file_picker.dart';
+import 'dart:async';
 import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +10,9 @@ import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../data/services/template_saver.dart';
 import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/usecases/download_excel_template.dart';
+import '../../domain/usecases/get_descriptions_status.dart';
 import '../../domain/usecases/import_foreign_file.dart';
+import '../../domain/usecases/write_missing_descriptions.dart';
 import '../../domain/usecases/suggest_column_mapping.dart';
 import '../../domain/usecases/import_excel_file.dart';
 import '../../domain/usecases/validate_excel_file.dart';
@@ -21,6 +25,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final DownloadExcelTemplate? downloadTemplateUc;
   final SuggestColumnMapping? suggestMappingUc;
   final ImportForeignFile? importForeignUc;
+  final GetDescriptionsStatus? descriptionsStatusUc;
+  final WriteMissingDescriptions? writeDescriptionsUc;
 
   ExcelImportBloc({
     required this.validateUc,
@@ -28,6 +34,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     this.downloadTemplateUc,
     this.suggestMappingUc,
     this.importForeignUc,
+    this.descriptionsStatusUc,
+    this.writeDescriptionsUc,
   }) : super(ExcelImportState.initial()) {
     on<ExcelPickFilePressed>(_pickFile);
     on<ExcelValidatePressed>(_validate);
@@ -44,7 +52,21 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelForeignCategoryChanged>(_changeForeignCategory);
     on<ExcelMatchModeChanged>(_changeMatchMode);
     on<ExcelForeignImportPressed>(_importForeign);
+    on<ExcelDescriptionsChecked>(_checkDescriptions);
+    on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
+
+  /// How often the assistant's progress is read back.
+  ///
+  /// Slow enough not to hammer the server over a job that takes minutes,
+  /// often enough that the owner sees the count move.
+  static const Duration _descriptionPollInterval = Duration(seconds: 5);
+
+  /// How long to keep watching before leaving it to the owner to refresh.
+  ///
+  /// A job that outlives this is still running on the server; only this
+  /// screen stops following it.
+  static const Duration _descriptionPollLimit = Duration(minutes: 20);
 
   Future<void> _pickFile(
     ExcelPickFilePressed event,
@@ -322,6 +344,63 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
         importing: false,
         errorMessage: ExceptionMapper.toMessage(e),
       ));
+    }
+  }
+
+  Future<void> _checkDescriptions(
+    ExcelDescriptionsChecked event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (descriptionsStatusUc == null) return;
+
+    try {
+      emit(state.copyWith(descriptions: await descriptionsStatusUc!()));
+    } catch (_) {
+      // Not being able to offer this is not worth an error over the import the
+      // owner just completed successfully.
+    }
+  }
+
+  Future<void> _writeDescriptions(
+    ExcelWriteDescriptionsPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (writeDescriptionsUc == null || state.descriptions.running) return;
+
+    try {
+      emit(state.copyWith(
+        descriptions: await writeDescriptionsUc!(state.descriptions),
+        clearError: true,
+      ));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: ExceptionMapper.toMessage(e)));
+      return;
+    }
+
+    await _followDescriptions(emit);
+  }
+
+  /// Reads the assistant's progress back until it finishes.
+  ///
+  /// The work runs on the server and does not need this screen; watching it only
+  /// means the owner can see the count move instead of guessing.
+  Future<void> _followDescriptions(Emitter<ExcelImportState> emit) async {
+    if (descriptionsStatusUc == null) return;
+
+    final startedAt = DateTime.now();
+
+    while (state.descriptions.running && !isClosed && !emit.isDone) {
+      if (DateTime.now().difference(startedAt) > _descriptionPollLimit) return;
+
+      await Future<void>.delayed(_descriptionPollInterval);
+      if (isClosed || emit.isDone) return;
+
+      try {
+        emit(state.copyWith(descriptions: await descriptionsStatusUc!()));
+      } catch (_) {
+        // One unanswered poll is not a reason to stop watching a job that is
+        // still running perfectly well on the server.
+      }
     }
   }
 }

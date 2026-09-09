@@ -2,10 +2,12 @@ import '../../domain/entities/picked_excel_file.dart';
 
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/excel_validation_result.dart';
+import '../../domain/entities/description_job.dart';
 import '../../domain/entities/sheet_mapping.dart';
 import '../../domain/repositories/excel_import_repository.dart';
 import '../models/excel_import_result_model.dart';
 import '../models/excel_validation_result_model.dart';
+import '../models/description_job_model.dart';
 import '../models/sheet_mapping_model.dart';
 import '../services/excel_import_api_service.dart';
 
@@ -150,6 +152,25 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       errors: m.errors,
       warnings: m.warnings,
     );
+  }
+
+  @override
+  Future<DescriptionJob> descriptionsStatus() async {
+    final raw = await api.descriptionsStatus();
+
+    // A failure here should not break the import screen: the offer simply is
+    // not made, which is what "none" says.
+    if (raw['success'] != true) return DescriptionJob.none;
+
+    return DescriptionJobModel.fromJson(raw);
+  }
+
+  @override
+  Future<DescriptionJob> startDescriptions(DescriptionJob current) async {
+    final raw = await api.startDescriptions();
+    _throwIfFailed(raw, 'Could not start writing the descriptions.');
+
+    return DescriptionJobModel.fromStartJson(raw, current);
   }
 
   @override

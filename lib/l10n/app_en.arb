@@ -1703,5 +1703,35 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelDescriptionsTitle": "Products with nothing written about them",
+  "excelDescriptionsCount": "{count} products have no description",
+  "@excelDescriptionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsWriteBtn": "Let the assistant write them",
+  "excelDescriptionsRunning": "Writing… {written} of {total}",
+  "@excelDescriptionsRunning": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsDone": "{written} descriptions written",
+  "@excelDescriptionsDone": {
+    "placeholders": {
+      "written": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelDescriptionsHint": "You can leave this page — it keeps going."
 }

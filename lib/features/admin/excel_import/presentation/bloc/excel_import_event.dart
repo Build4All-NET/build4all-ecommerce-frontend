@@ -124,3 +124,13 @@ class ExcelMatchModeChanged extends ExcelImportEvent {
 class ExcelForeignImportPressed extends ExcelImportEvent {
   const ExcelForeignImportPressed();
 }
+
+/// Asks whether there are products worth offering to describe.
+class ExcelDescriptionsChecked extends ExcelImportEvent {
+  const ExcelDescriptionsChecked();
+}
+
+/// Sets the assistant writing the descriptions the catalogue arrived without.
+class ExcelWriteDescriptionsPressed extends ExcelImportEvent {
+  const ExcelWriteDescriptionsPressed();
+}

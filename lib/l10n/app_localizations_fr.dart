@@ -3851,4 +3851,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String excelImportCounts(Object added, Object updated, Object skipped) {
     return '$added ajoutés · $updated mis à jour · $skipped inchangés';
   }
+
+  @override
+  String get excelDescriptionsTitle => 'Produits sans description';
+
+  @override
+  String excelDescriptionsCount(Object count) {
+    return '$count produits sans description';
+  }
+
+  @override
+  String get excelDescriptionsWriteBtn => 'Laisser l\'assistant les rédiger';
+
+  @override
+  String excelDescriptionsRunning(Object written, Object total) {
+    return 'Rédaction… $written sur $total';
+  }
+
+  @override
+  String excelDescriptionsDone(Object written) {
+    return '$written descriptions rédigées';
+  }
+
+  @override
+  String get excelDescriptionsHint => 'Vous pouvez quitter cette page, cela continue.';
 }

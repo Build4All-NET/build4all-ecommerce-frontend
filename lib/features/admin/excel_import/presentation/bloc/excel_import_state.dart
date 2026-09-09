@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/excel_product_preview.dart';
+import '../../domain/entities/description_job.dart';
 import '../../domain/entities/excel_validation_result.dart';
 import '../../domain/entities/sheet_mapping.dart';
 
@@ -56,6 +57,10 @@ class ExcelImportState extends Equatable {
   /// What to do with products whose code the owner already has.
   final String matchMode;
 
+  /// Whether products are waiting to be described, and how far the
+  /// assistant has got with them.
+  final DescriptionJob descriptions;
+
   const ExcelImportState({
     required this.picking,
     required this.validating,
@@ -75,6 +80,7 @@ class ExcelImportState extends Equatable {
     this.selectedSheetName,
     this.foreignCategoryName = '',
     this.matchMode = matchModeUpdate,
+    this.descriptions = DescriptionJob.none,
   });
 
   /// Overwrite the product a repeated code names -- what an owner re-exporting
@@ -108,6 +114,7 @@ class ExcelImportState extends Equatable {
     String? selectedSheetName,
     String? foreignCategoryName,
     String? matchMode,
+    DescriptionJob? descriptions,
     bool? downloadingTemplate,
     PickedExcelFile? file,
     ExcelValidationResult? validation,
@@ -146,6 +153,7 @@ class ExcelImportState extends Equatable {
           clearSheets ? null : (selectedSheetName ?? this.selectedSheetName),
       foreignCategoryName: foreignCategoryName ?? this.foreignCategoryName,
       matchMode: matchMode ?? this.matchMode,
+      descriptions: descriptions ?? this.descriptions,
     );
   }
 
@@ -216,6 +224,7 @@ class ExcelImportState extends Equatable {
         selectedSheetName,
         foreignCategoryName,
         matchMode,
+        descriptions,
       ];
 }
 

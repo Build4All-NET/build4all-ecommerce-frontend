@@ -1,6 +1,7 @@
 import '../entities/picked_excel_file.dart';
 import '../entities/excel_import_result.dart';
 import '../entities/excel_validation_result.dart';
+import '../entities/description_job.dart';
 import '../entities/sheet_mapping.dart';
 
 abstract class ExcelImportRepository {
@@ -29,6 +30,13 @@ abstract class ExcelImportRepository {
     required String matchMode,
     Map<int, int> imageAssignments,
   });
+
+  /// How many products have nothing written about them, and whether the
+  /// assistant is already writing.
+  Future<DescriptionJob> descriptionsStatus();
+
+  /// Starts writing them, and answers with the job as it stands.
+  Future<DescriptionJob> startDescriptions(DescriptionJob current);
 
   /// The blank workbook, or null when the server could not provide it.
   Future<List<int>?> downloadTemplate();
