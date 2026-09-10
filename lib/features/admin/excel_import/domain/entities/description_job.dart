@@ -36,8 +36,16 @@ class DescriptionJob extends Equatable {
     failed: 0,
   );
 
-  /// Whether there is anything to offer the owner right now.
-  bool get worthOffering => available && (missing > 0 || running);
+  /// Whether the card is worth showing at all.
+  ///
+  /// Shown whenever the assistant could help, even when nothing needs writing:
+  /// an owner who sees no card cannot tell a feature that found nothing to do
+  /// from one that is broken, and after an import that is exactly the question
+  /// they are asking.
+  bool get worthOffering => available;
+
+  /// Nothing to write: every product already has something written about it.
+  bool get nothingToWrite => !running && missing == 0;
 
   @override
   List<Object?> get props =>

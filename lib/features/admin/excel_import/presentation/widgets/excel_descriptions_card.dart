@@ -22,8 +22,8 @@ class ExcelDescriptionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Nothing to describe, or nothing to describe with: no offer at all rather
-    // than a button that explains why it cannot help.
+    // No assistant available at all: no card rather than one explaining why it
+    // cannot help. Having nothing to write is different -- that gets said.
     if (!job.worthOffering) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context)!;
@@ -51,12 +51,26 @@ class ExcelDescriptionsCard extends StatelessWidget {
           Text(
             job.running
                 ? l10n.excelDescriptionsRunning(job.written, job.total)
-                : l10n.excelDescriptionsCount(job.missing),
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: colors.body),
+                : job.nothingToWrite
+                    ? l10n.excelDescriptionsAllHave
+                    : l10n.excelDescriptionsCount(job.missing),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: job.nothingToWrite ? colors.success : colors.body,
+                ),
           ),
+
+          // Why there is nothing to do, since "already has one" invites the
+          // question of where it came from.
+          if (job.nothingToWrite && job.written == 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.excelDescriptionsFromFile,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: colors.muted),
+            ),
+          ],
 
           if (job.running) ...[
             const SizedBox(height: 10),
@@ -94,11 +108,15 @@ class ExcelDescriptionsCard extends StatelessWidget {
                     ?.copyWith(color: colors.muted),
               ),
             ],
-            const SizedBox(height: 12),
-            PrimaryButton(
-              label: l10n.excelDescriptionsWriteBtn,
-              onPressed: onWrite,
-            ),
+            // No button when there is nothing for it to do: one that reports
+            // "0 written" teaches the owner the feature does not work.
+            if (!job.nothingToWrite) ...[
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: l10n.excelDescriptionsWriteBtn,
+                onPressed: onWrite,
+              ),
+            ],
           ],
         ],
       ),

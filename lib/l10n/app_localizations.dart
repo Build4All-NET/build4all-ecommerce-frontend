@@ -7674,6 +7674,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{done} of {total} have a picture'**
   String excelPreviewImagesGiven(Object done, Object total);
+
+  /// No description provided for @excelDescriptionsAllHave.
+  ///
+  /// In en, this message translates to:
+  /// **'Every product already has a description.'**
+  String get excelDescriptionsAllHave;
+
+  /// No description provided for @excelDescriptionsFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'They came with your file, so the assistant left them alone.'**
+  String get excelDescriptionsFromFile;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

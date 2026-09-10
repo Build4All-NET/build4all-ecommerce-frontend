@@ -1810,5 +1810,7 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelDescriptionsAllHave": "Every product already has a description.",
+  "excelDescriptionsFromFile": "They came with your file, so the assistant left them alone."
 }

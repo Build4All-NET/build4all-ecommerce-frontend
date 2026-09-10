@@ -3955,4 +3955,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String excelPreviewImagesGiven(Object done, Object total) {
     return '$done of $total have a picture';
   }
+
+  @override
+  String get excelDescriptionsAllHave => 'Every product already has a description.';
+
+  @override
+  String get excelDescriptionsFromFile => 'They came with your file, so the assistant left them alone.';
 }
