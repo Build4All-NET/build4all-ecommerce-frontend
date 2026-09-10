@@ -195,3 +195,39 @@ class ExcelRowDescriptionChanged extends ExcelImportEvent {
 class ExcelDraftDescriptionsPressed extends ExcelImportEvent {
   const ExcelDraftDescriptionsPressed();
 }
+
+/// Opens the camera, or the gallery, and reads whatever comes back.
+class ExcelPhotosCaptured extends ExcelImportEvent {
+  /// True for the camera, false for pictures already on the device.
+  final bool fromCamera;
+
+  const ExcelPhotosCaptured({required this.fromCamera});
+
+  @override
+  List<Object?> get props => [fromCamera];
+}
+
+/// Corrects what one photographed product is called.
+class ExcelPhotoNameChanged extends ExcelImportEvent {
+  final int photoIndex;
+  final String name;
+
+  const ExcelPhotoNameChanged({required this.photoIndex, required this.name});
+
+  @override
+  List<Object?> get props => [photoIndex, name];
+}
+
+/// Takes one photograph back off the list.
+class ExcelPhotoRemoved extends ExcelImportEvent {
+  final int photoIndex;
+  const ExcelPhotoRemoved(this.photoIndex);
+
+  @override
+  List<Object?> get props => [photoIndex];
+}
+
+/// Creates the photographed products.
+class ExcelPhotosImportPressed extends ExcelImportEvent {
+  const ExcelPhotosImportPressed();
+}

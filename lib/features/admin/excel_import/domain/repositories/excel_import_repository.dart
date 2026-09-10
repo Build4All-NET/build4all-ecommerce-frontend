@@ -4,6 +4,8 @@ import '../entities/excel_validation_result.dart';
 import '../entities/description_job.dart';
 import '../entities/excel_product_preview.dart';
 import '../entities/foreign_preview.dart';
+import '../entities/photographed_product.dart';
+import '../entities/picked_photo.dart';
 import '../entities/sheet_mapping.dart';
 
 abstract class ExcelImportRepository {
@@ -49,6 +51,16 @@ abstract class ExcelImportRepository {
   /// How many products have nothing written about them, and whether the
   /// assistant is already writing.
   Future<DescriptionJob> descriptionsStatus();
+
+  /// Stores a batch of photographs and says what each one appears to be.
+  Future<List<PhotographedProduct>> readPhotos(List<PickedPhoto> photos);
+
+  /// Creates products the owner assembled with no file behind them.
+  Future<ExcelImportResult> importDrafts({
+    required List<Map<String, Object?>> products,
+    String? categoryName,
+    required String matchMode,
+  });
 
   /// Descriptions for rows that are not products yet, keyed by row.
   ///

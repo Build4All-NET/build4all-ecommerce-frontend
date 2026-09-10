@@ -3983,4 +3983,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String excelPreviewWriteLimited(Object count) {
     return 'بيكتب لأول $count يلي مبيّنين';
   }
+
+  @override
+  String get excelSourcePhotos => 'بصوّرهن';
+
+  @override
+  String get excelSourcePhotosHint => 'صوّر كل غرض. نحنا منقول شو هوي.';
+
+  @override
+  String get excelPhotosTakeBtn => 'صوّر';
+
+  @override
+  String get excelPhotosPickBtn => 'اختار من الصور';
+
+  @override
+  String get excelPhotosReading => 'عم نقرا الصور…';
+
+  @override
+  String excelPhotosBatchLimit(Object count) {
+    return 'لحد $count صورة بالمرة';
+  }
+
+  @override
+  String get excelPhotosNameLabel => 'اسم المنتج';
+
+  @override
+  String get excelPhotosNameMissing => 'ما عرفنا شو هوي — سمّيه إنت';
+
+  @override
+  String excelPhotosNeedNames(Object count) {
+    return '$count لسا بدهن اسم';
+  }
+
+  @override
+  String get excelPhotosAddMore => 'زيد صور';
+
+  @override
+  String get excelPhotosImportBtn => 'زيد هالمنتجات';
+
+  @override
+  String get excelPhotosEmpty => 'لسا ما في صور.';
+
+  @override
+  String get excelPhotosRemove => 'شيله';
 }

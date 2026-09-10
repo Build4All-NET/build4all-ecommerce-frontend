@@ -2,17 +2,22 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../data/services/template_saver.dart';
+import '../../domain/entities/photographed_product.dart';
 import '../../domain/entities/picked_excel_file.dart';
+import '../../domain/entities/picked_photo.dart';
 import '../../domain/usecases/download_excel_template.dart';
 import '../../domain/usecases/draft_descriptions.dart';
 import '../../domain/usecases/get_descriptions_status.dart';
+import '../../domain/usecases/import_draft_products.dart';
 import '../../domain/usecases/import_foreign_file.dart';
+import '../../domain/usecases/read_product_photos.dart';
 import '../../domain/usecases/preview_foreign_file.dart';
 import '../../domain/usecases/write_missing_descriptions.dart';
 import '../../domain/usecases/suggest_column_mapping.dart';
@@ -29,6 +34,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final ImportForeignFile? importForeignUc;
   final PreviewForeignFile? previewForeignUc;
   final DraftDescriptions? draftDescriptionsUc;
+  final ReadProductPhotos? readPhotosUc;
+  final ImportDraftProducts? importDraftsUc;
   final GetDescriptionsStatus? descriptionsStatusUc;
   final WriteMissingDescriptions? writeDescriptionsUc;
 
@@ -40,6 +47,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     this.importForeignUc,
     this.previewForeignUc,
     this.draftDescriptionsUc,
+    this.readPhotosUc,
+    this.importDraftsUc,
     this.descriptionsStatusUc,
     this.writeDescriptionsUc,
   }) : super(ExcelImportState.initial()) {
@@ -65,6 +74,10 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelPreviewSearchChanged>(_changePreviewSearch);
     on<ExcelRowDescriptionChanged>(_changeRowDescription);
     on<ExcelDraftDescriptionsPressed>(_draftDescriptions);
+    on<ExcelPhotosCaptured>(_capturePhotos);
+    on<ExcelPhotoNameChanged>(_changePhotoName);
+    on<ExcelPhotoRemoved>(_removePhoto);
+    on<ExcelPhotosImportPressed>(_importPhotos);
     on<ExcelDescriptionsChecked>(_checkDescriptions);
     on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
@@ -256,6 +269,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
       clearSheets: true,
       clearValidation: true,
       clearResult: true,
+      clearPreview: true,
+      clearPhotos: true,
       clearError: true,
     ));
   }
@@ -522,6 +537,135 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     } catch (e) {
       emit(state.copyWith(
         draftingDescriptions: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  /// How much a photograph is scaled down before it is sent.
+  ///
+  /// Big enough for the assistant to tell a bag from a wallet, small enough that
+  /// a dozen of them go up over a shop's connection rather than timing out on it.
+  static const double _photoMaxWidth = 1280;
+  static const int _photoQuality = 80;
+
+  Future<void> _capturePhotos(
+    ExcelPhotosCaptured event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (readPhotosUc == null || state.readingPhotos) return;
+
+    final picker = ImagePicker();
+
+    try {
+      final taken = <XFile>[];
+
+      if (event.fromCamera) {
+        // One shot per press: the camera hands back a single picture, and an
+        // owner walking a shelf presses again rather than choosing a count first.
+        final shot = await picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: _photoMaxWidth,
+          imageQuality: _photoQuality,
+        );
+        if (shot != null) taken.add(shot);
+      } else {
+        taken.addAll(await picker.pickMultiImage(
+          maxWidth: _photoMaxWidth,
+          imageQuality: _photoQuality,
+        ));
+      }
+
+      if (taken.isEmpty) return;
+
+      final photos = <PickedPhoto>[];
+      for (final shot in taken) {
+        photos.add(PickedPhoto(name: shot.name, bytes: await shot.readAsBytes()));
+      }
+
+      emit(state.copyWith(readingPhotos: true, clearError: true, clearResult: true));
+
+      final read = await readPhotosUc!(photos);
+
+      // Appended, not replaced: an owner photographs a shelf at a time and the
+      // batch before it is still theirs.
+      final existing = state.photos;
+      emit(state.copyWith(
+        readingPhotos: false,
+        photos: [
+          ...existing,
+          for (final product in read)
+            PhotographedProduct(
+              // Renumbered onto the end of what they already have, so a
+              // correction lands on the product they are looking at.
+              photoIndex: existing.length + product.photoIndex,
+              mediaId: product.mediaId,
+              imageUrl: product.imageUrl,
+              name: product.name,
+              category: product.category,
+            ),
+        ],
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        readingPhotos: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  void _changePhotoName(
+    ExcelPhotoNameChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(photos: [
+      for (final photo in state.photos)
+        if (photo.photoIndex == event.photoIndex)
+          PhotographedProduct(
+            photoIndex: photo.photoIndex,
+            mediaId: photo.mediaId,
+            imageUrl: photo.imageUrl,
+            name: event.name,
+            category: photo.category,
+          )
+        else
+          photo,
+    ]));
+  }
+
+  void _removePhoto(
+    ExcelPhotoRemoved event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    final kept = state.photos
+        .where((photo) => photo.photoIndex != event.photoIndex)
+        .toList();
+
+    // The removed product's price and description go with it, or they would land
+    // on whichever photograph takes its place.
+    final edits = Map<int, RowEdit>.from(state.rowEdits)..remove(event.photoIndex);
+
+    emit(state.copyWith(photos: kept, rowEdits: edits));
+  }
+
+  Future<void> _importPhotos(
+    ExcelPhotosImportPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (!state.canImportPhotos || importDraftsUc == null) return;
+
+    emit(state.copyWith(importing: true, clearError: true));
+
+    try {
+      final result = await importDraftsUc!(
+        products: state.photoDraftPayload,
+        matchMode: state.matchMode,
+      );
+
+      emit(state.copyWith(importing: false, result: result, clearPhotos: true));
+    } catch (e) {
+      emit(state.copyWith(
+        importing: false,
         errorMessage: ExceptionMapper.toMessage(e),
       ));
     }

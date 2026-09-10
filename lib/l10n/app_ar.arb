@@ -1651,5 +1651,32 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelSourcePhotos": "بصوّرهن",
+  "excelSourcePhotosHint": "صوّر كل غرض. نحنا منقول شو هوي.",
+  "excelPhotosTakeBtn": "صوّر",
+  "excelPhotosPickBtn": "اختار من الصور",
+  "excelPhotosReading": "عم نقرا الصور…",
+  "excelPhotosBatchLimit": "لحد {count} صورة بالمرة",
+  "@excelPhotosBatchLimit": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosNameLabel": "اسم المنتج",
+  "excelPhotosNameMissing": "ما عرفنا شو هوي — سمّيه إنت",
+  "excelPhotosNeedNames": "{count} لسا بدهن اسم",
+  "@excelPhotosNeedNames": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosAddMore": "زيد صور",
+  "excelPhotosImportBtn": "زيد هالمنتجات",
+  "excelPhotosEmpty": "لسا ما في صور.",
+  "excelPhotosRemove": "شيله"
 }

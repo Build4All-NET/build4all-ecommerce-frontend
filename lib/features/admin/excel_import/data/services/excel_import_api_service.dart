@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:build4front/core/network/globals.dart' as g;
 
 import '../../domain/entities/picked_excel_file.dart';
+import '../../domain/entities/picked_photo.dart';
 
 class ExcelImportApiService {
   final Dio _dio;
@@ -315,6 +316,65 @@ class ExcelImportApiService {
       return _normalizeResponse(res);
     } on DioException catch (e) {
       return _fromDioError(e, fallbackMessage: 'Import request failed.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Stores a batch of photographs and asks what each one is.
+  Future<Map<String, dynamic>> readPhotos(List<PickedPhoto> photos) async {
+    final form = FormData();
+    for (final photo in photos) {
+      form.files.add(MapEntry(
+        'photos',
+        MultipartFile.fromBytes(photo.bytes, filename: photo.name),
+      ));
+    }
+
+    try {
+      final res = await _dio.post(
+        '/api/admin/ai/product-photos',
+        data: form,
+        options: await _auth(receiveTimeout: _importTimeout),
+      );
+
+      final status = res.statusCode;
+      final ok = status != null && status >= 200 && status < 300;
+
+      // A bare list of products comes back, which the usual envelope reader is
+      // not shaped for.
+      return ok
+          ? {'success': true, 'products': res.data, 'statusCode': status}
+          : _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not read those photos.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
+  /// Creates products the owner assembled with no file behind them.
+  Future<Map<String, dynamic>> importDrafts({
+    required List<Map<String, Object?>> products,
+    String? categoryName,
+    required String matchMode,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/api/admin/import/excel/drafts',
+        data: {
+          'products': products,
+          if (categoryName != null && categoryName.trim().isNotEmpty)
+            'categoryName': categoryName.trim(),
+          'matchMode': matchMode,
+        },
+        options: (await _auth(receiveTimeout: _importTimeout))
+            .copyWith(contentType: 'application/json'),
+      );
+
+      return _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not add those products.');
     } catch (e) {
       return _fail('Something went wrong. Please try again.');
     }

@@ -5,12 +5,15 @@ import '../../domain/entities/excel_validation_result.dart';
 import '../../domain/entities/description_job.dart';
 import '../../domain/entities/excel_product_preview.dart';
 import '../../domain/entities/foreign_preview.dart';
+import '../../domain/entities/photographed_product.dart';
+import '../../domain/entities/picked_photo.dart';
 import '../../domain/entities/sheet_mapping.dart';
 import '../../domain/repositories/excel_import_repository.dart';
 import '../models/excel_import_result_model.dart';
 import '../models/excel_validation_result_model.dart';
 import '../models/description_job_model.dart';
 import '../models/foreign_preview_model.dart';
+import '../models/photographed_product_model.dart';
 import '../models/sheet_mapping_model.dart';
 import '../services/excel_import_api_service.dart';
 
@@ -186,6 +189,51 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
     if (raw['success'] != true) return DescriptionJob.none;
 
     return DescriptionJobModel.fromJson(raw);
+  }
+
+  @override
+  Future<List<PhotographedProduct>> readPhotos(List<PickedPhoto> photos) async {
+    final raw = await api.readPhotos(photos);
+    _throwIfFailed(raw, 'We could not read those photos. Please try again.');
+
+    return PhotographedProductModel.listFromJson(raw['products']);
+  }
+
+  @override
+  Future<ExcelImportResult> importDrafts({
+    required List<Map<String, Object?>> products,
+    String? categoryName,
+    required String matchMode,
+  }) async {
+    final raw = await api.importDrafts(
+      products: products,
+      categoryName: categoryName,
+      matchMode: matchMode,
+    );
+
+    final m = ExcelImportResultModel.fromJson(raw);
+    if (!m.success) {
+      throw Exception(
+        m.message.isNotEmpty ? m.message : 'Could not add those products.',
+      );
+    }
+
+    return ExcelImportResult(
+      success: m.success,
+      message: m.message,
+      projectId: m.projectId,
+      slug: m.slug,
+      insertedCategories: m.insertedCategories,
+      insertedItemTypes: m.insertedItemTypes,
+      insertedProducts: m.insertedProducts,
+      updatedProducts: m.updatedProducts,
+      skippedProducts: m.skippedProducts,
+      insertedTaxRules: m.insertedTaxRules,
+      insertedShippingMethods: m.insertedShippingMethods,
+      insertedCoupons: m.insertedCoupons,
+      errors: m.errors,
+      warnings: m.warnings,
+    );
   }
 
   @override

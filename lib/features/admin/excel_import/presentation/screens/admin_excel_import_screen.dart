@@ -20,6 +20,7 @@ import '../widgets/excel_file_card.dart';
 import '../widgets/excel_product_review_list.dart';
 import '../widgets/excel_column_mapping_card.dart';
 import '../widgets/excel_match_mode_card.dart';
+import '../widgets/excel_photo_capture_card.dart';
 import '../widgets/excel_replace_card.dart';
 import '../widgets/excel_sheet_picker_card.dart';
 import '../widgets/excel_source_card.dart';
@@ -259,6 +260,64 @@ class AdminExcelImportScreen extends StatelessWidget {
                               : null,
                         ),
                       ],
+                    ],
+                  ],
+
+                  // ===== Photographing a shop with nothing written down =====
+                  if (state.source == ExcelImportSource.photos) ...[
+                    ExcelPhotoCaptureCard(
+                      photos: state.photos,
+                      needingName: state.photosNeedingName,
+                      reading: state.readingPhotos,
+                      priceOf: state.priceForPhoto,
+                      stockOf: state.stockForPhoto,
+                      descriptionOf: state.descriptionForPhoto,
+                      onTakePhoto: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelPhotosCaptured(fromCamera: true)),
+                      onPickFromGallery: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelPhotosCaptured(fromCamera: false)),
+                      onNameChanged: (index, name) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelPhotoNameChanged(photoIndex: index, name: name)),
+                      onPriceChanged: (index, price) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelRowPriceChanged(row: index, price: price)),
+                      onStockChanged: (index, stock) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelRowStockChanged(row: index, stock: stock)),
+                      onDescriptionChanged: (index, description) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelRowDescriptionChanged(
+                            row: index,
+                            description: description,
+                          )),
+                      onRemove: (index) => context
+                          .read<ExcelImportBloc>()
+                          .add(ExcelPhotoRemoved(index)),
+                    ),
+
+                    if (state.photos.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ExcelMatchModeCard(
+                        matchMode: state.matchMode,
+                        onChanged: (mode) => context
+                            .read<ExcelImportBloc>()
+                            .add(ExcelMatchModeChanged(mode)),
+                      ),
+                      const SizedBox(height: 12),
+                      PrimaryButton(
+                        label: state.importing
+                            ? l10n.loadingLabel
+                            : l10n.excelPhotosImportBtn,
+                        isLoading: state.importing,
+                        onPressed: state.canImportPhotos
+                            ? () => context
+                                .read<ExcelImportBloc>()
+                                .add(const ExcelPhotosImportPressed())
+                            : null,
+                      ),
                     ],
                   ],
 

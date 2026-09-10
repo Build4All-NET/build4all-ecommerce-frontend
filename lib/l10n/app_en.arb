@@ -1832,5 +1832,32 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelSourcePhotos": "I'll photograph them",
+  "excelSourcePhotosHint": "Take a picture of each thing. We'll say what it is.",
+  "excelPhotosTakeBtn": "Take photos",
+  "excelPhotosPickBtn": "Choose from gallery",
+  "excelPhotosReading": "Reading your photos…",
+  "excelPhotosBatchLimit": "Up to {count} photos at a time",
+  "@excelPhotosBatchLimit": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosNameLabel": "Product name",
+  "excelPhotosNameMissing": "We couldn't tell what this is — please name it",
+  "excelPhotosNeedNames": "{count} still need a name",
+  "@excelPhotosNeedNames": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosAddMore": "Add more photos",
+  "excelPhotosImportBtn": "Add these products",
+  "excelPhotosEmpty": "No photos yet.",
+  "excelPhotosRemove": "Remove"
 }

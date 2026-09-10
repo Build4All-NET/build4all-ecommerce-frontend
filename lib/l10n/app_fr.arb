@@ -1651,5 +1651,32 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "excelSourcePhotos": "Je vais les photographier",
+  "excelSourcePhotosHint": "Photographiez chaque article. Nous dirons ce que c'est.",
+  "excelPhotosTakeBtn": "Prendre des photos",
+  "excelPhotosPickBtn": "Choisir dans la galerie",
+  "excelPhotosReading": "Lecture des photos…",
+  "excelPhotosBatchLimit": "Jusqu'à {count} photos à la fois",
+  "@excelPhotosBatchLimit": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosNameLabel": "Nom du produit",
+  "excelPhotosNameMissing": "Nous n'avons pas pu l'identifier — nommez-le",
+  "excelPhotosNeedNames": "{count} attendent encore un nom",
+  "@excelPhotosNeedNames": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPhotosAddMore": "Ajouter des photos",
+  "excelPhotosImportBtn": "Ajouter ces produits",
+  "excelPhotosEmpty": "Aucune photo pour l'instant.",
+  "excelPhotosRemove": "Retirer"
 }

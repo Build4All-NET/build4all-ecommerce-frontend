@@ -6,6 +6,7 @@ import '../../domain/entities/excel_product_preview.dart';
 import '../../domain/entities/description_job.dart';
 import '../../domain/entities/excel_validation_result.dart';
 import '../../domain/entities/foreign_preview.dart';
+import '../../domain/entities/photographed_product.dart';
 import '../../domain/entities/sheet_mapping.dart';
 
 /// Where the owner's products are coming from.
@@ -13,7 +14,7 @@ import '../../domain/entities/sheet_mapping.dart';
 /// The two are genuinely different jobs -- one fills in a workbook we designed,
 /// the other hands us a file written for another system -- and asking once, up
 /// front, keeps the owner from being shown steps that are not theirs.
-enum ExcelImportSource { ownFile, template }
+enum ExcelImportSource { ownFile, photos, template }
 
 class ExcelImportState extends Equatable {
   final bool picking;
@@ -84,6 +85,12 @@ class ExcelImportState extends Equatable {
   /// True while the assistant is describing the products on screen.
   final bool draftingDescriptions;
 
+  /// True while photographs are being stored and read.
+  final bool readingPhotos;
+
+  /// The products photographed so far, in the order they were taken.
+  final List<PhotographedProduct> photos;
+
   const ExcelImportState({
     required this.picking,
     required this.validating,
@@ -110,6 +117,8 @@ class ExcelImportState extends Equatable {
     this.previewIssuesOnly = false,
     this.previewQuery = '',
     this.draftingDescriptions = false,
+    this.readingPhotos = false,
+    this.photos = const [],
   });
 
   /// Overwrite the product a repeated code names -- what an owner re-exporting
@@ -150,6 +159,8 @@ class ExcelImportState extends Equatable {
     bool? previewIssuesOnly,
     String? previewQuery,
     bool? draftingDescriptions,
+    bool? readingPhotos,
+    List<PhotographedProduct>? photos,
     bool? downloadingTemplate,
     PickedExcelFile? file,
     ExcelValidationResult? validation,
@@ -166,6 +177,7 @@ class ExcelImportState extends Equatable {
     bool clearRowImages = false,
     bool clearSheets = false,
     bool clearPreview = false,
+    bool clearPhotos = false,
   }) {
     return ExcelImportState(
       picking: picking ?? this.picking,
@@ -198,6 +210,8 @@ class ExcelImportState extends Equatable {
       previewIssuesOnly: previewIssuesOnly ?? this.previewIssuesOnly,
       previewQuery: previewQuery ?? this.previewQuery,
       draftingDescriptions: draftingDescriptions ?? this.draftingDescriptions,
+      readingPhotos: readingPhotos ?? this.readingPhotos,
+      photos: clearPhotos ? const [] : (photos ?? this.photos),
     );
   }
 
@@ -227,6 +241,47 @@ class ExcelImportState extends Equatable {
   }
 
   bool get canReadOwnFile => file != null && !readingOwnFile && !importing;
+
+  /// Photographed products still waiting to be named. Nothing can be created
+  /// with a blank name, so this is what stands between the owner and the button.
+  List<PhotographedProduct> get photosNeedingName =>
+      photos.where((photo) => photo.needsName).toList();
+
+  bool get canImportPhotos =>
+      photos.isNotEmpty &&
+      photosNeedingName.isEmpty &&
+      !importing &&
+      !readingPhotos;
+
+  /// The photographed products in the shape the create call sends them.
+  List<Map<String, Object?>> get photoDraftPayload {
+    return [
+      for (final photo in photos)
+        if (!photo.needsName)
+          {
+            'name': photo.name.trim(),
+            'category': photo.category,
+            'mediaId': photo.mediaId,
+            if (priceForPhoto(photo).trim().isNotEmpty)
+              'price': priceForPhoto(photo).trim(),
+            if (stockForPhoto(photo).trim().isNotEmpty)
+              'stock': stockForPhoto(photo).trim(),
+            if (descriptionForPhoto(photo).trim().isNotEmpty)
+              'description': descriptionForPhoto(photo).trim(),
+          },
+    ];
+  }
+
+  /// Photographed products carry their edits under their own position, the same
+  /// way a spreadsheet's rows carry theirs under a row number.
+  String priceForPhoto(PhotographedProduct photo) =>
+      rowEdits[photo.photoIndex]?.price ?? '';
+
+  String stockForPhoto(PhotographedProduct photo) =>
+      rowEdits[photo.photoIndex]?.stock ?? '';
+
+  String descriptionForPhoto(PhotographedProduct photo) =>
+      rowEdits[photo.photoIndex]?.description ?? '';
 
   bool get canPreviewOwnFile =>
       file != null &&
@@ -348,6 +403,8 @@ class ExcelImportState extends Equatable {
         previewIssuesOnly,
         previewQuery,
         draftingDescriptions,
+        readingPhotos,
+        photos,
       ];
 }
 

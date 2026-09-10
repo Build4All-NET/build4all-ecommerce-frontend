@@ -7722,6 +7722,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Writes for the first {count} on screen'**
   String excelPreviewWriteLimited(Object count);
+
+  /// No description provided for @excelSourcePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'I'll photograph them'**
+  String get excelSourcePhotos;
+
+  /// No description provided for @excelSourcePhotosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a picture of each thing. We'll say what it is.'**
+  String get excelSourcePhotosHint;
+
+  /// No description provided for @excelPhotosTakeBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photos'**
+  String get excelPhotosTakeBtn;
+
+  /// No description provided for @excelPhotosPickBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get excelPhotosPickBtn;
+
+  /// No description provided for @excelPhotosReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading your photos…'**
+  String get excelPhotosReading;
+
+  /// No description provided for @excelPhotosBatchLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {count} photos at a time'**
+  String excelPhotosBatchLimit(Object count);
+
+  /// No description provided for @excelPhotosNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name'**
+  String get excelPhotosNameLabel;
+
+  /// No description provided for @excelPhotosNameMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn't tell what this is — please name it'**
+  String get excelPhotosNameMissing;
+
+  /// No description provided for @excelPhotosNeedNames.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} still need a name'**
+  String excelPhotosNeedNames(Object count);
+
+  /// No description provided for @excelPhotosAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more photos'**
+  String get excelPhotosAddMore;
+
+  /// No description provided for @excelPhotosImportBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add these products'**
+  String get excelPhotosImportBtn;
+
+  /// No description provided for @excelPhotosEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos yet.'**
+  String get excelPhotosEmpty;
+
+  /// No description provided for @excelPhotosRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get excelPhotosRemove;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

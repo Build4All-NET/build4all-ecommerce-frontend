@@ -3983,4 +3983,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String excelPreviewWriteLimited(Object count) {
     return 'Writes for the first $count on screen';
   }
+
+  @override
+  String get excelSourcePhotos => 'I\'ll photograph them';
+
+  @override
+  String get excelSourcePhotosHint => 'Take a picture of each thing. We\'ll say what it is.';
+
+  @override
+  String get excelPhotosTakeBtn => 'Take photos';
+
+  @override
+  String get excelPhotosPickBtn => 'Choose from gallery';
+
+  @override
+  String get excelPhotosReading => 'Reading your photos…';
+
+  @override
+  String excelPhotosBatchLimit(Object count) {
+    return 'Up to $count photos at a time';
+  }
+
+  @override
+  String get excelPhotosNameLabel => 'Product name';
+
+  @override
+  String get excelPhotosNameMissing => 'We couldn\'t tell what this is — please name it';
+
+  @override
+  String excelPhotosNeedNames(Object count) {
+    return '$count still need a name';
+  }
+
+  @override
+  String get excelPhotosAddMore => 'Add more photos';
+
+  @override
+  String get excelPhotosImportBtn => 'Add these products';
+
+  @override
+  String get excelPhotosEmpty => 'No photos yet.';
+
+  @override
+  String get excelPhotosRemove => 'Remove';
 }
