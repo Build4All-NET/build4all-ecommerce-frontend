@@ -479,6 +479,15 @@ class AdminExcelImportScreen extends StatelessWidget {
                     ),
                   ],
 
+                    // Advice about validating a workbook, kept with the
+                    // workbook: it means nothing on a screen of photographs.
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.adminExcelProTipBody,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colors.body,
+                          ),
+                    ),
                   ],
 
                   if (state.descriptions.worthOffering) ...[
@@ -490,15 +499,6 @@ class AdminExcelImportScreen extends StatelessWidget {
                           .add(const ExcelWriteDescriptionsPressed()),
                     ),
                   ],
-
-                  const SizedBox(height: 24),
-
-                  Text(
-                    l10n.adminExcelProTipBody,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colors.body,
-                        ),
-                  ),
                 ],
               ),
             );

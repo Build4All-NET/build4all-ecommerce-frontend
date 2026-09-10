@@ -11,10 +11,14 @@ import '../../domain/entities/sheet_mapping.dart';
 
 /// Where the owner's products are coming from.
 ///
-/// The two are genuinely different jobs -- one fills in a workbook we designed,
-/// the other hands us a file written for another system -- and asking once, up
-/// front, keeps the owner from being shown steps that are not theirs.
-enum ExcelImportSource { ownFile, photos, template }
+/// Three genuinely different jobs: filling in a workbook we designed, handing us
+/// a file written for another system, and photographing a shop that has nothing
+/// written down at all. Asking once, up front, keeps each owner from reading
+/// past steps that are not theirs.
+///
+/// In the order the screen offers them, which is the order of what an owner is
+/// most likely to already have.
+enum ExcelImportSource { template, ownFile, photos }
 
 class ExcelImportState extends Equatable {
   final bool picking;
@@ -44,7 +48,12 @@ class ExcelImportState extends Equatable {
   /// apart means re-validating the file never silently discards their choices.
   final Map<int, ExcelRowImage> rowImages;
 
-  final ExcelImportSource source;
+  /// Null until the owner picks one.
+  ///
+  /// Nothing is preselected: a default would have them reading the steps of a
+  /// way in they never chose, and the question at the top is the whole point of
+  /// the screen.
+  final ExcelImportSource? source;
 
   /// Every sheet of the owner's file that could hold products, as the server
   /// read it -- and as the owner has since corrected it.
@@ -105,7 +114,7 @@ class ExcelImportState extends Equatable {
     required this.errorMessage,
     this.rowImages = const {},
     this.readingOwnFile = false,
-    this.source = ExcelImportSource.ownFile,
+    this.source,
     this.sheets = const [],
     this.selectedSheetName,
     this.foreignCategoryName = '',

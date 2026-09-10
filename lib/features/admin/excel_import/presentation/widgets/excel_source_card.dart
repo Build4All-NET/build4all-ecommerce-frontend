@@ -12,7 +12,7 @@ import '../bloc/excel_import_state.dart';
 /// follow are not the same. Asking once, up front, keeps each of them from
 /// reading past instructions that are not theirs.
 class ExcelSourceCard extends StatelessWidget {
-  final ExcelImportSource source;
+  final ExcelImportSource? source;
   final ValueChanged<ExcelImportSource> onChanged;
 
   const ExcelSourceCard({
@@ -39,6 +39,13 @@ class ExcelSourceCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _SourceOption(
+          title: l10n.excelSourceTemplate,
+          subtitle: l10n.excelSourceTemplateHint,
+          selected: source == ExcelImportSource.template,
+          onTap: () => onChanged(ExcelImportSource.template),
+        ),
+        const SizedBox(height: 8),
+        _SourceOption(
           title: l10n.excelSourceOwnFile,
           subtitle: l10n.excelSourceOwnFileHint,
           selected: source == ExcelImportSource.ownFile,
@@ -51,13 +58,6 @@ class ExcelSourceCard extends StatelessWidget {
           subtitle: l10n.excelSourcePhotosHint,
           selected: source == ExcelImportSource.photos,
           onTap: () => onChanged(ExcelImportSource.photos),
-        ),
-        const SizedBox(height: 8),
-        _SourceOption(
-          title: l10n.excelSourceTemplate,
-          subtitle: l10n.excelSourceTemplateHint,
-          selected: source == ExcelImportSource.template,
-          onTap: () => onChanged(ExcelImportSource.template),
         ),
       ],
     );
