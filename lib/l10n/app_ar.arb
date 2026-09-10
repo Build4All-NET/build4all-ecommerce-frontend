@@ -1631,5 +1631,25 @@
     }
   },
   "excelDescriptionsAllHave": "كل المنتجات إلها وصف من قبل.",
-  "excelDescriptionsFromFile": "إجوا مع الملف تبعك، فالمساعد ما لمسهن."
+  "excelDescriptionsFromFile": "إجوا مع الملف تبعك، فالمساعد ما لمسهن.",
+  "excelPreviewDescriptionLabel": "الوصف",
+  "excelPreviewDescriptionHint": "شو بيقرا الزبون",
+  "excelPreviewWriteVisible": "خلي المساعد يكتب هودي",
+  "excelPreviewWriting": "عم يكتب…",
+  "excelPreviewMissingDescriptions": "{count} ما فيهن ولا كلمة",
+  "@excelPreviewMissingDescriptions": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewWriteLimited": "بيكتب لأول {count} يلي مبيّنين",
+  "@excelPreviewWriteLimited": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  }
 }

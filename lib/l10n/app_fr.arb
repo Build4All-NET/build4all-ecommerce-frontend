@@ -1631,5 +1631,25 @@
     }
   },
   "excelDescriptionsAllHave": "Tous les produits ont déjà une description.",
-  "excelDescriptionsFromFile": "Elles proviennent de votre fichier ; l'assistant n'y a pas touché."
+  "excelDescriptionsFromFile": "Elles proviennent de votre fichier ; l'assistant n'y a pas touché.",
+  "excelPreviewDescriptionLabel": "Description",
+  "excelPreviewDescriptionHint": "Ce que le client lit",
+  "excelPreviewWriteVisible": "Laisser l'assistant les rédiger",
+  "excelPreviewWriting": "Rédaction…",
+  "excelPreviewMissingDescriptions": "{count} n'ont aucune description",
+  "@excelPreviewMissingDescriptions": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewWriteLimited": "Rédige pour les {count} premiers affichés",
+  "@excelPreviewWriteLimited": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  }
 }

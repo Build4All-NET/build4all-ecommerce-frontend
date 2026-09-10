@@ -179,3 +179,19 @@ class ExcelPreviewSearchChanged extends ExcelImportEvent {
   @override
   List<Object?> get props => [query];
 }
+
+/// Corrects what one product on the review list says about itself.
+class ExcelRowDescriptionChanged extends ExcelImportEvent {
+  final int row;
+  final String description;
+
+  const ExcelRowDescriptionChanged({required this.row, required this.description});
+
+  @override
+  List<Object?> get props => [row, description];
+}
+
+/// Asks the assistant to describe the products currently on screen.
+class ExcelDraftDescriptionsPressed extends ExcelImportEvent {
+  const ExcelDraftDescriptionsPressed();
+}

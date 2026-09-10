@@ -72,6 +72,7 @@ class ExcelValidationResultModel {
         row: _int(m['row']) ?? 0,
         name: name,
         sku: _text(m['sku']),
+        description: _text(m['description']),
         price: _double(m['price']),
         stock: _int(m['stock']),
         categoryName: _text(m['categoryName']),

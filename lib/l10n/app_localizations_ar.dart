@@ -3961,4 +3961,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelDescriptionsFromFile => 'إجوا مع الملف تبعك، فالمساعد ما لمسهن.';
+
+  @override
+  String get excelPreviewDescriptionLabel => 'الوصف';
+
+  @override
+  String get excelPreviewDescriptionHint => 'شو بيقرا الزبون';
+
+  @override
+  String get excelPreviewWriteVisible => 'خلي المساعد يكتب هودي';
+
+  @override
+  String get excelPreviewWriting => 'عم يكتب…';
+
+  @override
+  String excelPreviewMissingDescriptions(Object count) {
+    return '$count ما فيهن ولا كلمة';
+  }
+
+  @override
+  String excelPreviewWriteLimited(Object count) {
+    return 'بيكتب لأول $count يلي مبيّنين';
+  }
 }

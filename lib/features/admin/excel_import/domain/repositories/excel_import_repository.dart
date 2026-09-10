@@ -2,6 +2,7 @@ import '../entities/picked_excel_file.dart';
 import '../entities/excel_import_result.dart';
 import '../entities/excel_validation_result.dart';
 import '../entities/description_job.dart';
+import '../entities/excel_product_preview.dart';
 import '../entities/foreign_preview.dart';
 import '../entities/sheet_mapping.dart';
 
@@ -48,6 +49,11 @@ abstract class ExcelImportRepository {
   /// How many products have nothing written about them, and whether the
   /// assistant is already writing.
   Future<DescriptionJob> descriptionsStatus();
+
+  /// Descriptions for rows that are not products yet, keyed by row.
+  ///
+  /// Nothing is saved: the owner keeps or changes the text on the review screen.
+  Future<Map<int, String>> draftDescriptions(List<ExcelProductPreview> rows);
 
   /// Starts writing them, and answers with the job as it stands.
   Future<DescriptionJob> startDescriptions(DescriptionJob current);

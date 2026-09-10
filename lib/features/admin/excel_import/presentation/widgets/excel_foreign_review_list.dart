@@ -24,9 +24,17 @@ class ExcelForeignReviewList extends StatelessWidget {
 
   final String Function(ExcelProductPreview) priceOf;
   final String Function(ExcelProductPreview) stockOf;
+  final String Function(ExcelProductPreview) descriptionOf;
+
+  /// Products on screen with nothing said about them -- what the assistant
+  /// would be asked to write.
+  final List<ExcelProductPreview> withoutDescription;
+  final bool drafting;
+  final VoidCallback onDraftDescriptions;
 
   final void Function(int row, String price) onPriceChanged;
   final void Function(int row, String stock) onStockChanged;
+  final void Function(int row, String description) onDescriptionChanged;
   final void Function(ExcelProductPreview product) onPickImage;
   final ValueChanged<bool> onFilterChanged;
   final ValueChanged<String> onQueryChanged;
@@ -41,8 +49,13 @@ class ExcelForeignReviewList extends StatelessWidget {
     required this.query,
     required this.priceOf,
     required this.stockOf,
+    required this.descriptionOf,
+    required this.withoutDescription,
+    required this.drafting,
+    required this.onDraftDescriptions,
     required this.onPriceChanged,
     required this.onStockChanged,
+    required this.onDescriptionChanged,
     required this.onPickImage,
     required this.onFilterChanged,
     required this.onQueryChanged,
@@ -145,6 +158,33 @@ class ExcelForeignReviewList extends StatelessWidget {
             ),
           ),
 
+          // The assistant, offered here rather than after the import: this is
+          // where the owner is already deciding what each product says.
+          if (withoutDescription.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.excelPreviewMissingDescriptions(withoutDescription.length),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: colors.body),
+            ),
+            const SizedBox(height: 6),
+            OutlinedButton.icon(
+              onPressed: drafting ? null : onDraftDescriptions,
+              icon: drafting
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 16),
+              label: Text(drafting
+                  ? l10n.excelPreviewWriting
+                  : l10n.excelPreviewWriteVisible),
+            ),
+          ],
+
           const SizedBox(height: 12),
 
           if (visible.isEmpty)
@@ -174,8 +214,11 @@ class ExcelForeignReviewList extends StatelessWidget {
                   image: rowImages[product.row],
                   price: priceOf(product),
                   stock: stockOf(product),
+                  description: descriptionOf(product),
                   onPriceChanged: (value) => onPriceChanged(product.row, value),
                   onStockChanged: (value) => onStockChanged(product.row, value),
+                  onDescriptionChanged: (value) =>
+                      onDescriptionChanged(product.row, value),
                   onPickImage: () => onPickImage(product),
                 );
               },
@@ -191,8 +234,10 @@ class _ProductRow extends StatelessWidget {
   final ExcelRowImage? image;
   final String price;
   final String stock;
+  final String description;
   final ValueChanged<String> onPriceChanged;
   final ValueChanged<String> onStockChanged;
+  final ValueChanged<String> onDescriptionChanged;
   final VoidCallback onPickImage;
 
   const _ProductRow({
@@ -200,8 +245,10 @@ class _ProductRow extends StatelessWidget {
     required this.image,
     required this.price,
     required this.stock,
+    required this.description,
     required this.onPriceChanged,
     required this.onStockChanged,
+    required this.onDescriptionChanged,
     required this.onPickImage,
   });
 
@@ -285,7 +332,66 @@ class _ProductRow extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+
+          // What the customer reads, in the same place as everything else the
+          // owner is deciding about this product.
+          _DescriptionField(
+            key: ValueKey('description-${product.row}'),
+            value: description,
+            onChanged: onDescriptionChanged,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DescriptionField extends StatefulWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _DescriptionField({super.key, required this.value, required this.onChanged});
+
+  @override
+  State<_DescriptionField> createState() => _DescriptionFieldState();
+}
+
+class _DescriptionFieldState extends State<_DescriptionField> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.value);
+
+  @override
+  void didUpdateWidget(_DescriptionField old) {
+    super.didUpdateWidget(old);
+
+    // The assistant writing into this row is the one time the field should take
+    // a value it did not get from the person typing in it.
+    if (widget.value != old.value && widget.value != _controller.text) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return TextField(
+      controller: _controller,
+      minLines: 1,
+      maxLines: 3,
+      onChanged: widget.onChanged,
+      decoration: InputDecoration(
+        labelText: l10n.excelPreviewDescriptionLabel,
+        hintText: l10n.excelPreviewDescriptionHint,
+        filled: true,
+        isDense: true,
       ),
     );
   }

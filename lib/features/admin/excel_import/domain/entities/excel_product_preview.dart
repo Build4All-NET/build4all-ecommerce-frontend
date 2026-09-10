@@ -10,6 +10,9 @@ class ExcelProductPreview {
 
   final String name;
   final String? sku;
+
+  /// What the file said about the product, if it said anything.
+  final String? description;
   final double? price;
   final int? stock;
   final String? categoryName;
@@ -32,6 +35,7 @@ class ExcelProductPreview {
     required this.row,
     required this.name,
     this.sku,
+    this.description,
     this.price,
     this.stock,
     this.categoryName,

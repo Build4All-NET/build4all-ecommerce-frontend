@@ -218,12 +218,24 @@ class AdminExcelImportScreen extends StatelessWidget {
                           query: state.previewQuery,
                           priceOf: state.priceFor,
                           stockOf: state.stockFor,
+                          descriptionOf: state.descriptionFor,
+                          withoutDescription: state.visibleWithoutDescription,
+                          drafting: state.draftingDescriptions,
+                          onDraftDescriptions: () => context
+                              .read<ExcelImportBloc>()
+                              .add(const ExcelDraftDescriptionsPressed()),
                           onPriceChanged: (row, price) => context
                               .read<ExcelImportBloc>()
                               .add(ExcelRowPriceChanged(row: row, price: price)),
                           onStockChanged: (row, stock) => context
                               .read<ExcelImportBloc>()
                               .add(ExcelRowStockChanged(row: row, stock: stock)),
+                          onDescriptionChanged: (row, description) => context
+                              .read<ExcelImportBloc>()
+                              .add(ExcelRowDescriptionChanged(
+                                row: row,
+                                description: description,
+                              )),
                           onPickImage: (product) =>
                               _pickImageForRow(context, product.row),
                           onFilterChanged: (issuesOnly) => context

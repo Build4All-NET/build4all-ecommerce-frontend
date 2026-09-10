@@ -7686,6 +7686,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'They came with your file, so the assistant left them alone.'**
   String get excelDescriptionsFromFile;
+
+  /// No description provided for @excelPreviewDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get excelPreviewDescriptionLabel;
+
+  /// No description provided for @excelPreviewDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the customer reads'**
+  String get excelPreviewDescriptionHint;
+
+  /// No description provided for @excelPreviewWriteVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Let the assistant write these'**
+  String get excelPreviewWriteVisible;
+
+  /// No description provided for @excelPreviewWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing…'**
+  String get excelPreviewWriting;
+
+  /// No description provided for @excelPreviewMissingDescriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} have nothing written about them'**
+  String excelPreviewMissingDescriptions(Object count);
+
+  /// No description provided for @excelPreviewWriteLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Writes for the first {count} on screen'**
+  String excelPreviewWriteLimited(Object count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1812,5 +1812,25 @@
     }
   },
   "excelDescriptionsAllHave": "Every product already has a description.",
-  "excelDescriptionsFromFile": "They came with your file, so the assistant left them alone."
+  "excelDescriptionsFromFile": "They came with your file, so the assistant left them alone.",
+  "excelPreviewDescriptionLabel": "Description",
+  "excelPreviewDescriptionHint": "What the customer reads",
+  "excelPreviewWriteVisible": "Let the assistant write these",
+  "excelPreviewWriting": "Writing…",
+  "excelPreviewMissingDescriptions": "{count} have nothing written about them",
+  "@excelPreviewMissingDescriptions": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "excelPreviewWriteLimited": "Writes for the first {count} on screen",
+  "@excelPreviewWriteLimited": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  }
 }

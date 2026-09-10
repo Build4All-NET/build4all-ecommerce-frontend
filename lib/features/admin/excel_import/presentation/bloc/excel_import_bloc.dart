@@ -10,6 +10,7 @@ import '../../../../../core/exceptions/exception_mapper.dart';
 import '../../data/services/template_saver.dart';
 import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/usecases/download_excel_template.dart';
+import '../../domain/usecases/draft_descriptions.dart';
 import '../../domain/usecases/get_descriptions_status.dart';
 import '../../domain/usecases/import_foreign_file.dart';
 import '../../domain/usecases/preview_foreign_file.dart';
@@ -27,6 +28,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final SuggestColumnMapping? suggestMappingUc;
   final ImportForeignFile? importForeignUc;
   final PreviewForeignFile? previewForeignUc;
+  final DraftDescriptions? draftDescriptionsUc;
   final GetDescriptionsStatus? descriptionsStatusUc;
   final WriteMissingDescriptions? writeDescriptionsUc;
 
@@ -37,6 +39,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     this.suggestMappingUc,
     this.importForeignUc,
     this.previewForeignUc,
+    this.draftDescriptionsUc,
     this.descriptionsStatusUc,
     this.writeDescriptionsUc,
   }) : super(ExcelImportState.initial()) {
@@ -60,6 +63,8 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelRowStockChanged>(_changeRowStock);
     on<ExcelPreviewFilterChanged>(_changePreviewFilter);
     on<ExcelPreviewSearchChanged>(_changePreviewSearch);
+    on<ExcelRowDescriptionChanged>(_changeRowDescription);
+    on<ExcelDraftDescriptionsPressed>(_draftDescriptions);
     on<ExcelDescriptionsChecked>(_checkDescriptions);
     on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
@@ -479,5 +484,46 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     Emitter<ExcelImportState> emit,
   ) {
     emit(state.copyWith(previewQuery: event.query));
+  }
+
+  void _changeRowDescription(
+    ExcelRowDescriptionChanged event,
+    Emitter<ExcelImportState> emit,
+  ) {
+    emit(state.copyWith(rowEdits: {
+      ...state.rowEdits,
+      event.row: (state.rowEdits[event.row] ?? const RowEdit())
+          .copyWith(description: event.description),
+    }));
+  }
+
+  Future<void> _draftDescriptions(
+    ExcelDraftDescriptionsPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (draftDescriptionsUc == null || state.draftingDescriptions) return;
+
+    // Only the ones with nothing said about them. A description the owner wrote,
+    // or their old system did, is not ours to replace.
+    final rows = state.visibleWithoutDescription;
+    if (rows.isEmpty) return;
+
+    emit(state.copyWith(draftingDescriptions: true, clearError: true));
+
+    try {
+      final written = await draftDescriptionsUc!(rows);
+
+      final edits = Map<int, RowEdit>.from(state.rowEdits);
+      written.forEach((row, description) {
+        edits[row] = (edits[row] ?? const RowEdit()).copyWith(description: description);
+      });
+
+      emit(state.copyWith(draftingDescriptions: false, rowEdits: edits));
+    } catch (e) {
+      emit(state.copyWith(
+        draftingDescriptions: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
   }
 }

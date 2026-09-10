@@ -3961,4 +3961,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelDescriptionsFromFile => 'Elles proviennent de votre fichier ; l\'assistant n\'y a pas touché.';
+
+  @override
+  String get excelPreviewDescriptionLabel => 'Description';
+
+  @override
+  String get excelPreviewDescriptionHint => 'Ce que le client lit';
+
+  @override
+  String get excelPreviewWriteVisible => 'Laisser l\'assistant les rédiger';
+
+  @override
+  String get excelPreviewWriting => 'Rédaction…';
+
+  @override
+  String excelPreviewMissingDescriptions(Object count) {
+    return '$count n\'ont aucune description';
+  }
+
+  @override
+  String excelPreviewWriteLimited(Object count) {
+    return 'Rédige pour les $count premiers affichés';
+  }
 }

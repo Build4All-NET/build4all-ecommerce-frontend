@@ -320,6 +320,35 @@ class ExcelImportApiService {
     }
   }
 
+  /// Asks the assistant to describe rows that are not products yet.
+  ///
+  /// Nothing is saved: the text comes back for the owner to keep or change on
+  /// the review screen, and travels with the import like their other decisions.
+  Future<Map<String, dynamic>> draftDescriptions(
+      List<Map<String, Object?>> rows) async {
+    try {
+      final res = await _dio.post(
+        '/api/admin/ai/product-descriptions/draft',
+        data: rows,
+        options: (await _auth(receiveTimeout: _importTimeout))
+            .copyWith(contentType: 'application/json'),
+      );
+
+      final status = res.statusCode;
+      final ok = status != null && status >= 200 && status < 300;
+
+      // The endpoint answers with a bare map of row to description, which the
+      // usual envelope reader is not shaped for.
+      return ok
+          ? {'success': true, 'descriptions': res.data, 'statusCode': status}
+          : _normalizeResponse(res);
+    } on DioException catch (e) {
+      return _fromDioError(e, fallbackMessage: 'Could not write the descriptions.');
+    } catch (e) {
+      return _fail('Something went wrong. Please try again.');
+    }
+  }
+
   /// How many products have nothing written about them, and whether the
   /// assistant is already writing.
   Future<Map<String, dynamic>> descriptionsStatus() async {

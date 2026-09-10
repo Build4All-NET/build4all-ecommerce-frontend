@@ -81,6 +81,9 @@ class ExcelImportState extends Equatable {
   /// What the owner is searching the list for.
   final String previewQuery;
 
+  /// True while the assistant is describing the products on screen.
+  final bool draftingDescriptions;
+
   const ExcelImportState({
     required this.picking,
     required this.validating,
@@ -106,6 +109,7 @@ class ExcelImportState extends Equatable {
     this.rowEdits = const {},
     this.previewIssuesOnly = false,
     this.previewQuery = '',
+    this.draftingDescriptions = false,
   });
 
   /// Overwrite the product a repeated code names -- what an owner re-exporting
@@ -145,6 +149,7 @@ class ExcelImportState extends Equatable {
     Map<int, RowEdit>? rowEdits,
     bool? previewIssuesOnly,
     String? previewQuery,
+    bool? draftingDescriptions,
     bool? downloadingTemplate,
     PickedExcelFile? file,
     ExcelValidationResult? validation,
@@ -192,6 +197,7 @@ class ExcelImportState extends Equatable {
       rowEdits: clearPreview ? const {} : (rowEdits ?? this.rowEdits),
       previewIssuesOnly: previewIssuesOnly ?? this.previewIssuesOnly,
       previewQuery: previewQuery ?? this.previewQuery,
+      draftingDescriptions: draftingDescriptions ?? this.draftingDescriptions,
     );
   }
 
@@ -268,6 +274,19 @@ class ExcelImportState extends Equatable {
     return product.stock == null ? '' : product.stock.toString();
   }
 
+  String descriptionFor(ExcelProductPreview product) {
+    final edited = rowEdits[product.row]?.description;
+    if (edited != null) return edited;
+
+    return product.description ?? '';
+  }
+
+  /// The products on screen that still have nothing said about them -- what the
+  /// assistant would be asked to write.
+  List<ExcelProductPreview> get visibleWithoutDescription => visiblePreviewProducts
+      .where((product) => descriptionFor(product).trim().isEmpty)
+      .toList();
+
   /// The corrections in the shape the import call sends them.
   Map<int, Map<String, Object>> get rowEditPayload {
     final payload = <int, Map<String, Object>>{};
@@ -279,6 +298,9 @@ class ExcelImportState extends Equatable {
       }
       if (edit.stock != null && edit.stock!.trim().isNotEmpty) {
         fields['stock'] = edit.stock!.trim();
+      }
+      if (edit.description != null && edit.description!.trim().isNotEmpty) {
+        fields['description'] = edit.description!.trim();
       }
       if (fields.isNotEmpty) payload[row] = fields;
     });
@@ -325,6 +347,7 @@ class ExcelImportState extends Equatable {
         rowEdits,
         previewIssuesOnly,
         previewQuery,
+        draftingDescriptions,
       ];
 }
 
@@ -349,11 +372,19 @@ class RowEdit extends Equatable {
   final String? price;
   final String? stock;
 
-  const RowEdit({this.price, this.stock});
+  /// What the product says about itself: typed by the owner, or written by the
+  /// assistant and left in place by them. Theirs either way by the time it is
+  /// sent.
+  final String? description;
 
-  RowEdit copyWith({String? price, String? stock}) =>
-      RowEdit(price: price ?? this.price, stock: stock ?? this.stock);
+  const RowEdit({this.price, this.stock, this.description});
+
+  RowEdit copyWith({String? price, String? stock, String? description}) => RowEdit(
+        price: price ?? this.price,
+        stock: stock ?? this.stock,
+        description: description ?? this.description,
+      );
 
   @override
-  List<Object?> get props => [price, stock];
+  List<Object?> get props => [price, stock, description];
 }

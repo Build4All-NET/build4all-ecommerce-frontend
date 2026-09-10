@@ -3961,4 +3961,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelDescriptionsFromFile => 'They came with your file, so the assistant left them alone.';
+
+  @override
+  String get excelPreviewDescriptionLabel => 'Description';
+
+  @override
+  String get excelPreviewDescriptionHint => 'What the customer reads';
+
+  @override
+  String get excelPreviewWriteVisible => 'Let the assistant write these';
+
+  @override
+  String get excelPreviewWriting => 'Writing…';
+
+  @override
+  String excelPreviewMissingDescriptions(Object count) {
+    return '$count have nothing written about them';
+  }
+
+  @override
+  String excelPreviewWriteLimited(Object count) {
+    return 'Writes for the first $count on screen';
+  }
 }

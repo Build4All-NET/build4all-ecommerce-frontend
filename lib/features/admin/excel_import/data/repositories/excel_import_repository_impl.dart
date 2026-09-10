@@ -3,6 +3,7 @@ import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/excel_import_result.dart';
 import '../../domain/entities/excel_validation_result.dart';
 import '../../domain/entities/description_job.dart';
+import '../../domain/entities/excel_product_preview.dart';
 import '../../domain/entities/foreign_preview.dart';
 import '../../domain/entities/sheet_mapping.dart';
 import '../../domain/repositories/excel_import_repository.dart';
@@ -185,6 +186,27 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
     if (raw['success'] != true) return DescriptionJob.none;
 
     return DescriptionJobModel.fromJson(raw);
+  }
+
+  @override
+  Future<Map<int, String>> draftDescriptions(List<ExcelProductPreview> rows) async {
+    final raw = await api.draftDescriptions([
+      for (final row in rows)
+        {'row': row.row, 'name': row.name, 'category': row.categoryName},
+    ]);
+    _throwIfFailed(raw, 'The assistant could not write those descriptions.');
+
+    final descriptions = raw['descriptions'];
+    if (descriptions is! Map) return const {};
+
+    final byRow = <int, String>{};
+    descriptions.forEach((row, text) {
+      final number = int.tryParse(row.toString());
+      final description = text?.toString().trim() ?? '';
+      if (number != null && description.isNotEmpty) byRow[number] = description;
+    });
+
+    return byRow;
   }
 
   @override
