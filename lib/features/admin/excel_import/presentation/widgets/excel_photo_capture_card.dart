@@ -324,6 +324,17 @@ class _TextFieldState extends State<_TextField> {
       TextEditingController(text: widget.value);
 
   @override
+  void didUpdateWidget(_TextField old) {
+    super.didUpdateWidget(old);
+
+    // The assistant writing a description into this row is the one time the
+    // field should take a value it did not get from the person typing in it.
+    if (widget.value != old.value && widget.value != _controller.text) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
