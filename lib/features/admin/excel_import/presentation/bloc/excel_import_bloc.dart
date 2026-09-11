@@ -14,6 +14,7 @@ import '../../domain/entities/picked_excel_file.dart';
 import '../../domain/entities/picked_photo.dart';
 import '../../domain/usecases/download_excel_template.dart';
 import '../../domain/usecases/draft_descriptions.dart';
+import '../../domain/usecases/draft_photo_descriptions.dart';
 import '../../domain/usecases/get_descriptions_status.dart';
 import '../../domain/usecases/import_draft_products.dart';
 import '../../domain/usecases/import_foreign_file.dart';
@@ -34,6 +35,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
   final ImportForeignFile? importForeignUc;
   final PreviewForeignFile? previewForeignUc;
   final DraftDescriptions? draftDescriptionsUc;
+  final DraftPhotoDescriptions? draftPhotoDescriptionsUc;
   final ReadProductPhotos? readPhotosUc;
   final ImportDraftProducts? importDraftsUc;
   final GetDescriptionsStatus? descriptionsStatusUc;
@@ -47,6 +49,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     this.importForeignUc,
     this.previewForeignUc,
     this.draftDescriptionsUc,
+    this.draftPhotoDescriptionsUc,
     this.readPhotosUc,
     this.importDraftsUc,
     this.descriptionsStatusUc,
@@ -78,6 +81,7 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     on<ExcelPhotoNameChanged>(_changePhotoName);
     on<ExcelPhotoRemoved>(_removePhoto);
     on<ExcelPhotosImportPressed>(_importPhotos);
+    on<ExcelPhotoDraftDescriptionsPressed>(_draftPhotoDescriptions);
     on<ExcelDescriptionsChecked>(_checkDescriptions);
     on<ExcelWriteDescriptionsPressed>(_writeDescriptions);
   }
@@ -666,6 +670,38 @@ class ExcelImportBloc extends Bloc<ExcelImportEvent, ExcelImportState> {
     } catch (e) {
       emit(state.copyWith(
         importing: false,
+        errorMessage: ExceptionMapper.toMessage(e),
+      ));
+    }
+  }
+
+  Future<void> _draftPhotoDescriptions(
+    ExcelPhotoDraftDescriptionsPressed event,
+    Emitter<ExcelImportState> emit,
+  ) async {
+    if (draftPhotoDescriptionsUc == null || state.draftingDescriptions) return;
+
+    // Only the ones with a name and nothing said about them: one with no name
+    // is not a product yet, and one the owner already described is not ours to
+    // replace.
+    final photos = state.photosWithoutDescription;
+    if (photos.isEmpty) return;
+
+    emit(state.copyWith(draftingDescriptions: true, clearError: true));
+
+    try {
+      final written = await draftPhotoDescriptionsUc!(photos);
+
+      final edits = Map<int, RowEdit>.from(state.rowEdits);
+      written.forEach((photoIndex, description) {
+        edits[photoIndex] =
+            (edits[photoIndex] ?? const RowEdit()).copyWith(description: description);
+      });
+
+      emit(state.copyWith(draftingDescriptions: false, rowEdits: edits));
+    } catch (e) {
+      emit(state.copyWith(
+        draftingDescriptions: false,
         errorMessage: ExceptionMapper.toMessage(e),
       ));
     }

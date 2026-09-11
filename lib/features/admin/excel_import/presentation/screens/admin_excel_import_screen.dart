@@ -272,6 +272,11 @@ class AdminExcelImportScreen extends StatelessWidget {
                       priceOf: state.priceForPhoto,
                       stockOf: state.stockForPhoto,
                       descriptionOf: state.descriptionForPhoto,
+                      withoutDescription: state.photosWithoutDescription,
+                      drafting: state.draftingDescriptions,
+                      onDraftDescriptions: () => context
+                          .read<ExcelImportBloc>()
+                          .add(const ExcelPhotoDraftDescriptionsPressed()),
                       onTakePhoto: () => context
                           .read<ExcelImportBloc>()
                           .add(const ExcelPhotosCaptured(fromCamera: true)),

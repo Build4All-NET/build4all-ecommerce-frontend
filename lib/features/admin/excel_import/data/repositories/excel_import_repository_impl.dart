@@ -242,6 +242,23 @@ class ExcelImportRepositoryImpl implements ExcelImportRepository {
       for (final row in rows)
         {'row': row.row, 'name': row.name, 'category': row.categoryName},
     ]);
+    return _descriptionsByRow(raw);
+  }
+
+  @override
+  Future<Map<int, String>> draftPhotoDescriptions(
+      List<PhotographedProduct> photos) async {
+    final raw = await api.draftDescriptions([
+      for (final photo in photos)
+        {'row': photo.photoIndex, 'name': photo.name, 'category': photo.category},
+    ]);
+    return _descriptionsByRow(raw);
+  }
+
+  /// The assistant's answer, keyed by row -- shared between describing rows a
+  /// file named and products a photograph named, since both ask the same
+  /// endpoint the same way.
+  Map<int, String> _descriptionsByRow(Map<String, dynamic> raw) {
     _throwIfFailed(raw, 'The assistant could not write those descriptions.');
 
     final descriptions = raw['descriptions'];

@@ -231,3 +231,8 @@ class ExcelPhotoRemoved extends ExcelImportEvent {
 class ExcelPhotosImportPressed extends ExcelImportEvent {
   const ExcelPhotosImportPressed();
 }
+
+/// Asks the assistant to describe the photographed products on screen.
+class ExcelPhotoDraftDescriptionsPressed extends ExcelImportEvent {
+  const ExcelPhotoDraftDescriptionsPressed();
+}

@@ -67,6 +67,11 @@ abstract class ExcelImportRepository {
   /// Nothing is saved: the owner keeps or changes the text on the review screen.
   Future<Map<int, String>> draftDescriptions(List<ExcelProductPreview> rows);
 
+  /// Descriptions for photographed products, keyed by their position in the
+  /// batch -- the same call as [draftDescriptions], for products that arrived
+  /// as a picture rather than a row.
+  Future<Map<int, String>> draftPhotoDescriptions(List<PhotographedProduct> photos);
+
   /// Starts writing them, and answers with the job as it stands.
   Future<DescriptionJob> startDescriptions(DescriptionJob current);
 

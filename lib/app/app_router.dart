@@ -5,6 +5,7 @@ import 'package:build4front/features/admin/excel_import/data/services/excel_impo
 import 'package:build4front/features/admin/excel_import/domain/usecases/download_excel_template.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_excel_file.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/draft_descriptions.dart';
+import 'package:build4front/features/admin/excel_import/domain/usecases/draft_photo_descriptions.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/get_descriptions_status.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_draft_products.dart';
 import 'package:build4front/features/admin/excel_import/domain/usecases/import_foreign_file.dart';
@@ -303,6 +304,7 @@ class AppRouter {
                   importForeignUc: ImportForeignFile(repo),
                   previewForeignUc: PreviewForeignFile(repo),
                   draftDescriptionsUc: DraftDescriptions(repo),
+                  draftPhotoDescriptionsUc: DraftPhotoDescriptions(repo),
                   readPhotosUc: ReadProductPhotos(repo),
                   importDraftsUc: ImportDraftProducts(repo),
                   descriptionsStatusUc: GetDescriptionsStatus(repo),

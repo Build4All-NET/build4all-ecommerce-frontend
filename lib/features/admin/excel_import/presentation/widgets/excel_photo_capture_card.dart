@@ -21,6 +21,12 @@ class ExcelPhotoCaptureCard extends StatelessWidget {
   final String Function(PhotographedProduct) stockOf;
   final String Function(PhotographedProduct) descriptionOf;
 
+  /// Named products with nothing said about them -- what the assistant would
+  /// be asked to write.
+  final List<PhotographedProduct> withoutDescription;
+  final bool drafting;
+  final VoidCallback onDraftDescriptions;
+
   final VoidCallback onTakePhoto;
   final VoidCallback onPickFromGallery;
   final void Function(int photoIndex, String name) onNameChanged;
@@ -37,6 +43,9 @@ class ExcelPhotoCaptureCard extends StatelessWidget {
     required this.priceOf,
     required this.stockOf,
     required this.descriptionOf,
+    required this.withoutDescription,
+    required this.drafting,
+    required this.onDraftDescriptions,
     required this.onTakePhoto,
     required this.onPickFromGallery,
     required this.onNameChanged,
@@ -119,6 +128,33 @@ class ExcelPhotoCaptureCard extends StatelessWidget {
                   color: colors.danger,
                   fontWeight: FontWeight.w700,
                 ),
+          ),
+        ],
+
+        // The assistant, offered here rather than after the import: this is
+        // where the owner is already deciding what each product says.
+        if (withoutDescription.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            l10n.excelPreviewMissingDescriptions(withoutDescription.length),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: colors.body),
+          ),
+          const SizedBox(height: 6),
+          OutlinedButton.icon(
+            onPressed: drafting ? null : onDraftDescriptions,
+            icon: drafting
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_awesome, size: 16),
+            label: Text(drafting
+                ? l10n.excelPreviewWriting
+                : l10n.excelPreviewWriteVisible),
           ),
         ],
 

@@ -292,6 +292,14 @@ class ExcelImportState extends Equatable {
   String descriptionForPhoto(PhotographedProduct photo) =>
       rowEdits[photo.photoIndex]?.description ?? '';
 
+  /// Photographed products with a name but nothing said about them -- what the
+  /// assistant would be asked to write. One with no name is not a product yet,
+  /// so it is not this list's to describe.
+  List<PhotographedProduct> get photosWithoutDescription => photos
+      .where((photo) =>
+          !photo.needsName && descriptionForPhoto(photo).trim().isEmpty)
+      .toList();
+
   bool get canPreviewOwnFile =>
       file != null &&
       selectedSheet != null &&
