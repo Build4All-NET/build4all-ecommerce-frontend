@@ -275,6 +275,12 @@ class ExceptionMapper {
       case 'SUBSCRIPTION_LIMIT_EXCEEDED':
         return 'Your subscription limit has been reached.';
 
+      // Thrown when the app's tenant link is missing or wrong. The owner
+      // can't fix that from inside the app, and the raw backend text names
+      // the internal ownerProjectLinkId — so say what it means instead.
+      case 'OWNER_PROJECT_NOT_FOUND':
+        return 'This app is not set up correctly. Please contact support.';
+
       case 'FIREBASE_CONFIG_NOT_READY':
         return 'Configuration is not ready yet. Please try again shortly.';
 
