@@ -4026,4 +4026,101 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get excelPhotosRemove => 'شيله';
+
+  @override
+  String get adminStatisticsTitle => 'إحصائيات';
+
+  @override
+  String get adminActionStatisticsSubtitle => 'مستخدمين التطبيق وتواصل';
+
+  @override
+  String get adminStatisticsRefresh => 'تحديث';
+
+  @override
+  String get adminStatisticsLoadFailed => 'ما قدرنا نجيب الإحصائيات.';
+
+  @override
+  String get adminStatisticsTotalUsers => 'كل المستخدمين';
+
+  @override
+  String get adminStatisticsActiveUsers => 'مستخدمين فعّالين';
+
+  @override
+  String get adminStatisticsVerifiedUsers => 'مستخدمين موثّقين';
+
+  @override
+  String get adminStatisticsNewLast7Days => 'جداد هالأسبوع';
+
+  @override
+  String get adminStatisticsNewLast30Days => 'جداد هالشهر';
+
+  @override
+  String get adminStatisticsActiveLast30Days => 'فاتوا هالشهر';
+
+  @override
+  String get adminStatisticsReachableTitle => 'مستخدمين فيك تتواصل معن';
+
+  @override
+  String adminStatisticsWithEmail(int count) {
+    return '$count عندن إيميل';
+  }
+
+  @override
+  String adminStatisticsWithPhone(int count) {
+    return '$count عندن رقم';
+  }
+
+  @override
+  String get adminStatisticsUsersSectionTitle => 'مستخدمين التطبيق';
+
+  @override
+  String get adminStatisticsSearchHint => 'دوّر بالاسم أو الإيميل أو الرقم';
+
+  @override
+  String get adminStatisticsEmpty => 'لسا ما حدا سجّل بتطبيقك.';
+
+  @override
+  String get adminStatisticsNoSearchResults => 'ما في حدا مطابق للبحث.';
+
+  @override
+  String get adminStatisticsRetry => 'جرّب كمان مرة';
+
+  @override
+  String get adminStatisticsInactiveBadge => 'غير فعّال';
+
+  @override
+  String get adminStatisticsNoContactDetails => 'ما في معلومات تواصل';
+
+  @override
+  String adminStatisticsJoinedOn(String date) {
+    return 'سجّل بـ $date';
+  }
+
+  @override
+  String get adminStatisticsContactFailed => 'ما قدرنا نفتح التطبيق.';
+
+  @override
+  String get adminStatisticsCopied => 'تنسخ';
+
+  @override
+  String get adminStatisticsCopy => 'نسخ';
+
+  @override
+  String adminStatisticsContactSheetTitle(String name) {
+    return 'تواصل مع $name';
+  }
+
+  @override
+  String get adminStatisticsContactWhatsApp => 'واتساب';
+
+  @override
+  String get adminStatisticsContactCall => 'اتصال';
+
+  @override
+  String get adminStatisticsContactEmail => 'إيميل';
+
+  @override
+  String adminStatisticsWhatsAppMessage(String name) {
+    return 'مرحبا $name، ';
+  }
 }

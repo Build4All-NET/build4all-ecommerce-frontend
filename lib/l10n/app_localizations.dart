@@ -7800,6 +7800,179 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove'**
   String get excelPhotosRemove;
+  /// No description provided for @adminStatisticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get adminStatisticsTitle;
+
+  /// No description provided for @adminActionStatisticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App users & contacts'**
+  String get adminActionStatisticsSubtitle;
+
+  /// No description provided for @adminStatisticsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get adminStatisticsRefresh;
+
+  /// No description provided for @adminStatisticsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your statistics.'**
+  String get adminStatisticsLoadFailed;
+
+  /// No description provided for @adminStatisticsTotalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total users'**
+  String get adminStatisticsTotalUsers;
+
+  /// No description provided for @adminStatisticsActiveUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Active users'**
+  String get adminStatisticsActiveUsers;
+
+  /// No description provided for @adminStatisticsVerifiedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified users'**
+  String get adminStatisticsVerifiedUsers;
+
+  /// No description provided for @adminStatisticsNewLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'New this week'**
+  String get adminStatisticsNewLast7Days;
+
+  /// No description provided for @adminStatisticsNewLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'New this month'**
+  String get adminStatisticsNewLast30Days;
+
+  /// No description provided for @adminStatisticsActiveLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in this month'**
+  String get adminStatisticsActiveLast30Days;
+
+  /// No description provided for @adminStatisticsReachableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Users you can contact'**
+  String get adminStatisticsReachableTitle;
+
+  /// No description provided for @adminStatisticsWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} with email'**
+  String adminStatisticsWithEmail(int count);
+
+  /// No description provided for @adminStatisticsWithPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} with phone'**
+  String adminStatisticsWithPhone(int count);
+
+  /// No description provided for @adminStatisticsUsersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App users'**
+  String get adminStatisticsUsersSectionTitle;
+
+  /// No description provided for @adminStatisticsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, email or phone'**
+  String get adminStatisticsSearchHint;
+
+  /// No description provided for @adminStatisticsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has signed up in your app yet.'**
+  String get adminStatisticsEmpty;
+
+  /// No description provided for @adminStatisticsNoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No user matches your search.'**
+  String get adminStatisticsNoSearchResults;
+
+  /// No description provided for @adminStatisticsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get adminStatisticsRetry;
+
+  /// No description provided for @adminStatisticsInactiveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get adminStatisticsInactiveBadge;
+
+  /// No description provided for @adminStatisticsNoContactDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'No contact details'**
+  String get adminStatisticsNoContactDetails;
+
+  /// No description provided for @adminStatisticsJoinedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined {date}'**
+  String adminStatisticsJoinedOn(String date);
+
+  /// No description provided for @adminStatisticsContactFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open that app on your phone.'**
+  String get adminStatisticsContactFailed;
+
+  /// No description provided for @adminStatisticsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get adminStatisticsCopied;
+
+  /// No description provided for @adminStatisticsCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get adminStatisticsCopy;
+
+  /// No description provided for @adminStatisticsContactSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact {name}'**
+  String adminStatisticsContactSheetTitle(String name);
+
+  /// No description provided for @adminStatisticsContactWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get adminStatisticsContactWhatsApp;
+
+  /// No description provided for @adminStatisticsContactCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get adminStatisticsContactCall;
+
+  /// No description provided for @adminStatisticsContactEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get adminStatisticsContactEmail;
+
+  /// No description provided for @adminStatisticsWhatsAppMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}, '**
+  String adminStatisticsWhatsAppMessage(String name);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

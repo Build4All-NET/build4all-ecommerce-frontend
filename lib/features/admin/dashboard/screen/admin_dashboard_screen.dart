@@ -45,6 +45,13 @@ import 'package:build4front/features/admin/tax/presentation/screens/admin_tax_ru
 import 'package:build4front/features/admin/announcements/data/services/owner_announcement_api_service.dart';
 import 'package:build4front/features/admin/announcements/presentation/screens/owner_announcements_screen.dart';
 
+// 📊 Statistics (app users + how to reach them)
+import 'package:build4front/features/admin/statistics/data/repositories/owner_statistics_repository_impl.dart';
+import 'package:build4front/features/admin/statistics/data/services/owner_statistics_api_service.dart';
+import 'package:build4front/features/admin/statistics/domain/usecases/get_owner_user_statistics.dart';
+import 'package:build4front/features/admin/statistics/presentation/cubit/owner_statistics_cubit.dart';
+import 'package:build4front/features/admin/statistics/presentation/screens/owner_statistics_screen.dart';
+
 // 🔹 Coupons
 import 'package:build4front/features/admin/coupons/presentations/screens/admin_coupons_screen.dart';
 import 'package:build4front/features/admin/coupons/presentations/bloc/coupon_bloc.dart';
@@ -669,6 +676,31 @@ final bool lockActions =
                   deleteCouponUc: DeleteCoupon(repo),
                 ),
                 child: const AdminCouponsScreen(),
+              ),
+            ),
+          );
+        }),
+      ),
+      // Sits right before the orders card: the owner looks at who is in the
+      // app first, then at what they bought.
+      _DashAction(
+        icon: Icons.insights_outlined,
+        title: l10n.adminStatisticsTitle,
+        subtitle: l10n.adminActionStatisticsSubtitle,
+        onTap: guarded(() {
+          final api = OwnerStatisticsApiService(
+            getToken: () => _store.getToken(),
+          );
+
+          final repo = OwnerStatisticsRepositoryImpl(api: api);
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BlocProvider<OwnerStatisticsCubit>(
+                create: (_) => OwnerStatisticsCubit(
+                  getStatistics: GetOwnerUserStatistics(repo),
+                ),
+                child: const OwnerStatisticsScreen(),
               ),
             ),
           );

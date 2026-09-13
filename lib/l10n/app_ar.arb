@@ -1678,5 +1678,69 @@
   "excelPhotosAddMore": "زيد صور",
   "excelPhotosImportBtn": "زيد هالمنتجات",
   "excelPhotosEmpty": "لسا ما في صور.",
-  "excelPhotosRemove": "شيله"
+  "excelPhotosRemove": "شيله",
+  "adminStatisticsTitle": "إحصائيات",
+  "adminActionStatisticsSubtitle": "مستخدمين التطبيق وتواصل",
+  "adminStatisticsRefresh": "تحديث",
+  "adminStatisticsLoadFailed": "ما قدرنا نجيب الإحصائيات.",
+  "adminStatisticsTotalUsers": "كل المستخدمين",
+  "adminStatisticsActiveUsers": "مستخدمين فعّالين",
+  "adminStatisticsVerifiedUsers": "مستخدمين موثّقين",
+  "adminStatisticsNewLast7Days": "جداد هالأسبوع",
+  "adminStatisticsNewLast30Days": "جداد هالشهر",
+  "adminStatisticsActiveLast30Days": "فاتوا هالشهر",
+  "adminStatisticsReachableTitle": "مستخدمين فيك تتواصل معن",
+  "adminStatisticsWithEmail": "{count} عندن إيميل",
+  "@adminStatisticsWithEmail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsWithPhone": "{count} عندن رقم",
+  "@adminStatisticsWithPhone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsUsersSectionTitle": "مستخدمين التطبيق",
+  "adminStatisticsSearchHint": "دوّر بالاسم أو الإيميل أو الرقم",
+  "adminStatisticsEmpty": "لسا ما حدا سجّل بتطبيقك.",
+  "adminStatisticsNoSearchResults": "ما في حدا مطابق للبحث.",
+  "adminStatisticsRetry": "جرّب كمان مرة",
+  "adminStatisticsInactiveBadge": "غير فعّال",
+  "adminStatisticsNoContactDetails": "ما في معلومات تواصل",
+  "adminStatisticsJoinedOn": "سجّل بـ {date}",
+  "@adminStatisticsJoinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactFailed": "ما قدرنا نفتح التطبيق.",
+  "adminStatisticsCopied": "تنسخ",
+  "adminStatisticsCopy": "نسخ",
+  "adminStatisticsContactSheetTitle": "تواصل مع {name}",
+  "@adminStatisticsContactSheetTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactWhatsApp": "واتساب",
+  "adminStatisticsContactCall": "اتصال",
+  "adminStatisticsContactEmail": "إيميل",
+  "adminStatisticsWhatsAppMessage": "مرحبا {name}، ",
+  "@adminStatisticsWhatsAppMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -4026,4 +4026,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelPhotosRemove => 'Remove';
+
+  @override
+  String get adminStatisticsTitle => 'Statistics';
+
+  @override
+  String get adminActionStatisticsSubtitle => 'App users & contacts';
+
+  @override
+  String get adminStatisticsRefresh => 'Refresh';
+
+  @override
+  String get adminStatisticsLoadFailed => 'Couldn\'t load your statistics.';
+
+  @override
+  String get adminStatisticsTotalUsers => 'Total users';
+
+  @override
+  String get adminStatisticsActiveUsers => 'Active users';
+
+  @override
+  String get adminStatisticsVerifiedUsers => 'Verified users';
+
+  @override
+  String get adminStatisticsNewLast7Days => 'New this week';
+
+  @override
+  String get adminStatisticsNewLast30Days => 'New this month';
+
+  @override
+  String get adminStatisticsActiveLast30Days => 'Signed in this month';
+
+  @override
+  String get adminStatisticsReachableTitle => 'Users you can contact';
+
+  @override
+  String adminStatisticsWithEmail(int count) {
+    return '$count with email';
+  }
+
+  @override
+  String adminStatisticsWithPhone(int count) {
+    return '$count with phone';
+  }
+
+  @override
+  String get adminStatisticsUsersSectionTitle => 'App users';
+
+  @override
+  String get adminStatisticsSearchHint => 'Search by name, email or phone';
+
+  @override
+  String get adminStatisticsEmpty => 'Nobody has signed up in your app yet.';
+
+  @override
+  String get adminStatisticsNoSearchResults => 'No user matches your search.';
+
+  @override
+  String get adminStatisticsRetry => 'Try again';
+
+  @override
+  String get adminStatisticsInactiveBadge => 'Inactive';
+
+  @override
+  String get adminStatisticsNoContactDetails => 'No contact details';
+
+  @override
+  String adminStatisticsJoinedOn(String date) {
+    return 'Joined $date';
+  }
+
+  @override
+  String get adminStatisticsContactFailed => 'Couldn\'t open that app on your phone.';
+
+  @override
+  String get adminStatisticsCopied => 'Copied';
+
+  @override
+  String get adminStatisticsCopy => 'Copy';
+
+  @override
+  String adminStatisticsContactSheetTitle(String name) {
+    return 'Contact $name';
+  }
+
+  @override
+  String get adminStatisticsContactWhatsApp => 'WhatsApp';
+
+  @override
+  String get adminStatisticsContactCall => 'Call';
+
+  @override
+  String get adminStatisticsContactEmail => 'Email';
+
+  @override
+  String adminStatisticsWhatsAppMessage(String name) {
+    return 'Hello $name, ';
+  }
 }

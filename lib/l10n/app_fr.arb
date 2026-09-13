@@ -1678,5 +1678,69 @@
   "excelPhotosAddMore": "Ajouter des photos",
   "excelPhotosImportBtn": "Ajouter ces produits",
   "excelPhotosEmpty": "Aucune photo pour l'instant.",
-  "excelPhotosRemove": "Retirer"
+  "excelPhotosRemove": "Retirer",
+  "adminStatisticsTitle": "Statistiques",
+  "adminActionStatisticsSubtitle": "Utilisateurs & contacts",
+  "adminStatisticsRefresh": "Actualiser",
+  "adminStatisticsLoadFailed": "Impossible de charger vos statistiques.",
+  "adminStatisticsTotalUsers": "Utilisateurs au total",
+  "adminStatisticsActiveUsers": "Utilisateurs actifs",
+  "adminStatisticsVerifiedUsers": "Utilisateurs vérifiés",
+  "adminStatisticsNewLast7Days": "Nouveaux cette semaine",
+  "adminStatisticsNewLast30Days": "Nouveaux ce mois-ci",
+  "adminStatisticsActiveLast30Days": "Connectés ce mois-ci",
+  "adminStatisticsReachableTitle": "Utilisateurs joignables",
+  "adminStatisticsWithEmail": "{count} avec e-mail",
+  "@adminStatisticsWithEmail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsWithPhone": "{count} avec téléphone",
+  "@adminStatisticsWithPhone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsUsersSectionTitle": "Utilisateurs de l'app",
+  "adminStatisticsSearchHint": "Rechercher par nom, e-mail ou téléphone",
+  "adminStatisticsEmpty": "Personne ne s'est encore inscrit dans votre app.",
+  "adminStatisticsNoSearchResults": "Aucun utilisateur ne correspond.",
+  "adminStatisticsRetry": "Réessayer",
+  "adminStatisticsInactiveBadge": "Inactif",
+  "adminStatisticsNoContactDetails": "Aucun contact",
+  "adminStatisticsJoinedOn": "Inscrit le {date}",
+  "@adminStatisticsJoinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactFailed": "Impossible d'ouvrir cette application.",
+  "adminStatisticsCopied": "Copié",
+  "adminStatisticsCopy": "Copier",
+  "adminStatisticsContactSheetTitle": "Contacter {name}",
+  "@adminStatisticsContactSheetTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactWhatsApp": "WhatsApp",
+  "adminStatisticsContactCall": "Appeler",
+  "adminStatisticsContactEmail": "E-mail",
+  "adminStatisticsWhatsAppMessage": "Bonjour {name}, ",
+  "@adminStatisticsWhatsAppMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -4026,4 +4026,101 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get excelPhotosRemove => 'Retirer';
+
+  @override
+  String get adminStatisticsTitle => 'Statistiques';
+
+  @override
+  String get adminActionStatisticsSubtitle => 'Utilisateurs & contacts';
+
+  @override
+  String get adminStatisticsRefresh => 'Actualiser';
+
+  @override
+  String get adminStatisticsLoadFailed => 'Impossible de charger vos statistiques.';
+
+  @override
+  String get adminStatisticsTotalUsers => 'Utilisateurs au total';
+
+  @override
+  String get adminStatisticsActiveUsers => 'Utilisateurs actifs';
+
+  @override
+  String get adminStatisticsVerifiedUsers => 'Utilisateurs vérifiés';
+
+  @override
+  String get adminStatisticsNewLast7Days => 'Nouveaux cette semaine';
+
+  @override
+  String get adminStatisticsNewLast30Days => 'Nouveaux ce mois-ci';
+
+  @override
+  String get adminStatisticsActiveLast30Days => 'Connectés ce mois-ci';
+
+  @override
+  String get adminStatisticsReachableTitle => 'Utilisateurs joignables';
+
+  @override
+  String adminStatisticsWithEmail(int count) {
+    return '$count avec e-mail';
+  }
+
+  @override
+  String adminStatisticsWithPhone(int count) {
+    return '$count avec téléphone';
+  }
+
+  @override
+  String get adminStatisticsUsersSectionTitle => 'Utilisateurs de l\'app';
+
+  @override
+  String get adminStatisticsSearchHint => 'Rechercher par nom, e-mail ou téléphone';
+
+  @override
+  String get adminStatisticsEmpty => 'Personne ne s\'est encore inscrit dans votre app.';
+
+  @override
+  String get adminStatisticsNoSearchResults => 'Aucun utilisateur ne correspond.';
+
+  @override
+  String get adminStatisticsRetry => 'Réessayer';
+
+  @override
+  String get adminStatisticsInactiveBadge => 'Inactif';
+
+  @override
+  String get adminStatisticsNoContactDetails => 'Aucun contact';
+
+  @override
+  String adminStatisticsJoinedOn(String date) {
+    return 'Inscrit le $date';
+  }
+
+  @override
+  String get adminStatisticsContactFailed => 'Impossible d\'ouvrir cette application.';
+
+  @override
+  String get adminStatisticsCopied => 'Copié';
+
+  @override
+  String get adminStatisticsCopy => 'Copier';
+
+  @override
+  String adminStatisticsContactSheetTitle(String name) {
+    return 'Contacter $name';
+  }
+
+  @override
+  String get adminStatisticsContactWhatsApp => 'WhatsApp';
+
+  @override
+  String get adminStatisticsContactCall => 'Appeler';
+
+  @override
+  String get adminStatisticsContactEmail => 'E-mail';
+
+  @override
+  String adminStatisticsWhatsAppMessage(String name) {
+    return 'Bonjour $name, ';
+  }
 }

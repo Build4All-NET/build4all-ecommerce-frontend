@@ -1859,5 +1859,69 @@
   "excelPhotosAddMore": "Add more photos",
   "excelPhotosImportBtn": "Add these products",
   "excelPhotosEmpty": "No photos yet.",
-  "excelPhotosRemove": "Remove"
+  "excelPhotosRemove": "Remove",
+  "adminStatisticsTitle": "Statistics",
+  "adminActionStatisticsSubtitle": "App users & contacts",
+  "adminStatisticsRefresh": "Refresh",
+  "adminStatisticsLoadFailed": "Couldn't load your statistics.",
+  "adminStatisticsTotalUsers": "Total users",
+  "adminStatisticsActiveUsers": "Active users",
+  "adminStatisticsVerifiedUsers": "Verified users",
+  "adminStatisticsNewLast7Days": "New this week",
+  "adminStatisticsNewLast30Days": "New this month",
+  "adminStatisticsActiveLast30Days": "Signed in this month",
+  "adminStatisticsReachableTitle": "Users you can contact",
+  "adminStatisticsWithEmail": "{count} with email",
+  "@adminStatisticsWithEmail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsWithPhone": "{count} with phone",
+  "@adminStatisticsWithPhone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStatisticsUsersSectionTitle": "App users",
+  "adminStatisticsSearchHint": "Search by name, email or phone",
+  "adminStatisticsEmpty": "Nobody has signed up in your app yet.",
+  "adminStatisticsNoSearchResults": "No user matches your search.",
+  "adminStatisticsRetry": "Try again",
+  "adminStatisticsInactiveBadge": "Inactive",
+  "adminStatisticsNoContactDetails": "No contact details",
+  "adminStatisticsJoinedOn": "Joined {date}",
+  "@adminStatisticsJoinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactFailed": "Couldn't open that app on your phone.",
+  "adminStatisticsCopied": "Copied",
+  "adminStatisticsCopy": "Copy",
+  "adminStatisticsContactSheetTitle": "Contact {name}",
+  "@adminStatisticsContactSheetTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatisticsContactWhatsApp": "WhatsApp",
+  "adminStatisticsContactCall": "Call",
+  "adminStatisticsContactEmail": "Email",
+  "adminStatisticsWhatsAppMessage": "Hello {name}, ",
+  "@adminStatisticsWhatsAppMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
