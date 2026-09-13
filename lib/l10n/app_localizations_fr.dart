@@ -4099,14 +4099,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get adminStatisticsContactFailed => 'Impossible d\'ouvrir cette application.';
 
-  @override
-  String get adminStatisticsCopied => 'Copié';
+
 
   @override
-  String get adminStatisticsCopy => 'Copier';
-
-  @override
-  String adminStatisticsContactSheetTitle(String name) {
+  String adminStatisticsContactTitle(String name) {
     return 'Contacter $name';
   }
 

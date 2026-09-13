@@ -1722,10 +1722,8 @@
     }
   },
   "adminStatisticsContactFailed": "ما قدرنا نفتح التطبيق.",
-  "adminStatisticsCopied": "تنسخ",
-  "adminStatisticsCopy": "نسخ",
-  "adminStatisticsContactSheetTitle": "تواصل مع {name}",
-  "@adminStatisticsContactSheetTitle": {
+  "adminStatisticsContactTitle": "تواصل مع {name}",
+  "@adminStatisticsContactTitle": {
     "placeholders": {
       "name": {
         "type": "String"

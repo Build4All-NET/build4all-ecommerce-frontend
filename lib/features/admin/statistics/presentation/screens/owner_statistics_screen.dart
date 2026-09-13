@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/owner_statistics_cubit.dart';
 import '../widgets/owner_stat_tile.dart';
 import '../widgets/owner_user_card.dart';
-import '../widgets/owner_user_contact_sheet.dart';
+import '../widgets/owner_user_contact_dialog.dart';
 
 /// The owner's audience at a glance: how many people installed the app, and
 /// every one of them with the email/phone needed to reach out.
@@ -269,7 +269,7 @@ class _OwnerStatisticsScreenState extends State<OwnerStatisticsScreen> {
                         final user = users[index];
                         return OwnerUserCard(
                           user: user,
-                          onTap: () => showOwnerUserContactSheet(context, user),
+                          onTap: () => showOwnerUserContactDialog(context, user),
                         );
                       },
                     ),

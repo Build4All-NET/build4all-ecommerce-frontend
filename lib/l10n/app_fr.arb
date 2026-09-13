@@ -1722,10 +1722,8 @@
     }
   },
   "adminStatisticsContactFailed": "Impossible d'ouvrir cette application.",
-  "adminStatisticsCopied": "Copié",
-  "adminStatisticsCopy": "Copier",
-  "adminStatisticsContactSheetTitle": "Contacter {name}",
-  "@adminStatisticsContactSheetTitle": {
+  "adminStatisticsContactTitle": "Contacter {name}",
+  "@adminStatisticsContactTitle": {
     "placeholders": {
       "name": {
         "type": "String"

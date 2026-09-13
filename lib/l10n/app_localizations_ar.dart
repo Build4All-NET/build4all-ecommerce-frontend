@@ -4099,14 +4099,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get adminStatisticsContactFailed => 'ما قدرنا نفتح التطبيق.';
 
-  @override
-  String get adminStatisticsCopied => 'تنسخ';
+
 
   @override
-  String get adminStatisticsCopy => 'نسخ';
-
-  @override
-  String adminStatisticsContactSheetTitle(String name) {
+  String adminStatisticsContactTitle(String name) {
     return 'تواصل مع $name';
   }
 

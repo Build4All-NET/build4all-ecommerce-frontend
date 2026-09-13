@@ -7932,23 +7932,13 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open that app on your phone.'**
   String get adminStatisticsContactFailed;
 
-  /// No description provided for @adminStatisticsCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied'**
-  String get adminStatisticsCopied;
 
-  /// No description provided for @adminStatisticsCopy.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get adminStatisticsCopy;
 
-  /// No description provided for @adminStatisticsContactSheetTitle.
+  /// No description provided for @adminStatisticsContactTitle.
   ///
   /// In en, this message translates to:
   /// **'Contact {name}'**
-  String adminStatisticsContactSheetTitle(String name);
+  String adminStatisticsContactTitle(String name);
 
   /// No description provided for @adminStatisticsContactWhatsApp.
   ///

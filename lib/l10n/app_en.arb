@@ -1903,10 +1903,8 @@
     }
   },
   "adminStatisticsContactFailed": "Couldn't open that app on your phone.",
-  "adminStatisticsCopied": "Copied",
-  "adminStatisticsCopy": "Copy",
-  "adminStatisticsContactSheetTitle": "Contact {name}",
-  "@adminStatisticsContactSheetTitle": {
+  "adminStatisticsContactTitle": "Contact {name}",
+  "@adminStatisticsContactTitle": {
     "placeholders": {
       "name": {
         "type": "String"
