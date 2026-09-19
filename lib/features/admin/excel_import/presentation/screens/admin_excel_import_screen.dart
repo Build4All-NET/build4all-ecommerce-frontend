@@ -1,4 +1,5 @@
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/core/network/globals.dart' as net;
 import 'package:build4front/features/admin/gallery/presentation/widgets/gallery_picker_sheet.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 import 'package:build4front/common/widgets/primary_button.dart';
@@ -87,11 +88,11 @@ class AdminExcelImportScreen extends StatelessWidget {
             ),
           );
 
-          // A catalogue from a till arrives as names and prices. Asked for only
-          // now, because before the import there is nothing to describe.
-          context
-              .read<ExcelImportBloc>()
-              .add(const ExcelDescriptionsChecked());
+          if (net.aiEnabledNotifier.value) {
+            context
+                .read<ExcelImportBloc>()
+                .add(const ExcelDescriptionsChecked());
+          }
         }
 
         // ✅ After download: show toast + open file
@@ -114,9 +115,12 @@ class AdminExcelImportScreen extends StatelessWidget {
                 ),
           ),
         ),
-        body: BlocBuilder<ExcelImportBloc, ExcelImportState>(
-          builder: (context, state) {
-            return SingleChildScrollView(
+        body: ValueListenableBuilder<bool>(
+          valueListenable: net.aiEnabledNotifier,
+          builder: (context, aiEnabled, _) {
+            return BlocBuilder<ExcelImportBloc, ExcelImportState>(
+              builder: (context, state) {
+                return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,9 +226,11 @@ class AdminExcelImportScreen extends StatelessWidget {
                           descriptionOf: state.descriptionFor,
                           withoutDescription: state.visibleWithoutDescription,
                           drafting: state.draftingDescriptions,
-                          onDraftDescriptions: () => context
-                              .read<ExcelImportBloc>()
-                              .add(const ExcelDraftDescriptionsPressed()),
+                          onDraftDescriptions: aiEnabled
+                              ? () => context
+                                  .read<ExcelImportBloc>()
+                                  .add(const ExcelDraftDescriptionsPressed())
+                              : null,
                           onPriceChanged: (row, price) => context
                               .read<ExcelImportBloc>()
                               .add(ExcelRowPriceChanged(row: row, price: price)),
@@ -264,7 +270,8 @@ class AdminExcelImportScreen extends StatelessWidget {
                   ],
 
                   // ===== Photographing a shop with nothing written down =====
-                  if (state.source == ExcelImportSource.photos) ...[
+                  // Only reachable when AI is on — naming from photographs needs a model.
+                  if (aiEnabled && state.source == ExcelImportSource.photos) ...[
                     ExcelPhotoCaptureCard(
                       photos: state.photos,
                       needingName: state.photosNeedingName,
@@ -495,7 +502,7 @@ class AdminExcelImportScreen extends StatelessWidget {
                     ),
                   ],
 
-                  if (state.descriptions.worthOffering) ...[
+                  if (aiEnabled && state.descriptions.worthOffering) ...[
                     const SizedBox(height: 20),
                     ExcelDescriptionsCard(
                       job: state.descriptions,
@@ -508,6 +515,8 @@ class AdminExcelImportScreen extends StatelessWidget {
               ),
             );
           },
+        );
+      },
         ),
       ),
     );
