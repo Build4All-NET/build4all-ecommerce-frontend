@@ -51,6 +51,14 @@ class ExcelSourceCard extends StatelessWidget {
           selected: source == ExcelImportSource.ownFile,
           onTap: () => onChanged(ExcelImportSource.ownFile),
         ),
+        const SizedBox(height: 8),
+        // For the shop that has nothing written down anywhere.
+        _SourceOption(
+          title: l10n.excelSourcePhotos,
+          subtitle: l10n.excelSourcePhotosHint,
+          selected: source == ExcelImportSource.photos,
+          onTap: () => onChanged(ExcelImportSource.photos),
+        ),
       ],
     );
   }
