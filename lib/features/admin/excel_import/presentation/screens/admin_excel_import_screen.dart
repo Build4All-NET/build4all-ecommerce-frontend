@@ -13,14 +13,12 @@ import '../bloc/excel_import_bloc.dart';
 import '../bloc/excel_import_event.dart';
 import '../bloc/excel_import_state.dart';
 import '../widgets/excel_counts_card.dart';
-import '../widgets/excel_descriptions_card.dart';
 import '../widgets/excel_foreign_review_list.dart';
 import '../widgets/excel_issues_list.dart';
 import '../widgets/excel_file_card.dart';
 import '../widgets/excel_product_review_list.dart';
 import '../widgets/excel_column_mapping_card.dart';
 import '../widgets/excel_match_mode_card.dart';
-import '../widgets/excel_photo_capture_card.dart';
 import '../widgets/excel_replace_card.dart';
 import '../widgets/excel_sheet_picker_card.dart';
 import '../widgets/excel_source_card.dart';
@@ -87,11 +85,6 @@ class AdminExcelImportScreen extends StatelessWidget {
             ),
           );
 
-          // A catalogue from a till arrives as names and prices. Asked for only
-          // now, because before the import there is nothing to describe.
-          context
-              .read<ExcelImportBloc>()
-              .add(const ExcelDescriptionsChecked());
         }
 
         // ✅ After download: show toast + open file
@@ -222,9 +215,7 @@ class AdminExcelImportScreen extends StatelessWidget {
                           descriptionOf: state.descriptionFor,
                           withoutDescription: state.visibleWithoutDescription,
                           drafting: state.draftingDescriptions,
-                          onDraftDescriptions: () => context
-                              .read<ExcelImportBloc>()
-                              .add(const ExcelDraftDescriptionsPressed()),
+                          onDraftDescriptions: null,
                           onPriceChanged: (row, price) => context
                               .read<ExcelImportBloc>()
                               .add(ExcelRowPriceChanged(row: row, price: price)),
@@ -260,69 +251,6 @@ class AdminExcelImportScreen extends StatelessWidget {
                               : null,
                         ),
                       ],
-                    ],
-                  ],
-
-                  // ===== Photographing a shop with nothing written down =====
-                  if (state.source == ExcelImportSource.photos) ...[
-                    ExcelPhotoCaptureCard(
-                      photos: state.photos,
-                      needingName: state.photosNeedingName,
-                      reading: state.readingPhotos,
-                      priceOf: state.priceForPhoto,
-                      stockOf: state.stockForPhoto,
-                      descriptionOf: state.descriptionForPhoto,
-                      withoutDescription: state.photosWithoutDescription,
-                      drafting: state.draftingDescriptions,
-                      onDraftDescriptions: () => context
-                          .read<ExcelImportBloc>()
-                          .add(const ExcelPhotoDraftDescriptionsPressed()),
-                      onTakePhoto: () => context
-                          .read<ExcelImportBloc>()
-                          .add(const ExcelPhotosCaptured(fromCamera: true)),
-                      onPickFromGallery: () => context
-                          .read<ExcelImportBloc>()
-                          .add(const ExcelPhotosCaptured(fromCamera: false)),
-                      onNameChanged: (index, name) => context
-                          .read<ExcelImportBloc>()
-                          .add(ExcelPhotoNameChanged(photoIndex: index, name: name)),
-                      onPriceChanged: (index, price) => context
-                          .read<ExcelImportBloc>()
-                          .add(ExcelRowPriceChanged(row: index, price: price)),
-                      onStockChanged: (index, stock) => context
-                          .read<ExcelImportBloc>()
-                          .add(ExcelRowStockChanged(row: index, stock: stock)),
-                      onDescriptionChanged: (index, description) => context
-                          .read<ExcelImportBloc>()
-                          .add(ExcelRowDescriptionChanged(
-                            row: index,
-                            description: description,
-                          )),
-                      onRemove: (index) => context
-                          .read<ExcelImportBloc>()
-                          .add(ExcelPhotoRemoved(index)),
-                    ),
-
-                    if (state.photos.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      ExcelMatchModeCard(
-                        matchMode: state.matchMode,
-                        onChanged: (mode) => context
-                            .read<ExcelImportBloc>()
-                            .add(ExcelMatchModeChanged(mode)),
-                      ),
-                      const SizedBox(height: 12),
-                      PrimaryButton(
-                        label: state.importing
-                            ? l10n.loadingLabel
-                            : l10n.excelPhotosImportBtn,
-                        isLoading: state.importing,
-                        onPressed: state.canImportPhotos
-                            ? () => context
-                                .read<ExcelImportBloc>()
-                                .add(const ExcelPhotosImportPressed())
-                            : null,
-                      ),
                     ],
                   ],
 
@@ -495,15 +423,6 @@ class AdminExcelImportScreen extends StatelessWidget {
                     ),
                   ],
 
-                  if (state.descriptions.worthOffering) ...[
-                    const SizedBox(height: 20),
-                    ExcelDescriptionsCard(
-                      job: state.descriptions,
-                      onWrite: () => context
-                          .read<ExcelImportBloc>()
-                          .add(const ExcelWriteDescriptionsPressed()),
-                    ),
-                  ],
                 ],
               ),
             );
