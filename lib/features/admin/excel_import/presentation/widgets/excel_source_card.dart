@@ -1,4 +1,5 @@
 import 'package:build4front/core/theme/theme_cubit.dart';
+import 'package:build4front/features/ai_feature/presentation/widgets/ai_enabled_gate.dart';
 import 'package:build4front/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,13 +52,22 @@ class ExcelSourceCard extends StatelessWidget {
           selected: source == ExcelImportSource.ownFile,
           onTap: () => onChanged(ExcelImportSource.ownFile),
         ),
-        const SizedBox(height: 8),
         // For the shop that has nothing written down anywhere.
-        _SourceOption(
-          title: l10n.excelSourcePhotos,
-          subtitle: l10n.excelSourcePhotosHint,
-          selected: source == ExcelImportSource.photos,
-          onTap: () => onChanged(ExcelImportSource.photos),
+        // Only offered when AI is enabled — naming products from photographs
+        // requires a model and cannot work without one.
+        AiEnabledGate(
+          whenEnabled: (_) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              _SourceOption(
+                title: l10n.excelSourcePhotos,
+                subtitle: l10n.excelSourcePhotosHint,
+                selected: source == ExcelImportSource.photos,
+                onTap: () => onChanged(ExcelImportSource.photos),
+              ),
+            ],
+          ),
         ),
       ],
     );
