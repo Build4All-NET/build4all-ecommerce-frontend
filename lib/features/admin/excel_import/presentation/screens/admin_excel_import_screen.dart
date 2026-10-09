@@ -134,7 +134,8 @@ class AdminExcelImportScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // ===== Bringing a file from another system =====
-                  if (state.source == ExcelImportSource.ownFile) ...[
+                  // An AI feature: not reachable for a store without AI.
+                  if (aiEnabled && state.source == ExcelImportSource.ownFile) ...[
                     ExcelFileCard(
                       file: state.file,
                       isPicking: state.picking,
