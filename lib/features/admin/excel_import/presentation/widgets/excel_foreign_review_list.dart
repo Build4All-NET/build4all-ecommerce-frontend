@@ -30,7 +30,10 @@ class ExcelForeignReviewList extends StatelessWidget {
   /// would be asked to write.
   final List<ExcelProductPreview> withoutDescription;
   final bool drafting;
-  final VoidCallback onDraftDescriptions;
+
+  /// Asks the assistant to write the missing descriptions. Null when the store
+  /// has no AI, in which case the offer is not shown at all.
+  final VoidCallback? onDraftDescriptions;
 
   final void Function(int row, String price) onPriceChanged;
   final void Function(int row, String stock) onStockChanged;
@@ -160,7 +163,7 @@ class ExcelForeignReviewList extends StatelessWidget {
 
           // The assistant, offered here rather than after the import: this is
           // where the owner is already deciding what each product says.
-          if (withoutDescription.isNotEmpty) ...[
+          if (onDraftDescriptions != null && withoutDescription.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
               l10n.excelPreviewMissingDescriptions(withoutDescription.length),

@@ -45,20 +45,21 @@ class ExcelSourceCard extends StatelessWidget {
           selected: source == ExcelImportSource.template,
           onTap: () => onChanged(ExcelImportSource.template),
         ),
-        const SizedBox(height: 8),
-        _SourceOption(
-          title: l10n.excelSourceOwnFile,
-          subtitle: l10n.excelSourceOwnFileHint,
-          selected: source == ExcelImportSource.ownFile,
-          onTap: () => onChanged(ExcelImportSource.ownFile),
-        ),
-        // For the shop that has nothing written down anywhere.
-        // Only offered when AI is enabled — naming products from photographs
-        // requires a model and cannot work without one.
+        // Everything below is AI: reading a file from another system asks a
+        // model about its columns, and naming products from photographs cannot
+        // work without one. A store without AI is offered only the template.
         AiEnabledGate(
           whenEnabled: (_) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
+              _SourceOption(
+                title: l10n.excelSourceOwnFile,
+                subtitle: l10n.excelSourceOwnFileHint,
+                selected: source == ExcelImportSource.ownFile,
+                onTap: () => onChanged(ExcelImportSource.ownFile),
+              ),
+              // For the shop that has nothing written down anywhere.
               const SizedBox(height: 8),
               _SourceOption(
                 title: l10n.excelSourcePhotos,
