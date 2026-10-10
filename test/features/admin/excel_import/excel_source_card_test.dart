@@ -37,6 +37,7 @@ void main() {
 
   Future<void> pump(
     WidgetTester tester, {
+    ExcelImportSource? source,
     ValueChanged<ExcelImportSource>? onChanged,
   }) async {
     await tester.pumpWidget(
@@ -50,7 +51,7 @@ void main() {
               builder: (context) {
                 l10n = AppLocalizations.of(context)!;
                 return ExcelSourceCard(
-                  source: null,
+                  source: source,
                   onChanged: onChanged ?? (_) {},
                 );
               },
@@ -103,6 +104,15 @@ void main() {
     await tester.tap(find.text(l10n.excelSourceTemplate));
 
     expect(chosen, ExcelImportSource.template);
+  });
+
+  testWidgets('shows the template as chosen when it is the selected source', (tester) async {
+    serverSays(aiEnabled: false);
+
+    await pump(tester, source: ExcelImportSource.template);
+
+    expect(find.byIcon(Icons.radio_button_checked), findsOneWidget);
+    expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
   });
 }
 
