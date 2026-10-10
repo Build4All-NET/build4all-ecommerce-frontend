@@ -35,6 +35,7 @@ import 'package:build4front/core/config/env.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 
+import 'package:build4front/features/admin/ai_tokens/presentation/screens/ai_tokens_screen.dart';
 import 'package:build4front/features/admin/product/presentation/screens/admin_products_list_screen.dart';
 import 'package:build4front/features/admin/home_banner/presentation/screens/admin_home_banners_screen.dart';
 import 'package:build4front/features/admin/payment_config/presentation/screens/owner_payment_config_screen.dart';
@@ -568,6 +569,16 @@ final bool lockActions =
     final canManageProducts = AppConfig.fromEnv().canManageCatalogueInApp;
 
     final actions = <_DashAction>[
+      _DashAction(
+        icon: Icons.auto_awesome_outlined,
+        title: 'AI add-on',
+        subtitle: 'Tokens for AI features',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AiTokensScreen()),
+          );
+        },
+      ),
       if (canManageProducts)
         _DashAction(
           icon: Icons.shopping_bag_outlined,
