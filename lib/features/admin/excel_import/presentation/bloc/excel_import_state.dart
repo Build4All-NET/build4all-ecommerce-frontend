@@ -151,6 +151,11 @@ class ExcelImportState extends Equatable {
         errorMessage: null,
       );
 
+  /// The source shown as chosen. A store without AI has only the template to
+  /// choose from, so it is chosen for them instead of asking about one option.
+  ExcelImportSource? effectiveSource({required bool aiEnabled}) =>
+      source ?? (aiEnabled ? null : ExcelImportSource.template);
+
   ExcelImportState copyWith({
     bool? picking,
     bool? validating,

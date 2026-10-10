@@ -120,13 +120,15 @@ class AdminExcelImportScreen extends StatelessWidget {
           builder: (context, aiEnabled, _) {
             return BlocBuilder<ExcelImportBloc, ExcelImportState>(
               builder: (context, state) {
+                final source = state.effectiveSource(aiEnabled: aiEnabled);
+
                 return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ExcelSourceCard(
-                    source: state.source,
+                    source: source,
                     onChanged: (source) => context
                         .read<ExcelImportBloc>()
                         .add(ExcelSourceChanged(source)),
@@ -135,7 +137,7 @@ class AdminExcelImportScreen extends StatelessWidget {
 
                   // ===== Bringing a file from another system =====
                   // An AI feature: not reachable for a store without AI.
-                  if (aiEnabled && state.source == ExcelImportSource.ownFile) ...[
+                  if (aiEnabled && source == ExcelImportSource.ownFile) ...[
                     ExcelFileCard(
                       file: state.file,
                       isPicking: state.picking,
@@ -272,7 +274,7 @@ class AdminExcelImportScreen extends StatelessWidget {
 
                   // ===== Photographing a shop with nothing written down =====
                   // Only reachable when AI is on — naming from photographs needs a model.
-                  if (aiEnabled && state.source == ExcelImportSource.photos) ...[
+                  if (aiEnabled && source == ExcelImportSource.photos) ...[
                     ExcelPhotoCaptureCard(
                       photos: state.photos,
                       needingName: state.photosNeedingName,
@@ -335,7 +337,7 @@ class AdminExcelImportScreen extends StatelessWidget {
                   ],
 
                   // ===== Filling in the template we provide =====
-                  if (state.source == ExcelImportSource.template) ...[
+                  if (source == ExcelImportSource.template) ...[
                   // ===== Header / helper text =====
                   _SectionHeader(
                     title: l10n.adminExcelStep1Title,
