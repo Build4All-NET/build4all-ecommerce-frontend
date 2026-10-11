@@ -166,8 +166,37 @@ class _UpgradePopupState extends State<UpgradePopup> {
   void _selectPlan(String code) {
     if (widget.isProcessing) return;
     final next = code == _selectedPlan ? null : code;
-    setState(() => _selectedPlan = next);
-    widget.onSelectionChanged?.call(next, _cycle);
+    // A plan may only have one active billing cycle; keep the current cycle if
+    // the plan supports it, otherwise fall to the one it does, so the owner is
+    // never left on a cycle that has no (active) price.
+    final correctedCycle = _cycleForPlan(next) ?? _cycle;
+    setState(() {
+      _selectedPlan = next;
+      _cycle = correctedCycle;
+    });
+    widget.onSelectionChanged?.call(next, correctedCycle);
+  }
+
+  UpgradePlan? _planByCode(String? code) {
+    if (code == null) return null;
+    for (final p in widget.plans) {
+      if (p.code == code) return p;
+    }
+    return null;
+  }
+
+  /// The billing cycle to use for [code], preferring the current one when the
+  /// plan supports it. Null when the plan isn't found (e.g. deselected).
+  BillingCycle? _cycleForPlan(String? code) {
+    final plan = _planByCode(code);
+    if (plan == null) return null;
+    final monthlyOk = plan.pricing.monthlyPrice != null;
+    final yearlyOk = plan.pricing.effectiveYearlyPrice != null;
+    if (_cycle == BillingCycle.MONTHLY && monthlyOk) return BillingCycle.MONTHLY;
+    if (_cycle == BillingCycle.YEARLY && yearlyOk) return BillingCycle.YEARLY;
+    if (monthlyOk) return BillingCycle.MONTHLY;
+    if (yearlyOk) return BillingCycle.YEARLY;
+    return null;
   }
 
   void _selectCycle(BillingCycle cycle) {
@@ -203,13 +232,24 @@ class _UpgradePopupState extends State<UpgradePopup> {
     widget.onClose?.call();
   }
 
-  UpgradePlan? get _selectedPlanDetails {
-    if (_selectedPlan == null) return null;
-    for (final p in widget.plans) {
-      if (p.code == _selectedPlan) return p;
-    }
-    return null;
+  UpgradePlan? get _selectedPlanDetails => _planByCode(_selectedPlan);
+
+  /// Whether each cycle has active pricing for the current selection. With no
+  /// plan selected yet, both are offered; once a plan is chosen, only the cycles
+  /// the super admin left active (price present in the DB response) are offered.
+  bool get _monthlyEnabled {
+    final p = _selectedPlanDetails;
+    return p == null || p.pricing.monthlyPrice != null;
   }
+
+  bool get _yearlyEnabled {
+    final p = _selectedPlanDetails;
+    return p == null || p.pricing.effectiveYearlyPrice != null;
+  }
+
+  /// Only show the cycle selector when there is an actual choice (both cycles
+  /// active). A single active cycle needs no toggle.
+  bool get _showCycleSelector => _monthlyEnabled && _yearlyEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -267,17 +307,26 @@ class _UpgradePopupState extends State<UpgradePopup> {
                             const SizedBox(height: 10),
                           ],
                           _buildPlansSection(l10n, colors, textTheme),
-                          const SizedBox(height: 14),
-                          _SectionLabel(
-                            text: l10n.upgradeBillingCycleLabel,
-                            colors: colors,
-                            textTheme: textTheme,
-                          ),
-                          const SizedBox(height: 8),
-                          BillingCycleSelector(
-                            value: _cycle,
-                            onChanged: _selectCycle,
-                          ),
+                          // Billing cycle is only offered when the selected plan
+                          // has more than one active cycle in the database --
+                          // an inactive cycle is never shown. With a single
+                          // active cycle there is no choice to make, so the
+                          // selector is hidden and the price below speaks for it.
+                          if (_showCycleSelector) ...[
+                            const SizedBox(height: 14),
+                            _SectionLabel(
+                              text: l10n.upgradeBillingCycleLabel,
+                              colors: colors,
+                              textTheme: textTheme,
+                            ),
+                            const SizedBox(height: 8),
+                            BillingCycleSelector(
+                              value: _cycle,
+                              onChanged: _selectCycle,
+                              monthlyEnabled: _monthlyEnabled,
+                              yearlyEnabled: _yearlyEnabled,
+                            ),
+                          ],
                           const SizedBox(height: 14),
                           if (_selectedPlanDetails != null)
                             _PricePreview(

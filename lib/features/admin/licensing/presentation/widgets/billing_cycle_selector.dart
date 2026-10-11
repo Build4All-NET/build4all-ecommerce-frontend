@@ -8,10 +8,18 @@ class BillingCycleSelector extends StatelessWidget {
   final BillingCycle value;
   final ValueChanged<BillingCycle> onChanged;
 
+  /// Whether each cycle has active pricing for the selected plan (read from the
+  /// backend). A cycle that is not enabled is not shown at all -- the owner is
+  /// never offered a billing cycle the super admin left inactive.
+  final bool monthlyEnabled;
+  final bool yearlyEnabled;
+
   const BillingCycleSelector({
     super.key,
     required this.value,
     required this.onChanged,
+    this.monthlyEnabled = true,
+    this.yearlyEnabled = true,
   });
 
   @override
@@ -21,6 +29,33 @@ class BillingCycleSelector extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
 
+    final segments = <Widget>[];
+    if (monthlyEnabled) {
+      segments.add(Expanded(
+        child: _segment(
+          context: context,
+          colors: colors,
+          textTheme: textTheme,
+          label: l10n.billingCycleMonthly,
+          isActive: value == BillingCycle.MONTHLY,
+          onTap: () => onChanged(BillingCycle.MONTHLY),
+        ),
+      ));
+    }
+    if (yearlyEnabled) {
+      segments.add(Expanded(
+        child: _segment(
+          context: context,
+          colors: colors,
+          textTheme: textTheme,
+          label: l10n.billingCycleYearly,
+          isActive: value == BillingCycle.YEARLY,
+          onTap: () => onChanged(BillingCycle.YEARLY),
+        ),
+      ));
+    }
+    if (segments.isEmpty) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -28,30 +63,7 @@ class BillingCycleSelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: colors.border.withOpacity(.25)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _segment(
-              context: context,
-              colors: colors,
-              textTheme: textTheme,
-              label: l10n.billingCycleMonthly,
-              isActive: value == BillingCycle.MONTHLY,
-              onTap: () => onChanged(BillingCycle.MONTHLY),
-            ),
-          ),
-          Expanded(
-            child: _segment(
-              context: context,
-              colors: colors,
-              textTheme: textTheme,
-              label: l10n.billingCycleYearly,
-              isActive: value == BillingCycle.YEARLY,
-              onTap: () => onChanged(BillingCycle.YEARLY),
-            ),
-          ),
-        ],
-      ),
+      child: Row(children: segments),
     );
   }
 
