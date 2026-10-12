@@ -236,11 +236,12 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
                         _sectionTitle('USED THIS PERIOD'),
                         _usageCard(),
                       ],
-                      if (_payments.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        _sectionTitle('PAYMENT HISTORY'),
+                      const SizedBox(height: 10),
+                      _sectionTitle('PAYMENT HISTORY'),
+                      if (_payments.isEmpty)
+                        _emptyHistoryCard()
+                      else
                         ..._payments.map(_paymentCard),
-                      ],
                     ],
                   ),
                 ),
@@ -396,6 +397,27 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
                   ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyHistoryCard() {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.receipt_long_outlined, color: cs.onSurfaceVariant, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'No purchases yet. Your token-pack payments will appear here.',
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12.5),
+              ),
+            ),
           ],
         ),
       ),
