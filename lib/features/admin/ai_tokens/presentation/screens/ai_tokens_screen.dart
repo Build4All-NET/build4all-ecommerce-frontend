@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/ai_api.dart';
+import '../../data/models/ai_payment.dart';
 import '../../data/models/ai_token_pack.dart';
 import '../../data/models/ai_usage_line.dart';
 import '../../data/models/ai_wallet.dart';
@@ -28,6 +29,7 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
   AiWallet? _wallet;
   List<AiTokenPack> _packs = const [];
   List<AiUsageLine> _usage = const [];
+  List<AiPayment> _payments = const [];
   String? _buyingCode;
 
   @override
@@ -47,11 +49,18 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
         _api.getPacks(),
         _api.getUsage(),
       ]);
+      // Payment history is optional (older backends may not expose it yet), so
+      // it must never fail the whole screen.
+      List<AiPayment> payments = const [];
+      try {
+        payments = await _api.getPayments();
+      } catch (_) {/* history endpoint optional */}
       if (!mounted) return;
       setState(() {
         _wallet = results[0] as AiWallet;
         _packs = results[1] as List<AiTokenPack>;
         _usage = results[2] as List<AiUsageLine>;
+        _payments = payments;
         _loading = false;
       });
     } catch (e) {
@@ -227,6 +236,11 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
                         _sectionTitle('USED THIS PERIOD'),
                         _usageCard(),
                       ],
+                      if (_payments.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        _sectionTitle('PAYMENT HISTORY'),
+                        ..._payments.map(_paymentCard),
+                      ],
                     ],
                   ),
                 ),
@@ -382,6 +396,64 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
                   ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentCard(AiPayment p) {
+    final cs = Theme.of(context).colorScheme;
+    final isPaid = (p.status ?? '').toUpperCase() == 'PAID';
+    final statusColor = isPaid
+        ? Colors.green
+        : ((p.status ?? '').toUpperCase() == 'PENDING' ? cs.tertiary : cs.error);
+    final title = (p.planName != null && p.planName!.isNotEmpty)
+        ? p.planName!
+        : (p.planCode ?? 'AI tokens');
+    final parts = <String>[
+      if (p.dateLabel.isNotEmpty) p.dateLabel,
+      if (p.tokens != null) '${_fmt(p.tokens!)} tokens',
+      if (p.provider != null && p.provider!.isNotEmpty) p.provider!,
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                  const SizedBox(height: 3),
+                  Text(parts.join(' · '),
+                      style: TextStyle(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (p.amount != null)
+                  Text('\$${p.amount!.toStringAsFixed(2)} ${p.currency}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w900, fontSize: 14)),
+                if (p.status != null) ...[
+                  const SizedBox(height: 3),
+                  Text(p.status!,
+                      style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11)),
+                ],
+              ],
+            ),
           ],
         ),
       ),
