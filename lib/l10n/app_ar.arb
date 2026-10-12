@@ -1466,8 +1466,8 @@
   "excelPreviewFixFirst": "صحّح الصفوف المعلَّمة أدناه، ثم ارفع الملف مرة أخرى.",
   "excelPreviewNoShipping": "بدون شحن",
   "excelSourceTitle": "وين منتجاتك هلق؟",
-  "excelSourceOwnFile": "عندي ملف من نظام تاني",
-  "excelSourceOwnFileHint": "ارفعه متل ما هو. نحنا منقراه عنك.",
+  "excelSourceOwnFile": "SmartImport",
+  "excelSourceOwnFileHint": "ملف منتجات من نظام آخر — نقرأه ونطابق أعمدته تلقائيًا.",
   "excelSourceTemplate": "استعمل قالب Build4All",
   "excelSourceTemplateHint": "حمّل الملف تبعنا وعبّيه.",
   "excelOwnFileReadBtn": "اقرا الملف تبعي",
@@ -1652,8 +1652,8 @@
       }
     }
   },
-  "excelSourcePhotos": "بصوّرهن",
-  "excelSourcePhotosHint": "صوّر كل غرض. نحنا منقول شو هوي.",
+  "excelSourcePhotos": "SnapCatalog",
+  "excelSourcePhotosHint": "صوّر منتجاتك أو اخترها من المعرض — ونحدّد كل واحد.",
   "excelPhotosTakeBtn": "صوّر",
   "excelPhotosPickBtn": "اختار من الصور",
   "excelPhotosReading": "عم نقرا الصور…",

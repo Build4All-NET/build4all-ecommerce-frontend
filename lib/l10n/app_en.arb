@@ -1647,8 +1647,8 @@
   "excelPreviewFixFirst": "Fix the rows marked below, then upload the file again.",
   "excelPreviewNoShipping": "No shipping",
   "excelSourceTitle": "Where are your products now?",
-  "excelSourceOwnFile": "I have a file from another system",
-  "excelSourceOwnFileHint": "Upload it as it is. We will read it for you.",
+  "excelSourceOwnFile": "SmartImport",
+  "excelSourceOwnFileHint": "A product file from another system — we read it and map its columns for you.",
   "excelSourceTemplate": "Use the Build4All template",
   "excelSourceTemplateHint": "Download our sheet and fill it in.",
   "excelOwnFileReadBtn": "Read my file",
@@ -1833,8 +1833,8 @@
       }
     }
   },
-  "excelSourcePhotos": "I'll photograph them",
-  "excelSourcePhotosHint": "Take a picture of each thing. We'll say what it is.",
+  "excelSourcePhotos": "SnapCatalog",
+  "excelSourcePhotosHint": "Photograph your products or pick from the gallery — we name each one.",
   "excelPhotosTakeBtn": "Take photos",
   "excelPhotosPickBtn": "Choose from gallery",
   "excelPhotosReading": "Reading your photos…",

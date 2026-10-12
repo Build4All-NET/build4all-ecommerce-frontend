@@ -1466,8 +1466,8 @@
   "excelPreviewFixFirst": "Corrigez les lignes signalées ci-dessous, puis importez à nouveau le fichier.",
   "excelPreviewNoShipping": "Sans livraison",
   "excelSourceTitle": "Où sont vos produits ?",
-  "excelSourceOwnFile": "J'ai un fichier d'un autre système",
-  "excelSourceOwnFileHint": "Envoyez-le tel quel. Nous le lisons pour vous.",
+  "excelSourceOwnFile": "SmartImport",
+  "excelSourceOwnFileHint": "Un fichier produits d'un autre système — nous le lisons et mappons ses colonnes.",
   "excelSourceTemplate": "Utiliser le modèle Build4All",
   "excelSourceTemplateHint": "Téléchargez notre feuille et remplissez-la.",
   "excelOwnFileReadBtn": "Lire mon fichier",
@@ -1652,8 +1652,8 @@
       }
     }
   },
-  "excelSourcePhotos": "Je vais les photographier",
-  "excelSourcePhotosHint": "Photographiez chaque article. Nous dirons ce que c'est.",
+  "excelSourcePhotos": "SnapCatalog",
+  "excelSourcePhotosHint": "Photographiez vos produits ou choisissez dans la galerie — nous identifions chacun.",
   "excelPhotosTakeBtn": "Prendre des photos",
   "excelPhotosPickBtn": "Choisir dans la galerie",
   "excelPhotosReading": "Lecture des photos…",
