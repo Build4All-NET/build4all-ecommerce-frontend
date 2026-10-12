@@ -4,6 +4,7 @@ import 'package:build4front/features/admin/licensing/data/models/upgrade_payment
 import 'package:build4front/features/admin/licensing/data/models/upgrade_payment_intent_model.dart';
 import 'package:dio/dio.dart';
 
+import 'models/ai_payment.dart';
 import 'models/ai_token_pack.dart';
 import 'models/ai_usage_line.dart';
 import 'models/ai_wallet.dart';
@@ -35,6 +36,11 @@ class AiApi {
   Future<List<AiUsageLine>> getUsage() async {
     final res = await _dio.get('/api/ai/apps/me/usage');
     return _list(res.data).map(AiUsageLine.fromJson).toList();
+  }
+
+  Future<List<AiPayment>> getPayments() async {
+    final res = await _dio.get('/api/ai/apps/me/payments');
+    return _list(res.data).map(AiPayment.fromJson).toList();
   }
 
   Future<List<AvailablePaymentMethodModel>> paymentMethods() async {
