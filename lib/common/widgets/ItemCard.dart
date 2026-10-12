@@ -384,7 +384,7 @@ class _ProductCardBody extends StatelessWidget {
                                   size: 16,
                                 ),
                                 label: Text(
-                                  'Ask AI',
+                                  'Shop Assistant',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: t.labelMedium?.copyWith(
@@ -675,7 +675,7 @@ class _GenericCardBody extends StatelessWidget {
                                 ),
                                 icon: const Icon(Icons.auto_awesome, size: 16),
                                 label: Text(
-                                  'Ask AI',
+                                  'Shop Assistant',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: t.labelMedium?.copyWith(

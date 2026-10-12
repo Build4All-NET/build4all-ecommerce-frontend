@@ -3757,10 +3757,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get excelSourceTitle => 'وين منتجاتك هلق؟';
 
   @override
-  String get excelSourceOwnFile => 'عندي ملف من نظام تاني';
+  String get excelSourceOwnFile => 'SmartImport';
 
   @override
-  String get excelSourceOwnFileHint => 'ارفعه متل ما هو. نحنا منقراه عنك.';
+  String get excelSourceOwnFileHint => 'ملف منتجات من نظام آخر — نقرأه ونطابق أعمدته تلقائيًا.';
 
   @override
   String get excelSourceTemplate => 'استعمل قالب Build4All';
@@ -3985,10 +3985,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get excelSourcePhotos => 'بصوّرهن';
+  String get excelSourcePhotos => 'SnapCatalog';
 
   @override
-  String get excelSourcePhotosHint => 'صوّر كل غرض. نحنا منقول شو هوي.';
+  String get excelSourcePhotosHint => 'صوّر منتجاتك أو اخترها من المعرض — ونحدّد كل واحد.';
 
   @override
   String get excelPhotosTakeBtn => 'صوّر';

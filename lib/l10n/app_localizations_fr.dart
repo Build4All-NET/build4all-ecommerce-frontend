@@ -3757,10 +3757,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get excelSourceTitle => 'Où sont vos produits ?';
 
   @override
-  String get excelSourceOwnFile => 'J\'ai un fichier d\'un autre système';
+  String get excelSourceOwnFile => 'SmartImport';
 
   @override
-  String get excelSourceOwnFileHint => 'Envoyez-le tel quel. Nous le lisons pour vous.';
+  String get excelSourceOwnFileHint => 'Un fichier produits d\'un autre système — nous le lisons et mappons ses colonnes.';
 
   @override
   String get excelSourceTemplate => 'Utiliser le modèle Build4All';
@@ -3985,10 +3985,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get excelSourcePhotos => 'Je vais les photographier';
+  String get excelSourcePhotos => 'SnapCatalog';
 
   @override
-  String get excelSourcePhotosHint => 'Photographiez chaque article. Nous dirons ce que c\'est.';
+  String get excelSourcePhotosHint => 'Photographiez vos produits ou choisissez dans la galerie — nous identifions chacun.';
 
   @override
   String get excelPhotosTakeBtn => 'Prendre des photos';
