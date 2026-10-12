@@ -44,7 +44,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
   bool _manualRequestHandled = false;
   bool _stripeHandled = false;
   bool _paypalHandled = false;
-  bool _mpgsHandled = false;
+  bool _hostedCardHandled = false;
   bool _pendingHandled = false;
   bool _successHandled = false;
 
@@ -183,9 +183,9 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
     }
   }
 
-  Future<void> _handleMpgsPayment(UpgradeFlowState state) async {
-    if (_mpgsHandled) return;
-    _mpgsHandled = true;
+  Future<void> _handleHostedCardPayment(UpgradeFlowState state) async {
+    if (_hostedCardHandled) return;
+    _hostedCardHandled = true;
 
     final l10n = AppLocalizations.of(context)!;
     final bloc = context.read<UpgradeFlowBloc>();
@@ -193,8 +193,9 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
     if (intent == null) return;
 
-    // Backend returns the absolute URL of our /api/licensing/mpgs/checkout
-    // page, which loads MPGS's checkout.min.js for the configured session.
+    // Backend returns the absolute URL of our hosted card-checkout page
+    // (MPGS's checkout.min.js, or Cybersource/Areeba Unified Checkout) for
+    // the configured session.
     final checkoutUrl = (intent.checkoutUrl ?? '').trim();
     if (checkoutUrl.isEmpty) {
       bloc.add(UpgradePaymentFailed(l10n.upgradePaymentMissingConfig));
@@ -359,11 +360,13 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           return;
         }
 
-        // 2.b) MPGS hosted-checkout URL → external browser → "I've paid"
+        // 2.b) MPGS / Cybersource hosted-checkout URL → external browser →
+        // "I've paid". Both are hosted card pages: open the backend checkout
+        // URL, then confirm server-side once the owner returns.
         if (state.status == UpgradeFlowStatus.awaitingPayment &&
             state.paymentIntent != null &&
-            provider == 'mpgs') {
-          await _handleMpgsPayment(state);
+            (provider == 'mpgs' || provider == 'cybersource')) {
+          await _handleHostedCardPayment(state);
           return;
         }
 
@@ -373,7 +376,8 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             provider != null &&
             provider != 'stripe' &&
             provider != 'paypal' &&
-            provider != 'mpgs') {
+            provider != 'mpgs' &&
+            provider != 'cybersource') {
           await _handleManualSuccess(state);
           return;
         }
@@ -384,6 +388,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             provider != 'stripe' &&
             provider != 'paypal' &&
             provider != 'mpgs' &&
+            provider != 'cybersource' &&
             state.confirmedAccess == null) {
           await _handleManualSuccess(state);
           return;
