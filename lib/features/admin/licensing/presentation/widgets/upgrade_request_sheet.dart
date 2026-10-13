@@ -1,4 +1,5 @@
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/common/widgets/payment_result_screen.dart';
 import 'package:build4front/core/payments/stripe_payment_sheet.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/billing_cycle.dart';
 import 'package:build4front/features/admin/licensing/domain/entities/owner_app_access.dart';
@@ -400,7 +401,24 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           if (_successHandled) return;
           _successHandled = true;
 
-          AppToast.success(ctx, l10n.upgradePaymentSuccess);
+          final intent = state.paymentIntent;
+          final plan = state.selectedPlanDetails;
+          final planLabel =
+              plan?.title ?? plan?.code ?? state.selectedPlan ?? 'Your plan';
+          final amountText = (intent != null && intent.amount > 0)
+              ? '${intent.currency} ${intent.amount.toStringAsFixed(2)}'
+              : null;
+
+          await Navigator.of(ctx).push(
+            MaterialPageRoute(
+              builder: (_) => PaymentResultScreen.success(
+                message: '$planLabel is now active.',
+                amountText: amountText,
+                reference: intent?.paymentIntentId,
+              ),
+            ),
+          );
+          if (!ctx.mounted) return;
           Navigator.of(ctx).pop(state.confirmedAccess);
           return;
         }
@@ -415,7 +433,16 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
             return;
           }
 
-          AppToast.error(ctx, state.errorMessage!);
+          await Navigator.of(ctx).push(
+            MaterialPageRoute(
+              builder: (_) => PaymentResultScreen.failure(
+                message: state.errorMessage,
+                reference: state.paymentIntent?.paymentIntentId,
+                showRetry: false,
+              ),
+            ),
+          );
+          if (!ctx.mounted) return;
           ctx.read<UpgradeFlowBloc>().add(const UpgradeFlowMessagesCleared());
         }
       },

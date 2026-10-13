@@ -1,4 +1,5 @@
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/common/widgets/payment_result_screen.dart';
 import 'package:build4front/core/payments/stripe_payment_sheet.dart';
 import 'package:build4front/features/admin/licensing/data/models/available_payment_method_model.dart';
 import 'package:build4front/features/admin/licensing/data/models/upgrade_payment_intent_model.dart';
@@ -123,8 +124,18 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
       final ok = await _completePayment(intent);
       if (!mounted) return;
       if (ok) {
-        AppToast.success(context, 'AI tokens added.');
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PaymentResultScreen.success(
+              message:
+                  '${pack.name} — ${pack.tokensPerPeriod} AI tokens have been added.',
+              amountText: '${intent.currency} ${intent.amount.toStringAsFixed(2)}',
+              reference: intent.paymentIntentId,
+            ),
+          ),
+        );
       }
+      if (!mounted) return;
       await _load();
     } catch (e) {
       if (mounted) AppToast.error(context, e.toString());
