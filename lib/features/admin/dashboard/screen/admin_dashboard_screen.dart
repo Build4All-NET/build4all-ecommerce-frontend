@@ -36,6 +36,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:build4front/features/auth/data/services/admin_token_store.dart';
 
 import 'package:build4front/features/admin/ai_tokens/presentation/screens/ai_tokens_screen.dart';
+import 'package:build4front/features/admin/ai_marketplace/presentation/screens/ai_marketplace_screen.dart';
 import 'package:build4front/features/admin/product/presentation/screens/admin_products_list_screen.dart';
 import 'package:build4front/features/admin/home_banner/presentation/screens/admin_home_banners_screen.dart';
 import 'package:build4front/features/admin/payment_config/presentation/screens/owner_payment_config_screen.dart';
@@ -576,6 +577,16 @@ final bool lockActions =
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const AiTokensScreen()),
+          );
+        },
+      ),
+      _DashAction(
+        icon: Icons.grid_view_rounded,
+        title: 'AI Marketplace',
+        subtitle: 'Install or remove AI features',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AiMarketplaceScreen()),
           );
         },
       ),
