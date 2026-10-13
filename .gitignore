@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Signing keystores must never be committed (CI rebuilds them from GitHub Secrets).
+*.jks
+*.p12
+*.keystore

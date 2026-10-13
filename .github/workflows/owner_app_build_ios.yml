@@ -37,6 +37,7 @@ jobs:
       DEFAULT_BETA_APP_DESCRIPTION: ${{ secrets.DEFAULT_BETA_APP_DESCRIPTION }}
       DEFAULT_BETA_FEEDBACK_EMAIL: ${{ secrets.DEFAULT_BETA_FEEDBACK_EMAIL }}
       DEFAULT_BETA_CONTACT_PHONE: ${{ secrets.DEFAULT_BETA_CONTACT_PHONE }}
+      DEFAULT_DEMO_PASSWORD: ${{ secrets.DEFAULT_DEMO_PASSWORD }}
 
       SPACESHIP_CONNECT_API_IN_HOUSE: "false"
       COCOAPODS_DISABLE_STATS: "true"
@@ -667,7 +668,12 @@ jobs:
           " 2>/dev/null || echo "")
 
           [ -n "$DEMO_EMAIL"    ] || DEMO_EMAIL="demo@applereview.com"
-          [ -n "$DEMO_PASSWORD" ] || DEMO_PASSWORD="AppleReview2026!"
+          # Fallback comes from a repository secret, never from the code.
+          [ -n "$DEMO_PASSWORD" ] || DEMO_PASSWORD="${DEFAULT_DEMO_PASSWORD:-}"
+          if [ -z "$DEMO_PASSWORD" ]; then
+            echo "::error title=Demo password missing::The backend returned no password and the DEFAULT_DEMO_PASSWORD secret is not set."
+            exit 1
+          fi
 
           echo "DEMO_EMAIL=$DEMO_EMAIL"       >> "$GITHUB_ENV"
           echo "DEMO_PASSWORD=$DEMO_PASSWORD" >> "$GITHUB_ENV"

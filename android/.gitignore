@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+**/*.p12
+app/*.b64
+
+# Firebase config is injected by CI (or kept locally) - never commit it.
+app/google-services.json
