@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:build4front/common/widgets/app_toast.dart';
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:flutter/material.dart';
 
 import '../../data/ai_marketplace_api.dart';
@@ -101,6 +102,18 @@ class _AiMarketplaceScreenState extends State<AiMarketplaceScreen> {
 
     try {
       await _api.setInstalled(f.code, next);
+      // Keep the app-wide install set in sync so other screens (storefront chat,
+      // import sources) reflect the change without waiting for a reload.
+      final cur = g.aiInstalledFeaturesNotifier.value;
+      if (cur != null) {
+        final updated = {...cur};
+        if (next) {
+          updated.add(f.code);
+        } else {
+          updated.remove(f.code);
+        }
+        g.aiInstalledFeatures = updated;
+      }
     } catch (e) {
       if (!mounted) return;
       // Revert on failure.

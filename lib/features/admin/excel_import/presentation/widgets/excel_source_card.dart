@@ -1,3 +1,4 @@
+import 'package:build4front/core/network/globals.dart' as g;
 import 'package:build4front/core/theme/theme_cubit.dart';
 import 'package:build4front/features/ai_feature/presentation/widgets/ai_enabled_gate.dart';
 import 'package:build4front/l10n/app_localizations.dart';
@@ -48,26 +49,42 @@ class ExcelSourceCard extends StatelessWidget {
         // Everything below is AI: reading a file from another system asks a
         // model about its columns, and naming products from photographs cannot
         // work without one. A store without AI is offered only the template.
+        // Each AI source also respects the AI Marketplace: SmartImport (own file)
+        // and SnapCatalog (photos) disappear here when the owner uninstalls them.
         AiEnabledGate(
-          whenEnabled: (_) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              _SourceOption(
-                title: l10n.excelSourceOwnFile,
-                subtitle: l10n.excelSourceOwnFileHint,
-                selected: source == ExcelImportSource.ownFile,
-                onTap: () => onChanged(ExcelImportSource.ownFile),
-              ),
-              // For the shop that has nothing written down anywhere.
-              const SizedBox(height: 8),
-              _SourceOption(
-                title: l10n.excelSourcePhotos,
-                subtitle: l10n.excelSourcePhotosHint,
-                selected: source == ExcelImportSource.photos,
-                onTap: () => onChanged(ExcelImportSource.photos),
-              ),
-            ],
+          whenEnabled: (_) => ValueListenableBuilder<Set<String>?>(
+            valueListenable: g.aiInstalledFeaturesNotifier,
+            builder: (_, __, ___) {
+              final smartImport = g.aiFeatureInstalled('SMART_IMPORT');
+              final snapCatalog = g.aiFeatureInstalled('SNAP_CATALOG');
+              if (!smartImport && !snapCatalog) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (smartImport) ...[
+                    const SizedBox(height: 8),
+                    _SourceOption(
+                      title: l10n.excelSourceOwnFile,
+                      subtitle: l10n.excelSourceOwnFileHint,
+                      selected: source == ExcelImportSource.ownFile,
+                      onTap: () => onChanged(ExcelImportSource.ownFile),
+                    ),
+                  ],
+                  // For the shop that has nothing written down anywhere.
+                  if (snapCatalog) ...[
+                    const SizedBox(height: 8),
+                    _SourceOption(
+                      title: l10n.excelSourcePhotos,
+                      subtitle: l10n.excelSourcePhotosHint,
+                      selected: source == ExcelImportSource.photos,
+                      onTap: () => onChanged(ExcelImportSource.photos),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ],
