@@ -38,6 +38,22 @@ final ValueNotifier<bool> aiEnabledNotifier = ValueNotifier<bool>(false);
 bool get aiEnabled => aiEnabledNotifier.value;
 set aiEnabled(bool v) => aiEnabledNotifier.value = v;
 
+/// Which AI features are INSTALLED for this app, by code (from the AI
+/// Marketplace). `null` = not loaded yet; a non-null set hides any feature not
+/// in it. Features are installed by default, so until this loads everything
+/// shows — then an uninstalled feature disappears.
+final ValueNotifier<Set<String>?> aiInstalledFeaturesNotifier =
+    ValueNotifier<Set<String>?>(null);
+
+set aiInstalledFeatures(Set<String> v) => aiInstalledFeaturesNotifier.value = v;
+
+/// Whether a feature should be shown. Optimistic before load (installed by
+/// default); respects the server's list once loaded.
+bool aiFeatureInstalled(String code) {
+  final v = aiInstalledFeaturesNotifier.value;
+  return v == null || v.contains(code);
+}
+
 // -------- Connection Cubit (for server / network status) --------
 ConnectionCubit? connectionCubit;
 

@@ -337,7 +337,10 @@ class _ProductCardBody extends StatelessWidget {
                       ValueListenableBuilder<bool>(
                         valueListenable: net.aiEnabledNotifier,
                         builder: (_, enabled, __) {
-                          if (!enabled) return const SizedBox.shrink();
+                          if (!enabled ||
+                              !net.aiFeatureInstalled('SHOP_ASSISTANT')) {
+                            return const SizedBox.shrink();
+                          }
                           return Padding(
                             padding: EdgeInsets.only(
                               bottom: hasCta ? 8.0 : 0,
@@ -632,7 +635,10 @@ class _GenericCardBody extends StatelessWidget {
                       ValueListenableBuilder<bool>(
                         valueListenable: net.aiEnabledNotifier,
                         builder: (_, enabled, __) {
-                          if (!enabled) return const SizedBox.shrink();
+                          if (!enabled ||
+                              !net.aiFeatureInstalled('SHOP_ASSISTANT')) {
+                            return const SizedBox.shrink();
+                          }
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),

@@ -36,6 +36,11 @@ class AiFeatureBootstrap {
 
     debugPrint('[AI-DEBUG] refresh: OWNER_PROJECT_LINK_ID=$linkIdStr (linkId=$linkId), current g.aiEnabled=${g.aiEnabled}');
 
+    // Which AI features are installed (for show/hide). Load before the enabled
+    // flag so screens that gate on both already have the install set in place.
+    final installed = await _api.fetchInstalledFeatures(linkId: linkId);
+    if (installed != null) g.aiInstalledFeatures = installed;
+
     final fresh = await _api.fetchAiEnabled(linkId: linkId);
     if (fresh == null) {
       debugPrint('[AI-DEBUG] refresh: API returned null — keeping current g.aiEnabled=${g.aiEnabled}');

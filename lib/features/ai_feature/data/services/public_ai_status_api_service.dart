@@ -37,4 +37,26 @@ class PublicAiStatusApiService {
       return null;
     }
   }
+
+  /// The AI features installed for this app (by code). `null` on failure so the
+  /// caller keeps the optimistic "installed by default" view.
+  Future<Set<String>?> fetchInstalledFeatures({required int linkId}) async {
+    try {
+      final Dio dio = g.dio();
+      final res = await dio.get(
+        '/api/public/ai/features',
+        queryParameters: {'linkId': linkId},
+      );
+      if (res.data is Map<String, dynamic>) {
+        final list = (res.data as Map<String, dynamic>)['installed'];
+        if (list is List) {
+          return list.map((e) => e.toString()).toSet();
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('[AI-DEBUG] fetchInstalledFeatures failed: $e');
+      return null;
+    }
+  }
 }
