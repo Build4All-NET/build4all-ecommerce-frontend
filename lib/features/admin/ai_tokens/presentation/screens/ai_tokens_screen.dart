@@ -134,7 +134,8 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
   }
 
   /// Dispatches on the provider the backend chose — identical to the license
-  /// upgrade flow (Stripe native sheet; PayPal/MPGS external URL; cash pending).
+  /// upgrade flow (Stripe native sheet; PayPal/MPGS/Cybersource external hosted
+  /// checkout URL + "I've paid" confirm; cash pending).
   Future<bool> _completePayment(UpgradePaymentIntentModel intent) async {
     final provider = (intent.provider).toLowerCase();
 
@@ -154,7 +155,7 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
       return true;
     }
 
-    if (provider == 'paypal' || provider == 'mpgs') {
+    if (provider == 'paypal' || provider == 'mpgs' || provider == 'cybersource') {
       final url = (intent.checkoutUrl ?? '').trim();
       if (url.isEmpty) throw Exception('Checkout URL is missing.');
       final uri = Uri.tryParse(url);
