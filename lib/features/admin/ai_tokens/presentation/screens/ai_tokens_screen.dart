@@ -176,7 +176,7 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
         } catch (_) {/* fall through to confirm dialog */}
       }
       if (!mounted) return false;
-      final confirmed = await showDialog<bool>(
+      await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
@@ -193,7 +193,10 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
           ],
         ),
       );
-      if (confirmed != true) return false;
+      // Money safety: verify with the provider regardless of the button — the
+      // owner may have completed the payment but tapped Cancel. confirm() throws
+      // if the payment was not completed, so a real charge still grants the
+      // tokens and only a genuinely incomplete one is reported as an error.
       await _api.confirm(intent.paymentIntentId);
       return true;
     }

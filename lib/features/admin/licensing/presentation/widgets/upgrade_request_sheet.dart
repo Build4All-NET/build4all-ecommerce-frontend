@@ -153,7 +153,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
     if (!mounted) return;
 
-    final confirmed = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
@@ -177,11 +177,12 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
     if (!mounted) return;
 
-    if (confirmed == true) {
-      bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
-    } else {
-      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
-    }
+    // Money safety: verify with the provider whichever button the owner taps.
+    // They may have completed the payment but tapped Cancel (or returned
+    // without tapping "I've paid"). A real payment still activates; only a
+    // genuinely incomplete one is reported as not completed — a successful
+    // charge is never silently discarded.
+    bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
   }
 
   Future<void> _handleHostedCardPayment(UpgradeFlowState state) async {
@@ -215,7 +216,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
     if (!mounted) return;
 
-    final confirmed = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
@@ -239,11 +240,12 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
 
     if (!mounted) return;
 
-    if (confirmed == true) {
-      bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
-    } else {
-      bloc.add(UpgradePaymentFailed(l10n.upgradePaymentCanceled));
-    }
+    // Money safety: verify with the provider whichever button the owner taps.
+    // They may have completed the payment but tapped Cancel (or returned
+    // without tapping "I've paid"). A real payment still activates; only a
+    // genuinely incomplete one is reported as not completed — a successful
+    // charge is never silently discarded.
+    bloc.add(UpgradePaymentSucceeded(intent.paymentIntentId));
   }
 
   Future<void> _handleManualSuccess(UpgradeFlowState state) async {
