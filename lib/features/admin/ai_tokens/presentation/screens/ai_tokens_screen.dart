@@ -138,7 +138,14 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
       if (!mounted) return;
       await _load();
     } catch (e) {
-      if (mounted) AppToast.error(context, e.toString());
+      // Show the standard failure screen instead of a raw error (e.g. the 422
+      // the confirm returns when the payment wasn't completed).
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PaymentResultScreen.failure(showRetry: false),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _buyingCode = null);
     }
