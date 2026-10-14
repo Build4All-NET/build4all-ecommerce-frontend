@@ -3547,16 +3547,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get completeProfileFailed => 'فشل إكمال الملف الشخصي';
 
   @override
-  String get upgradeCompletePaypalTitle => 'إتمام الدفع عبر PayPal';
+  String get upgradeCompletePaypalTitle => 'أكمل الدفع عبر PayPal';
 
   @override
-  String get upgradeCompletePaypalContent => 'لقد فتحنا PayPal في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.';
+  String get upgradeCompletePaypalContent => 'أكمل الدفع في PayPal الذي فتحناه في متصفحك. بمجرد إتمام الدفع، سيتم تفعيل خطتك تلقائيًا — اضغط على \"لقد دفعت\" للتحقق الآن. إغلاق هذه الشاشة لن يلغي عملية دفع قمت بها بالفعل.';
 
   @override
-  String get upgradeCompleteCardTitle => 'إتمام الدفع بالبطاقة';
+  String get upgradeCompleteCardTitle => 'أكمل الدفع بالبطاقة';
 
   @override
-  String get upgradeCompleteCardContent => 'لقد فتحنا صفحة الدفع الآمن بالبطاقة في متصفحك. بعد إتمام الدفع، عد إلى هنا واضغط على \"لقد دفعت\" لتفعيل خطتك.';
+  String get upgradeCompleteCardContent => 'أكمل الدفع في الصفحة الآمنة التي فتحناها في متصفحك. بمجرد إتمام الدفع، سيتم تفعيل خطتك تلقائيًا — اضغط على \"لقد دفعت\" للتحقق الآن. إغلاق هذه الشاشة لن يلغي عملية دفع قمت بها بالفعل.';
 
   @override
   String get upgradePendingConfirmationTitle => 'الدفع في انتظار التأكيد';

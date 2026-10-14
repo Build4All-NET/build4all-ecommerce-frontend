@@ -180,13 +180,16 @@ class _AiTokensScreenState extends State<AiTokensScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Complete your payment'),
+          title: const Text('Finish your card payment'),
           content: const Text(
-              'Finish the payment in the opened page, then tap "I\'ve paid".'),
+              'Complete the payment on the secure page we opened in your browser. '
+              'Once it goes through, your AI tokens are added automatically — tap '
+              '"I\'ve paid" to check now. Closing this screen won\'t cancel a '
+              'payment you\'ve already made.'),
           actions: [
             TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel')),
+                child: const Text('Close')),
             FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: const Text("I've paid")),

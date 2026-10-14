@@ -164,7 +164,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(dl.commonCancel),
+              child: Text(dl.closeLabel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
@@ -227,7 +227,7 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(dl.commonCancel),
+              child: Text(dl.closeLabel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
