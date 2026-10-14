@@ -3547,16 +3547,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get completeProfileFailed => 'Échec de la complétion du profil';
 
   @override
-  String get upgradeCompletePaypalTitle => 'Finaliser le paiement PayPal';
+  String get upgradeCompletePaypalTitle => 'Finalisez votre paiement PayPal';
 
   @override
-  String get upgradeCompletePaypalContent => 'Nous avons ouvert PayPal dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.';
+  String get upgradeCompletePaypalContent => 'Effectuez le paiement dans PayPal, que nous avons ouvert dans votre navigateur. Une fois le paiement effectué, votre abonnement est activé automatiquement — appuyez sur \"J’ai payé\" pour vérifier maintenant. Fermer cet écran n’annulera pas un paiement déjà effectué.';
 
   @override
-  String get upgradeCompleteCardTitle => 'Finaliser le paiement par carte';
+  String get upgradeCompleteCardTitle => 'Finalisez votre paiement par carte';
 
   @override
-  String get upgradeCompleteCardContent => 'Nous avons ouvert la page de paiement sécurisé par carte dans votre navigateur. Après avoir effectué le paiement, revenez ici et appuyez sur \"J’ai payé\" pour activer votre abonnement.';
+  String get upgradeCompleteCardContent => 'Effectuez le paiement sur la page sécurisée que nous avons ouverte dans votre navigateur. Une fois le paiement effectué, votre abonnement est activé automatiquement — appuyez sur \"J’ai payé\" pour vérifier maintenant. Fermer cet écran n’annulera pas un paiement déjà effectué.';
 
   @override
   String get upgradePendingConfirmationTitle => 'Paiement en attente de confirmation';
