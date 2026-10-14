@@ -46,14 +46,6 @@ jobs:
           repository: ${{ env.APP_SOURCE_REPO }}
           token: ${{ secrets.CORE_REPO_TOKEN }}
 
-      # TEMPORARY — proves the checkout really came from the private repo.
-      # Remove once the split is verified.
-      - name: TEMP verify source repository
-        run: |
-          echo "----- CI_SOURCE_MARKER.txt -----"
-          cat CI_SOURCE_MARKER.txt
-          echo "--------------------------------"
-
       # ════════════════════════════════════════════════════════════════════
       # EXTRACT BUILD_ID / LINK_ID / API_BASE
       # Mirrors the Android workflow, plus a workflow_dispatch path for manual
