@@ -343,6 +343,18 @@ class _UpgradeRequestSheetState extends State<_UpgradeRequestSheet> {
           prev.paymentIntent != next.paymentIntent ||
           prev.confirmedAccess != next.confirmedAccess,
       listener: (ctx, state) async {
+        // A new attempt is starting (Pay now re-pressed after a failure): clear
+        // the one-shot guards so the handler runs again. Without this a retry
+        // was silently skipped.
+        if (state.status == UpgradeFlowStatus.initiatingPayment) {
+          _stripeHandled = false;
+          _paypalHandled = false;
+          _hostedCardHandled = false;
+          _manualRequestHandled = false;
+          _pendingHandled = false;
+          _successHandled = false;
+        }
+
         final provider = state.paymentIntent?.provider.toLowerCase().trim();
 
         // 1) Stripe payment sheet
