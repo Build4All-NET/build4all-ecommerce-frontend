@@ -903,7 +903,8 @@ jobs:
           ENV_FILE="lib/env/ci_env.json"
           python3 - "$API_KEY_JSON" "$BUNDLE_ID" "$ENV_FILE" <<'PY'
           import json, jwt, os, time, sys, re
-          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
+                                os.environ["CI_SCRIPTS_DIR"], ".github", "scripts"))
           import asc_http
           api_key  = json.load(open(sys.argv[1]))
           bundle   = sys.argv[2]
@@ -996,7 +997,8 @@ jobs:
           BUNDLE_ID="$(tr -d '\r\n' < ci_ios_bundle_id.txt)"
           python3 - "$API_KEY_JSON" "$BUNDLE_ID" "${BETA_APP_DESCRIPTION}" "${BETA_FEEDBACK_EMAIL}" "${BETA_CONTACT_PHONE}" "$DEMO_EMAIL" "$DEMO_PASSWORD" <<'PYEOF'
           import json, jwt, os, time, requests, sys
-          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
+                                os.environ["CI_SCRIPTS_DIR"], ".github", "scripts"))
           import asc_http; asc_http.install()  # retries + timeouts on transient ASC 5xx
           api_key = json.load(open(sys.argv[1]))
           def create_token():
@@ -1377,7 +1379,8 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import json, jwt, os, time, requests, pathlib, sys
-          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()), ".github", "scripts"))
+          sys.path.insert(0, os.path.join(os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
+                                os.environ["CI_SCRIPTS_DIR"], ".github", "scripts"))
           import asc_http; asc_http.install()  # retries + timeouts on transient ASC 5xx
           api_key = json.load(open(".private/api_key.json", encoding="utf-8"))
           payload = json.load(open("/tmp/client_payload.json", "r", encoding="utf-8")) or {}
