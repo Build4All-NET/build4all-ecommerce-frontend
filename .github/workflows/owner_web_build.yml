@@ -27,6 +27,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # The app source lives in a private repository so it is not published
+      # with the workflows; CI pulls it in at build time.
+      APP_SOURCE_REPO: Build4All-NET/build4all-ecommerce-core
       CI_AUTH_TOKEN: ${{ secrets.CI_AUTH_TOKEN }}
       CI_CALLBACK_TOKEN: ${{ secrets.CI_CALLBACK_TOKEN }}
       CI_RUNTIME_TOKEN: ${{ secrets.CI_RUNTIME_TOKEN }}
@@ -37,8 +40,11 @@ jobs:
       CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
     steps:
-      - name: Checkout
+      - name: Checkout app source
         uses: actions/checkout@v4
+        with:
+          repository: ${{ env.APP_SOURCE_REPO }}
+          token: ${{ secrets.CORE_REPO_TOKEN }}
 
       # ════════════════════════════════════════════════════════════════════
       # EXTRACT BUILD_ID / LINK_ID / API_BASE
