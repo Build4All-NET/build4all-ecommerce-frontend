@@ -1,0 +1,121 @@
+name: Cloudflare Pages Diagnose
+
+# Read-only check of why "wrangler pages project create" started failing with
+# the generic 8000000 error. Run it by hand from the Actions tab; it uses the
+# same secrets the web build uses, so it proves what CI itself sees.
+on:
+  workflow_dispatch:
+    inputs:
+      probe_project:
+        description: "Throwaway project name used for the create probe (deleted right after)."
+        required: false
+        default: "b4a-diag-probe"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      API: https://api.cloudflare.com/client/v4
+    steps:
+      # Nothing below prints the token or the account id — only statuses,
+      # counts and Cloudflare's own error messages.
+      - name: Check the secrets are present
+        run: |
+          set -e
+          [ -n "$CF_TOKEN" ]   && echo "CLOUDFLARE_API_TOKEN  = set" || echo "CLOUDFLARE_API_TOKEN  = MISSING"
+          [ -n "$CF_ACCOUNT" ] && echo "CLOUDFLARE_ACCOUNT_ID = set" || echo "CLOUDFLARE_ACCOUNT_ID = MISSING"
+          if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
+            echo "::error title=Secrets missing::The web build cannot deploy to Cloudflare without both secrets."
+            exit 1
+          fi
+
+      # An expired or revoked token is the one cause that turns a working
+      # pipeline off overnight without anybody touching the repository.
+      - name: Is the token still alive?
+        run: |
+          set -e
+          RES="$(curl -s "$API/user/tokens/verify" -H "Authorization: Bearer $CF_TOKEN")"
+          echo "$RES" | jq '{success, status: .result.status, expires_on: .result.expires_on, errors: [.errors[]?.message]}'
+          STATUS="$(echo "$RES" | jq -r '.result.status // "unknown"')"
+          case "$STATUS" in
+            active)  echo "✅ Token is active." ;;
+            expired) echo "::error title=Token expired::VERDICT — the API token has expired. Issue a new one and update CLOUDFLARE_API_TOKEN."; exit 1 ;;
+            *)       echo "::error title=Token rejected::VERDICT — Cloudflare will not accept this token (status: $STATUS)."; exit 1 ;;
+          esac
+
+      # Read access working while create fails is exactly the shape the failed
+      # build showed, so both are probed separately.
+      - name: Can the token read Pages projects?
+        run: |
+          set -e
+          RES="$(curl -s "$API/accounts/$CF_ACCOUNT/pages/projects?per_page=1" -H "Authorization: Bearer $CF_TOKEN")"
+          if [ "$(echo "$RES" | jq -r '.success')" != "true" ]; then
+            echo "$RES" | jq '{errors: [.errors[]? | {code, message}]}'
+            echo "::error title=Cannot list projects::VERDICT — the token cannot even read Pages on this account. Check that CLOUDFLARE_ACCOUNT_ID belongs to the token, and that the token has the Cloudflare Pages permission."
+            exit 1
+          fi
+          echo "✅ Pages read access works."
+
+      # Pages allows 100 projects per account. One project per merchant plus a
+      # fresh slug on every retry burns that quota quietly: existing sites keep
+      # deploying, only new merchants break — which is what "it worked until
+      # today" looks like from the outside.
+      - name: How many projects does the account hold?
+        run: |
+          set -e
+          RES="$(curl -s "$API/accounts/$CF_ACCOUNT/pages/projects?per_page=100" -H "Authorization: Bearer $CF_TOKEN")"
+          TOTAL="$(echo "$RES" | jq -r '.result_info.total_count // (.result | length)')"
+          B4A="$(echo "$RES" | jq -r '[.result[]?.name | select(startswith("b4a-"))] | length')"
+          echo "Projects on the account : $TOTAL / 100"
+          echo "Of which b4a-*          : $B4A"
+          echo ""
+          echo "---- b4a-* projects, oldest first ----"
+          echo "$RES" | jq -r '[.result[]? | select(.name | startswith("b4a-"))]
+                               | sort_by(.created_on)
+                               | .[] | "\(.created_on)  \(.name)"'
+          if [ "$TOTAL" -ge 100 ]; then
+            echo "::error title=Project limit reached::VERDICT — the account is at the 100-project Cloudflare Pages limit, so no new merchant project can be created. Delete the throwaway test projects listed above, or move to one project for many merchants."
+            exit 1
+          fi
+          echo "✅ Under the limit — $((100 - TOTAL)) slots left."
+
+      # If the account is under the limit and the token is fine, reproduce the
+      # failing call on a throwaway name so Cloudflare's real message is on the
+      # record instead of wrangler's "unknown error".
+      - name: Reproduce the create call
+        env:
+          PROBE: ${{ github.event.inputs.probe_project }}
+        run: |
+          set -e
+          NAME="${PROBE:-b4a-diag-probe}-${GITHUB_RUN_ID}"
+          echo "Creating $NAME …"
+          RES="$(curl -s -X POST "$API/accounts/$CF_ACCOUNT/pages/projects" \
+                   -H "Authorization: Bearer $CF_TOKEN" \
+                   -H "Content-Type: application/json" \
+                   -d "{\"name\":\"$NAME\",\"production_branch\":\"main\"}")"
+
+          if [ "$(echo "$RES" | jq -r '.success')" = "true" ]; then
+            echo "✅ Create succeeded — the account and token are healthy right now."
+            echo "   So the build's failure was either transient on Cloudflare's side,"
+            echo "   or specific to the name it asked for (a recently deleted project"
+            echo "   keeps its name reserved for a while)."
+            curl -s -X DELETE "$API/accounts/$CF_ACCOUNT/pages/projects/$NAME" \
+              -H "Authorization: Bearer $CF_TOKEN" > /dev/null
+            echo "   Probe project deleted."
+          else
+            echo "---- Cloudflare's answer ----"
+            echo "$RES" | jq '{errors: [.errors[]? | {code, message}], messages}'
+            CODE="$(echo "$RES" | jq -r '.errors[0].code // 0')"
+            case "$CODE" in
+              10000|9109) HINT="the token lacks the Cloudflare Pages: Edit permission (read works, write does not)." ;;
+              8000009)    HINT="that project name is taken or still reserved from a recent delete." ;;
+              *)          HINT="see the message above; if it is bare 8000000 with a healthy token and free quota, it is Cloudflare-side — check their status page and retry." ;;
+            esac
+            echo "::error title=Create failed (code $CODE)::VERDICT — $HINT"
+            exit 1
+          fi
